@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,15 +27,14 @@ export default function NextStepsSummaryGenerator({ patient, educationMaterial, 
   const [sessionNotes, setSessionNotes] = useState("");
   const [medicationsDiscussed, setMedicationsDiscussed] = useState("");
   const [followUpDays, setFollowUpDays] = useState("7");
-  const [isGenerating, setIsGenerating] = useState(false);
+  const ai = useAICall();
   const [summary, setSummary] = useState(null);
   const [copied, setCopied] = useState(false);
   const [selectedItems, setSelectedItems] = useState({});
 
   const generateSummary = async () => {
-    setIsGenerating(true);
     try {
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `You are creating a personalized "Next Steps" and "What to Watch For" summary for a patient after an education session. This should be simple, actionable, and easy for patients/caregivers to follow at home.
 
 PATIENT: ${patient ? `${patient.first_name} ${patient.last_name}` : 'Unknown'}
@@ -143,7 +142,6 @@ Return JSON:
       console.error("Error generating summary:", error);
       toast.error("Error generating summary. Please try again.");
     }
-    setIsGenerating(false);
   };
 
   const handleCopy = () => {
@@ -298,10 +296,10 @@ Return JSON:
 
             <Button
               onClick={generateSummary}
-              disabled={isGenerating}
+              disabled={ai.loading}
               className="w-full bg-green-600 hover:bg-green-700"
             >
-              {isGenerating ? (
+              {ai.loading ? (
                 <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Generating Summary...</>
               ) : (
                 <><ListChecks className="w-4 h-4 mr-2" /> Generate Patient Summary</>

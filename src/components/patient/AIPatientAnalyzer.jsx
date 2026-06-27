@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -9,7 +9,7 @@ import { Brain, AlertTriangle, Target, TrendingUp, Loader2, Sparkles, ChevronDow
 import { toast } from 'sonner';
 
 export default function AIPatientAnalyzer({ patient, visits, carePlans, incidents }) {
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const ai = useAICall();
   const [analysis, setAnalysis] = useState(null);
   const [expandedSections, setExpandedSections] = useState({
     diagnoses: true,
@@ -22,7 +22,6 @@ export default function AIPatientAnalyzer({ patient, visits, carePlans, incident
   };
 
   const runAnalysis = async () => {
-    setIsAnalyzing(true);
     try {
       // Prepare comprehensive patient data
       const recentVisits = (visits || []).slice(0, 10);
@@ -66,7 +65,7 @@ Provide a comprehensive clinical analysis with:
 
 Format as JSON with clear, actionable clinical insights.`;
 
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt,
         response_json_schema: {
           type: "object",
@@ -142,7 +141,6 @@ Format as JSON with clear, actionable clinical insights.`;
       console.error('Analysis error:', error);
       toast.error('Failed to generate analysis. Please try again.');
     }
-    setIsAnalyzing(false);
   };
 
   const getSeverityColor = (severity) => {
@@ -174,10 +172,10 @@ Format as JSON with clear, actionable clinical insights.`;
           </CardTitle>
           <Button
             onClick={runAnalysis}
-            disabled={isAnalyzing}
+            disabled={ai.loading}
             className="bg-navy-600 hover:bg-navy-700"
           >
-            {isAnalyzing ? (
+            {ai.loading ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 Analyzing...
@@ -195,7 +193,7 @@ Format as JSON with clear, actionable clinical insights.`;
         </p>
       </CardHeader>
       <CardContent className="p-6">
-        {!analysis && !isAnalyzing && (
+        {!analysis && !ai.loading && (
           <div className="text-center py-12">
             <Brain className="w-16 h-16 text-navy-200 mx-auto mb-4" />
             <p className="text-slate-600 mb-2">Click "Run Analysis" to generate AI-powered clinical insights</p>

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -28,7 +28,7 @@ import {
 export default function AIKPIReportGenerator() {
   const [timeframe, setTimeframe] = useState("30");
   const [report, setReport] = useState(null);
-  const [isGenerating, setIsGenerating] = useState(false);
+  const ai = useAICall();
 
   const { data: visits = [] } = useQuery({
     queryKey: ['visitsForKPI'],
@@ -55,7 +55,6 @@ export default function AIKPIReportGenerator() {
   });
 
   const generateReport = async () => {
-    setIsGenerating(true);
     
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - parseInt(timeframe, 10));
@@ -158,7 +157,7 @@ Return as JSON:
   ]
 }`;
 
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt,
         response_json_schema: {
           type: "object",
@@ -226,7 +225,6 @@ Return as JSON:
       console.error("Error generating KPI report:", error);
     }
     
-    setIsGenerating(false);
   };
 
   const getTrendIcon = (trend) => {
@@ -272,10 +270,10 @@ Return as JSON:
 
           <Button
             onClick={generateReport}
-            disabled={isGenerating}
+            disabled={ai.loading}
             className="flex-1 bg-blue-600 hover:bg-blue-700"
           >
-            {isGenerating ? (
+            {ai.loading ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 Generating Report...

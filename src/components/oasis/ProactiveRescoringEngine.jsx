@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -21,13 +21,12 @@ export default function ProactiveRescoringEngine({
   autoAnalyze = false,
   onOpportunitiesFound
 }) {
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const ai = useAICall();
   const [opportunities, setOpportunities] = useState(null);
 
   const analyzeRescoringOpportunities = useCallback(async () => {
     if (!oasisData) return;
 
-    setIsAnalyzing(true);
     try {
       const prompt = `Analyze OASIS data for rescoring opportunities with revenue impact.
 
@@ -55,7 +54,7 @@ For each opportunity, calculate:
 - Required documentation to support change
 - Audit risk assessment`;
 
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt,
         response_json_schema: {
           type: "object",
@@ -121,7 +120,6 @@ For each opportunity, calculate:
     } catch (error) {
       console.error('Rescoring analysis error:', error);
     }
-    setIsAnalyzing(false);
   }, [oasisData, patientData, clinicalContext, onOpportunitiesFound]);
 
   useEffect(() => {
@@ -160,7 +158,7 @@ For each opportunity, calculate:
             <TrendingUp className="w-5 h-5 text-green-600" />
             Proactive Rescoring Engine
           </CardTitle>
-          {!opportunities && !isAnalyzing && (
+          {!opportunities && !ai.loading && (
             <Button
               onClick={analyzeRescoringOpportunities}
               className="bg-green-600 hover:bg-green-700"
@@ -173,7 +171,7 @@ For each opportunity, calculate:
       </CardHeader>
 
       <CardContent>
-        {isAnalyzing && (
+        {ai.loading && (
           <div className="text-center py-12">
             <Loader2 className="w-12 h-12 animate-spin text-green-600 mx-auto mb-4" />
             <p className="text-green-700">Analyzing rescoring opportunities and revenue impact...</p>

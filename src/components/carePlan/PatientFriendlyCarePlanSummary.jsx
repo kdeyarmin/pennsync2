@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -21,7 +21,7 @@ import { toast } from 'sonner';
 
 export default function PatientFriendlyCarePlanSummary({ patient, carePlans, _onEmailSummary }) {
   const [summary, setSummary] = useState(null);
-  const [isGenerating, setIsGenerating] = useState(false);
+  const ai = useAICall();
   const [copied, setCopied] = useState(false);
 
   const activeCarePlans = (carePlans || []).filter(cp => cp.status === 'active');
@@ -32,7 +32,6 @@ export default function PatientFriendlyCarePlanSummary({ patient, carePlans, _on
       return;
     }
 
-    setIsGenerating(true);
     try {
       const carePlanData = activeCarePlans.map(cp => ({
         problem: cp.problem,
@@ -78,7 +77,7 @@ Return JSON:
   "questions_to_ask": ["Suggested questions for the patient to ask"]
 }`;
 
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt,
         response_json_schema: {
           type: "object",
@@ -112,7 +111,6 @@ Return JSON:
       console.error('Error generating summary:', error);
       toast.error('Failed to generate summary. Please try again.');
     }
-    setIsGenerating(false);
   };
 
   const handleCopy = () => {
@@ -213,11 +211,11 @@ Your Care Team
           </CardTitle>
           <Button
             onClick={generateSummary}
-            disabled={isGenerating || activeCarePlans.length === 0}
+            disabled={ai.loading || activeCarePlans.length === 0}
             size="sm"
             className="bg-green-600 hover:bg-green-700"
           >
-            {isGenerating ? (
+            {ai.loading ? (
               <>
                 <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
                 Creating...
@@ -239,7 +237,7 @@ Your Care Team
           </div>
         )}
 
-        {activeCarePlans.length > 0 && !summary && !isGenerating && (
+        {activeCarePlans.length > 0 && !summary && !ai.loading && (
           <div className="text-center py-6 text-slate-500">
             <User className="w-10 h-10 text-slate-300 mx-auto mb-2" />
             <p className="text-sm">Generate a patient-friendly version of the care plan</p>

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -51,7 +51,7 @@ import {
 const COLORS = ['#3557b0', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
 
 export default function PDGMPredictiveAnalytics({ compact = false }) {
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const ai = useAICall();
   const [predictions, setPredictions] = useState(null);
   const [timeRange, setTimeRange] = useState("6months");
   const [error, setError] = useState(null);
@@ -67,7 +67,6 @@ export default function PDGMPredictiveAnalytics({ compact = false }) {
   });
 
   const generatePredictions = useCallback(async () => {
-    setIsAnalyzing(true);
     setError(null);
 
     try {
@@ -84,7 +83,7 @@ export default function PDGMPredictiveAnalytics({ compact = false }) {
         status: v.status
       }));
 
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `You are a PDGM financial analyst. Based on this home health agency data, generate predictive analytics with detailed cohort analysis.
 
 PATIENT DATA (${activePatients.length} active):
@@ -318,14 +317,13 @@ Return JSON:
       setError("Failed to generate predictions. Please try again.");
     }
 
-    setIsAnalyzing(false);
   }, [patients, visits, timeRange]);
 
   useEffect(() => {
-    if (patients.length > 0 && !predictions && !isAnalyzing) {
+    if (patients.length > 0 && !predictions && !ai.loading) {
       generatePredictions();
     }
-  }, [patients, predictions, isAnalyzing, generatePredictions]);
+  }, [patients, predictions, ai.loading, generatePredictions]);
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-US', {
@@ -346,7 +344,7 @@ Return JSON:
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {isAnalyzing ? (
+          {ai.loading ? (
             <div className="flex items-center justify-center py-4">
               <Loader2 className="w-5 h-5 animate-spin text-indigo-600" />
             </div>
@@ -411,16 +409,16 @@ Return JSON:
             <Button 
               size="sm" 
               onClick={generatePredictions} 
-              disabled={isAnalyzing}
+              disabled={ai.loading}
               className="bg-indigo-600 hover:bg-indigo-700"
             >
-              {isAnalyzing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+              {ai.loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
             </Button>
           </div>
         </div>
       </CardHeader>
       <CardContent className="pt-4">
-        {isAnalyzing ? (
+        {ai.loading ? (
           <div className="flex flex-col items-center justify-center py-12">
             <Loader2 className="w-10 h-10 animate-spin text-indigo-600 mb-4" />
             <p className="text-sm text-slate-600">Analyzing patient data and generating predictions...</p>

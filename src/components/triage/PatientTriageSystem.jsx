@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -30,7 +30,7 @@ import { format, differenceInDays, parseISO } from "date-fns";
 import { toast } from 'sonner';
 
 export default function PatientTriageSystem() {
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const ai = useAICall();
   const [triageResults, setTriageResults] = useState([]);
   const [lastAnalyzed, setLastAnalyzed] = useState(null);
 
@@ -64,7 +64,6 @@ export default function PatientTriageSystem() {
       return;
     }
     
-    setIsAnalyzing(true);
     const results = [];
 
     for (const patient of patients) {
@@ -128,7 +127,6 @@ export default function PatientTriageSystem() {
     
     setTriageResults(results);
     setLastAnalyzed(new Date());
-    setIsAnalyzing(false);
   };
 
   const analyzeVitalTrends = (visits) => {
@@ -308,7 +306,7 @@ Provide a brief triage assessment in JSON format:
   "escalation_reason": "If escalation needed, brief reason why"
 }`;
 
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt,
         response_json_schema: {
           type: "object",
@@ -416,10 +414,10 @@ Provide a brief triage assessment in JSON format:
               )}
               <Button
                 onClick={runTriageAnalysis}
-                disabled={isAnalyzing || patients.length === 0}
+                disabled={ai.loading || patients.length === 0}
                 className="bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700"
               >
-                {isAnalyzing ? (
+                {ai.loading ? (
                   <>
                     <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
                     Analyzing {patients.length} patients...
@@ -500,7 +498,7 @@ Provide a brief triage assessment in JSON format:
             <p className="text-slate-500 mb-4">
               Click "Run Triage Analysis" to assess {patients.length} active patients
             </p>
-            <Button onClick={runTriageAnalysis} disabled={isAnalyzing || patients.length === 0}>
+            <Button onClick={runTriageAnalysis} disabled={ai.loading || patients.length === 0}>
               <Activity className="w-4 h-4 mr-2" />
               Start Analysis
             </Button>

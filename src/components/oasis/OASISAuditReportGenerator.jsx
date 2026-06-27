@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Dialog,
@@ -27,7 +27,7 @@ import { format } from "date-fns";
 import AIAuditReportAssistant from "./AIAuditReportAssistant";
 
 export default function OASISAuditReportGenerator({ audit, isOpen, onClose, currentUser }) {
-  const [isGenerating, setIsGenerating] = useState(false);
+  const ai = useAICall();
   const [reportGenerated, setReportGenerated] = useState(false);
   const [additionalFindings, setAdditionalFindings] = useState("");
   const [recommendations, setRecommendations] = useState([""]);
@@ -79,7 +79,6 @@ export default function OASISAuditReportGenerator({ audit, isOpen, onClose, curr
   };
 
   const generateReport = async () => {
-    setIsGenerating(true);
 
     try {
       // Build report content
@@ -104,7 +103,7 @@ export default function OASISAuditReportGenerator({ audit, isOpen, onClose, curr
       };
 
       // Generate PDF report using AI
-      const reportContent = await invokeLLM({
+      const reportContent = await ai.run({
         prompt: `Generate a professional OASIS audit report in markdown format based on this data:
 
 ${JSON.stringify(reportData, null, 2)}
@@ -164,7 +163,6 @@ Use proper markdown formatting with headers, bullet points, and tables where app
       console.error("Error generating report:", error);
     }
 
-    setIsGenerating(false);
   };
 
   const generateFallbackReport = (data) => {
@@ -358,10 +356,10 @@ ${data.corrections?.map(c => `
               <Button variant="outline" onClick={onClose}>Cancel</Button>
               <Button 
                 onClick={generateReport} 
-                disabled={isGenerating}
+                disabled={ai.loading}
                 className="bg-blue-600 hover:bg-blue-700"
               >
-                {isGenerating ? (
+                {ai.loading ? (
                   <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Generating...</>
                 ) : (
                   <><FileDown className="w-4 h-4 mr-2" /> Generate & Download Report</>

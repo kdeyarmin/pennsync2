@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,7 +19,7 @@ export default function ReferralLetterGenerator({ patientId, patient }) {
   const [reasonForReferral, setReasonForReferral] = useState("");
   const [urgency, setUrgency] = useState("routine");
   const [generatedLetter, setGeneratedLetter] = useState("");
-  const [isGenerating, setIsGenerating] = useState(false);
+  const ai = useAICall();
   const [additionalContext, setAdditionalContext] = useState("");
 
   const { data: visits = [] } = useQuery({
@@ -35,11 +35,10 @@ export default function ReferralLetterGenerator({ patientId, patient }) {
   });
 
   const generateLetter = async () => {
-    setIsGenerating(true);
     try {
       const recentVisit = visits[0];
       
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `Generate a professional medical referral letter.
 
 FROM:
@@ -114,7 +113,6 @@ Keep the tone professional and concise. Include all relevant clinical informatio
     } catch (error) {
       console.error("Error generating referral letter:", error);
     }
-    setIsGenerating(false);
   };
 
   return (
@@ -207,10 +205,10 @@ Keep the tone professional and concise. Include all relevant clinical informatio
 
             <Button 
               onClick={generateLetter} 
-              disabled={isGenerating || !referringTo || !reasonForReferral}
+              disabled={ai.loading || !referringTo || !reasonForReferral}
               className="w-full bg-indigo-600 hover:bg-indigo-700"
             >
-              {isGenerating ? (
+              {ai.loading ? (
                 <><div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2" /> Generating...</>
               ) : (
                 <><Sparkles className="w-5 h-5 mr-2" /> Generate Referral Letter</>

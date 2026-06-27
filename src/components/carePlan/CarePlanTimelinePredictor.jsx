@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,7 +22,7 @@ import { toast } from 'sonner';
 
 export default function CarePlanTimelinePredictor({ patient, carePlans }) {
   const [predictions, setPredictions] = useState(null);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const ai = useAICall();
 
   const { data: visits } = useQuery({
     queryKey: ['visitsForPrediction', patient?.id],
@@ -39,7 +39,6 @@ export default function CarePlanTimelinePredictor({ patient, carePlans }) {
       return;
     }
 
-    setIsAnalyzing(true);
     try {
       const visitTrends = visits.slice(0, 10).map(v => ({
         date: v.visit_date,
@@ -93,7 +92,7 @@ Return JSON:
   "high_risk_goals": ["Goals at risk of not being met"]
 }`;
 
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt,
         response_json_schema: {
           type: "object",
@@ -126,7 +125,6 @@ Return JSON:
       console.error('Error analyzing timelines:', error);
       toast.error('Failed to analyze timelines. Please try again.');
     }
-    setIsAnalyzing(false);
   };
 
   const getTrendIcon = (trend) => {
@@ -156,11 +154,11 @@ Return JSON:
           </CardTitle>
           <Button
             onClick={analyzeTimelines}
-            disabled={isAnalyzing || activeCarePlans.length === 0}
+            disabled={ai.loading || activeCarePlans.length === 0}
             size="sm"
             className="bg-blue-600 hover:bg-blue-700"
           >
-            {isAnalyzing ? (
+            {ai.loading ? (
               <>
                 <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
                 Analyzing...
@@ -182,7 +180,7 @@ Return JSON:
           </div>
         )}
 
-        {activeCarePlans.length > 0 && !predictions && !isAnalyzing && (
+        {activeCarePlans.length > 0 && !predictions && !ai.loading && (
           <div className="text-center py-6 text-slate-500">
             <Calendar className="w-10 h-10 text-slate-300 mx-auto mb-2" />
             <p className="text-sm">Click to predict goal achievement timelines for {activeCarePlans.length} active care plan(s)</p>

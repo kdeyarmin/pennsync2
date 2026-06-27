@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -26,7 +26,7 @@ import {
 import { toast } from 'sonner';
 
 export default function PersonalizedEducationGenerator({ patient, carePlans = [], recentVisits = [] }) {
-  const [isGenerating, setIsGenerating] = useState(false);
+  const ai = useAICall();
   const [educationMaterial, setEducationMaterial] = useState(null);
   const [readingLevel, setReadingLevel] = useState("6th-grade");
   const [language, _setLanguage] = useState("English");
@@ -37,12 +37,11 @@ export default function PersonalizedEducationGenerator({ patient, carePlans = []
   const generateMaterial = async () => {
     if (!patient) return;
 
-    setIsGenerating(true);
     try {
       const activePlans = carePlans.filter(cp => cp.status === 'active');
       const latestVisit = recentVisits[0];
 
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `You are a patient education specialist creating easy-to-understand health information for home health patients.
 
 PATIENT INFORMATION:
@@ -161,7 +160,6 @@ Return JSON with the complete material:`,
     } catch (error) {
       console.error("Education generation error:", error);
     }
-    setIsGenerating(false);
   };
 
   const copyToClipboard = () => {
@@ -257,10 +255,10 @@ Return JSON with the complete material:`,
 
           <Button
             onClick={generateMaterial}
-            disabled={isGenerating}
+            disabled={ai.loading}
             className="w-full bg-navy-600 hover:bg-navy-700"
           >
-            {isGenerating ? (
+            {ai.loading ? (
               <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Generating Personalized Material...</>
             ) : (
               <><Sparkles className="w-4 h-4 mr-2" /> Generate Education Material</>

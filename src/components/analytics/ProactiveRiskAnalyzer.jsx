@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -33,7 +33,7 @@ import { format } from "date-fns";
 
 export default function ProactiveRiskAnalyzer({ _users = [] }) {
   const queryClient = useQueryClient();
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const ai = useAICall();
   const [analysisProgress, setAnalysisProgress] = useState(0);
   const [analysisResults, setAnalysisResults] = useState(null);
   const [selectedAlert, setSelectedAlert] = useState(null);
@@ -83,7 +83,6 @@ export default function ProactiveRiskAnalyzer({ _users = [] }) {
   });
 
   const runProactiveAnalysis = async () => {
-    setIsAnalyzing(true);
     setAnalysisProgress(0);
     setAnalysisResults(null);
 
@@ -134,7 +133,7 @@ export default function ProactiveRiskAnalyzer({ _users = [] }) {
       for (let i = 0; i < patientData.length; i += batchSize) {
         const batch = patientData.slice(i, i + batchSize);
         
-        const result = await invokeLLM({
+        const result = await ai.run({
           prompt: `You are a clinical risk analysis AI for home health/hospice. Analyze these patients for potential adverse events, non-compliance risks, and urgent care needs.
 
 PATIENT DATA:
@@ -258,7 +257,6 @@ Return JSON:
       console.error("Error in proactive analysis:", error);
     }
     
-    setIsAnalyzing(false);
   };
 
   const getSeverityColor = (severity) => {
@@ -329,10 +327,10 @@ Return JSON:
           <Button
             size="sm"
             onClick={runProactiveAnalysis}
-            disabled={isAnalyzing}
+            disabled={ai.loading}
             className="bg-navy-600 hover:bg-navy-700"
           >
-            {isAnalyzing ? (
+            {ai.loading ? (
               <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Analyzing...</>
             ) : (
               <><RefreshCw className="w-4 h-4 mr-2" /> Run Analysis</>
@@ -341,7 +339,7 @@ Return JSON:
         </CardTitle>
       </CardHeader>
       <CardContent className="p-4">
-        {isAnalyzing && (
+        {ai.loading && (
           <div className="mb-4">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm text-slate-600">Analyzing patient data...</span>
@@ -351,7 +349,7 @@ Return JSON:
           </div>
         )}
 
-        {analysisResults && !isAnalyzing && (
+        {analysisResults && !ai.loading && (
           <Alert className="mb-4 bg-navy-50 border-navy-200">
             <Brain className="w-4 h-4" />
             <AlertDescription>

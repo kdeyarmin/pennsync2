@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -31,7 +31,7 @@ export default function AIComplianceAuditor({
   onIssuesFound,
   _scope = "comprehensive" // "comprehensive", "visit", "documentation", "oasis"
 }) {
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const ai = useAICall();
   const [auditResults, setAuditResults] = useState(null);
   const [_expandedSection, _setExpandedSection] = useState(null);
   const queryClient = useQueryClient();
@@ -75,7 +75,6 @@ export default function AIComplianceAuditor({
   const runComplianceAudit = useCallback(async () => {
     if (!patient) return;
 
-    setIsAnalyzing(true);
     try {
       // Build comprehensive patient history
       const patientHistory = await buildComprehensivePatientHistory(patient.id);
@@ -343,7 +342,7 @@ For each area, provide:
   ]
 }`;
 
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt,
         response_json_schema: {
           type: "object",
@@ -506,14 +505,13 @@ For each area, provide:
     } catch (error) {
       console.error("Compliance audit failed:", error);
     }
-    setIsAnalyzing(false);
   }, [patient, visits, carePlans, oasisData, incidents, currentUser, patientId, visitId, onIssuesFound, queryClient]);
 
   useEffect(() => {
-    if (autoRun && patient && !auditResults && !isAnalyzing) {
+    if (autoRun && patient && !auditResults && !ai.loading) {
       runComplianceAudit();
     }
-  }, [autoRun, patient, auditResults, isAnalyzing, runComplianceAudit]);
+  }, [autoRun, patient, auditResults, ai.loading, runComplianceAudit]);
 
   const getRiskColor = (level) => {
     switch (level) {
@@ -563,11 +561,11 @@ For each area, provide:
           </div>
           <Button
             onClick={runComplianceAudit}
-            disabled={isAnalyzing}
+            disabled={ai.loading}
             size="sm"
             className="bg-navy-600 hover:bg-navy-700"
           >
-            {isAnalyzing ? (
+            {ai.loading ? (
               <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Analyzing...</>
             ) : (
               <><Shield className="w-4 h-4 mr-2" /> Run Audit</>
@@ -577,7 +575,7 @@ For each area, provide:
       </CardHeader>
 
       <CardContent className="p-4">
-        {!auditResults && !isAnalyzing && (
+        {!auditResults && !ai.loading && (
           <Alert className="bg-blue-50 border-blue-200">
             <AlertCircle className="w-4 h-4 text-blue-600" />
             <AlertDescription className="text-blue-800">

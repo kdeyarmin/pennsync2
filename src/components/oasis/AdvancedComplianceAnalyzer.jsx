@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Shield, AlertTriangle, Loader2, TrendingUp, FileText, CheckCircle2, BookOpen } from "lucide-react";
 
 export default function AdvancedComplianceAnalyzer({ analysisResults, pdgmData, patientId }) {
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const ai = useAICall();
   const [complianceReport, setComplianceReport] = useState(null);
   const [autoAnalyze, setAutoAnalyze] = useState(false);
 
@@ -36,7 +36,6 @@ export default function AdvancedComplianceAnalyzer({ analysisResults, pdgmData, 
   const analyzeCompliance = useCallback(async () => {
     if (!analysisResults || !pdgmData) return;
 
-    setIsAnalyzing(true);
     try {
       // Calculate historical compliance metrics
       const historicalMetrics = {
@@ -73,7 +72,7 @@ export default function AdvancedComplianceAnalyzer({ analysisResults, pdgmData, 
         }));
 
       // Advanced AI analysis with regulatory knowledge
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `You are an expert OASIS compliance auditor with deep knowledge of CMS regulations, Medicare Conditions of Participation (CoPs), and OASIS-E guidance.
 
 CURRENT OASIS ASSESSMENT DATA:
@@ -226,16 +225,15 @@ DELIVER A COMPREHENSIVE COMPLIANCE RISK REPORT.`,
       console.error("Advanced compliance analysis error:", error);
       setComplianceReport({ error: "Failed to generate advanced compliance analysis. Please try again." });
     }
-    setIsAnalyzing(false);
   }, [analysisResults, pdgmData, historicalOASIS, historicalAudits]);
 
   // Auto-analyze when data is available
   useEffect(() => {
-    if (analysisResults && !complianceReport && !isAnalyzing && !autoAnalyze && historicalOASIS.length >= 0) {
+    if (analysisResults && !complianceReport && !ai.loading && !autoAnalyze && historicalOASIS.length >= 0) {
       setAutoAnalyze(true);
       analyzeCompliance();
     }
-  }, [analysisResults, historicalOASIS, complianceReport, isAnalyzing, autoAnalyze, analyzeCompliance]);
+  }, [analysisResults, historicalOASIS, complianceReport, ai.loading, autoAnalyze, analyzeCompliance]);
 
   const getSeverityColor = (severity) => {
     switch (severity) {
@@ -271,10 +269,10 @@ DELIVER A COMPREHENSIVE COMPLIANCE RISK REPORT.`,
           </CardTitle>
           <Button
             onClick={analyzeCompliance}
-            disabled={isAnalyzing}
+            disabled={ai.loading}
             className="bg-red-600 hover:bg-red-700"
           >
-            {isAnalyzing ? (
+            {ai.loading ? (
               <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Analyzing...</>
             ) : (
               <><Shield className="w-4 h-4 mr-2" /> {complianceReport ? 'Refresh Analysis' : 'Generate Report'}</>
@@ -716,7 +714,7 @@ DELIVER A COMPREHENSIVE COMPLIANCE RISK REPORT.`,
         </CardContent>
       )}
 
-      {!complianceReport && !isAnalyzing && (
+      {!complianceReport && !ai.loading && (
         <CardContent className="py-8 text-center">
           <Shield className="w-16 h-16 text-slate-300 mx-auto mb-4" />
           <p className="text-slate-600 mb-4">Click "Generate Report" to perform advanced compliance analysis</p>

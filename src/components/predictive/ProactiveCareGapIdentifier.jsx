@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -33,14 +33,13 @@ export default function ProactiveCareGapIdentifier({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
   });
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const ai = useAICall();
   const [identifiedGaps, setIdentifiedGaps] = useState(null);
   const [_selectedPatients, _setSelectedPatients] = useState([]);
 
   const analyzeForGaps = useCallback(async () => {
     if (!patients || patients.length === 0) return;
 
-    setIsAnalyzing(true);
     try {
       // Analyze high-risk patients (active, with visits/care plans)
       const patientsToAnalyze = patients
@@ -81,7 +80,7 @@ export default function ProactiveCareGapIdentifier({
       });
 
       // Use AI to identify care gaps
-      const gapAnalysis = await invokeLLM({
+      const gapAnalysis = await ai.run({
         prompt: `You are an expert home health clinical analyst. Analyze these patient profiles to proactively identify potential care gaps, missed opportunities, and risks before they become problems.
 
 PATIENT PROFILES:
@@ -152,7 +151,6 @@ Return structured JSON with prioritized gaps.`,
     } catch (error) {
       console.error('Error analyzing care gaps:', error);
     }
-    setIsAnalyzing(false);
   }, [patients, visits, carePlans, alerts, maxGaps]);
 
   useEffect(() => {
@@ -214,10 +212,10 @@ Return structured JSON with prioritized gaps.`,
         <CardContent className="p-4">
           <Button 
             onClick={analyzeForGaps} 
-            disabled={isAnalyzing}
+            disabled={ai.loading}
             className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
           >
-            {isAnalyzing ? (
+            {ai.loading ? (
               <><div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" /> Analyzing...</>
             ) : (
               <><Brain className="w-4 h-4 mr-2" /> Scan for Care Gaps</>
@@ -245,7 +243,7 @@ Return structured JSON with prioritized gaps.`,
               )}
             </div>
           </div>
-          {!isAnalyzing && (
+          {!ai.loading && (
             <Button 
               onClick={analyzeForGaps} 
               size="sm"
@@ -259,7 +257,7 @@ Return structured JSON with prioritized gaps.`,
         </CardTitle>
       </CardHeader>
       <CardContent className="p-4">
-        {isAnalyzing ? (
+        {ai.loading ? (
           <div className="text-center py-8">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4" />
             <p className="text-sm text-slate-600">Analyzing patient data for potential care gaps...</p>

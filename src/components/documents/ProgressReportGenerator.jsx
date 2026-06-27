@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,7 +18,7 @@ export default function ProgressReportGenerator({ patientId, patient }) {
   const [recipient, setRecipient] = useState("");
   const [additionalNotes, setAdditionalNotes] = useState("");
   const [generatedReport, setGeneratedReport] = useState("");
-  const [isGenerating, setIsGenerating] = useState(false);
+  const ai = useAICall();
   const [additionalContext, setAdditionalContext] = useState("");
 
   const { data: visits = [] } = useQuery({
@@ -43,7 +43,6 @@ export default function ProgressReportGenerator({ patientId, patient }) {
   });
 
   const generateReport = async () => {
-    setIsGenerating(true);
     try {
       const daysAgo = new Date();
       daysAgo.setDate(daysAgo.getDate() - parseInt(reportPeriod));
@@ -55,7 +54,7 @@ export default function ProgressReportGenerator({ patientId, patient }) {
       const firstVisit = periodVisits[periodVisits.length - 1];
       const latestVisit = periodVisits[0];
       
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `Generate a comprehensive progress report for home health services.
 
 REPORT INFORMATION:
@@ -178,7 +177,6 @@ Use professional medical terminology. Be objective and data-driven. Include spec
     } catch (error) {
       console.error("Error generating progress report:", error);
     }
-    setIsGenerating(false);
   };
 
   return (
@@ -269,10 +267,10 @@ Use professional medical terminology. Be objective and data-driven. Include spec
 
             <Button 
               onClick={generateReport} 
-              disabled={isGenerating}
+              disabled={ai.loading}
               className="w-full bg-green-600 hover:bg-green-700"
             >
-              {isGenerating ? (
+              {ai.loading ? (
                 <><div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2" /> Generating...</>
               ) : (
                 <><Sparkles className="w-5 h-5 mr-2" /> Generate Progress Report</>

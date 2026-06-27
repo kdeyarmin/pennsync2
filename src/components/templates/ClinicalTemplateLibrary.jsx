@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -147,7 +147,7 @@ const CONDITION_TEMPLATES = [
 export default function ClinicalTemplateLibrary({ onSelectTemplate, onClose }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTab, setSelectedTab] = useState('visit_types');
-  const [isGenerating, setIsGenerating] = useState(false);
+  const ai = useAICall();
   const [_selectedTemplate, setSelectedTemplate] = useState(null);
 
   const filteredVisitTemplates = VISIT_TYPE_TEMPLATES.filter(t =>
@@ -167,7 +167,6 @@ export default function ClinicalTemplateLibrary({ onSelectTemplate, onClose }) {
     }
     
     setSelectedTemplate({ ...template, type });
-    setIsGenerating(true);
 
     try {
       const generatedContent = await generateTemplateContent(template, type);
@@ -181,7 +180,6 @@ export default function ClinicalTemplateLibrary({ onSelectTemplate, onClose }) {
       toast.error('Failed to generate template. Please try again.');
     }
 
-    setIsGenerating(false);
   }, [onSelectTemplate]);
 
   return (
@@ -215,7 +213,7 @@ export default function ClinicalTemplateLibrary({ onSelectTemplate, onClose }) {
         </div>
 
         {/* Loading State */}
-        {isGenerating && (
+        {ai.loading && (
           <div className="flex items-center justify-center py-8 gap-3">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
             <div className="text-center">
@@ -226,7 +224,7 @@ export default function ClinicalTemplateLibrary({ onSelectTemplate, onClose }) {
         )}
 
         {/* Tabs */}
-        {!isGenerating && (
+        {!ai.loading && (
           <Tabs value={selectedTab} onValueChange={setSelectedTab}>
             <TabsList className="grid w-full grid-cols-2 mb-4">
               <TabsTrigger value="visit_types">Visit Types</TabsTrigger>
@@ -296,7 +294,7 @@ async function generateTemplateContent(template, type) {
     ? generateVisitTypePrompt(template)
     : generateConditionPrompt(template);
 
-  const result = await invokeLLM({
+  const result = await ai.run({
     prompt,
     response_json_schema: {
       type: "object",

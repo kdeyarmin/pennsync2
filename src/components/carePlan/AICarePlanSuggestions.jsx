@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -20,7 +20,7 @@ import { toast } from 'sonner';
 
 export default function AICarePlanSuggestions({ patient, existingCarePlans, onAddCarePlan }) {
   const [suggestions, setSuggestions] = useState(null);
-  const [isGenerating, setIsGenerating] = useState(false);
+  const ai = useAICall();
   const [addedSuggestions, setAddedSuggestions] = useState([]);
 
   const { data: visits } = useQuery({
@@ -40,7 +40,6 @@ export default function AICarePlanSuggestions({ patient, existingCarePlans, onAd
   const generateSuggestions = async () => {
     if (!patient) return;
     
-    setIsGenerating(true);
     try {
       const recentVisits = visits.slice(0, 5);
       const recentNotes = recentVisits
@@ -94,7 +93,7 @@ Return JSON:
   "quality_measure_opportunities": ["Specific quality improvements possible"]
 }`;
 
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt,
         response_json_schema: {
           type: "object",
@@ -125,7 +124,6 @@ Return JSON:
       console.error('Error generating suggestions:', error);
       toast.error('Failed to generate suggestions. Please try again.');
     }
-    setIsGenerating(false);
   };
 
   const handleAddSuggestion = (suggestion, index) => {
@@ -165,11 +163,11 @@ Return JSON:
           </CardTitle>
           <Button
             onClick={generateSuggestions}
-            disabled={isGenerating}
+            disabled={ai.loading}
             size="sm"
             className="bg-navy-600 hover:bg-navy-700"
           >
-            {isGenerating ? (
+            {ai.loading ? (
               <>
                 <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
                 Analyzing...
@@ -184,7 +182,7 @@ Return JSON:
         </div>
       </CardHeader>
       <CardContent className="pt-4">
-        {!suggestions && !isGenerating && (
+        {!suggestions && !ai.loading && (
           <div className="text-center py-6 text-slate-500">
             <Target className="w-10 h-10 text-slate-300 mx-auto mb-2" />
             <p className="text-sm">Click to analyze patient data and generate care plan suggestions</p>

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -18,14 +18,13 @@ import {
 
 export default function AIHealthInsights({ patientId, patient, visits, carePlans, alerts, oasisData }) {
   const [insights, setInsights] = useState(null);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const ai = useAICall();
 
   const generateInsights = useCallback(async () => {
-    setIsAnalyzing(true);
     try {
       const completedVisits = visits.filter(v => v.status === 'completed').slice(0, 10);
       
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `You are a clinical AI analyst specializing in home health patient care. Analyze this patient's health trends and provide actionable insights.
 
 PATIENT INFORMATION:
@@ -150,7 +149,6 @@ Provide comprehensive health trend analysis:
     } catch (error) {
       console.error("Error generating health insights:", error);
     }
-    setIsAnalyzing(false);
   }, [visits, patient, carePlans, alerts, oasisData]);
 
   useEffect(() => {
@@ -188,11 +186,11 @@ Provide comprehensive health trend analysis:
           </CardTitle>
           <Button
             onClick={generateInsights}
-            disabled={isAnalyzing}
+            disabled={ai.loading}
             size="sm"
             className="bg-navy-600 hover:bg-navy-700"
           >
-            {isAnalyzing ? (
+            {ai.loading ? (
               <><RefreshCw className="w-4 h-4 mr-2 animate-spin" /> Analyzing...</>
             ) : (
               <><Sparkles className="w-4 h-4 mr-2" /> Refresh Insights</>
@@ -202,7 +200,7 @@ Provide comprehensive health trend analysis:
       </CardHeader>
 
       <CardContent>
-        {isAnalyzing ? (
+        {ai.loading ? (
           <div className="text-center py-12">
             <Brain className="w-12 h-12 text-navy-400 mx-auto mb-4 animate-pulse" />
             <p className="text-slate-600">AI analyzing patient health trends...</p>

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -34,14 +34,13 @@ export default function AISmartOASISAssistant({
   autoAnalyze = true
 }) {
   const [suggestions, setSuggestions] = useState(null);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const ai = useAICall();
   const [appliedItems, setAppliedItems] = useState(new Set());
   const [feedbackGiven, setFeedbackGiven] = useState(new Set());
 
   const analyzePatientData = React.useCallback(async () => {
     if (!patientData) return;
 
-    setIsAnalyzing(true);
     try {
       const contextData = {
         patient: {
@@ -73,7 +72,7 @@ export default function AISmartOASISAssistant({
         recent_visit: visitData
       };
 
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `You are an expert home health OASIS-E assessment specialist with deep knowledge of CMS documentation and Medicare compliance requirements.
 
 **PRIMARY OBJECTIVE: Produce clinically accurate, fully compliant OASIS-E documentation that reflects the patient's true condition.**
@@ -455,7 +454,6 @@ Patient Data: ${JSON.stringify(contextData)}`,
       console.error('Error analyzing patient data:', error);
       toast.error('Failed to generate OASIS suggestions. Please try again.');
     }
-    setIsAnalyzing(false);
   }, [patientData, referralData, visitData]);
 
   React.useEffect(() => {
@@ -542,11 +540,11 @@ Patient Data: ${JSON.stringify(contextData)}`,
             <div className="text-center py-8">
               <Button
                 onClick={analyzePatientData}
-                disabled={isAnalyzing}
+                disabled={ai.loading}
                 className="bg-navy-600 hover:bg-navy-700"
                 size="lg"
               >
-                {isAnalyzing ? (
+                {ai.loading ? (
                   <>
                     <RefreshCw className="w-5 h-5 mr-2 animate-spin" />
                     Analyzing Patient Data...

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -51,7 +51,7 @@ export default function AIStaffPerformanceAnalytics({ timeRange: initialTimeRang
   // and discarded the choice. The query keys, cutoffDate, and prompt all key off
   // this; the Analyze / Refresh buttons re-run the analysis with the new value.
   const [timeRange, setTimeRange] = useState(initialTimeRange);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const ai = useAICall();
   const [selectedNurse, setSelectedNurse] = useState("all");
   const [performanceData, setPerformanceData] = useState(null);
 
@@ -92,7 +92,6 @@ export default function AIStaffPerformanceAnalytics({ timeRange: initialTimeRang
   });
 
   const analyzePerformance = useCallback(async () => {
-    setIsAnalyzing(true);
     try {
       const cutoffDate = subDays(new Date(), timeRange);
       
@@ -184,7 +183,7 @@ export default function AIStaffPerformanceAnalytics({ timeRange: initialTimeRang
         }
       });
 
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `You are an AI workforce analytics specialist for home health nursing. Analyze comprehensive staff performance data to provide actionable insights.
 
 TIME RANGE: Last ${timeRange} days
@@ -343,7 +342,6 @@ Return detailed analysis suitable for management dashboard.`,
       console.error('Error analyzing performance:', error);
       toast.error('Failed to analyze performance. Please try again.');
     }
-    setIsAnalyzing(false);
   }, [audits, recommendations, selectedNurse, timeRange, trainingCompletions, visits]);
 
   useEffect(() => {
@@ -370,7 +368,7 @@ Return detailed analysis suitable for management dashboard.`,
 
   const nurses = users.filter(u => u.role === 'user');
 
-  if (isAnalyzing) {
+  if (ai.loading) {
     return (
       <Card className="border-2 border-navy-300">
         <CardContent className="p-8 text-center">

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,7 +28,7 @@ export default function OASISAutomationEngine({
   onTasksCreated,
   autoExecute = true 
 }) {
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const ai = useAICall();
   const [suggestedActions, setSuggestedActions] = useState([]);
   const [selectedActions, setSelectedActions] = useState([]);
   const [isExpanded, setIsExpanded] = useState(true);
@@ -50,7 +50,6 @@ export default function OASISAutomationEngine({
   });
 
   const analyzeAndGenerateActions = useCallback(async () => {
-    setIsAnalyzing(true);
     
     try {
       // Simplified analysis - extract key issues only
@@ -76,7 +75,7 @@ ${JSON.stringify(automationRules.slice(0, 5), null, 2)}
 
 Generate actionable tasks. Each task must have: title, description, priority (high/medium/low), type, due_in_days (number), reason, impact_category.`;
 
-      const aiSuggestions = await invokeLLM({
+      const aiSuggestions = await ai.run({
         prompt,
         response_json_schema: {
           type: "object",
@@ -119,7 +118,6 @@ Generate actionable tasks. Each task must have: title, description, priority (hi
       setSuggestedActions([]);
     }
 
-    setIsAnalyzing(false);
   }, [analysisResults, automationRules]);
 
   // Analyze results and generate actions
@@ -188,7 +186,7 @@ Generate actionable tasks. Each task must have: title, description, priority (hi
 
   if (!analysisResults) return null;
 
-  if (isAnalyzing) {
+  if (ai.loading) {
     return (
       <Card className="border-2 border-navy-300 bg-gradient-to-br from-navy-50 to-indigo-50">
         <CardContent className="p-6 text-center">

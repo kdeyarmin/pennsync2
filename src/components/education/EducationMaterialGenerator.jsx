@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,7 +34,7 @@ export default function EducationMaterialGenerator({ patient, teachBackHistory =
   const [readingLevel, setReadingLevel] = useState("simple");
   const [language, setLanguage] = useState("english");
   const [culturalBackground, setCulturalBackground] = useState("not_specified");
-  const [isGenerating, setIsGenerating] = useState(false);
+  const ai = useAICall();
   const [generatedContent, setGeneratedContent] = useState(null);
   const [copied, setCopied] = useState(false);
   const [learningProfile, setLearningProfile] = useState(null);
@@ -110,7 +110,6 @@ export default function EducationMaterialGenerator({ patient, teachBackHistory =
       return;
     }
 
-    setIsGenerating(true);
     try {
       // Build personalization context
       let personalizationContext = '';
@@ -137,7 +136,7 @@ CULTURAL CONSIDERATIONS (${culturalBackground.replace(/_/g, ' ')}):
 `;
       }
 
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `You are a patient education specialist creating PERSONALIZED, easy-to-understand health education materials for home health and hospice patients.
 
 TOPIC: ${topic}
@@ -226,7 +225,6 @@ Return JSON:
       console.error("Error generating material:", error);
       toast.error("Error generating material. Please try again.");
     }
-    setIsGenerating(false);
   };
 
   const handleCopy = () => {
@@ -322,10 +320,10 @@ Return JSON:
               />
               <Button
                 onClick={generateMaterial}
-                disabled={isGenerating}
+                disabled={ai.loading}
                 className="bg-blue-600 hover:bg-blue-700"
               >
-                {isGenerating ? (
+                {ai.loading ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
                   <Search className="w-4 h-4" />

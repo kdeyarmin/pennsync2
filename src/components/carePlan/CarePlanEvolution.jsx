@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -31,7 +31,7 @@ export default function CarePlanEvolution({
   onCarePlanUpdated 
 }) {
   const queryClient = useQueryClient();
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const ai = useAICall();
   const [recommendations, setRecommendations] = useState(null);
   const [selectedUpdates, setSelectedUpdates] = useState([]);
   const [isApplying, setIsApplying] = useState(false);
@@ -43,7 +43,6 @@ export default function CarePlanEvolution({
       return;
     }
 
-    setIsAnalyzing(true);
     
     try {
       // Prepare care plan data with visit progress
@@ -81,7 +80,7 @@ export default function CarePlanEvolution({
         };
       });
 
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `You are a clinical care plan optimization AI. Analyze these active care plans and patient progress to recommend updates.
 
 PATIENT: ${patientName}
@@ -182,7 +181,6 @@ Return JSON:
       console.error("Error analyzing care plans:", error);
     }
     
-    setIsAnalyzing(false);
   };
 
   const applySelectedUpdates = async () => {
@@ -311,10 +309,10 @@ Return JSON:
               </p>
               <Button 
                 onClick={analyzeCarePlanProgress}
-                disabled={isAnalyzing}
+                disabled={ai.loading}
                 className="bg-indigo-600 hover:bg-indigo-700"
               >
-                {isAnalyzing ? (
+                {ai.loading ? (
                   <>
                     <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
                     Analyzing Progress...
@@ -477,9 +475,9 @@ Return JSON:
                 <Button
                   variant="ghost"
                   onClick={analyzeCarePlanProgress}
-                  disabled={isAnalyzing}
+                  disabled={ai.loading}
                 >
-                  <RefreshCw className={`w-4 h-4 ${isAnalyzing ? 'animate-spin' : ''}`} />
+                  <RefreshCw className={`w-4 h-4 ${ai.loading ? 'animate-spin' : ''}`} />
                 </Button>
               </div>
             </>

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -20,7 +20,7 @@ import {
 import { toast } from 'sonner';
 
 export default function AIProactiveOASISAssistant({ patientId, autoAnalyze = false }) {
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const ai = useAICall();
   const [analysis, setAnalysis] = useState(null);
   const queryClient = useQueryClient();
 
@@ -76,7 +76,6 @@ export default function AIProactiveOASISAssistant({ patientId, autoAnalyze = fal
   const performOASISAnalysis = React.useCallback(async () => {
     if (!patient) return;
 
-    setIsAnalyzing(true);
     try {
       const patientData = {
         demographics: {
@@ -112,7 +111,7 @@ export default function AIProactiveOASISAssistant({ patientId, autoAnalyze = fal
         existingOASIS: existingOASIS.length > 0
       };
 
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `You are an expert OASIS documentation specialist with deep knowledge of CMS home health regulations and PDGM requirements.
 
 **CRITICAL TASK:** Analyze this patient's data to identify OASIS documentation gaps and generate a preliminary OASIS assessment.
@@ -248,14 +247,13 @@ Provide detailed, actionable recommendations that a home health nurse can immedi
       console.error('Error performing OASIS analysis:', error);
       toast.error('Failed to perform OASIS analysis. Please try again.');
     }
-    setIsAnalyzing(false);
   }, [patient, visits, incidents, carePlans, existingOASIS, patientId, queryClient, calculateAge]);
 
   React.useEffect(() => {
-    if (autoAnalyze && patient && !analysis && !isAnalyzing) {
+    if (autoAnalyze && patient && !analysis && !ai.loading) {
       performOASISAnalysis();
     }
-  }, [autoAnalyze, patient, analysis, isAnalyzing, performOASISAnalysis]);
+  }, [autoAnalyze, patient, analysis, ai.loading, performOASISAnalysis]);
 
   const getRiskColor = (level) => {
     switch (level) {
@@ -287,11 +285,11 @@ Provide detailed, actionable recommendations that a home health nurse can immedi
             </CardTitle>
             <Button
               onClick={performOASISAnalysis}
-              disabled={isAnalyzing || !patient}
+              disabled={ai.loading || !patient}
               size="sm"
               className="bg-blue-600 hover:bg-blue-700"
             >
-              {isAnalyzing ? (
+              {ai.loading ? (
                 <>
                   <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
                   Analyzing...
@@ -306,7 +304,7 @@ Provide detailed, actionable recommendations that a home health nurse can immedi
           </div>
         </CardHeader>
         <CardContent>
-          {isAnalyzing && (
+          {ai.loading && (
             <Alert className="bg-blue-50 border-blue-200">
               <Brain className="w-4 h-4 text-blue-600 animate-pulse" />
               <AlertDescription className="text-blue-900">
@@ -315,7 +313,7 @@ Provide detailed, actionable recommendations that a home health nurse can immedi
             </Alert>
           )}
 
-          {!isAnalyzing && !analysis && (
+          {!ai.loading && !analysis && (
             <Alert className="bg-blue-50 border-blue-200">
               <ClipboardList className="w-4 h-4 text-blue-600" />
               <AlertDescription className="text-blue-900">

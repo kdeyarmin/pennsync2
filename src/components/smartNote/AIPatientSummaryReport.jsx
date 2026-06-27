@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -30,14 +30,13 @@ export default function AIPatientSummaryReport({
   compact = false
 }) {
   const [summary, setSummary] = useState(null);
-  const [isGenerating, setIsGenerating] = useState(false);
+  const ai = useAICall();
   const [copied, setCopied] = useState(false);
   const [isExpanded, setIsExpanded] = useState(!compact);
 
   const generateSummary = async () => {
     if (!patient) return;
 
-    setIsGenerating(true);
     try {
       const activeCarePlans = carePlans.filter(cp => cp.status === 'active');
       const recentVisits = previousVisits.slice(0, 5);
@@ -51,7 +50,7 @@ export default function AIPatientSummaryReport({
         notes: v.nurse_notes?.substring(0, 300)
       }));
 
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `Generate a concise clinical summary report for this patient. This will be used by nurses for quick context before/during visits.
 
 PATIENT INFORMATION:
@@ -126,7 +125,6 @@ Return JSON:
     } catch (error) {
       console.error("Error generating summary:", error);
     }
-    setIsGenerating(false);
   };
 
   const handleCopy = () => {
@@ -202,11 +200,11 @@ Return JSON:
         {!summary ? (
           <Button
             onClick={generateSummary}
-            disabled={isGenerating}
+            disabled={ai.loading}
             className="w-full bg-indigo-600 hover:bg-indigo-700"
             size="sm"
           >
-            {isGenerating ? (
+            {ai.loading ? (
               <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Generating Summary...</>
             ) : (
               <><FileText className="w-4 h-4 mr-2" /> Generate Patient Summary</>
@@ -322,9 +320,9 @@ Return JSON:
               variant="ghost"
               className="w-full text-xs"
               onClick={generateSummary}
-              disabled={isGenerating}
+              disabled={ai.loading}
             >
-              {isGenerating ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Sparkles className="w-3 h-3 mr-1" />}
+              {ai.loading ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Sparkles className="w-3 h-3 mr-1" />}
               Refresh Summary
             </Button>
           </div>

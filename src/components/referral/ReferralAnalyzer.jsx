@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -17,16 +17,15 @@ import { toast } from 'sonner';
 
 export default function ReferralAnalyzer({ referralData, onAnalysisComplete }) {
   const [analysis, setAnalysis] = useState(null);
-  const [_isAnalyzing, setIsAnalyzing] = useState(false);
+  const ai = useAICall();
   const [analysisError, setAnalysisError] = useState(false);
 
   const analyzeReferral = useCallback(async () => {
     if (!referralData) return;
 
-    setIsAnalyzing(true);
     setAnalysisError(false);
     try {
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `You are an expert home health intake coordinator. Analyze this patient referral and provide:
 
 1. MISSING INFORMATION ANALYSIS:
@@ -153,7 +152,6 @@ Referral Data: ${JSON.stringify(referralData)}`,
       setAnalysisError(true);
       toast.error('Failed to analyze referral. Please try again.');
     }
-    setIsAnalyzing(false);
   }, [referralData, onAnalysisComplete]);
 
   useEffect(() => {

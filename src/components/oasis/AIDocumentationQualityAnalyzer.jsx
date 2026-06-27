@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -72,7 +72,7 @@ const EXAMPLE_NARRATIVES = {
 };
 
 export default function AIDocumentationQualityAnalyzer({ analysisResults, pdgmData }) {
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const ai = useAICall();
   const [qualityAnalysis, setQualityAnalysis] = useState(null);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState("analysis");
@@ -81,7 +81,6 @@ export default function AIDocumentationQualityAnalyzer({ analysisResults, pdgmDa
   const runQualityAnalysis = useCallback(async () => {
     if (!analysisResults) return;
 
-    setIsAnalyzing(true);
     setError(null);
 
     try {
@@ -99,7 +98,7 @@ export default function AIDocumentationQualityAnalyzer({ analysisResults, pdgmDa
         compliance_score: analysisResults.compliance_score
       };
 
-      const response = await invokeLLM({
+      const response = await ai.run({
         prompt: `You are an expert OASIS documentation reviewer and home health compliance specialist. Analyze the following OASIS assessment data for documentation quality, focusing on narrative clarity, completeness, and consistency with coded data.
 
 OASIS DATA CONTEXT:
@@ -204,15 +203,14 @@ Return JSON:
       setError("Failed to analyze documentation quality. Please try again.");
     }
 
-    setIsAnalyzing(false);
   }, [analysisResults, pdgmData]);
 
   // Auto-analyze when results are available
   useEffect(() => {
-    if (analysisResults && !qualityAnalysis && !isAnalyzing) {
+    if (analysisResults && !qualityAnalysis && !ai.loading) {
       runQualityAnalysis();
     }
-  }, [analysisResults, qualityAnalysis, isAnalyzing, runQualityAnalysis]);
+  }, [analysisResults, qualityAnalysis, ai.loading, runQualityAnalysis]);
 
   const copyToClipboard = (text, exampleKey) => {
     navigator.clipboard.writeText(text);
@@ -270,7 +268,7 @@ Return JSON:
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4 pt-4">
-        {isAnalyzing ? (
+        {ai.loading ? (
           <div className="text-center py-8">
             <Loader2 className="w-8 h-8 animate-spin text-indigo-600 mx-auto mb-3" />
             <p className="text-sm text-slate-600">Analyzing documentation quality...</p>
@@ -654,10 +652,10 @@ Return JSON:
             variant="outline" 
             size="sm" 
             onClick={runQualityAnalysis}
-            disabled={isAnalyzing}
+            disabled={ai.loading}
             className="w-full"
           >
-            {isAnalyzing ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Brain className="w-4 h-4 mr-1" />}
+            {ai.loading ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Brain className="w-4 h-4 mr-1" />}
             Re-analyze Documentation Quality
           </Button>
         )}

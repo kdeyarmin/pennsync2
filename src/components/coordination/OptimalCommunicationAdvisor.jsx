@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -21,18 +21,17 @@ export default function OptimalCommunicationAdvisor({
   upcomingVisits,
   outreachPurpose
 }) {
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const ai = useAICall();
   const [recommendation, setRecommendation] = useState(null);
 
   const analyzeCommunicationStrategy = async () => {
     if (!patientData) return;
 
-    setIsAnalyzing(true);
     try {
       const lastVisit = recentVisits?.[0];
       const nextVisit = upcomingVisits?.[0];
 
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `You are a patient communication expert. Recommend optimal communication strategy for patient outreach.
 
 PATIENT PROFILE:
@@ -89,7 +88,6 @@ Consider patient preferences, accessibility needs, and likelihood of successful 
       console.error('Communication analysis error:', error);
       setRecommendation({ error: error.message });
     }
-    setIsAnalyzing(false);
   };
 
   const getChannelIcon = (channel) => {
@@ -115,7 +113,7 @@ Consider patient preferences, accessibility needs, and likelihood of successful 
           </AlertDescription>
         </Alert>
 
-        {!recommendation && !isAnalyzing && (
+        {!recommendation && !ai.loading && (
           <Button
             onClick={analyzeCommunicationStrategy}
             className="w-full bg-navy-600 hover:bg-navy-700"
@@ -125,7 +123,7 @@ Consider patient preferences, accessibility needs, and likelihood of successful 
           </Button>
         )}
 
-        {isAnalyzing && (
+        {ai.loading && (
           <div className="text-center py-6">
             <Loader2 className="w-8 h-8 text-navy-600 animate-spin mx-auto mb-2" />
             <p className="text-sm text-slate-600">Analyzing optimal outreach strategy...</p>

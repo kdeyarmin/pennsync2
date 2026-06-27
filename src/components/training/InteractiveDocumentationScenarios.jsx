@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -112,7 +112,7 @@ export default function InteractiveDocumentationScenarios({ nurseEmail, _recomme
   const [selectedScenario, setSelectedScenario] = useState(null);
   const [userResponse, setUserResponse] = useState("");
   const [feedback, setFeedback] = useState(null);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const ai = useAICall();
   const [showHint, setShowHint] = useState(false);
 
   // Auto-select scenario if provided
@@ -144,7 +144,6 @@ export default function InteractiveDocumentationScenarios({ nurseEmail, _recomme
   const handleSubmitResponse = async () => {
     if (!userResponse.trim() || !selectedScenario) return;
 
-    setIsAnalyzing(true);
     try {
       const prompt = `You are an expert nursing documentation reviewer. Analyze this nurse's documentation for a practice scenario.
 
@@ -169,7 +168,7 @@ Provide detailed feedback in JSON format:
   "passed": boolean (true if score >= 70)
 }`;
 
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt,
         response_json_schema: {
           type: "object",
@@ -207,7 +206,6 @@ Provide detailed feedback in JSON format:
     } catch (error) {
       console.error("Error analyzing response:", error);
     }
-    setIsAnalyzing(false);
   };
 
   const handleReset = () => {
@@ -312,10 +310,10 @@ Provide detailed feedback in JSON format:
             <div className="flex gap-2">
               <Button 
                 onClick={handleSubmitResponse}
-                disabled={!userResponse.trim() || isAnalyzing}
+                disabled={!userResponse.trim() || ai.loading}
                 className="bg-indigo-600 hover:bg-indigo-700"
               >
-                {isAnalyzing ? (
+                {ai.loading ? (
                   <>
                     <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
                     Analyzing...

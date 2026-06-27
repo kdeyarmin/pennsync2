@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -60,15 +60,14 @@ const trainingTopics = {
 export default function AITrainingContentGenerator({ onContentGenerated, _nurseEmail }) {
   const [selectedCategory, setSelectedCategory] = useState("documentation");
   const [selectedTopic, setSelectedTopic] = useState(null);
-  const [isGenerating, setIsGenerating] = useState(false);
+  const ai = useAICall();
   const [generatedContent, setGeneratedContent] = useState(null);
 
   const generateTrainingContent = async (topic) => {
-    setIsGenerating(true);
     setSelectedTopic(topic);
     
     try {
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `Generate comprehensive training content for home health nurses on: "${topic}"
 
 Category: ${trainingTopics[selectedCategory].label}
@@ -139,7 +138,6 @@ Use professional but accessible language.`,
     } catch (error) {
       console.error("Error generating training content:", error);
     }
-    setIsGenerating(false);
   };
 
   const category = trainingTopics[selectedCategory];
@@ -191,7 +189,7 @@ Use professional but accessible language.`,
       </Tabs>
 
       {/* Loading State */}
-      {isGenerating && (
+      {ai.loading && (
         <Card className="border-2 border-blue-200 bg-blue-50">
           <CardContent className="p-8 text-center">
             <Loader2 className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-3" />
@@ -202,7 +200,7 @@ Use professional but accessible language.`,
       )}
 
       {/* Generated Content Display */}
-      {generatedContent && !isGenerating && (
+      {generatedContent && !ai.loading && (
         <Card className="border-2 border-green-200">
           <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50">
             <CardTitle className="flex items-center justify-between">

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -18,7 +18,7 @@ import {
 
 export default function PredictiveHealthAnalytics({ patientId, patient, visits, carePlans, alerts, incidents }) {
   const [analysis, setAnalysis] = useState(null);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const ai = useAICall();
   const [expanded, setExpanded] = useState(false);
 
   const analyzeVitalTrends = useCallback((visits) => {
@@ -42,13 +42,12 @@ export default function PredictiveHealthAnalytics({ patientId, patient, visits, 
   }, []);
 
   const analyzePredictiveRisks = useCallback(async () => {
-    setIsAnalyzing(true);
     try {
       // Analyze vital trends
       const recentVisits = visits.filter(v => v.status === 'completed').slice(0, 10);
       const vitalTrends = analyzeVitalTrends(recentVisits);
       
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `You are a clinical analytics AI specializing in home health predictive modeling. Analyze this patient's data and predict health risks.
 
 PATIENT PROFILE:
@@ -189,7 +188,6 @@ Return detailed clinical analysis with specific evidence from the data.`,
     } catch (error) {
       console.error("Error analyzing predictive risks:", error);
     }
-    setIsAnalyzing(false);
   }, [visits, patient, carePlans, alerts, incidents, analyzeVitalTrends]);
 
   useEffect(() => {
@@ -226,7 +224,7 @@ Return detailed clinical analysis with specific evidence from the data.`,
     }
   };
 
-  if (isAnalyzing) {
+  if (ai.loading) {
     return (
       <Card className="border-2 border-navy-200">
         <CardContent className="p-8 text-center">

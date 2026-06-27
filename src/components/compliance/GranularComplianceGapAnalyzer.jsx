@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -22,7 +22,7 @@ export default function GranularComplianceGapAnalyzer({
   dateRange = 30 
 }) {
   const [gapAnalysis, setGapAnalysis] = useState(null);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const ai = useAICall();
   const [expandedGaps, setExpandedGaps] = useState({});
 
   const analyzeVisitTypeGaps = useCallback(() => {
@@ -73,13 +73,12 @@ export default function GranularComplianceGapAnalyzer({
   }, [visits]);
 
   const analyzeComplianceGaps = useCallback(async () => {
-    setIsAnalyzing(true);
     try {
       // Analyze visit types and missing documentation
       const visitTypeGaps = analyzeVisitTypeGaps();
 
       // AI-driven recommendations
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `You are a compliance analytics AI for home health agencies. Analyze these compliance gaps and provide actionable recommendations.
 
 IDENTIFIED GAPS:
@@ -152,7 +151,6 @@ Provide detailed analysis with:
     } catch (error) {
       console.error("Error analyzing compliance gaps:", error);
     }
-    setIsAnalyzing(false);
   }, [analyzeVisitTypeGaps, complianceAudits]);
 
   useEffect(() => {
@@ -177,7 +175,7 @@ Provide detailed analysis with:
     return colors[severity] || 'bg-slate-100 text-slate-800';
   };
 
-  if (isAnalyzing) {
+  if (ai.loading) {
     return (
       <Card className="border-2 border-orange-200">
         <CardContent className="p-8 text-center">

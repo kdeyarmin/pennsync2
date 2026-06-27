@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -25,7 +25,7 @@ export default function AdvancedComplianceRiskScoring({
   audits = [],
   autoAnalyze = false 
 }) {
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const ai = useAICall();
   const [riskAnalysis, setRiskAnalysis] = useState(null);
 
   const { data: alerts = [] } = useQuery({
@@ -47,7 +47,6 @@ export default function AdvancedComplianceRiskScoring({
   });
 
   const analyzeRisk = useCallback(async () => {
-    setIsAnalyzing(true);
     try {
       // Aggregate data for analysis
       const issuesByCategory = {};
@@ -75,7 +74,7 @@ export default function AdvancedComplianceRiskScoring({
       const criticalAlertsCount = alerts.filter(a => a.severity === 'critical').length;
       const trainingGapsCount = trainingRecommendations.filter(t => !t.addressed).length;
 
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `You are an AI Medicare compliance risk analyst for Pennsylvania home health agencies. Perform advanced risk scoring and predictive analysis.
 
 CURRENT COMPLIANCE DATA (Last ${timeRange} days):
@@ -232,7 +231,6 @@ Return detailed JSON analysis suitable for executive dashboard.`,
       console.error('Error analyzing risk:', error);
       toast.error('Failed to analyze compliance risk. Please try again.');
     }
-    setIsAnalyzing(false);
   }, [alerts, audits, medicareRules, timeRange, trainingRecommendations]);
 
   useEffect(() => {
@@ -254,7 +252,7 @@ Return detailed JSON analysis suitable for executive dashboard.`,
     return <ChevronRight className="w-4 h-4 text-slate-600" />;
   };
 
-  if (isAnalyzing) {
+  if (ai.loading) {
     return (
       <Card className="border-2 border-navy-300">
         <CardContent className="p-8 text-center">

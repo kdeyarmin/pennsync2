@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -26,7 +26,7 @@ export default function CareCoordinationAnalyzer({
   _compact = false 
 }) {
   const queryClient = useQueryClient();
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const ai = useAICall();
   const [alerts, setAlerts] = useState([]);
   const [_expandedAlert, _setExpandedAlert] = useState(null);
   const [customNotes, setCustomNotes] = useState({});
@@ -69,12 +69,11 @@ export default function CareCoordinationAnalyzer({
   const analyzeCoordination = useCallback(async () => {
     if (!patient) return;
 
-    setIsAnalyzing(true);
     try {
       const hospitalizations = incidents.filter(i => i.incident_type === 'hospitalized');
       const recentHospitalization = hospitalizations.length > 0 ? hospitalizations[0] : null;
 
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `You are an AI care coordination specialist for home health. Analyze this patient's data to identify care gaps and provider coordination needs.
 
 PATIENT: ${patient.first_name} ${patient.last_name}
@@ -185,14 +184,13 @@ Return comprehensive analysis with actionable coordination alerts.`,
       console.error('Error analyzing care coordination:', error);
       toast.error('Failed to analyze care coordination. Please try again.');
     }
-    setIsAnalyzing(false);
   }, [patient, incidents, visits, carePlans]);
 
   useEffect(() => {
-    if (autoAnalyze && patientId && patient && !isAnalyzing && alerts.length === 0) {
+    if (autoAnalyze && patientId && patient && !ai.loading && alerts.length === 0) {
       analyzeCoordination();
     }
-  }, [autoAnalyze, patientId, patient, isAnalyzing, alerts.length, analyzeCoordination]);
+  }, [autoAnalyze, patientId, patient, ai.loading, alerts.length, analyzeCoordination]);
 
   const saveAlert = async (alertData) => {
     try {
@@ -252,7 +250,7 @@ Return comprehensive analysis with actionable coordination alerts.`,
     );
   }
 
-  if (isAnalyzing) {
+  if (ai.loading) {
     return (
       <Card className="border-2 border-navy-300">
         <CardContent className="p-8 text-center">
@@ -266,7 +264,7 @@ Return comprehensive analysis with actionable coordination alerts.`,
     );
   }
 
-  if (alerts.length === 0 && !isAnalyzing) {
+  if (alerts.length === 0 && !ai.loading) {
     return (
       <Card className="border-2 border-blue-300">
         <CardHeader>

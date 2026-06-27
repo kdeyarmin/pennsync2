@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -17,7 +17,7 @@ export default function SmartDocumentationAssistant({
   visitType = null,
   identifiedProblems = []
 }) {
-  const [isGenerating, setIsGenerating] = useState(false);
+  const ai = useAICall();
   const [generatedData, setGeneratedData] = useState(null);
   const [appliedSections, setAppliedSections] = useState(new Set());
   const [editingSection, setEditingSection] = useState(null);
@@ -58,7 +58,6 @@ export default function SmartDocumentationAssistant({
   const generateSmartDocumentation = useCallback(async () => {
     if (!patient) return;
 
-    setIsGenerating(true);
     try {
       const context = {
         patient: {
@@ -159,7 +158,7 @@ Patient Context: ${JSON.stringify(context, null, 2)}
 Format as JSON with clear sections`;
       }
 
-      const response = await invokeLLM({
+      const response = await ai.run({
         prompt,
         response_json_schema: {
           type: "object",
@@ -187,8 +186,6 @@ Format as JSON with clear sections`;
       }
     } catch (error) {
       console.error("Smart documentation generation failed:", error);
-    } finally {
-      setIsGenerating(false);
     }
   }, [carePlans, clinicalEvents, documentType, identifiedProblems, onDataGenerated, patient, recentVisits, visitType]);
 
@@ -223,10 +220,10 @@ Format as JSON with clear sections`;
   };
 
   useEffect(() => {
-    if (autoFillEnabled && patient && !generatedData && !isGenerating) {
+    if (autoFillEnabled && patient && !generatedData && !ai.loading) {
       generateSmartDocumentation();
     }
-  }, [patient, autoFillEnabled, generateSmartDocumentation, generatedData, isGenerating]);
+  }, [patient, autoFillEnabled, generateSmartDocumentation, generatedData, ai.loading]);
 
   if (!patient) return null;
 
@@ -250,7 +247,7 @@ Format as JSON with clear sections`;
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3 pt-4">
-        {isGenerating && (
+        {ai.loading && (
           <Alert className="bg-blue-50 border-blue-300">
             <Clock className="w-4 h-4 text-blue-600 animate-spin" />
             <AlertDescription className="text-blue-900">
@@ -260,7 +257,7 @@ Format as JSON with clear sections`;
           </Alert>
         )}
 
-        {!isGenerating && !generatedData && (
+        {!ai.loading && !generatedData && (
           <Button 
             onClick={generateSmartDocumentation}
             className="w-full bg-navy-600 hover:bg-navy-700"

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { safePercent } from "@/lib/safePercent";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -62,7 +62,7 @@ export default function AIComplianceQuizGenerator({ nurseEmail, _recommendations
   const queryClient = useQueryClient();
   const [selectedTopic, setSelectedTopic] = useState(null);
   const [quiz, setQuiz] = useState(null);
-  const [isGenerating, setIsGenerating] = useState(false);
+  const ai = useAICall();
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [userAnswers, setUserAnswers] = useState({});
   const [showResults, setShowResults] = useState(false);
@@ -88,7 +88,6 @@ export default function AIComplianceQuizGenerator({ nurseEmail, _recommendations
   });
 
   const generateQuiz = async (topic) => {
-    setIsGenerating(true);
     try {
       const prompt = `Generate a 5-question multiple choice quiz about ${topic.title} for home health nurses.
 
@@ -115,7 +114,7 @@ Return JSON format:
   ]
 }`;
 
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt,
         response_json_schema: {
           type: "object",
@@ -145,7 +144,6 @@ Return JSON format:
     } catch (error) {
       console.error("Error generating quiz:", error);
     }
-    setIsGenerating(false);
   };
 
   const handleAnswerSelect = (questionIndex, answerIndex) => {
@@ -245,9 +243,9 @@ Return JSON format:
                   <Button 
                     size="sm" 
                     className="w-full"
-                    disabled={isGenerating}
+                    disabled={ai.loading}
                   >
-                    {isGenerating ? (
+                    {ai.loading ? (
                       <>
                         <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
                         Generating...

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -23,7 +23,7 @@ import { createPageUrl } from "@/utils";
 export default function PredictiveRiskScoring({ patients = [], visits = [], carePlans = [], incidents = [], compact = false }) {
   // Object shape: every consumer reads riskScores.risk_assessments / .critical_alerts.
   const [riskScores, setRiskScores] = useState({});
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const ai = useAICall();
   const [lastAnalyzed, setLastAnalyzed] = useState(null);
 
   const calculateVitalTrends = useCallback((visits) => {
@@ -54,7 +54,6 @@ export default function PredictiveRiskScoring({ patients = [], visits = [], care
   const analyzePatientRisks = useCallback(async () => {
     if (patients.length === 0) return;
     
-    setIsAnalyzing(true);
     
     try {
       // Prepare patient data for analysis
@@ -114,7 +113,7 @@ export default function PredictiveRiskScoring({ patients = [], visits = [], care
         };
       });
 
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `You are a clinical risk assessment AI for home health and hospice care. Analyze each patient's data and calculate predictive risk scores.
 
 PATIENT DATA:
@@ -191,7 +190,6 @@ Return JSON array:
       console.error("Error analyzing risks:", error);
     }
 
-    setIsAnalyzing(false);
   }, [patients, visits, carePlans, incidents, calculateVitalTrends]);
 
   useEffect(() => {
@@ -250,15 +248,15 @@ Return JSON array:
               size="sm" 
               variant="ghost" 
               onClick={analyzePatientRisks}
-              disabled={isAnalyzing}
+              disabled={ai.loading}
               className="h-7 px-2"
             >
-              <RefreshCw className={`w-3 h-3 ${isAnalyzing ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`w-3 h-3 ${ai.loading ? 'animate-spin' : ''}`} />
             </Button>
           </div>
         </CardHeader>
         <CardContent className="p-3">
-          {isAnalyzing ? (
+          {ai.loading ? (
             <div className="flex items-center justify-center py-4 text-sm text-slate-500">
               <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
               Analyzing patient risks...
@@ -313,10 +311,10 @@ Return JSON array:
           )}
           <Button 
             onClick={analyzePatientRisks}
-            disabled={isAnalyzing}
+            disabled={ai.loading}
             className="bg-navy-600 hover:bg-navy-700"
           >
-            {isAnalyzing ? (
+            {ai.loading ? (
               <>
                 <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
                 Analyzing...
@@ -416,7 +414,7 @@ Return JSON array:
       )}
 
       {/* Patient Risk Cards */}
-      {isAnalyzing ? (
+      {ai.loading ? (
         <Card>
           <CardContent className="p-12 text-center">
             <RefreshCw className="w-12 h-12 mx-auto mb-4 text-navy-500 animate-spin" />

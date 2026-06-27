@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -26,7 +26,7 @@ export default function PatientAlertAnalyzer({
   onAlertsGenerated,
   autoAnalyze = false 
 }) {
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const ai = useAICall();
   const [analysisProgress, setAnalysisProgress] = useState(0);
   const [generatedAlerts, setGeneratedAlerts] = useState([]);
   const queryClient = useQueryClient();
@@ -124,7 +124,6 @@ export default function PatientAlertAnalyzer({
   const runAnalysis = useCallback(async () => {
     if (!patient) return;
 
-    setIsAnalyzing(true);
     setAnalysisProgress(10);
     setGeneratedAlerts([]);
 
@@ -158,7 +157,7 @@ export default function PatientAlertAnalyzer({
 
       setAnalysisProgress(50);
 
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `You are an AI clinical decision support system for home health/hospice. Analyze this patient's data to identify potential critical events, deteriorations, or risks that require proactive intervention.
 
 PATIENT PROFILE:
@@ -287,7 +286,6 @@ Return JSON:
     } catch (error) {
       console.error("Error analyzing patient:", error);
     }
-    setIsAnalyzing(false);
   }, [patient, recentVisits, incidents, carePlans, patientId, existingAlerts, queryClient, onAlertsGenerated, extractVitalTrends, sendAlertNotifications]);
 
   // Auto-analyze on mount if enabled
@@ -347,10 +345,10 @@ Return JSON:
             size="sm"
             variant="outline"
             onClick={runAnalysis}
-            disabled={isAnalyzing}
+            disabled={ai.loading}
             className="h-7"
           >
-            {isAnalyzing ? (
+            {ai.loading ? (
               <Loader2 className="w-3 h-3 animate-spin" />
             ) : (
               <><RefreshCw className="w-3 h-3 mr-1" /> Analyze</>
@@ -359,7 +357,7 @@ Return JSON:
         </CardTitle>
       </CardHeader>
       <CardContent className="p-4">
-        {isAnalyzing ? (
+        {ai.loading ? (
           <div className="space-y-3">
             <div className="flex items-center gap-2">
               <Loader2 className="w-4 h-4 animate-spin text-orange-600" />
@@ -404,7 +402,7 @@ Return JSON:
             </p>
             <Button
               onClick={runAnalysis}
-              disabled={isAnalyzing || !patient}
+              disabled={ai.loading || !patient}
               className="bg-orange-600 hover:bg-orange-700"
               size="sm"
             >

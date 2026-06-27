@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { safePercent } from "@/lib/safePercent";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -20,7 +20,7 @@ import {
 
 export default function PersonalizedSkillBuilder({ userEmail }) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const ai = useAICall();
   const [skillAnalysis, setSkillAnalysis] = useState(null);
   const [completedModules, setCompletedModules] = useState([]);
 
@@ -40,7 +40,6 @@ export default function PersonalizedSkillBuilder({ userEmail }) {
   }, [userEmail]);
 
   const analyzeDocumentationPatterns = async () => {
-    setIsLoading(true);
     try {
       // Get user's recent documentation scores from localStorage
       let scores = [];
@@ -49,7 +48,7 @@ export default function PersonalizedSkillBuilder({ userEmail }) {
         scores = storedScores ? JSON.parse(storedScores) : [];
       } catch {}
 
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `You are a clinical documentation educator. Analyze this nurse's documentation patterns and suggest personalized skill-building modules.
 
 DOCUMENTATION HISTORY:
@@ -107,7 +106,6 @@ Return JSON:
     } catch (error) {
       console.error("Error analyzing skills:", error);
     }
-    setIsLoading(false);
   };
 
   const markModuleComplete = (moduleTitle) => {
@@ -162,10 +160,10 @@ Return JSON:
               </p>
               <Button
                 onClick={analyzeDocumentationPatterns}
-                disabled={isLoading}
+                disabled={ai.loading}
                 className="bg-navy-600 hover:bg-navy-700"
               >
-                {isLoading ? (
+                {ai.loading ? (
                   <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Analyzing...</>
                 ) : (
                   <><TrendingUp className="w-4 h-4 mr-2" /> Analyze My Skills</>
@@ -266,9 +264,9 @@ Return JSON:
                 variant="outline"
                 className="w-full"
                 onClick={analyzeDocumentationPatterns}
-                disabled={isLoading}
+                disabled={ai.loading}
               >
-                <RefreshCw className={`w-3 h-3 mr-1 ${isLoading ? 'animate-spin' : ''}`} />
+                <RefreshCw className={`w-3 h-3 mr-1 ${ai.loading ? 'animate-spin' : ''}`} />
                 Refresh Recommendations
               </Button>
             </div>

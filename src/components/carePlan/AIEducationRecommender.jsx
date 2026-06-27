@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { base44 } from "@/api/base44Client";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,7 +18,7 @@ import {
 import { format } from "date-fns";
 
 export default function AIEducationRecommender({ patient, carePlans = [], onAssignEducation }) {
-  const [isGenerating, setIsGenerating] = useState(false);
+  const ai = useAICall();
   const [recommendations, setRecommendations] = useState([]);
   const [selectedTopics, setSelectedTopics] = useState({});
   const [isAssigning, setIsAssigning] = useState(false);
@@ -34,12 +34,11 @@ export default function AIEducationRecommender({ patient, carePlans = [], onAssi
   const generateRecommendations = async () => {
     if (!patient) return;
 
-    setIsGenerating(true);
     try {
       const activeCarePlans = carePlans.filter(cp => cp.status === 'active');
       const assignedTopics = existingEducation.map(e => e.topic.toLowerCase());
 
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `You are a patient education specialist. Recommend educational topics for this patient based on their diagnosis and care plan goals.
 
 PATIENT: ${patient.first_name} ${patient.last_name}
@@ -107,7 +106,6 @@ Return JSON:`,
       console.error("Education recommendation error:", error);
       toast.error("Failed to generate recommendations. Please try again.");
     }
-    setIsGenerating(false);
   };
 
   const toggleSelection = (idx) => {
@@ -206,10 +204,10 @@ Return JSON:`,
             </Alert>
             <Button
               onClick={generateRecommendations}
-              disabled={isGenerating || !patient}
+              disabled={ai.loading || !patient}
               className="w-full bg-green-600 hover:bg-green-700"
             >
-              {isGenerating ? (
+              {ai.loading ? (
                 <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Generating...</>
               ) : (
                 <><Sparkles className="w-4 h-4 mr-2" /> Generate Education Topics</>

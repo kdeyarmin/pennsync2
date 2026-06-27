@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -22,14 +22,13 @@ export default function AICarePlanRecommendations({
   existingCarePlans = [],
   onAcceptRecommendation
 }) {
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const ai = useAICall();
   const [recommendations, setRecommendations] = useState(null);
   const [acceptedIds, setAcceptedIds] = useState(new Set());
 
   const analyzeAndRecommend = async () => {
     if (!patient) return;
 
-    setIsAnalyzing(true);
     try {
       // Get recent visits for context
       const recentVisits = visits.slice(0, 5);
@@ -49,7 +48,7 @@ export default function AICarePlanRecommendations({
         created: cp.created_date
       }));
 
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `You are an expert clinical care coordinator analyzing patient data to recommend new care plan goals.
 
 PATIENT PROFILE:
@@ -116,7 +115,6 @@ Return JSON:`,
       console.error("Analysis error:", error);
       toast.error("Failed to generate recommendations. Please try again.");
     }
-    setIsAnalyzing(false);
   };
 
   const handleAcceptRecommendation = async (recommendation, index) => {
@@ -153,10 +151,10 @@ Return JSON:`,
             </Alert>
             <Button
               onClick={analyzeAndRecommend}
-              disabled={isAnalyzing || !patient}
+              disabled={ai.loading || !patient}
               className="w-full bg-navy-600 hover:bg-navy-700"
             >
-              {isAnalyzing ? (
+              {ai.loading ? (
                 <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Analyzing Patient Data...</>
               ) : (
                 <><Sparkles className="w-4 h-4 mr-2" /> Generate Recommendations</>

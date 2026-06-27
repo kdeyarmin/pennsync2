@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -9,12 +9,11 @@ import { toast } from 'sonner';
 
 export default function PatientSummaryGenerator({ patient, visits, carePlans, incidents }) {
   const [summaryFormat, setSummaryFormat] = useState("concise");
-  const [isGenerating, setIsGenerating] = useState(false);
+  const ai = useAICall();
   const [summaries, setSummaries] = useState({});
   const [copied, setCopied] = useState(false);
 
   const generateSummary = async (format) => {
-    setIsGenerating(true);
     setSummaryFormat(format);
 
     try {
@@ -150,7 +149,7 @@ Provide actionable handoff information including:
         };
       }
 
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt,
         response_json_schema: schema
       });
@@ -160,7 +159,6 @@ Provide actionable handoff information including:
       console.error('Summary generation error:', error);
       toast.error('Failed to generate summary. Please try again.');
     }
-    setIsGenerating(false);
   };
 
   const copyToClipboard = async (text) => {
@@ -214,10 +212,10 @@ Provide actionable handoff information including:
               </div>
               <Button
                 onClick={() => generateSummary('concise')}
-                disabled={isGenerating}
+                disabled={ai.loading}
                 size="sm"
               >
-                {isGenerating && summaryFormat === 'concise' ? (
+                {ai.loading && summaryFormat === 'concise' ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                     Generating...
@@ -273,10 +271,10 @@ Provide actionable handoff information including:
               </div>
               <Button
                 onClick={() => generateSummary('detailed')}
-                disabled={isGenerating}
+                disabled={ai.loading}
                 size="sm"
               >
-                {isGenerating && summaryFormat === 'detailed' ? (
+                {ai.loading && summaryFormat === 'detailed' ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                     Generating...
@@ -371,10 +369,10 @@ Provide actionable handoff information including:
               </div>
               <Button
                 onClick={() => generateSummary('handoff')}
-                disabled={isGenerating}
+                disabled={ai.loading}
                 size="sm"
               >
-                {isGenerating && summaryFormat === 'handoff' ? (
+                {ai.loading && summaryFormat === 'handoff' ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                     Generating...

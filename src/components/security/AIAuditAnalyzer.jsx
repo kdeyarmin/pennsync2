@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { base44 } from '@/api/base44Client';
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,7 +10,7 @@ import { AlertTriangle, CheckCircle, Clock, TrendingUp, FileText, Shield } from 
 import { toast } from 'sonner';
 
 export default function AIAuditAnalyzer() {
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const ai = useAICall();
   const [analysisResults, setAnalysisResults] = useState(null);
 
   const { data: user } = useQuery({
@@ -37,7 +37,6 @@ export default function AIAuditAnalyzer() {
   });
 
   const analyzePatterns = async () => {
-    setIsAnalyzing(true);
     try {
       const analysisPrompt = `Analyze the following healthcare documentation and user activity data for suspicious patterns, compliance violations, and security concerns:
 
@@ -64,7 +63,7 @@ For each issue found, provide:
 - Affected users/records
 - Recommended actions`;
 
-      const response = await invokeLLM({
+      const response = await ai.run({
         prompt: analysisPrompt,
         response_json_schema: {
           type: 'object',
@@ -95,8 +94,6 @@ For each issue found, provide:
     } catch (error) {
       console.error('Analysis error:', error);
       toast.error('Failed to analyze audit data');
-    } finally {
-      setIsAnalyzing(false);
     }
   };
 
@@ -146,10 +143,10 @@ For each issue found, provide:
             </div>
             <Button
               onClick={analyzePatterns}
-              disabled={isAnalyzing}
+              disabled={ai.loading}
               className="bg-blue-600 hover:bg-blue-700"
             >
-              {isAnalyzing ? (
+              {ai.loading ? (
                 <>
                   <Clock className="w-4 h-4 mr-2 animate-spin" />
                   Analyzing...

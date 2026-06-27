@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -18,18 +18,16 @@ import { Button } from "@/components/ui/button";
 
 export default function OASISExecutiveSummary({ analysisResults, pdgmData }) {
   const [summary, setSummary] = useState(null);
-  const [isGenerating, setIsGenerating] = useState(false);
+  const ai = useAICall();
   const [isExpanded, setIsExpanded] = useState(true);
 
   useEffect(() => {
-    if (analysisResults && pdgmData && !summary && !isGenerating) {
+    if (analysisResults && pdgmData && !summary && !ai.loading) {
       // Don't auto-generate, let user click button
-      setIsGenerating(false);
     }
-  }, [analysisResults, pdgmData, summary, isGenerating]);
+  }, [analysisResults, pdgmData, summary, ai.loading]);
 
   const generateExecutiveSummary = async () => {
-    setIsGenerating(true);
 
     try {
       // Extract only essential data
@@ -37,7 +35,7 @@ export default function OASISExecutiveSummary({ analysisResults, pdgmData }) {
       const topRevenue = (analysisResults.revenue_tips || []).slice(0, 2).map(r => r.tip || r);
       const _topAccuracy = (analysisResults.accuracy_issues || []).slice(0, 2).map(a => a.issue || a);
 
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `Create executive summary for OASIS assessment.
 
 Scores: Overall ${analysisResults.overall_score}%, Compliance ${analysisResults.compliance_score}%, Revenue ${analysisResults.revenue_optimization_score}%
@@ -95,12 +93,11 @@ Generate: 1 overall assessment sentence, 2-3 critical actions, 2 revenue highlig
       setSummary(null);
     }
 
-    setIsGenerating(false);
   };
 
   if (!analysisResults) return null;
 
-  if (isGenerating) {
+  if (ai.loading) {
     return (
       <Card className="border-2 border-navy-300 bg-gradient-to-r from-navy-50 to-gold-50">
         <CardContent className="p-6 text-center">

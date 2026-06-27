@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -24,7 +24,7 @@ export default function AutomatedTaskGenerator({
   carePlans = [],
   onTasksGenerated
 }) {
-  const [isGenerating, setIsGenerating] = useState(false);
+  const ai = useAICall();
   const [generatedTasks, setGeneratedTasks] = useState([]);
   const [selectedTasks, setSelectedTasks] = useState({});
   const [isCreating, setIsCreating] = useState(false);
@@ -32,11 +32,10 @@ export default function AutomatedTaskGenerator({
   const generateTasks = async () => {
     if (!patient || carePlans.length === 0) return;
 
-    setIsGenerating(true);
     try {
       const activeCarePlans = carePlans.filter(cp => cp.status === 'active');
 
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `You are a nurse task automation system. Generate specific, actionable tasks for nurses based on active care plans.
 
 PATIENT: ${patient.first_name} ${patient.last_name}
@@ -115,7 +114,6 @@ Return JSON:`,
       console.error("Task generation error:", error);
       toast.error("Failed to generate tasks. Please try again.");
     }
-    setIsGenerating(false);
   };
 
   const toggleTaskSelection = (idx) => {
@@ -225,10 +223,10 @@ Return JSON:`,
             </Alert>
             <Button
               onClick={generateTasks}
-              disabled={isGenerating || activeCarePlansCount === 0}
+              disabled={ai.loading || activeCarePlansCount === 0}
               className="w-full bg-indigo-600 hover:bg-indigo-700"
             >
-              {isGenerating ? (
+              {ai.loading ? (
                 <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Generating Tasks...</>
               ) : (
                 <><Zap className="w-4 h-4 mr-2" /> Generate Tasks from Care Plans</>

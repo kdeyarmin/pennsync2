@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -25,7 +25,7 @@ export default function AIInteractiveQuiz({
   questionCount = 5,
   onComplete 
 }) {
-  const [isGenerating, setIsGenerating] = useState(false);
+  const ai = useAICall();
   const [quiz, setQuiz] = useState(null);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
@@ -35,7 +35,6 @@ export default function AIInteractiveQuiz({
   const [score, setScore] = useState(0);
 
   const generateQuiz = async () => {
-    setIsGenerating(true);
     setQuiz(null);
     setCurrentQuestion(0);
     setAnswers([]);
@@ -43,7 +42,7 @@ export default function AIInteractiveQuiz({
     setScore(0);
 
     try {
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `Generate an interactive quiz for home health nurses on the topic: "${topic}"
 
 Difficulty Level: ${difficulty}
@@ -95,7 +94,6 @@ Focus on real-world application, not just memorization.`,
     } catch (error) {
       console.error("Error generating quiz:", error);
     }
-    setIsGenerating(false);
   };
 
   const handleAnswer = () => {
@@ -139,7 +137,7 @@ Focus on real-world application, not just memorization.`,
     setScore(0);
   };
 
-  if (!quiz && !isGenerating) {
+  if (!quiz && !ai.loading) {
     return (
       <Card className="border-2 border-navy-200">
         <CardContent className="p-6 text-center">
@@ -160,7 +158,7 @@ Focus on real-world application, not just memorization.`,
     );
   }
 
-  if (isGenerating) {
+  if (ai.loading) {
     return (
       <Card className="border-2 border-navy-200">
         <CardContent className="p-8 text-center">

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -20,7 +20,7 @@ export default function ProactiveComplianceMonitor({
   refreshInterval = 60000 
 }) {
   const [alerts, setAlerts] = useState([]);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const ai = useAICall();
 
   const { data: recentAudits = [] } = useQuery({
     queryKey: ['recentComplianceAudits'],
@@ -42,7 +42,6 @@ export default function ProactiveComplianceMonitor({
   const analyzePatterns = useCallback(async () => {
     if (recentAudits.length < 5) return;
 
-    setIsAnalyzing(true);
     try {
       // Analyze patterns in recent audits
       const allIssues = recentAudits.flatMap(a => a.issues || []);
@@ -73,7 +72,7 @@ export default function ProactiveComplianceMonitor({
       });
 
       // Use AI to identify critical patterns
-      const patternAnalysis = await invokeLLM({
+      const patternAnalysis = await ai.run({
         prompt: `Analyze Medicare compliance patterns for Pennsylvania home health agency. Identify critical trends requiring immediate attention.
 
 RECENT DATA:
@@ -174,7 +173,6 @@ Return JSON with: critical_patterns array (with pattern, frequency, cop_referenc
     } catch (error) {
       console.error('Pattern analysis error:', error);
     }
-    setIsAnalyzing(false);
   }, [medicareRules, recentAudits]);
 
   useEffect(() => {
@@ -192,7 +190,7 @@ Return JSON with: critical_patterns array (with pattern, frequency, cop_referenc
     }
   };
 
-  if (isAnalyzing) {
+  if (ai.loading) {
     return (
       <Card className="border-2 border-blue-200">
         <CardContent className="p-6 text-center">
