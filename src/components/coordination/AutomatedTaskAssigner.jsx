@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { invokeLLM } from "@/lib/invokeLLM";
+// Standard component AI-call hook: shared timeout/retry policy + managed
+// loading/error state. Prefer over a raw invokeLLM at component call sites.
+import { useAICall } from "@/hooks/useAICall";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -24,7 +26,7 @@ export default function AutomatedTaskAssigner({
   carePlanGaps
 }) {
   const queryClient = useQueryClient();
-  const [isGenerating, setIsGenerating] = useState(false);
+  const ai = useAICall();
   const [suggestedTasks, setSuggestedTasks] = useState([]);
   const [selectedTasks, setSelectedTasks] = useState([]);
   const [isCreating, setIsCreating] = useState(false);
@@ -40,9 +42,8 @@ export default function AutomatedTaskAssigner({
   });
 
   const generateTaskAssignments = async () => {
-    setIsGenerating(true);
     try {
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `You are a care coordination AI. Based on detected gaps and patient changes, generate task assignments for the appropriate care team members.
 
 PATIENT: ${patientName}
@@ -89,8 +90,8 @@ Focus on tasks that require specialized expertise or coordination.`,
       setSelectedTasks(result.tasks?.map((_, idx) => idx) || []);
     } catch (error) {
       console.error('Task generation error:', error);
+      toast.error('Failed to generate task assignments. Please try again.');
     }
-    setIsGenerating(false);
   };
 
   const handleCreateTasks = async () => {
@@ -112,6 +113,16 @@ Focus on tasks that require specialized expertise or coordination.`,
           users.find(u => u.role === 'admin') ||
           users[0];
 
+        // assigned_to is required on Task. If no user could be resolved (empty
+        // users list / load failure), the only safe owner is the current user;
+        // skip the task entirely rather than write an invalid record with
+        // assigned_to: undefined (which the platform would reject/drop).
+        const assignee = roleMatch?.email || currentUser?.email;
+        if (!assignee) {
+          toast.error(`Couldn't assign "${task.title}" — no eligible team member found.`);
+          continue;
+        }
+
         const timeframeMap = {
           'today': 'today',
           'urgent': 'today',
@@ -121,9 +132,16 @@ Focus on tasks that require specialized expertise or coordination.`,
           'next visit': 'next_visit'
         };
 
-        const dueTimeframe = Object.keys(timeframeMap).find(key => 
+        const matchedKey = Object.keys(timeframeMap).find(key =>
           task.timeframe?.toLowerCase().includes(key)
         );
+        // Fall back aggressively for an urgent/high task whose free-text timeframe
+        // matched no key ("immediately", "asap") — defaulting it to the 7-day
+        // 'this_week' would bury work the AI flagged as urgent.
+        const isUrgent = task.priority === 'urgent' || task.priority === 'high';
+        const dueTimeframe = matchedKey
+          ? timeframeMap[matchedKey]
+          : (isUrgent ? 'today' : 'this_week');
 
         await base44.entities.Task.create({
           patient_id: patientId,
@@ -133,8 +151,8 @@ Focus on tasks that require specialized expertise or coordination.`,
                 task.task_type === 'call' ? 'call' : 'other',
           priority: task.priority === 'urgent' || task.priority === 'high' ? 'high' : 
                     task.priority === 'medium' ? 'medium' : 'low',
-          due_timeframe: dueTimeframe ? timeframeMap[dueTimeframe] : 'this_week',
-          assigned_to: roleMatch?.email || currentUser?.email,
+          due_timeframe: dueTimeframe,
+          assigned_to: assignee,
           source: 'ai_generated',
           ai_reason: task.rationale
         });
@@ -178,7 +196,7 @@ Focus on tasks that require specialized expertise or coordination.`,
           </AlertDescription>
         </Alert>
 
-        {!suggestedTasks.length && !isGenerating && (
+        {!suggestedTasks.length && !ai.loading && (
           <Button
             onClick={generateTaskAssignments}
             className="w-full bg-navy-600 hover:bg-navy-700"
@@ -188,7 +206,7 @@ Focus on tasks that require specialized expertise or coordination.`,
           </Button>
         )}
 
-        {isGenerating && (
+        {ai.loading && (
           <div className="text-center py-6">
             <Loader2 className="w-8 h-8 text-navy-600 animate-spin mx-auto mb-2" />
             <p className="text-sm text-slate-600">Generating task assignments...</p>

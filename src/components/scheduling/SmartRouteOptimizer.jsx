@@ -1,5 +1,9 @@
 import { useState } from "react";
-import { invokeLLM } from "@/lib/invokeLLM";
+// useAICall is the standard hook wrapper for component AI calls: it applies the
+// shared timeout/retry policy AND manages loading/error state + a stale-response
+// guard. Prefer it over a raw invokeLLM at component call sites (see the hook's
+// docs); use invokeLLM only in loops/utilities where a hook can't run.
+import { useAICall } from "@/hooks/useAICall";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -24,7 +28,7 @@ export default function SmartRouteOptimizer({
   nurseLocation = null,
   onOptimizedSchedule 
 }) {
-  const [isOptimizing, setIsOptimizing] = useState(false);
+  const ai = useAICall({ timeoutMs: 45000 });
   const [optimizedRoute, setOptimizedRoute] = useState(null);
   const [expanded, setExpanded] = useState(true);
   const [savings, setSavings] = useState(null);
@@ -36,8 +40,6 @@ export default function SmartRouteOptimizer({
       toast.error("Need at least 2 visits to optimize route");
       return;
     }
-
-    setIsOptimizing(true);
 
     try {
       // Prepare visit data with patient addresses
@@ -54,7 +56,7 @@ export default function SmartRouteOptimizer({
         };
       });
 
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `You are a healthcare route optimization AI. Optimize this nurse's daily visit schedule for maximum efficiency while respecting clinical priorities.
 
 VISITS TO SCHEDULE:
@@ -123,6 +125,13 @@ Return JSON:
         }
       });
 
+      // Guard against a malformed LLM response (no/blank order) before rendering
+      // or handing it upstream — the render maps over optimized_order.
+      if (!result || !Array.isArray(result.optimized_order) || result.optimized_order.length === 0) {
+        toast.error("The optimizer returned an unusable result — please try again.");
+        return;
+      }
+
       setOptimizedRoute(result);
       setSavings({
         time: result.time_saved_minutes,
@@ -133,9 +142,8 @@ Return JSON:
 
     } catch (error) {
       console.error("Error optimizing route:", error);
+      toast.error("Couldn't optimize the route. Please try again.");
     }
-
-    setIsOptimizing(false);
   };
 
   const getEstimatedDuration = (visitType) => {
@@ -201,10 +209,10 @@ Return JSON:
               </p>
               <Button
                 onClick={optimizeRoute}
-                disabled={isOptimizing}
+                disabled={ai.loading}
                 className="bg-blue-600 hover:bg-blue-700"
               >
-                {isOptimizing ? (
+                {ai.loading ? (
                   <>
                     <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
                     Optimizing Route...
@@ -216,6 +224,14 @@ Return JSON:
                   </>
                 )}
               </Button>
+              {ai.error && (
+                <Alert className="mt-3 bg-red-50 border-red-200 text-left">
+                  <AlertTriangle className="w-4 h-4 text-red-600" />
+                  <AlertDescription className="text-red-900 text-sm">
+                    Route optimization is unavailable right now. Please try again later.
+                  </AlertDescription>
+                </Alert>
+              )}
             </div>
           ) : (
             <>
@@ -310,10 +326,10 @@ Return JSON:
                 variant="outline"
                 size="sm"
                 onClick={optimizeRoute}
-                disabled={isOptimizing}
+                disabled={ai.loading}
                 className="w-full"
               >
-                <RefreshCw className={`w-4 h-4 mr-2 ${isOptimizing ? 'animate-spin' : ''}`} />
+                <RefreshCw className={`w-4 h-4 mr-2 ${ai.loading ? 'animate-spin' : ''}`} />
                 Re-optimize Route
               </Button>
             </>
