@@ -173,12 +173,44 @@ const ENUM_USAGE = {
     'training_due',
     'voicemail',
   ],
+  // Notification.priority — webhook/alert writers map provider severities onto
+  // these (the historical bug wrote 'normal'/'urgent', which were dropped).
+  'Notification.priority': ['low', 'medium', 'high', 'critical'],
   // FaxLog.status — written by the send path and the Telnyx status webhook mapper.
   'FaxLog.status': ['queued', 'sending', 'sent', 'delivered', 'failed', 'retrying', 'retried'],
   // DocumentSignature.status — written by the package create + signature submit
   // pipeline. NOTE: 'signed' is a display-only normalization in
   // src/components/signature/signatureUtils.js and is never persisted here.
   'DocumentSignature.status': ['pending', 'in_progress', 'completed', 'rejected'],
+  // PatientAlert.alert_type — written by monitorComplianceRisks /
+  // predictiveRiskAnalysis. 'documentation_risk' was the historically-dropped value.
+  'PatientAlert.alert_type': ['care_gap', 'documentation_risk', 'readmission_risk'],
+  // Patient.status — 'merged' is written by deduplicatePatients' merge-archive step.
+  'Patient.status': ['active', 'discharged', 'merged'],
+  // TrainingCompletion.status — written by the assign + grading flows.
+  'TrainingCompletion.status': ['assigned', 'in_progress', 'completed', 'expired'],
+};
+
+// ---------------------------------------------------------------------------
+// Part 3 — curated field-presence cross-reference
+//
+// The enum check above can't catch the OTHER drift class: code writing a flat
+// FIELD the schema doesn't define (e.g. the historical DocumentSignature
+// `signer_name`/`signed_at` flats, or Notification `related_entity`). Those are
+// silently dropped just like a bad enum value. Each entry below is a field the
+// application code is known to WRITE; the test asserts it exists in the schema
+// (top-level or nested via dotted/`[]` paths), so removing the field from the
+// schema while code still writes it becomes a build failure.
+// ---------------------------------------------------------------------------
+
+const FIELD_USAGE = {
+  Notification: ['metadata'],
+  FaxLog: ['retry_claimed_by', 'retry_claimed_at'],
+  DocumentSignature: ['document_title', 'signers', 'last_reminder_sent_at'],
+  Patient: ['merged_into_id', 'merged_at', 'merged_by', 'validation_overrides'],
+  Referral: ['page_range', 'detection_confidence', 'manually_confirmed', 'rejection_date', 'rejected_by'],
+  TrainingCompletion: ['training_module_id', 'due_date'],
+  PatientAlert: ['contributing_factors', 'recommended_actions', 'risk_score'],
 };
 
 test('curated registry references existing entities and enum fields', () => {
@@ -211,4 +243,28 @@ test('code-written enum values are all defined in the schema enum', () => {
     }
   }
   assert.equal(drift.length, 0, `Entity-contract drift detected:\n${drift.join('\n')}`);
+});
+
+test('code-written fields all exist in the entity schema', () => {
+  // Build the set of every field path the schema defines (top-level + nested),
+  // so a write to `metadata` or `signers` resolves regardless of nesting.
+  const drift = [];
+  for (const [entity, fields] of Object.entries(FIELD_USAGE)) {
+    const schema = byName.get(entity);
+    if (!schema) {
+      drift.push(`${entity}: no entity named '${entity}'`);
+      continue;
+    }
+    const defined = new Set();
+    for (const [path] of eachField(schema)) defined.add(path);
+    for (const field of fields) {
+      // accept the field itself, a nested child (`field.x`), or array items (`field[].x`)
+      const present =
+        defined.has(field) || [...defined].some((p) => p.startsWith(`${field}.`) || p.startsWith(`${field}[]`));
+      if (!present) {
+        drift.push(`${entity}.${field}: code writes this field but the schema has no such property`);
+      }
+    }
+  }
+  assert.equal(drift.length, 0, `Field-contract drift detected:\n${drift.join('\n')}`);
 });
