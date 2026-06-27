@@ -25,6 +25,8 @@ import VagueDocumentationResults from "./VagueDocumentationResults";
 import RecommendationsSummary from "./RecommendationsSummary";
 import QualityMeasuresImpact from "./QualityMeasuresImpact";
 import AuditDefenseSummary from "./AuditDefenseSummary";
+import GGSectionAnalysis from "./GGSectionAnalysis";
+import DocumentationQualitySummary from "./DocumentationQualitySummary";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -846,40 +848,7 @@ export default function OASISScrubber({
               )}
 
               {/* GG Section Analysis */}
-              {oasisResults.gg_section_analysis && (
-                <div className="bg-indigo-50 p-4 rounded-lg border-2 border-indigo-200">
-                  <h4 className="font-bold text-indigo-900 mb-3 flex items-center gap-2">
-                    <FileCheck className="w-5 h-5" />
-                    Section GG Functional Analysis
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                    {oasisResults.gg_section_analysis.gg0130_self_care_summary && (
-                      <div className="bg-white p-3 rounded border">
-                        <p className="text-xs font-semibold text-indigo-700 mb-1">GG0130 Self-Care</p>
-                        <p className="text-slate-700">{oasisResults.gg_section_analysis.gg0130_self_care_summary}</p>
-                      </div>
-                    )}
-                    {oasisResults.gg_section_analysis.gg0170_mobility_summary && (
-                      <div className="bg-white p-3 rounded border">
-                        <p className="text-xs font-semibold text-indigo-700 mb-1">GG0170 Mobility</p>
-                        <p className="text-slate-700">{oasisResults.gg_section_analysis.gg0170_mobility_summary}</p>
-                      </div>
-                    )}
-                    {oasisResults.gg_section_analysis.goal_appropriateness && (
-                      <div className="bg-white p-3 rounded border">
-                        <p className="text-xs font-semibold text-indigo-700 mb-1">Discharge Goal Assessment</p>
-                        <p className="text-slate-700">{oasisResults.gg_section_analysis.goal_appropriateness}</p>
-                      </div>
-                    )}
-                    {oasisResults.gg_section_analysis.functional_improvement_potential && (
-                      <div className="bg-white p-3 rounded border">
-                        <p className="text-xs font-semibold text-indigo-700 mb-1">Improvement Potential</p>
-                        <p className="text-slate-700">{oasisResults.gg_section_analysis.functional_improvement_potential}</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
+              <GGSectionAnalysis analysis={oasisResults.gg_section_analysis} />
 
               {/* Underscoring Opportunities */}
               {oasisResults.underscoring_opportunities && oasisResults.underscoring_opportunities.length > 0 && (
@@ -1057,39 +1026,7 @@ export default function OASISScrubber({
               />
 
                 {/* Documentation Quality Score */}
-                {oasisResults.documentation_quality && (
-                  <div className="bg-slate-50 p-4 rounded-lg border-2 border-slate-200">
-                    <h4 className="font-bold text-slate-900 mb-3 flex items-center gap-2">
-                      <FileCheck className="w-5 h-5" />
-                      Documentation Quality Analysis
-                    </h4>
-                    <div className="grid grid-cols-2 gap-4 mb-3">
-                      <div className="text-center">
-                        <p className="text-xs text-slate-500">Specificity Score</p>
-                        <p className="text-2xl font-bold text-slate-900">{oasisResults.documentation_quality.specificity_score || 'N/A'}</p>
-                        <Progress value={oasisResults.documentation_quality.specificity_score || 0} className="h-2 mt-1" />
-                      </div>
-                      <div className="text-center">
-                        <p className="text-xs text-slate-500">Defensibility Score</p>
-                        <p className="text-2xl font-bold text-slate-900">{oasisResults.documentation_quality.defensibility_score || 'N/A'}</p>
-                        <Progress value={oasisResults.documentation_quality.defensibility_score || 0} className="h-2 mt-1" />
-                      </div>
-                    </div>
-                    {oasisResults.documentation_quality.key_weaknesses?.length > 0 && (
-                      <div className="bg-white p-3 rounded border">
-                        <p className="text-xs font-semibold text-slate-700 mb-2">Key Weaknesses:</p>
-                        <ul className="text-xs text-slate-600 space-y-1">
-                          {oasisResults.documentation_quality.key_weaknesses.map((w, i) => (
-                            <li key={i} className="flex items-start gap-1">
-                              <XCircle className="w-3 h-3 text-red-500 mt-0.5 flex-shrink-0" />
-                              {w}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </div>
-                )}
+                <DocumentationQualitySummary quality={oasisResults.documentation_quality} />
                 </div>
                 </ScrollArea>
               </TabsContent>
