@@ -16,8 +16,7 @@ import NoteTemplateSelector from "../components/smartNote/NoteTemplateSelector";
 import VitalSignValidator from "../components/smartNote/VitalSignValidator";
 import VitalSignsForm from "../components/visit/VitalSignsForm";
 import StructuredNoteDrafter from "../components/smartNote/StructuredNoteDrafter";
-import EnhancedAudioRecorder from "../components/smartNote/EnhancedAudioRecorder";
-import SOAPAudioRecorder from "../components/smartNote/SOAPAudioRecorder";
+import VisitAudioRecorder from "../components/smartNote/VisitAudioRecorder";
 import VitalsTrendAnalysis from "../components/smartNote/VitalsTrendAnalysis";
 import FinalNoteDisplay from "../components/smartNote/FinalNoteDisplay";
 import FollowUpTasksPanel from "../components/smartNote/FollowUpTasksPanel";
@@ -618,7 +617,7 @@ export default function SmartNoteAssistant({ visitId = null }) {
                     <Mic className="w-3 h-3 text-navy-500" />
                     <span className="text-[11px] font-semibold text-navy-600 uppercase tracking-wide">Voice input — optional</span>
                   </div>
-                  <div className="flex flex-wrap gap-2 items-center">
+                  <div className="space-y-2">
                     <Button
                       variant={listening ? "destructive" : "default"}
                       className={`h-9 gap-2 text-xs font-semibold shadow-sm ${listening ? 'animate-pulse' : 'bg-navy-600 hover:bg-navy-700 text-white'}`}
@@ -626,13 +625,9 @@ export default function SmartNoteAssistant({ visitId = null }) {
                     >
                       {listening ? <><Square className="w-4 h-4 fill-current" /> Stop Dictation</> : <><Mic className="w-4 h-4" /> Live Dictation</>}
                     </Button>
-                    <EnhancedAudioRecorder
-                      onTranscribed={(transcribed) => setNote(prev => prev ? prev + " " + transcribed : transcribed)}
-                      disabled={false}
-                    />
-                    <SOAPAudioRecorder
-                      onSOAPGenerated={(soapText) => setNote(prev => prev ? prev + "\n\n" + soapText : soapText)}
-                      disabled={false}
+                    {/* One record-and-transcribe control (Narrative or SOAP). */}
+                    <VisitAudioRecorder
+                      onTranscribed={(text) => setNote(prev => prev ? prev + "\n\n" + text : text)}
                     />
                   </div>
                 </div>
