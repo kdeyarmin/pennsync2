@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import { base44 } from "@/api/base44Client";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -38,22 +38,21 @@ export default function MicroLearningModule({
   onClose
 }) {
   const [moduleContent, setModuleContent] = useState(null);
-  const [isGenerating, setIsGenerating] = useState(false);
+  const generatingAi = useAICall();
   const [currentStep, setCurrentStep] = useState(0);
   const [quizAnswers, setQuizAnswers] = useState({});
   const [quizResults, setQuizResults] = useState(null);
   const [scenarioResponse, setScenarioResponse] = useState("");
   const [scenarioFeedback, setScenarioFeedback] = useState(null);
-  const [isEvaluating, setIsEvaluating] = useState(false);
+  const evaluatingAi = useAICall();
   const [startTime, setStartTime] = useState(null);
   const [progressRecord, setProgressRecord] = useState(null);
 
   const setQuizError = (message) => toast.error(message);
 
   const generateLearningContent = useCallback(async () => {
-    setIsGenerating(true);
     try {
-      const result = await invokeLLM({
+      const result = await generatingAi.run({
         prompt: `You are an expert clinical educator creating personalized micro-learning content for a home health nurse.
 
 SKILL GAP IDENTIFIED:
@@ -163,7 +162,6 @@ Return JSON:
     } catch (error) {
       console.error("Error generating content:", error);
     }
-    setIsGenerating(false);
   }, [nurseEmail, skillGap]);
 
   useEffect(() => {
@@ -196,9 +194,8 @@ Return JSON:
   const evaluateScenarioResponse = async () => {
     if (!scenarioResponse.trim()) return;
     
-    setIsEvaluating(true);
     try {
-      const result = await invokeLLM({
+      const result = await evaluatingAi.run({
         prompt: `You are a clinical documentation expert evaluating a nurse's response to a simulated scenario.
 
 SCENARIO:
@@ -242,7 +239,6 @@ Return JSON:
     } catch (error) {
       console.error("Error evaluating scenario:", error);
     }
-    setIsEvaluating(false);
   };
 
   const completeModule = async () => {
@@ -287,7 +283,7 @@ Return JSON:
     { id: 'practice', title: 'Practice', icon: Target }
   ];
 
-  if (isGenerating) {
+  if (generatingAi.loading) {
     return (
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
         <Card className="w-full max-w-md mx-4">
@@ -539,10 +535,10 @@ Return JSON:
               {!scenarioFeedback ? (
                 <Button 
                   onClick={evaluateScenarioResponse}
-                  disabled={!scenarioResponse.trim() || isEvaluating}
+                  disabled={!scenarioResponse.trim() || evaluatingAi.loading}
                   className="w-full bg-navy-600 hover:bg-navy-700"
                 >
-                  {isEvaluating ? (
+                  {evaluatingAi.loading ? (
                     <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Evaluating...</>
                   ) : (
                     <><Brain className="w-4 h-4 mr-2" /> Get AI Feedback</>

@@ -236,7 +236,7 @@ Return detailed risk assessment:`,
             variant="outline"
             className="min-h-[44px]"
           >
-            <RefreshCw className={`w-4 h-4 mr-2 ${analyzing ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-4 h-4 mr-2 ${ai.loading ? 'animate-spin' : ''}`} />
             {ai.loading ? 'Analyzing...' : 'Analyze'}
           </Button>
         </div>
