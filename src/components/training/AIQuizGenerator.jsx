@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { invokeLLM } from "@/lib/invokeLLM";
+import { safePercent } from "@/lib/safePercent";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -97,7 +98,7 @@ Return JSON with:
       selectedAnswers[idx] === q.correct_answer
     ).length;
     
-    const score = Math.round((correctCount / quiz.questions.length) * 100);
+    const score = safePercent(correctCount, quiz.questions.length);
     const passed = score >= (quiz.passing_score || 80);
 
     setQuizResults({

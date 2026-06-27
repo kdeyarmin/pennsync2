@@ -1,4 +1,5 @@
 import React from "react";
+import { safePercent } from "@/lib/safePercent";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { BookOpen, Clock, CheckCircle2 } from "lucide-react";
@@ -104,7 +105,7 @@ export default function EducationVideos() {
   };
 
   const totalVideos = educationalVideos.length;
-  const completionPercentage = Math.round((completedVideos.length / totalVideos) * 100);
+  const completionPercentage = safePercent(completedVideos.length, totalVideos);
 
   const videosByCategory = educationalVideos.reduce((acc, video) => {
     if (!acc[video.category]) acc[video.category] = [];

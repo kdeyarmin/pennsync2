@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { invokeLLM } from "@/lib/invokeLLM";
+import { safePercent } from "@/lib/safePercent";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -177,9 +178,9 @@ Return JSON:
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-xs font-medium">Learning Progress</span>
-                  <span className="text-xs text-slate-500">{Math.round((completedCount / totalModules) * 100)}%</span>
+                  <span className="text-xs text-slate-500">{safePercent(completedCount, totalModules)}%</span>
                 </div>
-                <Progress value={(completedCount / totalModules) * 100} className="h-2" />
+                <Progress value={safePercent(completedCount, totalModules)} className="h-2" />
               </div>
 
               {/* Strengths */}

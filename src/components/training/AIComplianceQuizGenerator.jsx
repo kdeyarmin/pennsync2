@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { safePercent } from "@/lib/safePercent";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -159,7 +160,7 @@ Return JSON format:
       return count + (userAnswers[index] === question.correctAnswer ? 1 : 0);
     }, 0);
 
-    const score = Math.round((correctCount / quiz.questions.length) * 100);
+    const score = safePercent(correctCount, quiz.questions.length);
     const passed = score >= 70;
 
     const results = {

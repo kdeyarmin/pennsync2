@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { invokeLLM } from "@/lib/invokeLLM";
+import { safePercent } from "@/lib/safePercent";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -170,7 +171,7 @@ Provide constructive feedback:`,
       correctAnswer: q.correct_index
     }));
     
-    const score = Math.round((results.filter(r => r.correct).length / results.length) * 100);
+    const score = safePercent(results.filter(r => r.correct).length, results.length);
     setQuizResults({ results, score });
   };
 

@@ -65,8 +65,10 @@ function isSafeFetchUrl(raw) {
 
   // Admin-tier predicate. Mirrors src/lib/superAdmin.js isAdminLike — every admin
   // surface accepts facility admin (role 'admin'), agency_admin/super_admin, and
-  // the platform owner. Keep the owner email in step with superAdmin.js.
-  isAdminLike: `const SUPER_ADMIN_EMAIL = 'kdeyarmin@comcast.net';
+  // the platform owner. The owner email is configurable via the SUPER_ADMIN_EMAIL
+  // env var (mirrors VITE_SUPER_ADMIN_EMAIL on the frontend) and falls back to the
+  // original owner when unset. Keep the fallback in step with superAdmin.js.
+  isAdminLike: `const SUPER_ADMIN_EMAIL = ((typeof Deno !== 'undefined' && Deno.env.get('SUPER_ADMIN_EMAIL')) || 'kdeyarmin@comcast.net').trim().toLowerCase();
 const sameEmail = (a, b) => String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase();
 const isAdminLike = (u) => !!u && (
   u.role === 'admin' || u.account_type === 'agency_admin' ||

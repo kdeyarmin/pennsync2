@@ -16,8 +16,19 @@
  * same literal; keep them in sync when changing the owner.
  */
 
-/** The platform owner. This account is always treated as the super admin. */
-export const SUPER_ADMIN_EMAIL = "kdeyarmin@comcast.net";
+/**
+ * The platform owner. This account is always treated as the super admin.
+ *
+ * Configurable per deployment via the build-time env var
+ * `VITE_SUPER_ADMIN_EMAIL`; when unset it falls back to the original owner so
+ * existing deployments are unaffected. Normalized (trimmed + lower-cased) so the
+ * case-insensitive comparisons below hold for any configured value.
+ */
+export const SUPER_ADMIN_EMAIL = (
+  import.meta.env?.VITE_SUPER_ADMIN_EMAIL || "kdeyarmin@comcast.net"
+)
+  .trim()
+  .toLowerCase();
 
 /** Case/whitespace-insensitive email match against the designated super admin. */
 export function isSuperAdminEmail(email) {
