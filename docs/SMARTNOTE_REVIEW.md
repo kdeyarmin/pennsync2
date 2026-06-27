@@ -506,4 +506,42 @@ anti-hallucination guarantees — two of them *close* holes in it.
    and are excluded, shrinking that call without weakening the check. A re-check
    after a manual edit still grounds the whole note.
 
+## Update — follow-on rounds: drafter parity, dead-code removal, recorder merge (2026-06-27)
+
+Three further passes building on the round above (all build- and test-verified; net
+~28k LOC removed across them):
+
+**R2 — Structured-Drafter parity + first cleanups.**
+- The "Draft from Vitals" tab (`StructuredNoteDrafter`) had the same silent-vitals-loss
+  bug fixed above, in a second place: its vitals reached the chart but not the note.
+  New pure `toCanonicalVitalSigns` (`compliance/factExtraction.js`) maps the drafter's
+  legacy field names to the canonical `vital_signs` shape; the drafter now emits
+  structured vitals on handoff (and strips its own vitals line to avoid duplication),
+  so they flow through `formatVitalsSentence` into coverage, trends, escalation, and
+  chart cross-check.
+- Removed dead backend functions `enhanceNoteOptimized` and `smartNoteAssistant` (no
+  caller — superseded by the client-side constrained-scribe pipeline).
+- Finished the Scribe-route consolidation: `/MedicalScribe` already redirected to the
+  Clinical Notes hub, so removed the unreachable `MedicalScribe.jsx` page and its
+  scribe-only orphans (`ScribeNoteRecorder`, `NoteReviewPanel`).
+
+**R3 — Retire the dead `DocumentVisit` page.** `DocumentVisit.jsx` (~1.7k LOC) was
+already redirect-retired and not in the route manifest. Removed it plus the closure of
+~40 components imported only by it (each grep-gated for zero importers, build/test the
+backstop), and the `transcribeAndExtractClinicalData` backend fn (its sole caller was
+the removed `MedicalScribeAssistant`). Shared utilities (`VitalSignsForm`,
+`vitalEscalation`, `oasis/AIDocumentationAssistant`, the `compliance/*` utils, …) kept.
+
+**R4 — Merge the Step-1 audio recorders + final orphan removal.**
+- Replaced the two side-by-side recorders with one `VisitAudioRecorder` carrying a
+  **Narrative | SOAP** format toggle and a single record/stop button; the hardened
+  PHI-audio cleanup (detach `onstop` before stop, release mic, revoke blob URLs) is
+  ported verbatim. Narrative reuses `DictationSectionMapper`; SOAP reuses the existing
+  `transcribeAndGenerateSOAPNote` formatting. Covered by `VisitAudioRecorder.smoke.test.jsx`.
+- `performanceTracking.jsx` turned out to be entirely unreferenced (its one apparent
+  caller defines its own same-named function) — removed wholesale.
+- Removed 11 further components verified to have zero importers (visit/clinical/alerts/risk),
+  including `OASISScrubber.jsx` (its only importer was the removed `EnhancedOASISScrubber`);
+  kept the still-tested `oasisScrubberPrompt.jsx`/`.spec.js`.
+
 </content>
