@@ -2,7 +2,7 @@ import { useState } from "react";
 import { extractClinicalIndicators } from "./clinicalIndicators";
 import { determineClinicalGroup, identifyComorbidities } from "./pdgmClinicalGroup";
 import { invokeLLM } from "@/lib/invokeLLM";
-import { buildFunctionalPhrases, buildClinicalAlerts, getRiskColor, getImpactBadge } from "./oasisScrubberData";
+import { buildFunctionalPhrases, buildClinicalAlerts, getRiskColor } from "./oasisScrubberData";
 import { buildOASISScrubberPrompt, oasisScrubberResponseSchema } from "./oasisScrubberPrompt";
 import ClinicalAlertsPanel from "./ClinicalAlertsPanel";
 import ComorbiditiesSummary from "./ComorbiditiesSummary";
@@ -13,6 +13,15 @@ import FunctionalPhrasesPanel from "./FunctionalPhrasesPanel";
 import CollapsibleResultHeader from "./CollapsibleResultHeader";
 import PdgmAnalysisSummary from "./PdgmAnalysisSummary";
 import OptimizationSuggestionsPanel from "./OptimizationSuggestionsPanel";
+import MismatchesResults from "./MismatchesResults";
+import CrossValidationResults from "./CrossValidationResults";
+import IncompleteAssessmentsResults from "./IncompleteAssessmentsResults";
+import InconsistenciesResults from "./InconsistenciesResults";
+import CompliantItemsResults from "./CompliantItemsResults";
+import UnderscoringResults from "./UnderscoringResults";
+import OverscoringResults from "./OverscoringResults";
+import CriticalMissingResults from "./CriticalMissingResults";
+import VagueDocumentationResults from "./VagueDocumentationResults";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -67,7 +76,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { logSecurityEvent } from "../utils/security";
-import OASISFeedbackPanel from "../oasis/OASISFeedbackPanel";
 import CMSComplianceReference from "../oasis/CMSComplianceReference";
 import OASISPDFUploader from "../oasis/OASISPDFUploader";
 
@@ -814,42 +822,7 @@ export default function OASISScrubber({
                     onToggle={toggleCategory}
                   />
 
-                  {expandedCategories.includes('mismatches') && (
-                    <div className="space-y-3">
-                      {oasisResults.oasis_narrative_mismatches.map((item, index) => (
-                        <Card key={index} className="border-l-4 border-l-navy-500 bg-navy-50">
-                          <CardContent className="p-4 space-y-2">
-                            <div className="flex items-center justify-between">
-                              <h5 className="font-bold text-navy-900">{item.oasis_item}</h5>
-                              <Badge className={`${item.audit_risk === 'high' ? 'bg-red-600' : item.audit_risk === 'medium' ? 'bg-orange-500' : 'bg-blue-500'}`}>
-                                {item.audit_risk} audit risk
-                              </Badge>
-                            </div>
-                            <div className="grid grid-cols-2 gap-2 text-sm">
-                              <div className="bg-red-100 p-2 rounded border border-red-200">
-                                <p className="text-xs text-red-700">Uploaded OASIS Score</p>
-                                <p className="font-semibold text-red-800">{item.uploaded_score}</p>
-                              </div>
-                              <div className="bg-green-100 p-2 rounded border border-green-200">
-                                <p className="text-xs text-green-700">Narrative Suggests</p>
-                                <p className="font-semibold text-green-800">{item.narrative_suggests}</p>
-                              </div>
-                            </div>
-                            <div className="bg-white p-2 rounded border text-sm">
-                              <p className="text-xs text-slate-500">Discrepancy:</p>
-                              <p className="text-slate-900">{item.discrepancy}</p>
-                            </div>
-                            <Alert className="bg-blue-50 border-blue-200">
-                              <Info className="w-4 h-4 text-blue-600" />
-                              <AlertDescription className="text-blue-900 text-sm">
-                                <strong>Recommendation:</strong> {item.recommendation}
-                              </AlertDescription>
-                            </Alert>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  )}
+                  {expandedCategories.includes('mismatches') && <MismatchesResults items={oasisResults.oasis_narrative_mismatches} />}
                 </div>
               )}
 
@@ -867,57 +840,7 @@ export default function OASISScrubber({
                     onToggle={toggleCategory}
                   />
 
-                  {expandedCategories.includes('crossvalidation') && (
-                    <div className="space-y-3">
-                      {oasisResults.cross_validation_failures.map((item, index) => (
-                        <Card key={index} className="border-l-4 border-l-orange-500 bg-orange-50">
-                          <CardContent className="p-4 space-y-3">
-                            <div className="flex items-center justify-between flex-wrap gap-2">
-                              <h5 className="font-bold text-orange-900">{item.rule_violated}</h5>
-                              <Badge className={`${item.audit_risk === 'high' ? 'bg-red-600' : item.audit_risk === 'medium' ? 'bg-orange-500' : 'bg-blue-500'}`}>
-                                {item.audit_risk} audit risk
-                              </Badge>
-                            </div>
-                            <div className="flex flex-wrap gap-1">
-                              {item.items_involved?.map((mi, idx) => (
-                                <Badge key={idx} variant="outline" className="bg-white text-orange-800 border-orange-300 text-xs">
-                                  {mi}
-                                </Badge>
-                              ))}
-                            </div>
-                            <div className="grid grid-cols-2 gap-2 text-sm">
-                              <div className="bg-red-100 p-2 rounded border border-red-200">
-                                <p className="text-xs text-red-700 font-medium">Current Values</p>
-                                <p className="text-red-900">{item.current_values}</p>
-                              </div>
-                              <div className="bg-green-100 p-2 rounded border border-green-200">
-                                <p className="text-xs text-green-700 font-medium">Expected Relationship</p>
-                                <p className="text-green-900">{item.expected_relationship}</p>
-                              </div>
-                            </div>
-                            {item.narrative_evidence && (
-                              <div className="bg-white p-2 rounded border text-sm">
-                                <p className="text-xs text-slate-500">Evidence:</p>
-                                <p className="text-slate-900 italic">"{item.narrative_evidence}"</p>
-                              </div>
-                            )}
-                            {item.pdgm_impact && (
-                              <div className="bg-navy-50 p-2 rounded border border-navy-200 text-sm">
-                                <p className="text-xs text-navy-700 font-medium">PDGM Impact:</p>
-                                <p className="text-navy-900">{item.pdgm_impact}</p>
-                              </div>
-                            )}
-                            <Alert className="bg-blue-50 border-blue-200">
-                              <Info className="w-4 h-4 text-blue-600" />
-                              <AlertDescription className="text-blue-900 text-sm">
-                                <strong>Resolution:</strong> {item.resolution}
-                              </AlertDescription>
-                            </Alert>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  )}
+                  {expandedCategories.includes('crossvalidation') && <CrossValidationResults items={oasisResults.cross_validation_failures} />}
                 </div>
               )}
 
@@ -972,80 +895,14 @@ export default function OASISScrubber({
                   />
 
                   {expandedCategories.includes('underscoring') && (
-                    <div className="space-y-3">
-                      {oasisResults.underscoring_opportunities.map((item, index) => (
-                        <Card key={index} className="border-l-4 border-l-green-500 bg-green-50">
-                          <CardContent className="p-4 space-y-3">
-                            <div className="flex items-center justify-between flex-wrap gap-2">
-                              <h5 className="font-bold text-green-900">{item.oasis_item}</h5>
-                              <div className="flex gap-2">
-                                {item.score_difference && (
-                                  <Badge className="bg-blue-600">{item.score_difference}</Badge>
-                                )}
-                                <Badge className="bg-green-600">{item.revenue_impact}</Badge>
-                              </div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-2 text-sm">
-                              <div className="bg-white p-2 rounded border">
-                                <p className="text-xs text-slate-500">Current Implied Score</p>
-                                <p className="font-semibold text-slate-700">{item.current_implied_score || item.current_score}</p>
-                              </div>
-                              <div className="bg-green-100 p-2 rounded border border-green-300">
-                                <p className="text-xs text-green-700">Supported Score</p>
-                                <p className="font-semibold text-green-800">{item.supported_score}</p>
-                              </div>
-                            </div>
-                            {item.functional_level_change && (
-                              <Badge variant="outline" className="bg-navy-50 text-navy-800 border-navy-300">
-                                {item.functional_level_change}
-                              </Badge>
-                            )}
-                            <div className="bg-white p-2 rounded border text-sm">
-                              <p className="text-xs text-slate-500 font-medium">📝 Evidence from Narrative:</p>
-                              <p className="text-slate-900 italic">"{item.narrative_evidence}"</p>
-                            </div>
-                            {item.cms_scoring_definition && (
-                              <div className="bg-blue-50 p-2 rounded border border-blue-200 text-sm">
-                                <p className="text-xs text-blue-700 font-medium">📋 CMS Scoring Definition:</p>
-                                <p className="text-blue-900">{item.cms_scoring_definition}</p>
-                                {item.cms_reference && (
-                                  <p className="text-xs text-blue-600 mt-1">Ref: {item.cms_reference}</p>
-                                )}
-                              </div>
-                            )}
-                            {item.why_higher_score_applies && (
-                              <div className="bg-green-100 p-2 rounded border border-green-200 text-sm">
-                                <p className="text-xs text-green-700 font-medium">✓ Why Higher Score Applies:</p>
-                                <p className="text-green-900">{item.why_higher_score_applies}</p>
-                              </div>
-                            )}
-                            {item.documentation_enhancement && (
-                              <div className="bg-yellow-50 p-2 rounded border border-yellow-200 text-sm">
-                                <p className="text-xs text-yellow-700 font-medium">💡 Documentation Enhancement:</p>
-                                <p className="text-yellow-900">{item.documentation_enhancement}</p>
-                              </div>
-                            )}
-                            {item.example_compliant_language && (
-                              <div className="bg-emerald-50 p-3 rounded border border-emerald-200 text-sm">
-                                <p className="text-xs text-emerald-700 font-medium">✓ Example Compliant Language:</p>
-                                <p className="text-emerald-900 italic">"{item.example_compliant_language}"</p>
-                              </div>
-                            )}
-                            <OASISFeedbackPanel
-                              suggestion={item}
-                              suggestionType="underscoring"
-                              oasisItem={item.oasis_item}
-                              visitId={visit?.id}
-                              patientId={patient?.id}
-                              onAccept={() => handleSuggestionAccept(item, 'underscoring')}
-                              onReject={handleSuggestionReject}
-                              onModify={handleSuggestionModify}
-                              reimbursementImpact={item.revenue_impact}
-                            />
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
+                    <UnderscoringResults
+                      items={oasisResults.underscoring_opportunities}
+                      visit={visit}
+                      patient={patient}
+                      onAccept={(item) => handleSuggestionAccept(item, 'underscoring')}
+                      onReject={handleSuggestionReject}
+                      onModify={handleSuggestionModify}
+                    />
                   )}
                 </div>
               )}
@@ -1065,96 +922,14 @@ export default function OASISScrubber({
                   />
 
                   {expandedCategories.includes('overscoring') && (
-                    <div className="space-y-3">
-                      {oasisResults.overscoring_risks.map((item, index) => (
-                        <Card key={index} className="border-l-4 border-l-red-500 bg-red-50">
-                          <CardContent className="p-4 space-y-3">
-                            <div className="flex items-center justify-between flex-wrap gap-2">
-                              <h5 className="font-bold text-red-900">{item.oasis_item}</h5>
-                              <div className="flex gap-2">
-                                {item.score_difference && (
-                                  <Badge className="bg-slate-600">{item.score_difference}</Badge>
-                                )}
-                                <Badge className={`${item.audit_risk === 'high' ? 'bg-red-600' : 'bg-orange-500'}`}>
-                                  {item.audit_risk} audit risk
-                                </Badge>
-                              </div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-2 text-sm">
-                              <div className="bg-red-100 p-2 rounded border border-red-200">
-                                <p className="text-xs text-red-700">Claimed/Implied Score</p>
-                                <p className="font-semibold text-red-800">{item.claimed_score}</p>
-                              </div>
-                              <div className="bg-white p-2 rounded border">
-                                <p className="text-xs text-slate-500">Actually Supported</p>
-                                <p className="font-semibold text-slate-700">{item.supported_score}</p>
-                              </div>
-                            </div>
-                            {item.narrative_evidence && (
-                              <div className="bg-white p-2 rounded border text-sm">
-                                <p className="text-xs text-slate-500 font-medium">📝 Contradicting Evidence:</p>
-                                <p className="text-slate-900 italic">"{item.narrative_evidence}"</p>
-                              </div>
-                            )}
-                            {item.cms_scoring_definition && (
-                              <div className="bg-blue-50 p-2 rounded border border-blue-200 text-sm">
-                                <p className="text-xs text-blue-700 font-medium">📋 CMS Definition (Supported Score):</p>
-                                <p className="text-blue-900">{item.cms_scoring_definition}</p>
-                              </div>
-                            )}
-                            {item.audit_vulnerability && typeof item.audit_vulnerability === 'object' && (
-                              <div className="bg-red-100 p-3 rounded border border-red-300 text-sm space-y-2">
-                                <p className="text-xs text-red-700 font-bold">⚠️ AUDIT VULNERABILITY:</p>
-                                {item.audit_vulnerability.type && (
-                                  <Badge variant="outline" className="bg-red-200 text-red-800 border-red-400 text-xs">
-                                    {item.audit_vulnerability.type} Review Risk
-                                  </Badge>
-                                )}
-                                {item.audit_vulnerability.specific_risk && (
-                                  <p className="text-red-900"><strong>Risk:</strong> {item.audit_vulnerability.specific_risk}</p>
-                                )}
-                                {item.audit_vulnerability.potential_recoupment && (
-                                  <p className="text-red-800 font-semibold">💰 Potential Recoupment: {item.audit_vulnerability.potential_recoupment}</p>
-                                )}
-                                {item.audit_vulnerability.documentation_that_contradicts && (
-                                  <p className="text-red-900"><strong>Auditor Would Cite:</strong> "{item.audit_vulnerability.documentation_that_contradicts}"</p>
-                                )}
-                              </div>
-                            )}
-                            <div className="bg-yellow-50 p-3 rounded border border-yellow-200 text-sm">
-                              <p className="text-xs text-yellow-700 font-medium mb-2">🔧 Recommended Action:</p>
-                              <p className="text-yellow-900 font-medium">{item.recommended_action || item.recommendation}</p>
-                            </div>
-                            {(item.if_keeping_score || item.if_lowering_score) && (
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
-                                {item.if_keeping_score && (
-                                  <div className="bg-blue-50 p-2 rounded border border-blue-200">
-                                    <p className="text-xs text-blue-700 font-medium">If Keeping Score:</p>
-                                    <p className="text-blue-900 text-xs">{item.if_keeping_score}</p>
-                                  </div>
-                                )}
-                                {item.if_lowering_score && (
-                                  <div className="bg-green-50 p-2 rounded border border-green-200">
-                                    <p className="text-xs text-green-700 font-medium">If Lowering Score:</p>
-                                    <p className="text-green-900 text-xs">{item.if_lowering_score}</p>
-                                  </div>
-                                )}
-                              </div>
-                            )}
-                            <OASISFeedbackPanel
-                              suggestion={item}
-                              suggestionType="overscoring"
-                              oasisItem={item.oasis_item}
-                              visitId={visit?.id}
-                              patientId={patient?.id}
-                              onAccept={() => handleSuggestionAccept(item, 'overscoring')}
-                              onReject={handleSuggestionReject}
-                              onModify={handleSuggestionModify}
-                            />
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
+                    <OverscoringResults
+                      items={oasisResults.overscoring_risks}
+                      visit={visit}
+                      patient={patient}
+                      onAccept={(item) => handleSuggestionAccept(item, 'overscoring')}
+                      onReject={handleSuggestionReject}
+                      onModify={handleSuggestionModify}
+                    />
                   )}
                 </div>
               )}
@@ -1174,57 +949,14 @@ export default function OASISScrubber({
                   />
 
                   {expandedCategories.includes('critical') && (
-                    <div className="space-y-3">
-                      {oasisResults.critical_missing.map((item, index) => (
-                        <Card key={index} className="border-l-4 border-l-red-500 bg-red-50">
-                          <CardContent className="p-4 space-y-3">
-                            <div className="flex items-start justify-between">
-                              <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-2">
-                                  <h5 className="font-bold text-red-900">{item.oasis_item}</h5>
-                                  <Badge variant="outline" className="bg-red-100 text-red-800 border-red-300 text-xs">
-                                    {item.category}
-                                  </Badge>
-                                  <Badge className={`${getImpactBadge(item.reimbursement_impact)} text-white text-xs`}>
-                                    {item.reimbursement_impact?.toUpperCase()} IMPACT
-                                  </Badge>
-                                </div>
-                                <p className="text-sm text-red-800 mb-2">
-                                  <strong>Why Critical:</strong> {item.why_critical}
-                                </p>
-                              </div>
-                            </div>
-
-                            <div className="bg-white p-3 rounded border border-red-200">
-                              <p className="text-xs font-semibold text-slate-700 mb-1">
-                                <Info className="w-3 h-3 inline mr-1" />
-                                Documentation Guidance:
-                              </p>
-                              <p className="text-sm text-slate-900">{item.documentation_guidance}</p>
-                            </div>
-
-                            <div className="bg-green-50 p-3 rounded border border-green-200">
-                              <p className="text-xs font-semibold text-green-900 mb-1">
-                                ✓ Example of Compliant Documentation:
-                              </p>
-                              <p className="text-sm text-green-900 italic">"{item.example}"</p>
-                            </div>
-
-                            <OASISFeedbackPanel
-                              suggestion={item}
-                              suggestionType="missing_item"
-                              oasisItem={item.oasis_item}
-                              visitId={visit?.id}
-                              patientId={patient?.id}
-                              onAccept={() => handleSuggestionAccept(item, 'missing_item')}
-                              onReject={handleSuggestionReject}
-                              onModify={handleSuggestionModify}
-                              reimbursementImpact={item.estimated_revenue_impact}
-                            />
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
+                    <CriticalMissingResults
+                      items={oasisResults.critical_missing}
+                      visit={visit}
+                      patient={patient}
+                      onAccept={(item) => handleSuggestionAccept(item, 'missing_item')}
+                      onReject={handleSuggestionReject}
+                      onModify={handleSuggestionModify}
+                    />
                   )}
                 </div>
               )}
@@ -1243,44 +975,7 @@ export default function OASISScrubber({
                     onToggle={toggleCategory}
                   />
 
-                  {expandedCategories.includes('incomplete') && (
-                    <div className="space-y-3">
-                      {oasisResults.incomplete_assessments.map((item, index) => (
-                        <Card key={index} className="border-l-4 border-l-yellow-500 bg-yellow-50">
-                          <CardContent className="p-4 space-y-2">
-                            <h5 className="font-semibold text-yellow-900">{item.oasis_item}</h5>
-                            
-                            {item.current_documentation && (
-                              <div className="bg-white p-2 rounded border border-yellow-200">
-                                <p className="text-xs text-slate-600">Current documentation:</p>
-                                <p className="text-sm text-slate-900 italic">"{item.current_documentation}"</p>
-                              </div>
-                            )}
-
-                            <div className="bg-red-50 p-2 rounded border border-red-200">
-                              <p className="text-xs text-red-900">
-                                <strong>Issue:</strong> {item.issue}
-                              </p>
-                            </div>
-
-                            <div className="bg-blue-50 p-2 rounded border border-blue-200">
-                              <p className="text-xs text-blue-900">
-                                <strong>Guidance:</strong> {item.guidance}
-                              </p>
-                            </div>
-
-                            {item.example && (
-                              <div className="bg-green-50 p-2 rounded border border-green-200">
-                                <p className="text-xs text-green-900">
-                                  <strong>Better:</strong> "{item.example}"
-                                </p>
-                              </div>
-                            )}
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  )}
+                  {expandedCategories.includes('incomplete') && <IncompleteAssessmentsResults items={oasisResults.incomplete_assessments} />}
                 </div>
               )}
 
@@ -1299,89 +994,10 @@ export default function OASISScrubber({
                   />
 
                   {expandedCategories.includes('vague') && (
-                    <div className="space-y-3">
-                      {oasisResults.vague_documentation.map((item, index) => (
-                        <Card key={index} className="border-l-4 border-l-amber-500 bg-amber-50">
-                          <CardContent className="p-4 space-y-3">
-                            <h5 className="font-bold text-amber-900">{item.oasis_item}</h5>
-                            
-                            <div className="bg-red-100 p-2 rounded border border-red-200 text-sm">
-                              <p className="text-xs text-red-700 font-medium">❌ Current Vague Language:</p>
-                              <p className="text-red-900 italic">"{item.current_language}"</p>
-                            </div>
-
-                            <div className="bg-white p-2 rounded border text-sm">
-                              <p className="text-xs text-slate-600 font-medium">Problem:</p>
-                              <p className="text-slate-900">{item.problem}</p>
-                            </div>
-
-                            {item.cms_requirement && (
-                              <div className="bg-blue-50 p-2 rounded border border-blue-200 text-sm">
-                                <p className="text-xs text-blue-700 font-medium">📋 CMS Requirement:</p>
-                                <p className="text-blue-900">{item.cms_requirement}</p>
-                              </div>
-                            )}
-
-                            {item.defensibility_issue && (
-                              <div className="bg-orange-100 p-2 rounded border border-orange-200 text-sm">
-                                <p className="text-xs text-orange-700 font-medium">⚠️ Defensibility Issue:</p>
-                                <p className="text-orange-900">{item.defensibility_issue}</p>
-                              </div>
-                            )}
-
-                            {item.score_range_ambiguity && (
-                              <div className="bg-navy-50 p-2 rounded border border-navy-200 text-sm">
-                                <p className="text-xs text-navy-700 font-medium">🎯 Score Ambiguity:</p>
-                                <p className="text-navy-900">{item.score_range_ambiguity}</p>
-                              </div>
-                            )}
-
-                            {item.key_elements_to_add && item.key_elements_to_add.length > 0 && (
-                              <div className="bg-yellow-50 p-2 rounded border border-yellow-200 text-sm">
-                                <p className="text-xs text-yellow-700 font-medium">✚ Key Elements to Add:</p>
-                                <ul className="list-disc list-inside text-yellow-900 text-xs mt-1">
-                                  {item.key_elements_to_add.map((el, idx) => (
-                                    <li key={idx}>{el}</li>
-                                  ))}
-                                </ul>
-                              </div>
-                            )}
-
-                            <div className="bg-green-100 p-3 rounded border border-green-200 text-sm">
-                              <p className="text-xs text-green-700 font-medium">✓ Improved Language:</p>
-                              <p className="text-green-900 italic">"{item.improved_language}"</p>
-                            </div>
-
-                            {(item.example_for_higher_score || item.example_for_lower_score) && (
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
-                                {item.example_for_higher_score && (
-                                  <div className="bg-emerald-50 p-2 rounded border border-emerald-200">
-                                    <p className="text-xs text-emerald-700 font-medium">For Higher Score:</p>
-                                    <p className="text-emerald-900 text-xs italic">"{item.example_for_higher_score}"</p>
-                                  </div>
-                                )}
-                                {item.example_for_lower_score && (
-                                  <div className="bg-slate-50 p-2 rounded border border-slate-200">
-                                    <p className="text-xs text-slate-600 font-medium">For Lower Score:</p>
-                                    <p className="text-slate-800 text-xs italic">"{item.example_for_lower_score}"</p>
-                                  </div>
-                                )}
-                              </div>
-                            )}
-
-                            <Button 
-                              size="sm" 
-                              variant="outline"
-                              className="w-full border-green-300 text-green-700 hover:bg-green-50"
-                              onClick={() => handleQuickFix(item.cms_requirement || item.problem, item.improved_language)}
-                            >
-                              <CheckCircle2 className="w-4 h-4 mr-2" />
-                              Insert Improved Language
-                            </Button>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
+                    <VagueDocumentationResults
+                      items={oasisResults.vague_documentation}
+                      onQuickFix={handleQuickFix}
+                    />
                   )}
                 </div>
               )}
@@ -1400,71 +1016,7 @@ export default function OASISScrubber({
                     onToggle={toggleCategory}
                   />
 
-                  {expandedCategories.includes('inconsistencies') && (
-                    <div className="space-y-3">
-                      {oasisResults.inconsistencies.map((item, index) => (
-                        <Card key={index} className="border-l-4 border-l-orange-500 bg-orange-50">
-                          <CardContent className="p-4 space-y-3">
-                            <div className="flex items-center justify-between flex-wrap gap-2">
-                              <h5 className="font-bold text-orange-900">{item.issue}</h5>
-                              <div className="flex gap-2">
-                                {item.inconsistency_type && (
-                                  <Badge variant="outline" className="bg-orange-100 text-orange-800 border-orange-300 text-xs">
-                                    {item.inconsistency_type?.replace(/_/g, ' ')}
-                                  </Badge>
-                                )}
-                                {item.audit_risk && (
-                                  <Badge className={`${item.audit_risk === 'high' ? 'bg-red-600' : item.audit_risk === 'medium' ? 'bg-orange-500' : 'bg-blue-500'}`}>
-                                    {item.audit_risk} risk
-                                  </Badge>
-                                )}
-                              </div>
-                            </div>
-                            
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
-                              {item.location_1 && (
-                                <div className="bg-red-100 p-2 rounded border border-red-200">
-                                  <p className="text-xs text-red-700 font-medium">Statement 1:</p>
-                                  <p className="text-red-900 italic text-xs">"{item.location_1}"</p>
-                                </div>
-                              )}
-                              {item.location_2 && (
-                                <div className="bg-red-100 p-2 rounded border border-red-200">
-                                  <p className="text-xs text-red-700 font-medium">Statement 2 (Conflicts):</p>
-                                  <p className="text-red-900 italic text-xs">"{item.location_2}"</p>
-                                </div>
-                              )}
-                            </div>
-                            
-                            {item.oasis_items_affected && item.oasis_items_affected.length > 0 && (
-                              <div className="flex flex-wrap gap-1">
-                                <span className="text-xs text-slate-600 mr-1">Affects:</span>
-                                {item.oasis_items_affected.map((mi, idx) => (
-                                  <Badge key={idx} variant="outline" className="bg-white text-orange-800 border-orange-300 text-xs">
-                                    {mi}
-                                  </Badge>
-                                ))}
-                              </div>
-                            )}
-
-                            {item.why_problematic && (
-                              <div className="bg-white p-2 rounded border text-sm">
-                                <p className="text-xs text-slate-600 font-medium">Why This Is Problematic:</p>
-                                <p className="text-slate-900">{item.why_problematic}</p>
-                              </div>
-                            )}
-
-                            <Alert className="bg-blue-50 border-blue-200">
-                              <Info className="w-4 h-4 text-blue-600" />
-                              <AlertDescription className="text-blue-900 text-sm">
-                                <strong>Resolution:</strong> {item.resolution}
-                              </AlertDescription>
-                            </Alert>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  )}
+                  {expandedCategories.includes('inconsistencies') && <InconsistenciesResults items={oasisResults.inconsistencies} />}
                 </div>
               )}
 
@@ -1482,26 +1034,7 @@ export default function OASISScrubber({
                     onToggle={toggleCategory}
                   />
 
-                  {expandedCategories.includes('compliant') && (
-                    <div className="grid grid-cols-2 gap-2">
-                      {oasisResults.compliant_items.map((item, index) => (
-                        <div key={index} className="bg-green-50 p-3 rounded border border-green-200">
-                          <div className="flex items-start gap-2">
-                            <CheckCircle2 className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-semibold text-green-900">{item.oasis_item}</p>
-                              <Badge variant="outline" className="text-xs mt-1">{item.category}</Badge>
-                              {item.evidence && (
-                                <p className="text-xs text-green-700 mt-1 truncate" title={item.evidence}>
-                                  "{item.evidence}"
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                  {expandedCategories.includes('compliant') && <CompliantItemsResults items={oasisResults.compliant_items} />}
                 </div>
               )}
 
