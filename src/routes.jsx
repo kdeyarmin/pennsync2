@@ -180,6 +180,8 @@ export const REDIRECTS = [
   // tabs) retired in favor of the unified Clinical Notes hub's Smart Note / Visit
   // Scribe choice. The hub selects the patient/visit itself, so the old ?visitId
   // binding and DocumentVisit's vitals/template/offline extras are not carried over.
+  // The dead page file and its ~40 single-use components were removed once the
+  // consolidation proved stable; the redirect below is kept so old links resolve.
   { from: '/DocumentVisit', to: '/ClinicalDocumentation' },
   { from: '/MedicalScribe', to: '/ClinicalDocumentation?tab=visit-scribe' },
   { from: '/ClinicalInsightsDashboard', to: '/PredictiveAnalytics' },
