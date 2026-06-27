@@ -47,6 +47,23 @@ export default function Example() {
 4. **Icon tile** stays the default gradient — don't override `iconColor` per
    page, so every header shares one accent.
 
-Public, pre-login pages (`JoinTelehealth`, `SignerPortal`) render outside the
-Layout and are the only intentional exception: they keep their own centered,
-full-height shell.
+## Adoption & intentional exceptions
+
+`PageHeader` is adopted by every routed content page. A small set of pages
+deliberately do **not** render the standard hero — these are by design, not a
+pending rollout, and should be left as-is:
+
+- **`JoinTelehealth`, `SignerPortal`** — public, pre-login pages that render
+  outside the Layout; they keep their own centered, full-height shell.
+- **`AIComplianceInServices`** — a thin router that delegates to children
+  (`AIComplianceInServicesHub`, `MyTrainingDashboard`) which each render their
+  own standard header; adding a header here would duplicate it.
+- **`CarePlanBuilder`** — a full-screen editor (`h-[calc(100vh-4rem)]`) with a
+  custom inline toolbar (editable plan name + patient selector). A hero card
+  would break the full-height layout.
+- **`SmartNoteAssistant`** — renders a bespoke, workflow-aware `SmartNoteHeader`
+  (inside `HideWhenEmbedded`) carrying `careScope/step/activeTab` controls the
+  generic header can't express.
+
+`DuplicatePatients.spec.jsx` is a test file, not a page. Everything else uses
+`PageHeader`.

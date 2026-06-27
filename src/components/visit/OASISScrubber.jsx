@@ -4,6 +4,14 @@ import { determineClinicalGroup, identifyComorbidities } from "./pdgmClinicalGro
 import { invokeLLM } from "@/lib/invokeLLM";
 import { buildFunctionalPhrases, buildClinicalAlerts, getRiskColor, getImpactBadge } from "./oasisScrubberData";
 import { buildOASISScrubberPrompt, oasisScrubberResponseSchema } from "./oasisScrubberPrompt";
+import ClinicalAlertsPanel from "./ClinicalAlertsPanel";
+import ComorbiditiesSummary from "./ComorbiditiesSummary";
+import ClinicalGroupSummary from "./ClinicalGroupSummary";
+import ClinicalIndicatorsGrid from "./ClinicalIndicatorsGrid";
+import ClinicalIndicatorsDetail from "./ClinicalIndicatorsDetail";
+import FunctionalPhrasesPanel from "./FunctionalPhrasesPanel";
+import CollapsibleResultHeader from "./CollapsibleResultHeader";
+import PdgmAnalysisSummary from "./PdgmAnalysisSummary";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -30,8 +38,6 @@ import {
   TrendingUp,
   Sparkles,
   Info,
-  ChevronDown,
-  ChevronUp,
   BookOpen,
   MessageSquare,
   Upload,
@@ -43,7 +49,6 @@ import {
   BarChart3,
   Activity,
   Heart,
-  Thermometer,
   Wind,
   Pill,
   Brain,
@@ -52,7 +57,6 @@ import {
   Stethoscope,
   ClipboardList
 } from "lucide-react";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
@@ -422,202 +426,32 @@ export default function OASISScrubber({
                   </div>
 
                   {/* Clinical Group Preview */}
-                  <div className="bg-indigo-50 p-3 rounded-lg border border-indigo-200">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium text-indigo-900">PDGM Clinical Group</span>
-                      <Badge className={`${
-                        extractedIndicators.clinicalGroup.confidence === 'high' ? 'bg-green-600' :
-                        extractedIndicators.clinicalGroup.confidence === 'medium' ? 'bg-yellow-600' : 'bg-red-600'
-                      }`}>
-                        {extractedIndicators.clinicalGroup.confidence} confidence
-                      </Badge>
-                    </div>
-                    <p className="text-sm text-indigo-800 font-semibold">
-                      {extractedIndicators.clinicalGroup.group} - {extractedIndicators.clinicalGroup.name}
-                    </p>
-                    {extractedIndicators.clinicalGroup.matchedPatterns.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mt-2">
-                        {extractedIndicators.clinicalGroup.matchedPatterns.map((p, i) => (
-                          <Badge key={i} variant="outline" className="text-xs bg-white">{p}</Badge>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                  <ClinicalGroupSummary
+                    clinicalGroup={extractedIndicators.clinicalGroup}
+                    variant="compact"
+                  />
 
                   {/* Clinical Indicators Grid */}
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                    {(() => {
-                      const colorStyles = {
-                        blue: { bg: 'bg-blue-50 border-blue-200', text: 'text-blue-600', label: 'text-blue-900', badge: 'bg-blue-500' },
-                        cyan: { bg: 'bg-navy-50 border-navy-200', text: 'text-navy-600', label: 'text-navy-900', badge: 'bg-navy-500' },
-                        red: { bg: 'bg-red-50 border-red-200', text: 'text-red-600', label: 'text-red-900', badge: 'bg-red-500' },
-                        orange: { bg: 'bg-orange-50 border-orange-200', text: 'text-orange-600', label: 'text-orange-900', badge: 'bg-orange-500' },
-                        purple: { bg: 'bg-navy-50 border-navy-200', text: 'text-navy-600', label: 'text-navy-900', badge: 'bg-navy-500' },
-                        pink: { bg: 'bg-gold-50 border-gold-200', text: 'text-gold-600', label: 'text-gold-900', badge: 'bg-gold-500' },
-                        amber: { bg: 'bg-amber-50 border-amber-200', text: 'text-amber-600', label: 'text-amber-900', badge: 'bg-amber-500' },
-                        rose: { bg: 'bg-red-50 border-red-200', text: 'text-red-600', label: 'text-red-900', badge: 'bg-red-500' },
-                        teal: { bg: 'bg-navy-50 border-navy-200', text: 'text-navy-600', label: 'text-navy-900', badge: 'bg-navy-500' },
-                        indigo: { bg: 'bg-indigo-50 border-indigo-200', text: 'text-indigo-600', label: 'text-indigo-900', badge: 'bg-indigo-500' },
-                        green: { bg: 'bg-green-50 border-green-200', text: 'text-green-600', label: 'text-green-900', badge: 'bg-green-500' },
-                      };
-                      return [
-                      { key: 'assistDevices', label: 'Assistive Devices', icon: Footprints, color: 'blue' },
-                      { key: 'oxygenUse', label: 'Oxygen Use', icon: Wind, color: 'cyan' },
-                      { key: 'woundPresent', label: 'Wounds', icon: Activity, color: 'red' },
-                      { key: 'fallRisk', label: 'Fall Risk', icon: AlertTriangle, color: 'orange' },
-                      { key: 'painMentioned', label: 'Pain', icon: Thermometer, color: 'purple' },
-                      { key: 'cognitiveIssues', label: 'Cognitive', icon: Brain, color: 'pink' },
-                      { key: 'diabetic', label: 'Diabetic', icon: Pill, color: 'amber' },
-                      { key: 'cardiacIssues', label: 'Cardiac', icon: Heart, color: 'rose' }
-                    ].map(({ key, label, icon: Icon, color }) => {
-                      const indicator = extractedIndicators.clinical[key];
-                      const cs = colorStyles[color] || colorStyles.blue;
-                      return (
-                        <TooltipProvider key={key}>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <div className={`p-2 rounded border ${
-                                indicator?.detected
-                                  ? cs.bg
-                                  : 'bg-slate-50 border-slate-200'
-                              }`}>
-                                <div className="flex items-center gap-2">
-                                  <Icon className={`w-4 h-4 ${indicator?.detected ? cs.text : 'text-slate-400'}`} />
-                                  <span className={`text-xs font-medium ${indicator?.detected ? cs.label : 'text-slate-500'}`}>
-                                    {label}
-                                  </span>
-                                </div>
-                                <div className="mt-1">
-                                  {indicator?.detected ? (
-                                    <Badge className={`${cs.badge} text-white text-xs`}>Detected</Badge>
-                                  ) : (
-                                    <Badge variant="outline" className="text-xs">Not found</Badge>
-                                  )}
-                                </div>
-                              </div>
-                            </TooltipTrigger>
-                            <TooltipContent side="bottom" className="max-w-xs">
-                              {indicator?.sentences?.length > 0 ? (
-                                <div className="text-xs space-y-1">
-                                  <p className="font-semibold">Relevant phrases:</p>
-                                  {indicator.sentences.slice(0, 3).map((s, i) => (
-                                    <p key={i} className="text-slate-600">"{s.substring(0, 100)}..."</p>
-                                  ))}
-                                </div>
-                              ) : (
-                                <p className="text-xs">No mentions found in narrative</p>
-                              )}
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      );
-                    });
-                    })()}
-                  </div>
+                  <ClinicalIndicatorsGrid clinical={extractedIndicators.clinical} />
 
                   {/* Clinical Decision Support Alerts */}
-                  {clinicalAlerts.length > 0 && (
-                    <div className="bg-gradient-to-r from-blue-50 to-navy-50 p-3 rounded-lg border border-blue-300">
-                      <div className="flex items-center justify-between mb-2">
-                        <h4 className="text-sm font-bold text-blue-900 flex items-center gap-2">
-                          <Stethoscope className="w-4 h-4" />
-                          Clinical Decision Support
-                        </h4>
-                        <Badge variant="outline" className="text-xs bg-white">
-                          {clinicalAlerts.length} active alert{clinicalAlerts.length !== 1 ? 's' : ''}
-                        </Badge>
-                      </div>
-                      <div className="space-y-2">
-                        {clinicalAlerts.map((alert, idx) => (
-                          <div key={idx} className={`bg-white p-2 rounded border ${
-                            alert.severity === 'high' ? 'border-red-300' : 'border-blue-200'
-                          }`}>
-                            <div className="flex items-start justify-between gap-2 mb-1">
-                              <p className="text-xs font-semibold text-slate-900">{alert.title}</p>
-                              <Badge className={`${
-                                alert.severity === 'high' ? 'bg-red-500' : 'bg-blue-500'
-                              } text-white text-xs flex-shrink-0`}>
-                                {alert.severity}
-                              </Badge>
-                            </div>
-                            <p className="text-xs text-slate-700 mb-2">{alert.guideline}</p>
-                            <div className="flex flex-wrap gap-1 mb-1">
-                              {alert.actions.slice(0, 3).map((action, i) => (
-                                <Badge key={i} variant="outline" className="text-xs bg-blue-50">✓ {action}</Badge>
-                              ))}
-                            </div>
-                            <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-200">
-                              <p className="text-xs text-slate-500">
-                                <strong>CMS:</strong> {alert.cmsReference}
-                              </p>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => setActiveTab('reference')}
-                                className="h-5 text-xs text-blue-600 hover:text-blue-800"
-                              >
-                                <BookOpen className="w-3 h-3 mr-1" />
-                                Details
-                              </Button>
-                            </div>
-                            {alert.revenueNote && (
-                              <div className="mt-2 bg-green-50 p-2 rounded border border-green-200">
-                                <p className="text-xs text-green-800">
-                                  <DollarSign className="w-3 h-3 inline mr-1" />
-                                  <strong>PDGM:</strong> {alert.revenueNote}
-                                </p>
-                              </div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                  <ClinicalAlertsPanel
+                    alerts={clinicalAlerts}
+                    variant="compact"
+                    onViewReference={() => setActiveTab('reference')}
+                  />
 
                   {/* Comorbidities Summary */}
-                  {extractedIndicators.comorbidities.count > 0 && (
-                    <div className="bg-green-50 p-3 rounded-lg border border-green-200">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-medium text-green-900">Identified Comorbidities</span>
-                        <Badge className={`${
-                          extractedIndicators.comorbidities.adjustment === 'high' ? 'bg-green-600' :
-                          extractedIndicators.comorbidities.adjustment === 'low' ? 'bg-yellow-600' : 'bg-slate-500'
-                        }`}>
-                          {extractedIndicators.comorbidities.adjustment} adjustment
-                        </Badge>
-                      </div>
-                      <div className="flex flex-wrap gap-1">
-                        {extractedIndicators.comorbidities.high.map((c, i) => (
-                          <Badge key={`h-${i}`} className="bg-green-600 text-white text-xs">{c.name}</Badge>
-                        ))}
-                        {extractedIndicators.comorbidities.low.map((c, i) => (
-                          <Badge key={`l-${i}`} variant="outline" className="text-xs">{c.name}</Badge>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                  <ComorbiditiesSummary
+                    comorbidities={extractedIndicators.comorbidities}
+                    variant="compact"
+                  />
 
                   {/* Functional Phrases Summary */}
-                  <div className="grid grid-cols-3 md:grid-cols-6 gap-2 text-xs">
-                    {[
-                      { key: 'bathing', label: 'Bathing', icon: '🚿' },
-                      { key: 'dressing', label: 'Dressing', icon: '👕' },
-                      { key: 'ambulation', label: 'Ambulation', icon: '🚶' },
-                      { key: 'transfer', label: 'Transfers', icon: '🔄' },
-                      { key: 'toileting', label: 'Toileting', icon: '🚽' },
-                      { key: 'grooming', label: 'Grooming', icon: '🪥' }
-                    ].map(({ key, label, icon }) => {
-                      const phrases = extractedIndicators.functional[key];
-                      const count = phrases?.allPhrases?.length || 0;
-                      return (
-                        <div key={key} className={`p-2 rounded border text-center ${count > 0 ? 'bg-blue-50 border-blue-200' : 'bg-slate-50 border-slate-200'}`}>
-                          <span className="text-lg">{icon}</span>
-                          <p className={`font-medium ${count > 0 ? 'text-blue-900' : 'text-slate-500'}`}>{label}</p>
-                          <p className={count > 0 ? 'text-blue-700' : 'text-slate-400'}>{count} phrases</p>
-                        </div>
-                      );
-                    })}
-                  </div>
+                  <FunctionalPhrasesPanel
+                    functional={extractedIndicators.functional}
+                    variant="compact"
+                  />
                 </div>
               )}
             </div>
@@ -714,308 +548,36 @@ export default function OASISScrubber({
                   {extractedIndicators ? (
                     <div className="space-y-6 p-1">
                       {/* Clinical Decision Support Alerts - Expanded View */}
-                      {clinicalAlerts.length > 0 && (
-                        <Card className="border-blue-300 bg-gradient-to-r from-blue-50 to-navy-50">
-                          <CardHeader className="py-3 bg-blue-100">
-                            <CardTitle className="text-sm flex items-center gap-2">
-                              <Stethoscope className="w-4 h-4 text-blue-700" />
-                              AI Clinical Decision Support ({clinicalAlerts.length})
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent className="p-4">
-                            <div className="space-y-3">
-                              {clinicalAlerts.map((alert, idx) => (
-                                <div key={idx} className="bg-white p-3 rounded-lg border-2 border-blue-200">
-                                  <div className="flex items-start justify-between gap-2 mb-2">
-                                    <div className="flex items-center gap-2">
-                                      <div className={`w-2 h-2 rounded-full ${
-                                        alert.severity === 'high' ? 'bg-red-500' : 'bg-blue-500'
-                                      }`} />
-                                      <h5 className="font-bold text-slate-900">{alert.title}</h5>
-                                    </div>
-                                    <Badge className={`${
-                                      alert.severity === 'high' ? 'bg-red-500' : 'bg-blue-500'
-                                    } text-white text-xs`}>
-                                      {alert.severity} priority
-                                    </Badge>
-                                  </div>
-                                  
-                                  <div className="bg-blue-50 p-3 rounded border border-blue-200 mb-2">
-                                    <p className="text-xs font-semibold text-blue-900 mb-1">📋 Evidence-Based Guideline:</p>
-                                    <p className="text-sm text-blue-800">{alert.guideline}</p>
-                                  </div>
-
-                                  <div className="mb-2">
-                                    <p className="text-xs font-semibold text-slate-700 mb-1">Recommended Actions:</p>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-1">
-                                      {alert.actions.map((action, i) => (
-                                        <div key={i} className="flex items-center gap-1 text-xs text-slate-700">
-                                          <CheckCircle2 className="w-3 h-3 text-green-600 flex-shrink-0" />
-                                          {action}
-                                        </div>
-                                      ))}
-                                    </div>
-                                  </div>
-
-                                  {alert.revenueNote && (
-                                    <div className="bg-green-50 p-2 rounded border border-green-200 mb-2">
-                                      <p className="text-xs text-green-800">
-                                        <DollarSign className="w-3 h-3 inline mr-1" />
-                                        <strong>PDGM Impact:</strong> {alert.revenueNote}
-                                      </p>
-                                    </div>
-                                  )}
-
-                                  <div className="flex items-center justify-between pt-2 border-t">
-                                    <p className="text-xs text-slate-500">
-                                      <strong>CMS Reference:</strong> {alert.cmsReference}
-                                    </p>
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      onClick={() => setActiveTab('reference')}
-                                      className="h-6 text-xs"
-                                    >
-                                      <BookOpen className="w-3 h-3 mr-1" />
-                                      View CMS Guidance
-                                    </Button>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                            <Alert className="mt-3 bg-navy-50 border-navy-200">
-                              <Info className="w-4 h-4 text-navy-600" />
-                              <AlertDescription className="text-navy-900 text-xs">
-                                These evidence-based alerts are triggered by clinical indicators detected in your documentation. 
-                                Following these guidelines improves patient outcomes, strengthens OASIS defensibility, and optimizes reimbursement.
-                              </AlertDescription>
-                            </Alert>
-                          </CardContent>
-                        </Card>
-                      )}
+                      <ClinicalAlertsPanel
+                        alerts={clinicalAlerts}
+                        variant="expanded"
+                        onViewReference={() => setActiveTab('reference')}
+                      />
 
                       {/* Clinical Group Determination */}
-                      <Card className="border-indigo-200">
-                        <CardHeader className="py-3 bg-indigo-50">
-                          <CardTitle className="text-sm flex items-center gap-2">
-                            <Stethoscope className="w-4 h-4 text-indigo-600" />
-                            PDGM Clinical Group Analysis
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-4">
-                          <div className="flex items-center justify-between mb-3">
-                            <div>
-                              <p className="text-lg font-bold text-indigo-900">
-                                {extractedIndicators.clinicalGroup.group}
-                              </p>
-                              <p className="text-sm text-indigo-700">{extractedIndicators.clinicalGroup.name}</p>
-                            </div>
-                            <Badge className={`${
-                              extractedIndicators.clinicalGroup.confidence === 'high' ? 'bg-green-600' :
-                              extractedIndicators.clinicalGroup.confidence === 'medium' ? 'bg-yellow-600' : 'bg-red-600'
-                            } text-white`}>
-                              {extractedIndicators.clinicalGroup.confidence?.toUpperCase()} CONFIDENCE
-                            </Badge>
-                          </div>
-                          {extractedIndicators.clinicalGroup.matchedPatterns.length > 0 && (
-                            <div>
-                              <p className="text-xs text-slate-500 mb-1">Matched Patterns:</p>
-                              <div className="flex flex-wrap gap-1">
-                                {extractedIndicators.clinicalGroup.matchedPatterns.map((p, i) => (
-                                  <Badge key={i} variant="outline" className="text-xs">{p}</Badge>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                        </CardContent>
-                      </Card>
+                      <ClinicalGroupSummary
+                        clinicalGroup={extractedIndicators.clinicalGroup}
+                        variant="expanded"
+                      />
 
                       {/* Comorbidities */}
-                      <Card className="border-green-200">
-                        <CardHeader className="py-3 bg-green-50">
-                          <CardTitle className="text-sm flex items-center gap-2">
-                            <Activity className="w-4 h-4 text-green-600" />
-                            Comorbidity Analysis
-                            <Badge className={`ml-auto ${
-                              extractedIndicators.comorbidities.adjustment === 'high' ? 'bg-green-600' :
-                              extractedIndicators.comorbidities.adjustment === 'low' ? 'bg-yellow-600' : 'bg-slate-500'
-                            }`}>
-                              {extractedIndicators.comorbidities.adjustment?.toUpperCase()} Adjustment
-                            </Badge>
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-4">
-                          <div className="grid grid-cols-2 gap-4">
-                            <div className="bg-green-50 p-3 rounded border border-green-200">
-                              <p className="text-xs font-semibold text-green-800 mb-2">High-Impact (1 = HIGH adj)</p>
-                              {extractedIndicators.comorbidities.high.length > 0 ? (
-                                <ul className="space-y-1">
-                                  {extractedIndicators.comorbidities.high.map((c, i) => (
-                                    <li key={i} className="text-sm flex items-center gap-2">
-                                      <CheckCircle2 className="w-3 h-3 text-green-600" />
-                                      <span className="text-green-900">{c.name}</span>
-                                      <span className="text-xs text-green-600">({c.icd10_codes?.join(', ')})</span>
-                                    </li>
-                                  ))}
-                                </ul>
-                              ) : (
-                                <p className="text-sm text-slate-500">None identified</p>
-                              )}
-                            </div>
-                            <div className="bg-yellow-50 p-3 rounded border border-yellow-200">
-                              <p className="text-xs font-semibold text-yellow-800 mb-2">Low-Impact (2+ = LOW adj)</p>
-                              {extractedIndicators.comorbidities.low.length > 0 ? (
-                                <ul className="space-y-1">
-                                  {extractedIndicators.comorbidities.low.map((c, i) => (
-                                    <li key={i} className="text-sm flex items-center gap-2">
-                                      <CheckCircle2 className="w-3 h-3 text-yellow-600" />
-                                      <span className="text-yellow-900">{c.name}</span>
-                                    </li>
-                                  ))}
-                                </ul>
-                              ) : (
-                                <p className="text-sm text-slate-500">None identified</p>
-                              )}
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
+                      <ComorbiditiesSummary
+                        comorbidities={extractedIndicators.comorbidities}
+                        variant="expanded"
+                      />
 
                       {/* Clinical Indicators Detail */}
-                      <Card>
-                        <CardHeader className="py-3 bg-slate-50">
-                          <CardTitle className="text-sm flex items-center gap-2">
-                            <Brain className="w-4 h-4 text-slate-600" />
-                            Clinical Indicators Extracted
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-4">
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            {(() => {
-                              const colorStyles = {
-                                blue: { bg: 'bg-blue-50 border-blue-200', text: 'text-blue-600' },
-                                cyan: { bg: 'bg-navy-50 border-navy-200', text: 'text-navy-600' },
-                                red: { bg: 'bg-red-50 border-red-200', text: 'text-red-600' },
-                                orange: { bg: 'bg-orange-50 border-orange-200', text: 'text-orange-600' },
-                                purple: { bg: 'bg-navy-50 border-navy-200', text: 'text-navy-600' },
-                                pink: { bg: 'bg-gold-50 border-gold-200', text: 'text-gold-600' },
-                                amber: { bg: 'bg-amber-50 border-amber-200', text: 'text-amber-600' },
-                                rose: { bg: 'bg-red-50 border-red-200', text: 'text-red-600' },
-                                indigo: { bg: 'bg-indigo-50 border-indigo-200', text: 'text-indigo-600' },
-                                green: { bg: 'bg-green-50 border-green-200', text: 'text-green-600' },
-                              };
-                              return Object.entries({
-                              assistDevices: { label: 'Assistive Devices', icon: Footprints, color: 'blue' },
-                              oxygenUse: { label: 'Oxygen Usage', icon: Wind, color: 'cyan' },
-                              woundPresent: { label: 'Wound Presence', icon: Activity, color: 'red' },
-                              fallRisk: { label: 'Fall Risk Factors', icon: AlertTriangle, color: 'orange' },
-                              painMentioned: { label: 'Pain Indicators', icon: Thermometer, color: 'purple' },
-                              cognitiveIssues: { label: 'Cognitive Concerns', icon: Brain, color: 'pink' },
-                              diabetic: { label: 'Diabetic Management', icon: Pill, color: 'amber' },
-                              cardiacIssues: { label: 'Cardiac Symptoms', icon: Heart, color: 'rose' },
-                              assistanceNeeded: { label: 'Assistance Levels', icon: Hand, color: 'indigo' },
-                              independentMentioned: { label: 'Independence', icon: CheckCircle2, color: 'green' }
-                            }).map(([key, { label, icon: Icon, color }]) => {
-                              const indicator = extractedIndicators.clinical[key];
-                              const cs = colorStyles[color] || colorStyles.blue;
-                              if (!indicator) return null;
-                              return (
-                                <div key={key} className={`p-3 rounded border ${indicator.detected ? cs.bg : 'bg-slate-50 border-slate-200'}`}>
-                                  <div className="flex items-center justify-between mb-2">
-                                    <div className="flex items-center gap-2">
-                                      <Icon className={`w-4 h-4 ${indicator.detected ? cs.text : 'text-slate-400'}`} />
-                                      <span className="font-medium text-sm">{label}</span>
-                                    </div>
-                                    {indicator.detected ? (
-                                      <Badge className="bg-green-500 text-xs">Detected</Badge>
-                                    ) : (
-                                      <Badge variant="outline" className="text-xs">Not found</Badge>
-                                    )}
-                                  </div>
-                                  {indicator.detected && indicator.sentences?.length > 0 && (
-                                    <div className="mt-2 space-y-1 max-h-24 overflow-y-auto">
-                                      {indicator.sentences.slice(0, 3).map((s, i) => (
-                                        <div key={i} className="flex items-start gap-1 group">
-                                          <p className="text-xs text-slate-600 italic flex-1">"{s.substring(0, 150)}{s.length > 150 ? '...' : ''}"</p>
-                                          <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            className="h-5 w-5 p-0 opacity-0 group-hover:opacity-100"
-                                            onClick={() => copyToClipboard(s, `${key}-${i}`)}
-                                          >
-                                            {copiedText === `${key}-${i}` ? (
-                                              <CheckCircle2 className="w-3 h-3 text-green-600" />
-                                            ) : (
-                                              <Copy className="w-3 h-3" />
-                                            )}
-                                          </Button>
-                                        </div>
-                                      ))}
-                                    </div>
-                                  )}
-                                </div>
-                              );
-                            });
-                            })()}
-                          </div>
-                        </CardContent>
-                      </Card>
+                      <ClinicalIndicatorsDetail
+                        clinical={extractedIndicators.clinical}
+                        copiedText={copiedText}
+                        onCopy={copyToClipboard}
+                      />
 
                       {/* Functional Phrases Detail */}
-                      <Card>
-                        <CardHeader className="py-3 bg-blue-50">
-                          <CardTitle className="text-sm flex items-center gap-2">
-                            <Footprints className="w-4 h-4 text-blue-600" />
-                            ADL/IADL Functional Phrases
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-4">
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                            {Object.entries({
-                              bathing: { label: 'Bathing (M1830)', icon: '🚿', items: ['M1830', 'GG0130E'] },
-                              dressing: { label: 'Dressing (M1810/20)', icon: '👕', items: ['M1810', 'M1820'] },
-                              ambulation: { label: 'Ambulation (M1860)', icon: '🚶', items: ['M1860', 'GG0170'] },
-                              transfer: { label: 'Transfers (M1850)', icon: '🔄', items: ['M1850'] },
-                              toileting: { label: 'Toileting (M1840)', icon: '🚽', items: ['M1840'] },
-                              grooming: { label: 'Grooming (M1800)', icon: '🪥', items: ['M1800'] },
-                              eating: { label: 'Eating (GG0130A)', icon: '🍽️', items: ['GG0130A'] },
-                              medications: { label: 'Medications (M2020)', icon: '💊', items: ['M2020', 'M2030'] }
-                            }).map(([key, { label, icon, items }]) => {
-                              const phrases = extractedIndicators.functional[key];
-                              const count = phrases?.allPhrases?.length || 0;
-                              return (
-                                <div key={key} className={`p-3 rounded border ${count > 0 ? 'bg-blue-50 border-blue-200' : 'bg-slate-50 border-slate-200'}`}>
-                                  <div className="flex items-center justify-between mb-2">
-                                    <div className="flex items-center gap-2">
-                                      <span className="text-lg">{icon}</span>
-                                      <span className="font-medium text-sm">{label}</span>
-                                    </div>
-                                    <Badge variant={count > 0 ? 'default' : 'outline'} className="text-xs">
-                                      {count} phrases
-                                    </Badge>
-                                  </div>
-                                  <div className="flex flex-wrap gap-1 mb-2">
-                                    {items.map(item => (
-                                      <Badge key={item} variant="outline" className="text-xs">{item}</Badge>
-                                    ))}
-                                  </div>
-                                  {count > 0 && phrases.allPhrases?.slice(0, 2).map((s, i) => (
-                                    <p key={i} className="text-xs text-slate-600 italic mb-1">"{s.substring(0, 80)}..."</p>
-                                  ))}
-                                  {phrases?.assistLevel?.length > 0 && (
-                                    <div className="mt-2 pt-2 border-t">
-                                      <p className="text-xs text-slate-500">Assist Levels Found:</p>
-                                      {phrases.assistLevel.slice(0, 2).map((a, i) => (
-                                        <Badge key={i} variant="outline" className="text-xs mr-1 mt-1">{a.substring(0, 40)}</Badge>
-                                      ))}
-                                    </div>
-                                  )}
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </CardContent>
-                      </Card>
+                      <FunctionalPhrasesPanel
+                        functional={extractedIndicators.functional}
+                        variant="expanded"
+                      />
                     </div>
                   ) : (
                     <div className="text-center py-12 text-slate-500">
@@ -1187,139 +749,7 @@ export default function OASISScrubber({
                 {/* PDGM Analysis Section */}
                 {oasisResults.pdgm_analysis && (
                   <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg border border-green-200 mb-4">
-                    <h4 className="font-bold text-green-900 mb-3 flex items-center gap-2">
-                      <DollarSign className="w-5 h-5" />
-                      PDGM Case-Mix Analysis
-                    </h4>
-
-                    {/* Clinical Group with Confidence */}
-                    <div className="bg-white p-3 rounded border mb-3">
-                      <div className="flex items-center justify-between flex-wrap gap-2 mb-2">
-                        <div>
-                          <p className="text-xs text-slate-500">Clinical Group (MMTA)</p>
-                          <p className="font-bold text-slate-900">{oasisResults.pdgm_analysis.clinical_group}</p>
-                        </div>
-                        <Badge className={`${
-                          oasisResults.pdgm_analysis.clinical_group_confidence === 'high' ? 'bg-green-600' :
-                          oasisResults.pdgm_analysis.clinical_group_confidence === 'medium' ? 'bg-yellow-600' : 'bg-red-600'
-                        }`}>
-                          {oasisResults.pdgm_analysis.clinical_group_confidence?.toUpperCase()} Confidence
-                        </Badge>
-                      </div>
-                      {oasisResults.pdgm_analysis.clinical_group_rationale && (
-                        <p className="text-xs text-slate-600 mt-1">{oasisResults.pdgm_analysis.clinical_group_rationale}</p>
-                      )}
-                      {oasisResults.pdgm_analysis.primary_dx_icd10_suggested && (
-                        <p className="text-xs text-blue-700 mt-1">
-                          <strong>Suggested ICD-10:</strong> {oasisResults.pdgm_analysis.primary_dx_icd10_suggested}
-                        </p>
-                      )}
-                      {oasisResults.pdgm_analysis.alternative_clinical_groups?.length > 0 && (
-                        <div className="mt-2 flex flex-wrap gap-1">
-                          <span className="text-xs text-slate-500">Alternatives:</span>
-                          {oasisResults.pdgm_analysis.alternative_clinical_groups.map((alt, idx) => (
-                            <Badge key={idx} variant="outline" className="text-xs">{alt}</Badge>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm mb-3">
-                      <div className="bg-white p-2 rounded border">
-                        <p className="text-xs text-slate-500">Functional Level</p>
-                        <p className={`font-semibold ${
-                          oasisResults.pdgm_analysis.functional_level === 'high' ? 'text-green-700' :
-                          oasisResults.pdgm_analysis.functional_level === 'medium' ? 'text-yellow-700' : 'text-red-700'
-                        }`}>{oasisResults.pdgm_analysis.functional_level?.toUpperCase()}</p>
-                        {oasisResults.pdgm_analysis.functional_points_calculated && (
-                          <p className="text-xs text-slate-500 mt-1">{oasisResults.pdgm_analysis.functional_points_calculated} points</p>
-                        )}
-                      </div>
-                      <div className="bg-white p-2 rounded border">
-                        <p className="text-xs text-slate-500">Comorbidity Adj.</p>
-                        <p className={`font-semibold ${
-                          oasisResults.pdgm_analysis.comorbidity_adjustment === 'high' ? 'text-green-700' :
-                          oasisResults.pdgm_analysis.comorbidity_adjustment === 'low' ? 'text-yellow-700' : 'text-slate-700'
-                        }`}>{oasisResults.pdgm_analysis.comorbidity_adjustment?.toUpperCase()}</p>
-                        {oasisResults.pdgm_analysis.comorbidity_count > 0 && (
-                          <p className="text-xs text-slate-500 mt-1">{oasisResults.pdgm_analysis.comorbidity_count} qualifying</p>
-                        )}
-                      </div>
-                      <div className="bg-white p-2 rounded border">
-                        <p className="text-xs text-slate-500">Case-Mix Weight</p>
-                        <p className="font-bold text-green-700 text-lg">{oasisResults.pdgm_analysis.estimated_case_mix_weight}</p>
-                      </div>
-                      <div className="bg-green-100 p-2 rounded border border-green-300">
-                        <p className="text-xs text-green-700">Optimization</p>
-                        <p className="font-semibold text-green-800">{oasisResults.pdgm_analysis.optimization_potential}</p>
-                      </div>
-                    </div>
-
-                    {/* Qualifying Comorbidities Detail */}
-                    {oasisResults.pdgm_analysis.qualifying_comorbidities && (
-                      <div className="bg-blue-50 p-3 rounded border border-blue-200 mb-3">
-                        <p className="text-xs font-semibold text-blue-900 mb-2">Qualifying Comorbidities:</p>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                          {oasisResults.pdgm_analysis.qualifying_comorbidities.high_impact?.length > 0 && (
-                            <div>
-                              <p className="text-xs text-green-700 font-medium">✓ High-Impact (1 = HIGH adj):</p>
-                              <ul className="text-xs text-green-900">
-                                {oasisResults.pdgm_analysis.qualifying_comorbidities.high_impact.map((c, i) => (
-                                  <li key={i}>• {c}</li>
-                                ))}
-                              </ul>
-                            </div>
-                          )}
-                          {oasisResults.pdgm_analysis.qualifying_comorbidities.low_impact?.length > 0 && (
-                            <div>
-                              <p className="text-xs text-yellow-700 font-medium">○ Low-Impact (2+ = LOW adj):</p>
-                              <ul className="text-xs text-yellow-900">
-                                {oasisResults.pdgm_analysis.qualifying_comorbidities.low_impact.map((c, i) => (
-                                  <li key={i}>• {c}</li>
-                                ))}
-                              </ul>
-                            </div>
-                          )}
-                        </div>
-                        {oasisResults.pdgm_analysis.qualifying_comorbidities.potential_additions?.length > 0 && (
-                          <div className="mt-2 bg-yellow-100 p-2 rounded">
-                            <p className="text-xs text-yellow-800 font-medium">💡 Potential Additional Comorbidities (needs documentation):</p>
-                            <ul className="text-xs text-yellow-900">
-                              {oasisResults.pdgm_analysis.qualifying_comorbidities.potential_additions.map((c, i) => (
-                                <li key={i}>• {c}</li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Case-Mix Weight Breakdown */}
-                    {oasisResults.pdgm_analysis.case_mix_weight_breakdown && (
-                      <div className="bg-white p-2 rounded border mb-3">
-                        <p className="text-xs font-semibold text-slate-700 mb-1">Case-Mix Weight Breakdown:</p>
-                        <div className="flex gap-4 text-xs">
-                          <span>Clinical: <strong>{oasisResults.pdgm_analysis.case_mix_weight_breakdown.clinical_component}</strong></span>
-                          <span>Functional: <strong>{oasisResults.pdgm_analysis.case_mix_weight_breakdown.functional_component}</strong></span>
-                          <span>Comorbidity: <strong>{oasisResults.pdgm_analysis.case_mix_weight_breakdown.comorbidity_component}</strong></span>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Optimization Strategies */}
-                    {oasisResults.pdgm_analysis.optimization_strategies?.length > 0 && (
-                      <Alert className="bg-green-100 border-green-300">
-                        <TrendingUp className="w-4 h-4 text-green-600" />
-                        <AlertDescription className="text-green-900 text-sm">
-                          <strong>Optimization Strategies:</strong>
-                          <ul className="mt-1 text-xs">
-                            {oasisResults.pdgm_analysis.optimization_strategies.map((strategy, idx) => (
-                              <li key={idx}>• {strategy}</li>
-                            ))}
-                          </ul>
-                        </AlertDescription>
-                      </Alert>
-                    )}
+                    <PdgmAnalysisSummary pdgmAnalysis={oasisResults.pdgm_analysis} />
 
                     {/* Automated Optimization Suggestions */}
                     <div className="bg-gradient-to-r from-amber-50 to-orange-50 p-4 rounded-lg border border-amber-200 mt-3">
@@ -1712,25 +1142,16 @@ export default function OASISScrubber({
               {/* OASIS-Narrative Mismatches (from uploaded OASIS) */}
               {oasisResults.oasis_narrative_mismatches && oasisResults.oasis_narrative_mismatches.length > 0 && (
                 <div className="space-y-3">
-                  <div 
-                    className="flex items-center justify-between cursor-pointer bg-navy-50 p-4 rounded-lg border-2 border-navy-200"
-                    onClick={() => toggleCategory('mismatches')}
-                  >
-                    <div className="flex items-center gap-3">
-                      <AlertTriangle className="w-6 h-6 text-navy-600" />
-                      <div>
-                        <h4 className="font-bold text-navy-900 text-lg">
-                          🔍 OASIS vs Narrative Mismatches ({oasisResults.oasis_narrative_mismatches.length})
-                        </h4>
-                        <p className="text-xs text-navy-700">Uploaded OASIS scores don't match clinical documentation</p>
-                      </div>
-                    </div>
-                    {expandedCategories.includes('mismatches') ? (
-                      <ChevronUp className="w-5 h-5 text-navy-600" />
-                    ) : (
-                      <ChevronDown className="w-5 h-5 text-navy-600" />
-                    )}
-                  </div>
+                  <CollapsibleResultHeader
+                    name="mismatches"
+                    icon={AlertTriangle}
+                    color="navy"
+                    title="🔍 OASIS vs Narrative Mismatches"
+                    count={oasisResults.oasis_narrative_mismatches.length}
+                    subtitle="Uploaded OASIS scores don't match clinical documentation"
+                    isExpanded={expandedCategories.includes('mismatches')}
+                    onToggle={toggleCategory}
+                  />
 
                   {expandedCategories.includes('mismatches') && (
                     <div className="space-y-3">
@@ -1774,25 +1195,16 @@ export default function OASISScrubber({
               {/* Cross-Validation Failures */}
               {oasisResults.cross_validation_failures && oasisResults.cross_validation_failures.length > 0 && (
                 <div className="space-y-3">
-                  <div 
-                    className="flex items-center justify-between cursor-pointer bg-orange-50 p-4 rounded-lg border-2 border-orange-200"
-                    onClick={() => toggleCategory('crossvalidation')}
-                  >
-                    <div className="flex items-center gap-3">
-                      <AlertTriangle className="w-6 h-6 text-orange-600" />
-                      <div>
-                        <h4 className="font-bold text-orange-900 text-lg">
-                          🔗 Cross-Validation Issues ({oasisResults.cross_validation_failures.length})
-                        </h4>
-                        <p className="text-xs text-orange-700">Related OASIS items don't align per CMS rules</p>
-                      </div>
-                    </div>
-                    {expandedCategories.includes('crossvalidation') ? (
-                      <ChevronUp className="w-5 h-5 text-orange-600" />
-                    ) : (
-                      <ChevronDown className="w-5 h-5 text-orange-600" />
-                    )}
-                  </div>
+                  <CollapsibleResultHeader
+                    name="crossvalidation"
+                    icon={AlertTriangle}
+                    color="orange"
+                    title="🔗 Cross-Validation Issues"
+                    count={oasisResults.cross_validation_failures.length}
+                    subtitle="Related OASIS items don't align per CMS rules"
+                    isExpanded={expandedCategories.includes('crossvalidation')}
+                    onToggle={toggleCategory}
+                  />
 
                   {expandedCategories.includes('crossvalidation') && (
                     <div className="space-y-3">
@@ -1887,25 +1299,16 @@ export default function OASISScrubber({
               {/* Underscoring Opportunities */}
               {oasisResults.underscoring_opportunities && oasisResults.underscoring_opportunities.length > 0 && (
                 <div className="space-y-3">
-                  <div 
-                    className="flex items-center justify-between cursor-pointer bg-green-50 p-4 rounded-lg border-2 border-green-200"
-                    onClick={() => toggleCategory('underscoring')}
-                  >
-                    <div className="flex items-center gap-3">
-                      <TrendingUp className="w-6 h-6 text-green-600" />
-                      <div>
-                        <h4 className="font-bold text-green-900 text-lg">
-                          💰 Underscoring Opportunities ({oasisResults.underscoring_opportunities.length})
-                        </h4>
-                        <p className="text-xs text-green-700">Documentation supports higher scores - potential revenue increase</p>
-                      </div>
-                    </div>
-                    {expandedCategories.includes('underscoring') ? (
-                      <ChevronUp className="w-5 h-5 text-green-600" />
-                    ) : (
-                      <ChevronDown className="w-5 h-5 text-green-600" />
-                    )}
-                  </div>
+                  <CollapsibleResultHeader
+                    name="underscoring"
+                    icon={TrendingUp}
+                    color="green"
+                    title="💰 Underscoring Opportunities"
+                    count={oasisResults.underscoring_opportunities.length}
+                    subtitle="Documentation supports higher scores - potential revenue increase"
+                    isExpanded={expandedCategories.includes('underscoring')}
+                    onToggle={toggleCategory}
+                  />
 
                   {expandedCategories.includes('underscoring') && (
                     <div className="space-y-3">
@@ -1989,25 +1392,16 @@ export default function OASISScrubber({
               {/* Overscoring Risks */}
               {oasisResults.overscoring_risks && oasisResults.overscoring_risks.length > 0 && (
                 <div className="space-y-3">
-                  <div 
-                    className="flex items-center justify-between cursor-pointer bg-red-50 p-4 rounded-lg border-2 border-red-200"
-                    onClick={() => toggleCategory('overscoring')}
-                  >
-                    <div className="flex items-center gap-3">
-                      <AlertTriangle className="w-6 h-6 text-red-600" />
-                      <div>
-                        <h4 className="font-bold text-red-900 text-lg">
-                          ⚠️ Overscoring Risks ({oasisResults.overscoring_risks.length})
-                        </h4>
-                        <p className="text-xs text-red-700">Claimed scores not fully supported - audit risk</p>
-                      </div>
-                    </div>
-                    {expandedCategories.includes('overscoring') ? (
-                      <ChevronUp className="w-5 h-5 text-red-600" />
-                    ) : (
-                      <ChevronDown className="w-5 h-5 text-red-600" />
-                    )}
-                  </div>
+                  <CollapsibleResultHeader
+                    name="overscoring"
+                    icon={AlertTriangle}
+                    color="red"
+                    title="⚠️ Overscoring Risks"
+                    count={oasisResults.overscoring_risks.length}
+                    subtitle="Claimed scores not fully supported - audit risk"
+                    isExpanded={expandedCategories.includes('overscoring')}
+                    onToggle={toggleCategory}
+                  />
 
                   {expandedCategories.includes('overscoring') && (
                     <div className="space-y-3">
@@ -2107,25 +1501,16 @@ export default function OASISScrubber({
               {/* Critical Missing Items */}
               {oasisResults.critical_missing && oasisResults.critical_missing.length > 0 && (
                 <div className="space-y-3">
-                  <div 
-                    className="flex items-center justify-between cursor-pointer bg-red-50 p-4 rounded-lg border-2 border-red-200"
-                    onClick={() => toggleCategory('critical')}
-                  >
-                    <div className="flex items-center gap-3">
-                      <XCircle className="w-6 h-6 text-red-600" />
-                      <div>
-                        <h4 className="font-bold text-red-900 text-lg">
-                          Critical Missing OASIS Items ({oasisResults.critical_missing.length})
-                        </h4>
-                        <p className="text-xs text-red-700">These items are REQUIRED for submission and reimbursement</p>
-                      </div>
-                    </div>
-                    {expandedCategories.includes('critical') ? (
-                      <ChevronUp className="w-5 h-5 text-red-600" />
-                    ) : (
-                      <ChevronDown className="w-5 h-5 text-red-600" />
-                    )}
-                  </div>
+                  <CollapsibleResultHeader
+                    name="critical"
+                    icon={XCircle}
+                    color="red"
+                    title="Critical Missing OASIS Items"
+                    count={oasisResults.critical_missing.length}
+                    subtitle="These items are REQUIRED for submission and reimbursement"
+                    isExpanded={expandedCategories.includes('critical')}
+                    onToggle={toggleCategory}
+                  />
 
                   {expandedCategories.includes('critical') && (
                     <div className="space-y-3">
@@ -2186,25 +1571,16 @@ export default function OASISScrubber({
               {/* Incomplete Assessments */}
               {oasisResults.incomplete_assessments && oasisResults.incomplete_assessments.length > 0 && (
                 <div className="space-y-3">
-                  <div 
-                    className="flex items-center justify-between cursor-pointer bg-yellow-50 p-4 rounded-lg border-2 border-yellow-200"
-                    onClick={() => toggleCategory('incomplete')}
-                  >
-                    <div className="flex items-center gap-3">
-                      <AlertTriangle className="w-6 h-6 text-yellow-600" />
-                      <div>
-                        <h4 className="font-bold text-yellow-900 text-lg">
-                          Incomplete Assessments ({oasisResults.incomplete_assessments.length})
-                        </h4>
-                        <p className="text-xs text-yellow-700">These items need more specific detail</p>
-                      </div>
-                    </div>
-                    {expandedCategories.includes('incomplete') ? (
-                      <ChevronUp className="w-5 h-5 text-yellow-600" />
-                    ) : (
-                      <ChevronDown className="w-5 h-5 text-yellow-600" />
-                    )}
-                  </div>
+                  <CollapsibleResultHeader
+                    name="incomplete"
+                    icon={AlertTriangle}
+                    color="yellow"
+                    title="Incomplete Assessments"
+                    count={oasisResults.incomplete_assessments.length}
+                    subtitle="These items need more specific detail"
+                    isExpanded={expandedCategories.includes('incomplete')}
+                    onToggle={toggleCategory}
+                  />
 
                   {expandedCategories.includes('incomplete') && (
                     <div className="space-y-3">
@@ -2250,25 +1626,16 @@ export default function OASISScrubber({
               {/* Vague Documentation */}
               {oasisResults.vague_documentation && oasisResults.vague_documentation.length > 0 && (
                 <div className="space-y-3">
-                  <div 
-                    className="flex items-center justify-between cursor-pointer bg-amber-50 p-4 rounded-lg border-2 border-amber-200"
-                    onClick={() => toggleCategory('vague')}
-                  >
-                    <div className="flex items-center gap-3">
-                      <AlertTriangle className="w-6 h-6 text-amber-600" />
-                      <div>
-                        <h4 className="font-bold text-amber-900 text-lg">
-                          📝 Vague Documentation ({oasisResults.vague_documentation.length})
-                        </h4>
-                        <p className="text-xs text-amber-700">Language not specific enough for defensible OASIS scoring</p>
-                      </div>
-                    </div>
-                    {expandedCategories.includes('vague') ? (
-                      <ChevronUp className="w-5 h-5 text-amber-600" />
-                    ) : (
-                      <ChevronDown className="w-5 h-5 text-amber-600" />
-                    )}
-                  </div>
+                  <CollapsibleResultHeader
+                    name="vague"
+                    icon={AlertTriangle}
+                    color="amber"
+                    title="📝 Vague Documentation"
+                    count={oasisResults.vague_documentation.length}
+                    subtitle="Language not specific enough for defensible OASIS scoring"
+                    isExpanded={expandedCategories.includes('vague')}
+                    onToggle={toggleCategory}
+                  />
 
                   {expandedCategories.includes('vague') && (
                     <div className="space-y-3">
@@ -2361,25 +1728,16 @@ export default function OASISScrubber({
               {/* Inconsistencies */}
               {oasisResults.inconsistencies && oasisResults.inconsistencies.length > 0 && (
                 <div className="space-y-3">
-                  <div 
-                    className="flex items-center justify-between cursor-pointer bg-orange-50 p-4 rounded-lg border-2 border-orange-200"
-                    onClick={() => toggleCategory('inconsistencies')}
-                  >
-                    <div className="flex items-center gap-3">
-                      <AlertTriangle className="w-6 h-6 text-orange-600" />
-                      <div>
-                        <h4 className="font-bold text-orange-900 text-lg">
-                          Inconsistencies Found ({oasisResults.inconsistencies.length})
-                        </h4>
-                        <p className="text-xs text-orange-700">Conflicting information that needs resolution</p>
-                      </div>
-                    </div>
-                    {expandedCategories.includes('inconsistencies') ? (
-                      <ChevronUp className="w-5 h-5 text-orange-600" />
-                    ) : (
-                      <ChevronDown className="w-5 h-5 text-orange-600" />
-                    )}
-                  </div>
+                  <CollapsibleResultHeader
+                    name="inconsistencies"
+                    icon={AlertTriangle}
+                    color="orange"
+                    title="Inconsistencies Found"
+                    count={oasisResults.inconsistencies.length}
+                    subtitle="Conflicting information that needs resolution"
+                    isExpanded={expandedCategories.includes('inconsistencies')}
+                    onToggle={toggleCategory}
+                  />
 
                   {expandedCategories.includes('inconsistencies') && (
                     <div className="space-y-3">
@@ -2452,25 +1810,16 @@ export default function OASISScrubber({
               {/* Compliant Items */}
               {oasisResults.compliant_items && oasisResults.compliant_items.length > 0 && (
                 <div className="space-y-3">
-                  <div 
-                    className="flex items-center justify-between cursor-pointer bg-green-50 p-4 rounded-lg border-2 border-green-200"
-                    onClick={() => toggleCategory('compliant')}
-                  >
-                    <div className="flex items-center gap-3">
-                      <CheckCircle2 className="w-6 h-6 text-green-600" />
-                      <div>
-                        <h4 className="font-bold text-green-900 text-lg">
-                          Compliant OASIS Items ({oasisResults.compliant_items.length})
-                        </h4>
-                        <p className="text-xs text-green-700">These items are properly documented</p>
-                      </div>
-                    </div>
-                    {expandedCategories.includes('compliant') ? (
-                      <ChevronUp className="w-5 h-5 text-green-600" />
-                    ) : (
-                      <ChevronDown className="w-5 h-5 text-green-600" />
-                    )}
-                  </div>
+                  <CollapsibleResultHeader
+                    name="compliant"
+                    icon={CheckCircle2}
+                    color="green"
+                    title="Compliant OASIS Items"
+                    count={oasisResults.compliant_items.length}
+                    subtitle="These items are properly documented"
+                    isExpanded={expandedCategories.includes('compliant')}
+                    onToggle={toggleCategory}
+                  />
 
                   {expandedCategories.includes('compliant') && (
                     <div className="grid grid-cols-2 gap-2">

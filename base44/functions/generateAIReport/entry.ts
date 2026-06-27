@@ -7,7 +7,7 @@ import { jsPDF } from 'npm:jspdf@2.5.2';
  */
 
 // <<<BEGIN SHARED HELPER: isAdminLike — generated, edit base44/_shared/backendHelpers.mjs>>>
-const SUPER_ADMIN_EMAIL = 'kdeyarmin@comcast.net';
+const SUPER_ADMIN_EMAIL = ((typeof Deno !== 'undefined' && Deno.env.get('SUPER_ADMIN_EMAIL')) || 'kdeyarmin@comcast.net').trim().toLowerCase();
 const sameEmail = (a, b) => String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase();
 const isAdminLike = (u) => !!u && (
   u.role === 'admin' || u.account_type === 'agency_admin' ||

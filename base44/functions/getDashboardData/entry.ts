@@ -34,7 +34,7 @@ Deno.serve(async (req) => {
     // (Mirrors lib/roles.js getRoleView — kept inline since Deno functions can't
     // import frontend modules.) Without the account_type/owner checks a super
     // admin who isn't yet role:'admin' would incorrectly get the nurse view.
-    const SUPER_ADMIN_EMAIL = 'kdeyarmin@comcast.net';
+    const SUPER_ADMIN_EMAIL = ((typeof Deno !== 'undefined' && Deno.env.get('SUPER_ADMIN_EMAIL')) || 'kdeyarmin@comcast.net').trim().toLowerCase();
     const isAdmin =
       user.role === 'admin' ||
       user.account_type === 'agency_admin' ||
