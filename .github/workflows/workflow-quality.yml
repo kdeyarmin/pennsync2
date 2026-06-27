@@ -12,6 +12,8 @@ on:
       - 'src/components/timeoff/**'
       - 'base44/functions/processPatientFileUpdate/**'
       - 'base44/functions/deduplicatePatients/**'
+      - 'base44/entities/**'
+      - 'base44/schemaContract.test.js'
       - 'package.json'
       - 'package-lock.json'
       - '.github/workflows/workflow-quality.yml'
@@ -27,6 +29,8 @@ on:
       - 'src/components/timeoff/**'
       - 'base44/functions/processPatientFileUpdate/**'
       - 'base44/functions/deduplicatePatients/**'
+      - 'base44/entities/**'
+      - 'base44/schemaContract.test.js'
       - 'package.json'
       - 'package-lock.json'
       - '.github/workflows/workflow-quality.yml'
@@ -61,6 +65,9 @@ jobs:
 
       - name: Run utility unit tests
         run: npm run test:utils
+
+      - name: Run schema-contract tests
+        run: npm run test:contracts
 
       - name: Run component tests
         run: npm run test:components
