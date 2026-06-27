@@ -12,7 +12,7 @@ import { ChevronUp, ChevronDown } from "lucide-react";
  * Colors are a static map because Tailwind cannot generate interpolated class
  * names (`bg-${color}-50`); these literals already exist in the original markup.
  *
- * @param {{ name: string, icon: React.ComponentType, color?: 'navy'|'orange'|'yellow'|'green', title: string, count: number, subtitle: string, isExpanded: boolean, onToggle: (name: string) => void }} props
+ * @param {{ name: string, icon: React.ComponentType, color?: 'navy'|'orange'|'yellow'|'green'|'red'|'amber', title: string, count: number, subtitle: string, isExpanded: boolean, onToggle: (name: string) => void }} props
  */
 
 const COLOR_CLASSES = {
@@ -20,6 +20,8 @@ const COLOR_CLASSES = {
   orange: { wrap: 'bg-orange-50 border-orange-200', accent: 'text-orange-600', title: 'text-orange-900', subtitle: 'text-orange-700' },
   yellow: { wrap: 'bg-yellow-50 border-yellow-200', accent: 'text-yellow-600', title: 'text-yellow-900', subtitle: 'text-yellow-700' },
   green: { wrap: 'bg-green-50 border-green-200', accent: 'text-green-600', title: 'text-green-900', subtitle: 'text-green-700' },
+  red: { wrap: 'bg-red-50 border-red-200', accent: 'text-red-600', title: 'text-red-900', subtitle: 'text-red-700' },
+  amber: { wrap: 'bg-amber-50 border-amber-200', accent: 'text-amber-600', title: 'text-amber-900', subtitle: 'text-amber-700' },
 };
 
 export default function CollapsibleResultHeader({

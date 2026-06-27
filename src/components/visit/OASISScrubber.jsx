@@ -37,8 +37,6 @@ import {
   TrendingUp,
   Sparkles,
   Info,
-  ChevronDown,
-  ChevronUp,
   BookOpen,
   MessageSquare,
   Upload,
@@ -1432,25 +1430,16 @@ export default function OASISScrubber({
               {/* Underscoring Opportunities */}
               {oasisResults.underscoring_opportunities && oasisResults.underscoring_opportunities.length > 0 && (
                 <div className="space-y-3">
-                  <div 
-                    className="flex items-center justify-between cursor-pointer bg-green-50 p-4 rounded-lg border-2 border-green-200"
-                    onClick={() => toggleCategory('underscoring')}
-                  >
-                    <div className="flex items-center gap-3">
-                      <TrendingUp className="w-6 h-6 text-green-600" />
-                      <div>
-                        <h4 className="font-bold text-green-900 text-lg">
-                          💰 Underscoring Opportunities ({oasisResults.underscoring_opportunities.length})
-                        </h4>
-                        <p className="text-xs text-green-700">Documentation supports higher scores - potential revenue increase</p>
-                      </div>
-                    </div>
-                    {expandedCategories.includes('underscoring') ? (
-                      <ChevronUp className="w-5 h-5 text-green-600" />
-                    ) : (
-                      <ChevronDown className="w-5 h-5 text-green-600" />
-                    )}
-                  </div>
+                  <CollapsibleResultHeader
+                    name="underscoring"
+                    icon={TrendingUp}
+                    color="green"
+                    title="💰 Underscoring Opportunities"
+                    count={oasisResults.underscoring_opportunities.length}
+                    subtitle="Documentation supports higher scores - potential revenue increase"
+                    isExpanded={expandedCategories.includes('underscoring')}
+                    onToggle={toggleCategory}
+                  />
 
                   {expandedCategories.includes('underscoring') && (
                     <div className="space-y-3">
@@ -1534,25 +1523,16 @@ export default function OASISScrubber({
               {/* Overscoring Risks */}
               {oasisResults.overscoring_risks && oasisResults.overscoring_risks.length > 0 && (
                 <div className="space-y-3">
-                  <div 
-                    className="flex items-center justify-between cursor-pointer bg-red-50 p-4 rounded-lg border-2 border-red-200"
-                    onClick={() => toggleCategory('overscoring')}
-                  >
-                    <div className="flex items-center gap-3">
-                      <AlertTriangle className="w-6 h-6 text-red-600" />
-                      <div>
-                        <h4 className="font-bold text-red-900 text-lg">
-                          ⚠️ Overscoring Risks ({oasisResults.overscoring_risks.length})
-                        </h4>
-                        <p className="text-xs text-red-700">Claimed scores not fully supported - audit risk</p>
-                      </div>
-                    </div>
-                    {expandedCategories.includes('overscoring') ? (
-                      <ChevronUp className="w-5 h-5 text-red-600" />
-                    ) : (
-                      <ChevronDown className="w-5 h-5 text-red-600" />
-                    )}
-                  </div>
+                  <CollapsibleResultHeader
+                    name="overscoring"
+                    icon={AlertTriangle}
+                    color="red"
+                    title="⚠️ Overscoring Risks"
+                    count={oasisResults.overscoring_risks.length}
+                    subtitle="Claimed scores not fully supported - audit risk"
+                    isExpanded={expandedCategories.includes('overscoring')}
+                    onToggle={toggleCategory}
+                  />
 
                   {expandedCategories.includes('overscoring') && (
                     <div className="space-y-3">
@@ -1652,25 +1632,16 @@ export default function OASISScrubber({
               {/* Critical Missing Items */}
               {oasisResults.critical_missing && oasisResults.critical_missing.length > 0 && (
                 <div className="space-y-3">
-                  <div 
-                    className="flex items-center justify-between cursor-pointer bg-red-50 p-4 rounded-lg border-2 border-red-200"
-                    onClick={() => toggleCategory('critical')}
-                  >
-                    <div className="flex items-center gap-3">
-                      <XCircle className="w-6 h-6 text-red-600" />
-                      <div>
-                        <h4 className="font-bold text-red-900 text-lg">
-                          Critical Missing OASIS Items ({oasisResults.critical_missing.length})
-                        </h4>
-                        <p className="text-xs text-red-700">These items are REQUIRED for submission and reimbursement</p>
-                      </div>
-                    </div>
-                    {expandedCategories.includes('critical') ? (
-                      <ChevronUp className="w-5 h-5 text-red-600" />
-                    ) : (
-                      <ChevronDown className="w-5 h-5 text-red-600" />
-                    )}
-                  </div>
+                  <CollapsibleResultHeader
+                    name="critical"
+                    icon={XCircle}
+                    color="red"
+                    title="Critical Missing OASIS Items"
+                    count={oasisResults.critical_missing.length}
+                    subtitle="These items are REQUIRED for submission and reimbursement"
+                    isExpanded={expandedCategories.includes('critical')}
+                    onToggle={toggleCategory}
+                  />
 
                   {expandedCategories.includes('critical') && (
                     <div className="space-y-3">
@@ -1786,25 +1757,16 @@ export default function OASISScrubber({
               {/* Vague Documentation */}
               {oasisResults.vague_documentation && oasisResults.vague_documentation.length > 0 && (
                 <div className="space-y-3">
-                  <div 
-                    className="flex items-center justify-between cursor-pointer bg-amber-50 p-4 rounded-lg border-2 border-amber-200"
-                    onClick={() => toggleCategory('vague')}
-                  >
-                    <div className="flex items-center gap-3">
-                      <AlertTriangle className="w-6 h-6 text-amber-600" />
-                      <div>
-                        <h4 className="font-bold text-amber-900 text-lg">
-                          📝 Vague Documentation ({oasisResults.vague_documentation.length})
-                        </h4>
-                        <p className="text-xs text-amber-700">Language not specific enough for defensible OASIS scoring</p>
-                      </div>
-                    </div>
-                    {expandedCategories.includes('vague') ? (
-                      <ChevronUp className="w-5 h-5 text-amber-600" />
-                    ) : (
-                      <ChevronDown className="w-5 h-5 text-amber-600" />
-                    )}
-                  </div>
+                  <CollapsibleResultHeader
+                    name="vague"
+                    icon={AlertTriangle}
+                    color="amber"
+                    title="📝 Vague Documentation"
+                    count={oasisResults.vague_documentation.length}
+                    subtitle="Language not specific enough for defensible OASIS scoring"
+                    isExpanded={expandedCategories.includes('vague')}
+                    onToggle={toggleCategory}
+                  />
 
                   {expandedCategories.includes('vague') && (
                     <div className="space-y-3">
