@@ -88,6 +88,30 @@ export default function PHIDeIdentifier({ text, onDeIdentified }) {
       return match;
     });
 
+    // 10. URLs / web addresses (Safe Harbor identifier #14)
+    const urlPattern = /\bhttps?:\/\/[^\s<>"')]+/gi;
+    processed = processed.replace(urlPattern, (match) => {
+      replacements.push({ type: 'URL', original: match });
+      return '[URL]';
+    });
+
+    // 11. IP addresses (Safe Harbor identifier #15). Runs after the phone pass so
+    // dotted phone formats are already masked and won't be mis-tagged as IPs.
+    const ipPattern = /\b(?:\d{1,3}\.){3}\d{1,3}\b/g;
+    processed = processed.replace(ipPattern, (match) => {
+      replacements.push({ type: 'IP Address', original: match });
+      return '[IP]';
+    });
+
+    // 12. Account / device / serial / license / certificate numbers (Safe Harbor
+    // identifiers #9–#13). Anchored on an explicit label to avoid masking ordinary
+    // numbers; the value may contain letters, digits, and hyphens.
+    const accountPattern = /\b(account|acct|policy|member|device|serial|license|certificate|cert)\s*(?:no|number|#|id)?\.?\s*[:#]?\s*([A-Za-z0-9][A-Za-z0-9-]{3,})\b/gi;
+    processed = processed.replace(accountPattern, (match, label) => {
+      replacements.push({ type: 'Account/Device ID', original: match });
+      return `${label} [ID]`;
+    });
+
     setDeIdentifiedText(processed);
     setIsProcessing(false);
     
