@@ -31,12 +31,6 @@ export default function HospitalizationRiskWidget({ autoAnalyze = false }) {
     initialData: [],
   });
 
-  const { data: medications = [] } = useQuery({
-    queryKey: ['allMedications'],
-    queryFn: () => base44.entities.Medication.list('-updated_date', 500),
-    initialData: [],
-  });
-
   const analyzeHospitalizationRisk = useCallback(async () => {
     setAnalyzing(true);
     try {
@@ -45,8 +39,6 @@ export default function HospitalizationRiskWidget({ autoAnalyze = false }) {
         const patientVisits = recentVisits
           .filter(v => v.patient_id === patient.id)
           .slice(0, 10);
-        
-        const patientMeds = medications.filter(m => m.patient_id === patient.id);
         
         if (patientVisits.length === 0) {
           return {
@@ -91,9 +83,6 @@ AGE: ${patient.date_of_birth ? Math.floor((new Date() - new Date(patient.date_of
 RECENT VITALS TRENDS (Last ${vitalsTrends.length} visits):
 ${vitalsTrends.map(v => `Date: ${v.date} | BP: ${v.bp_systolic}/${v.bp_diastolic} | HR: ${v.heart_rate} | Temp: ${v.temp} | O2: ${v.o2_sat}% | Weight: ${v.weight}`).join('\n')}
 
-CURRENT MEDICATIONS (${patientMeds.length} total):
-${patientMeds.slice(0, 15).map(m => `${m.name} ${m.dosage} ${m.frequency} - ${m.status}`).join('\n')}
-
 RECENT CLINICAL NOTES:
 ${clinicalNotes.slice(0, 3).map(n => `${n.date}: ${n.note}`).join('\n\n')}
 
@@ -102,12 +91,11 @@ Analyze this data and calculate a hospitalization risk score (0-100):
 ASSESS THESE CRITICAL FACTORS:
 1. Vital Signs Stability: Trending worse? Abnormal patterns?
 2. Symptom Progression: Worsening symptoms mentioned in notes?
-3. Medication Changes: Recent additions, high-risk meds, polypharmacy?
-4. Clinical Deterioration: Any concerning observations?
-5. Disease-Specific Risks: Based on diagnoses
-6. Functional Decline: Mobility, ADL changes mentioned?
-7. Recent Hospitalizations: Pattern of readmissions?
-8. Red Flags: Pain escalation, infection signs, mental status changes?
+3. Clinical Deterioration: Any concerning observations?
+4. Disease-Specific Risks: Based on diagnoses
+5. Functional Decline: Mobility, ADL changes mentioned?
+6. Recent Hospitalizations: Pattern of readmissions?
+7. Red Flags: Pain escalation, infection signs, mental status changes?
 
 Return detailed risk assessment:`,
           response_json_schema: {
@@ -210,7 +198,7 @@ Return detailed risk assessment:`,
     } finally {
       setAnalyzing(false);
     }
-  }, [patients, recentVisits, medications]);
+  }, [patients, recentVisits]);
 
   React.useEffect(() => {
     if (autoAnalyze && patients.length > 0 && !riskScores) {

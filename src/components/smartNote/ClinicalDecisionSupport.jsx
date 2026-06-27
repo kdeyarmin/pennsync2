@@ -8,7 +8,6 @@ import {
   ShieldAlert,
   Loader2,
   AlertTriangle,
-  Pill,
   Stethoscope,
   CheckCircle2,
   ChevronDown,
@@ -657,14 +656,6 @@ Be specific and actionable. Only flag genuine clinical concerns, not minor docum
 Return JSON:
 {
   "risk_level": "high" | "moderate" | "low",
-  "drug_interactions": [
-    {
-      "drugs": ["Drug A", "Drug B"],
-      "interaction": "Description of interaction",
-      "severity": "high" | "moderate" | "low",
-      "recommendation": "What to do"
-    }
-  ],
   "contraindications": [
     {
       "item": "What is contraindicated",
@@ -707,18 +698,6 @@ Return JSON:
           type: "object",
           properties: {
             risk_level: { type: "string" },
-            drug_interactions: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  drugs: { type: "array", items: { type: "string" } },
-                  interaction: { type: "string" },
-                  severity: { type: "string" },
-                  recommendation: { type: "string" }
-                }
-              }
-            },
             contraindications: {
               type: "array",
               items: {
@@ -830,14 +809,12 @@ Return JSON:
   };
 
   const hasAlerts = cdsAlerts && (
-    cdsAlerts.drug_interactions?.length > 0 ||
     cdsAlerts.contraindications?.length > 0 ||
     cdsAlerts.vital_sign_alerts?.length > 0 ||
     cdsAlerts.best_practice_alerts?.length > 0
   );
 
   const totalAlerts = (cdsAlerts ? (
-    (cdsAlerts.drug_interactions?.length || 0) +
     (cdsAlerts.contraindications?.length || 0) +
     (cdsAlerts.vital_sign_alerts?.length || 0) +
     (cdsAlerts.best_practice_alerts?.length || 0)
@@ -1313,24 +1290,6 @@ Return JSON:
 
           {cdsAlerts && (
             <div className="space-y-3">
-              {/* Drug Interactions */}
-              {cdsAlerts.drug_interactions?.length > 0 && (
-                <div>
-                  <p className="text-xs font-semibold text-red-800 mb-1 flex items-center gap-1">
-                    <Pill className="w-3 h-3" /> Drug Interactions ({cdsAlerts.drug_interactions.length})
-                  </p>
-                  {cdsAlerts.drug_interactions.map((di, idx) => (
-                    <Alert key={idx} className={`mb-1 ${getSeverityColor(di.severity)}`}>
-                      <AlertTriangle className="w-3 h-3" />
-                      <AlertDescription className="text-xs">
-                        <strong>{di.drugs.join(' + ')}</strong>: {di.interaction}
-                        <p className="mt-1 text-slate-700">→ {di.recommendation}</p>
-                      </AlertDescription>
-                    </Alert>
-                  ))}
-                </div>
-              )}
-
               {/* Contraindications */}
               {cdsAlerts.contraindications?.length > 0 && (
                 <div>

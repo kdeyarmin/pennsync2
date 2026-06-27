@@ -34,13 +34,6 @@ export default function PersonalizedMaterialSender({ material, onClose, onSent }
     select: (data) => data[0]
   });
 
-  const { data: patientMedications = [] } = useQuery({
-    queryKey: ['patient-medications', selectedPatientId],
-    queryFn: () => base44.entities.Medication.filter({ patient_id: selectedPatientId }),
-    enabled: !!selectedPatientId,
-    initialData: []
-  });
-
   // Personalize content
   const personalizedContent = useMemo(() => {
     if (!selectedPatient || !material.content) return material.content;
@@ -55,8 +48,7 @@ export default function PersonalizedMaterialSender({ material, onClose, onSent }
     content = content.replace(/\{\{primary_diagnosis\}\}/g, selectedPatient.primary_diagnosis || 'your primary diagnosis');
     
     // Replace medication variables
-    const medList = patientMedications.map(m => m.name).join(', ') || 'your medications';
-    content = content.replace(/\{\{medications\}\}/g, medList);
+    content = content.replace(/\{\{medications\}\}/g, 'your medications');
     
     // Replace physician
     content = content.replace(/\{\{physician\}\}/g, selectedPatient.physician_name || 'your doctor');
@@ -65,7 +57,7 @@ export default function PersonalizedMaterialSender({ material, onClose, onSent }
     content = content.replace(/\{\{allergies\}\}/g, selectedPatient.allergies || 'None known');
 
     return content;
-  }, [selectedPatient, patientMedications, material.content]);
+  }, [selectedPatient, material.content]);
 
   const sendMutation = useMutation({
     mutationFn: async () => {
