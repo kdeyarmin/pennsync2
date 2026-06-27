@@ -1,5 +1,7 @@
 import { useState } from "react";
-import { invokeLLM } from "@/lib/invokeLLM";
+// Standard component AI-call hook (shared timeout/retry + managed loading/error).
+import { useAICall } from "@/hooks/useAICall";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -25,7 +27,7 @@ import {
 
 export default function PatientRiskScorecard({ patient, oasisData = [], visits = [] }) {
   const [aiAnalysis, setAiAnalysis] = useState(null);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const ai = useAICall();
 
   if (!patient) return null;
 
@@ -64,9 +66,8 @@ export default function PatientRiskScorecard({ patient, oasisData = [], visits =
   const overallRisk = Math.round(riskDimensions.reduce((s, d) => s + d.value, 0) / riskDimensions.length);
 
   const runAIAnalysis = async () => {
-    setIsAnalyzing(true);
     try {
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `Provide a comprehensive risk analysis for this home health patient.
 
 PATIENT: ${patient.first_name} ${patient.last_name}
@@ -124,8 +125,8 @@ Analyze all risk factors and provide:
       setAiAnalysis(result);
     } catch (error) {
       console.error("Analysis error:", error);
+      toast.error("Couldn't complete the risk analysis. Please try again.");
     }
-    setIsAnalyzing(false);
   };
 
   const getRiskColor = (score) => {
@@ -152,9 +153,9 @@ Analyze all risk factors and provide:
             size="sm"
             variant="outline"
             onClick={runAIAnalysis}
-            disabled={isAnalyzing}
+            disabled={ai.loading}
           >
-            {isAnalyzing ? (
+            {ai.loading ? (
               <><Loader2 className="w-4 h-4 mr-1 animate-spin" /> Analyzing...</>
             ) : aiAnalysis ? (
               <><RefreshCw className="w-4 h-4 mr-1" /> Refresh</>

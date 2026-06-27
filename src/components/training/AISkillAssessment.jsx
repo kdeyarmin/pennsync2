@@ -1,6 +1,7 @@
 import React from "react";
 import { base44 } from "@/api/base44Client";
-import { invokeLLM } from "@/lib/invokeLLM";
+// Standard component AI-call hook (shared timeout/retry + managed loading/error).
+import { useAICall } from "@/hooks/useAICall";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -25,7 +26,7 @@ import { toast } from 'sonner';
 
 export default function AISkillAssessment({ userEmail }) {
   const [assessment, setAssessment] = React.useState(null);
-  const [isAnalyzing, setIsAnalyzing] = React.useState(false);
+  const ai = useAICall();
   const [isDownloading, setIsDownloading] = React.useState(false);
 
   const { data: trainingCompletions } = useQuery({
@@ -67,7 +68,6 @@ export default function AISkillAssessment({ userEmail }) {
   };
 
   const analyzeSkills = async () => {
-    setIsAnalyzing(true);
     try {
       const prompt = `You are an expert clinical education specialist. Analyze this nurse's training performance data and provide a comprehensive skills assessment with personalized training recommendations.
 
@@ -153,7 +153,7 @@ Return JSON:
   ]
 }`;
 
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt,
         response_json_schema: {
           type: "object",
@@ -241,8 +241,8 @@ Return JSON:
       setAssessment(result);
     } catch (error) {
       console.error('Error analyzing skills:', error);
+      toast.error('Failed to generate the skills assessment. Please try again.');
     }
-    setIsAnalyzing(false);
   };
 
   const skillLevelColors = {
@@ -271,10 +271,10 @@ Return JSON:
           </p>
           <Button
             onClick={analyzeSkills}
-            disabled={isAnalyzing || trainingCompletions.length === 0}
+            disabled={ai.loading || trainingCompletions.length === 0}
             className="bg-indigo-600 hover:bg-indigo-700"
           >
-            {isAnalyzing ? (
+            {ai.loading ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 Analyzing Your Skills...
@@ -588,11 +588,11 @@ Return JSON:
       {/* Refresh Button */}
       <Button
         onClick={analyzeSkills}
-        disabled={isAnalyzing}
+        disabled={ai.loading}
         variant="outline"
         className="w-full"
       >
-        {isAnalyzing ? (
+        {ai.loading ? (
           <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Regenerating Assessment...</>
         ) : (
           <><BarChart3 className="w-4 h-4 mr-2" /> Refresh Assessment</>
