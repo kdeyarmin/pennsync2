@@ -6,6 +6,7 @@ import { buildFunctionalPhrases, buildClinicalAlerts, getRiskColor, getImpactBad
 import { buildOASISScrubberPrompt, oasisScrubberResponseSchema } from "./oasisScrubberPrompt";
 import ClinicalAlertsPanel from "./ClinicalAlertsPanel";
 import ComorbiditiesSummary from "./ComorbiditiesSummary";
+import ClinicalGroupSummary from "./ClinicalGroupSummary";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -424,27 +425,10 @@ export default function OASISScrubber({
                   </div>
 
                   {/* Clinical Group Preview */}
-                  <div className="bg-indigo-50 p-3 rounded-lg border border-indigo-200">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium text-indigo-900">PDGM Clinical Group</span>
-                      <Badge className={`${
-                        extractedIndicators.clinicalGroup.confidence === 'high' ? 'bg-green-600' :
-                        extractedIndicators.clinicalGroup.confidence === 'medium' ? 'bg-yellow-600' : 'bg-red-600'
-                      }`}>
-                        {extractedIndicators.clinicalGroup.confidence} confidence
-                      </Badge>
-                    </div>
-                    <p className="text-sm text-indigo-800 font-semibold">
-                      {extractedIndicators.clinicalGroup.group} - {extractedIndicators.clinicalGroup.name}
-                    </p>
-                    {extractedIndicators.clinicalGroup.matchedPatterns.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mt-2">
-                        {extractedIndicators.clinicalGroup.matchedPatterns.map((p, i) => (
-                          <Badge key={i} variant="outline" className="text-xs bg-white">{p}</Badge>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                  <ClinicalGroupSummary
+                    clinicalGroup={extractedIndicators.clinicalGroup}
+                    variant="compact"
+                  />
 
                   {/* Clinical Indicators Grid */}
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
@@ -654,40 +638,10 @@ export default function OASISScrubber({
                       />
 
                       {/* Clinical Group Determination */}
-                      <Card className="border-indigo-200">
-                        <CardHeader className="py-3 bg-indigo-50">
-                          <CardTitle className="text-sm flex items-center gap-2">
-                            <Stethoscope className="w-4 h-4 text-indigo-600" />
-                            PDGM Clinical Group Analysis
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-4">
-                          <div className="flex items-center justify-between mb-3">
-                            <div>
-                              <p className="text-lg font-bold text-indigo-900">
-                                {extractedIndicators.clinicalGroup.group}
-                              </p>
-                              <p className="text-sm text-indigo-700">{extractedIndicators.clinicalGroup.name}</p>
-                            </div>
-                            <Badge className={`${
-                              extractedIndicators.clinicalGroup.confidence === 'high' ? 'bg-green-600' :
-                              extractedIndicators.clinicalGroup.confidence === 'medium' ? 'bg-yellow-600' : 'bg-red-600'
-                            } text-white`}>
-                              {extractedIndicators.clinicalGroup.confidence?.toUpperCase()} CONFIDENCE
-                            </Badge>
-                          </div>
-                          {extractedIndicators.clinicalGroup.matchedPatterns.length > 0 && (
-                            <div>
-                              <p className="text-xs text-slate-500 mb-1">Matched Patterns:</p>
-                              <div className="flex flex-wrap gap-1">
-                                {extractedIndicators.clinicalGroup.matchedPatterns.map((p, i) => (
-                                  <Badge key={i} variant="outline" className="text-xs">{p}</Badge>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                        </CardContent>
-                      </Card>
+                      <ClinicalGroupSummary
+                        clinicalGroup={extractedIndicators.clinicalGroup}
+                        variant="expanded"
+                      />
 
                       {/* Comorbidities */}
                       <ComorbiditiesSummary
