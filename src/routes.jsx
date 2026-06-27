@@ -163,12 +163,15 @@ export const REDIRECTS = [
 
   // ─── Feature-audit consolidation ─────────────────────────────────────────────
   // Redundant standalone pages folded into their canonical homes — see
-  // docs/feature-audit.md. The page files remain on disk (reachable via the
-  // targets below or as embedded components) so each redirect is reversible.
+  // docs/feature-audit.md. Most page files remain on disk (reachable via the
+  // targets below or as embedded components) so the redirect is reversible.
   //   ClinicalChart       → its vitals / care-plan / OASIS tabs already live in
   //                          PatientDetails; sent to the patient list (no id ctx).
   //   MedicalScribe       → same record→transcribe→review pipeline as the Clinical
-  //                          Notes "Visit Scribe" choice (a strict superset).
+  //                          Notes "Visit Scribe" choice (a strict superset). The
+  //                          dead page file + its scribe-only components were
+  //                          removed once the consolidation proved stable; the
+  //                          redirect below is kept so old links/bookmarks resolve.
   //   ClinicalInsights    → population/risk views duplicated by Predictive Analytics.
   //   DocumentationTraining / NurseEducationVideos → consolidated under the Nurse
   //                          Training Hub. (See doc for the unique-content caveat.)
@@ -177,6 +180,8 @@ export const REDIRECTS = [
   // tabs) retired in favor of the unified Clinical Notes hub's Smart Note / Visit
   // Scribe choice. The hub selects the patient/visit itself, so the old ?visitId
   // binding and DocumentVisit's vitals/template/offline extras are not carried over.
+  // The dead page file and its ~40 single-use components were removed once the
+  // consolidation proved stable; the redirect below is kept so old links resolve.
   { from: '/DocumentVisit', to: '/ClinicalDocumentation' },
   { from: '/MedicalScribe', to: '/ClinicalDocumentation?tab=visit-scribe' },
   { from: '/ClinicalInsightsDashboard', to: '/PredictiveAnalytics' },

@@ -64,7 +64,7 @@ Questions to grade:
 ${JSON.stringify(questionsForGrading)}`;
 
   // Grade via Base44's standardized InvokeLLM (same path the rest of the app
-  // uses, e.g. enhanceNoteOptimized) rather than the raw OpenAI SDK. This avoids
+  // uses) rather than the raw OpenAI SDK. This avoids
   // a hardcoded/invalid model name and a module-level SDK init, and returns a
   // parsed object directly when a response_json_schema is supplied.
   let parsed;

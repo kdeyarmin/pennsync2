@@ -1,8 +1,8 @@
-import { FileText, Sparkles, CheckCircle2 } from "lucide-react";
+import { FileText, ClipboardCheck, CheckCircle2 } from "lucide-react";
 
 const STEPS = [
   { label: "Write", icon: FileText },
-  { label: "Generate", icon: Sparkles },
+  { label: "Review & Generate", icon: ClipboardCheck },
 ];
 
 export default function StepIndicator({ step }) {

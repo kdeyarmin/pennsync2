@@ -85,6 +85,98 @@ export function extractVitals(text) {
   return vitals;
 }
 
+/**
+ * Format the canonical structured `vital_signs` object (the shape produced by
+ * VitalSignsForm: blood_pressure_systolic/diastolic, heart_rate, respiratory_rate,
+ * oxygen_saturation, temperature, pain_level) into ONE factual sentence.
+ *
+ * The token spellings here are deliberately chosen to match the patterns
+ * extractNumbersAndMeasurements / extractVitals already recognize ("BP 148/90",
+ * "HR 82 bpm", "O2 95%", "Temp 98.6°F", "RR 16 breaths/min", "pain 3/10") so the
+ * sentence survives the value-guard when it is whitelisted as source material —
+ * exactly like the deterministic trend summary. Emits only fields that are
+ * present; returns "" when nothing was captured.
+ */
+export function formatVitalsSentence(vitals) {
+  if (!vitals || typeof vitals !== "object") return "";
+  const num = (v) => {
+    if (v === null || v === undefined || v === "") return null;
+    const n = Number(v);
+    return Number.isFinite(n) ? n : null;
+  };
+  const sys = num(vitals.blood_pressure_systolic);
+  const dia = num(vitals.blood_pressure_diastolic);
+  const hr = num(vitals.heart_rate);
+  const rr = num(vitals.respiratory_rate);
+  const o2 = num(vitals.oxygen_saturation);
+  const temp = num(vitals.temperature);
+  const pain = num(vitals.pain_level);
+  const parts = [];
+  if (sys !== null && dia !== null) parts.push(`BP ${sys}/${dia} mmHg`);
+  if (hr !== null) parts.push(`HR ${hr} bpm`);
+  if (rr !== null) parts.push(`RR ${rr} breaths/min`);
+  if (o2 !== null) parts.push(`O2 ${o2}%`);
+  if (temp !== null) parts.push(`Temp ${temp}°F`);
+  if (pain !== null) parts.push(`pain ${pain}/10`);
+  if (!parts.length) return "";
+  return `Vital signs: ${parts.join(", ")}.`;
+}
+
+/**
+ * Map the legacy StructuredNoteDrafter vitals shape (bp_systolic, bp_diastolic,
+ * heart_rate, resp_rate, o2_sat, temperature, pain_level — `weight` is not part of
+ * the canonical vital_signs shape and is intentionally dropped) to the canonical
+ * `vital_signs` shape that VitalSignsForm + formatVitalsSentence use. String inputs
+ * are parsed to numbers; blanks become null. Returns null when no canonical vital
+ * is set, so callers can skip threading an empty object.
+ */
+// Keep only finite numeric fields; return null if nothing usable remains. Omitting
+// (rather than nulling) absent fields lets callers merge two sources per-key with a
+// plain spread.
+function compactVitals(obj) {
+  const out = {};
+  for (const [k, v] of Object.entries(obj)) {
+    if (v !== null && v !== undefined && Number.isFinite(v)) out[k] = v;
+  }
+  return Object.keys(out).length ? out : null;
+}
+
+export function toCanonicalVitalSigns(legacy) {
+  if (!legacy || typeof legacy !== "object") return null;
+  const num = (v) => (v !== null && v !== undefined && String(v).trim() !== "" ? parseFloat(v) : null);
+  return compactVitals({
+    blood_pressure_systolic: num(legacy.bp_systolic),
+    blood_pressure_diastolic: num(legacy.bp_diastolic),
+    heart_rate: num(legacy.heart_rate),
+    respiratory_rate: num(legacy.resp_rate),
+    oxygen_saturation: num(legacy.o2_sat),
+    temperature: num(legacy.temperature),
+    pain_level: num(legacy.pain_level),
+  });
+}
+
+/**
+ * Extract canonical vital_signs from FREE TEXT (e.g. a nurse-edited draft line),
+ * reusing extractVitals plus an explicit pain parse. The point is that when a draft
+ * is hand-edited, the text — not a separate form-state object — is the source of
+ * truth, so the saved vital_signs can never diverge from what the note actually says.
+ * Returns null when no vital is found.
+ */
+export function extractCanonicalVitalsFromText(text) {
+  if (!text) return null;
+  const v = extractVitals(text);
+  const pain = text.match(/\bpain\b\s*:?\s*(\d{1,2})\s*\/\s*10/i);
+  return compactVitals({
+    blood_pressure_systolic: v.bp_sys ?? null,
+    blood_pressure_diastolic: v.bp_dia ?? null,
+    heart_rate: v.hr ?? null,
+    respiratory_rate: v.rr ?? null,
+    oxygen_saturation: v.o2 ?? null,
+    temperature: v.temp ?? null,
+    pain_level: pain ? parseInt(pain[1], 10) : null,
+  });
+}
+
 // ── Value extraction for the hallucination value-guard ─────────────────────
 // We intentionally extract only UNIT-BEARING / clinically-significant values
 // (vitals, doses, measurements, scores) rather than every bare integer, so the

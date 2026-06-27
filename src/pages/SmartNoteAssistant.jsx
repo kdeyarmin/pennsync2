@@ -4,7 +4,7 @@ import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import {
-  Sparkles, CheckCircle2, Loader2, ArrowRight, ClipboardList, User,
+  CheckCircle2, Loader2, ArrowRight, ClipboardList, User,
   Mic, Square, AlertTriangle
 } from "lucide-react";
 import { todayEastern } from "../components/utils/timezone";
@@ -16,12 +16,10 @@ import NoteTemplateSelector from "../components/smartNote/NoteTemplateSelector";
 import VitalSignValidator from "../components/smartNote/VitalSignValidator";
 import VitalSignsForm from "../components/visit/VitalSignsForm";
 import StructuredNoteDrafter from "../components/smartNote/StructuredNoteDrafter";
-import EnhancedAudioRecorder from "../components/smartNote/EnhancedAudioRecorder";
-import SOAPAudioRecorder from "../components/smartNote/SOAPAudioRecorder";
+import VisitAudioRecorder from "../components/smartNote/VisitAudioRecorder";
 import VitalsTrendAnalysis from "../components/smartNote/VitalsTrendAnalysis";
 import FinalNoteDisplay from "../components/smartNote/FinalNoteDisplay";
 import FollowUpTasksPanel from "../components/smartNote/FollowUpTasksPanel";
-import VoiceClinicalNoteRecorder from "../components/smartNote/VoiceClinicalNoteRecorder";
 import ComplianceChecklist from "../components/smartNote/ComplianceChecklist";
 import ConstrainedNoteReviewer from "../components/smartNote/ConstrainedNoteReviewer";
 import { persistVisitNote } from "../components/smartNote/persistVisitNote";
@@ -497,9 +495,13 @@ export default function SmartNoteAssistant({ visitId = null }) {
       {activeTab === "drafter" && (
         <StructuredNoteDrafter
           patient={patient}
-          onDraftReady={(draft, vType) => {
+          onDraftReady={(draft, vType, structuredVitals) => {
             setNote(draft);
             setVisitType(vType);
+            // Carry the structured vitals into the same canonical state the main
+            // form uses, so they reach the verified pipeline (coverage, trends,
+            // critical-vital escalation, chart cross-check) — not just the prose.
+            if (structuredVitals) setVitals(structuredVitals);
             setActiveTab("builder");
           }}
         />
@@ -597,14 +599,6 @@ export default function SmartNoteAssistant({ visitId = null }) {
                 setTimeout(() => textareaRef.current?.focus(), 100);
               }} />
 
-              {/* Voice Clinical Note Recorder */}
-              <VoiceClinicalNoteRecorder
-                onTranscriptionComplete={(enhancedNote) => {
-                  setNote(prev => (prev ? prev + "\n\n" + enhancedNote : enhancedNote));
-                  setTimeout(() => textareaRef.current?.focus(), 100);
-                }}
-              />
-
               <ComplianceChecklist isHospice={isHospice} />
 
               <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
@@ -615,23 +609,27 @@ export default function SmartNoteAssistant({ visitId = null }) {
                     <ClipboardList className="w-3.5 h-3.5" /> Use Structured Form
                   </Button>
                 </div>
-                {/* Enhanced Audio Recorder */}
-                <div className="px-4 py-2 bg-navy-50 border-b border-navy-100 flex flex-wrap gap-2 items-center">
-                  <Button
-                    variant={listening ? "destructive" : "default"}
-                    className={`h-9 gap-2 text-xs font-semibold shadow-sm ${listening ? 'animate-pulse' : 'bg-navy-600 hover:bg-navy-700 text-white'}`}
-                    onClick={listening ? stopDictation : startDictation}
-                  >
-                    {listening ? <><Square className="w-4 h-4 fill-current" /> Stop Dictation</> : <><Mic className="w-4 h-4" /> Live Dictation</>}
-                  </Button>
-                  <EnhancedAudioRecorder
-                    onTranscribed={(transcribed) => setNote(prev => prev ? prev + " " + transcribed : transcribed)}
-                    disabled={false}
-                  />
-                  <SOAPAudioRecorder
-                    onSOAPGenerated={(soapText) => setNote(prev => prev ? prev + "\n\n" + soapText : soapText)}
-                    disabled={false}
-                  />
+                {/* Voice input — one consolidated group: speak live, or record &
+                    transcribe. All paths append your own words to the draft below;
+                    none rewrite or embellish it. */}
+                <div className="px-4 py-2 bg-navy-50 border-b border-navy-100">
+                  <div className="flex items-center gap-1.5 mb-1.5">
+                    <Mic className="w-3 h-3 text-navy-500" />
+                    <span className="text-[11px] font-semibold text-navy-600 uppercase tracking-wide">Voice input — optional</span>
+                  </div>
+                  <div className="space-y-2">
+                    <Button
+                      variant={listening ? "destructive" : "default"}
+                      className={`h-9 gap-2 text-xs font-semibold shadow-sm ${listening ? 'animate-pulse' : 'bg-navy-600 hover:bg-navy-700 text-white'}`}
+                      onClick={listening ? stopDictation : startDictation}
+                    >
+                      {listening ? <><Square className="w-4 h-4 fill-current" /> Stop Dictation</> : <><Mic className="w-4 h-4" /> Live Dictation</>}
+                    </Button>
+                    {/* One record-and-transcribe control (Narrative or SOAP). */}
+                    <VisitAudioRecorder
+                      onTranscribed={(text) => setNote(prev => prev ? prev + "\n\n" + text : text)}
+                    />
+                  </div>
                 </div>
                 <textarea ref={textareaRef} value={note} onChange={e => setNote(e.target.value)}
                   placeholder={"Enter bullet points or rough draft — AI will NOT invent information.\n\n• BP 148/90, HR 82, O2 95% RA, pain 3/10\n• homebound: unable to leave without considerable effort\n• skilled need: wound assessment and dressing change\n• wound R heel 2×3 cm granulating, no odor\n• taught med schedule, pt verbalized understanding\n• fall risk — clutter noted, discussed w/ family"}
@@ -647,7 +645,7 @@ export default function SmartNoteAssistant({ visitId = null }) {
                     style={ready ? { backgroundColor: '#264491', color: '#ffffff' } : undefined}
                     className="hover:bg-navy-700 h-11 sm:h-9 px-5 gap-1.5 text-sm font-semibold w-full sm:w-auto"
                   >
-                    <Sparkles className="w-4 h-4" /> Generate Note <ArrowRight className="w-3.5 h-3.5" />
+                    <ClipboardList className="w-4 h-4" /> Review & Complete <ArrowRight className="w-3.5 h-3.5" />
                   </Button>
                 </div>
               </div>
@@ -663,6 +661,7 @@ export default function SmartNoteAssistant({ visitId = null }) {
               roughNote={note}
               serviceLine={serviceLine}
               visitType={visitType}
+              vitals={vitals}
               priorNote={getPriorNote(patientDetail || patient)}
               patient={patientDetail || patient}
               currentUser={currentUser}

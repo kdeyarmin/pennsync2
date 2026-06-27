@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { normalizeDraft } from "./compliance/normalize";
 import { getRequiredElements } from "./compliance/requiredElements";
 import { detectPresence, computeGaps, computeCriticalGaps, computeCarryForward } from "./compliance/presenceDetection";
-import { splitSentences } from "./compliance/factExtraction";
+import { splitSentences, formatVitalsSentence } from "./compliance/factExtraction";
 import { generateConstrainedNote, groundNote } from "./compliance/generation";
 import { valueGuard } from "./compliance/valueGuard";
 import { computeCoverageScore, computeDraftPresenceScore } from "./compliance/coverageScore";
@@ -31,6 +31,9 @@ import { withTimeout } from "./compliance/withTimeout";
  *   roughNote      — the rough draft to convert
  *   serviceLine    — "home_health" | "hospice"
  *   visitType      — routine_visit | admission | recertification | discharge | prn
+ *   vitals         — (optional) canonical structured vital_signs captured on the
+ *                    form. Folded in deterministically so values entered there reach
+ *                    the note + coverage even when not retyped into the draft.
  *   priorNote      — (optional) the patient's last note, for carry-forward pre-fill
  *   patient        — (optional) the full chart record, for the chart cross-check
  *   currentUser    — (optional) for the grounding call's rate-limit key
@@ -44,7 +47,7 @@ import { withTimeout } from "./compliance/withTimeout";
  *                     the reviewer renders the fact-check banner but defers the
  *                     note display + actions (e.g. Save-to-chart, PDF) to the host.
  */
-export default function ConstrainedNoteReviewer({ roughNote, serviceLine = "home_health", visitType = "routine_visit", priorNote = "", patient = null, currentUser, onFinalNote, onBack, renderFinalNote, onEscalate }) {
+export default function ConstrainedNoteReviewer({ roughNote, serviceLine = "home_health", visitType = "routine_visit", vitals = null, priorNote = "", patient = null, currentUser, onFinalNote, onBack, renderFinalNote, onEscalate }) {
   const [answers, setAnswers] = useState({});
   const [prefilledIds, setPrefilledIds] = useState(new Set());
   const [confirmedNegatives, setConfirmedNegatives] = useState(new Set());
@@ -65,12 +68,19 @@ export default function ConstrainedNoteReviewer({ roughNote, serviceLine = "home
   const analysis = useMemo(() => {
     if (!roughNote || roughNote.trim().length < 20) return null;
     const normalized = normalizeDraft(roughNote);
+    const vitalsSentence = formatVitalsSentence(vitals);
     const required = getRequiredElements(serviceLine, visitType);
-    const presence = detectPresence(normalized, required);
+    // Presence/coverage must see structured vitals captured on the form, even
+    // when the nurse didn't retype them into the draft — otherwise vitals are
+    // falsely scored as "not documented this visit". The draft sentences fed to
+    // the scribe stay roughNote-only (vitals are appended verbatim, never
+    // re-voiced), so this only affects gap detection and the coverage score.
+    const presenceText = vitalsSentence ? normalizeDraft(`${roughNote} ${vitalsSentence}`) : normalized;
+    const presence = detectPresence(presenceText, required);
     const gaps = computeGaps(presence, required);
     const draftScore = computeDraftPresenceScore({ requiredElements: required, presenceResults: presence });
-    return { normalized, required, presence, gaps, draftScore };
-  }, [roughNote, serviceLine, visitType]);
+    return { normalized, vitalsSentence, required, presence, gaps, draftScore };
+  }, [roughNote, serviceLine, visitType, vitals]);
 
   // Deterministic visit-over-visit comparison: what measured values changed since
   // the patient's last documented note. Pure + offline, derived from the same
@@ -149,7 +159,7 @@ export default function ConstrainedNoteReviewer({ roughNote, serviceLine = "home
     if (!analysis) return "";
     const answerTexts = analysis.required.filter(e => answers[e.id]?.trim()).map(e => answers[e.id].trim());
     const negPhrases = analysis.required.filter(e => confirmedNegatives.has(e.id) && e.standardNegative).map(e => e.standardNegative.phrase);
-    return [analysis.normalized, ...answerTexts, ...negPhrases, ...computeNotDocumented(), activeTrendSummary()].filter(Boolean).join(" ");
+    return [analysis.normalized, ...answerTexts, ...negPhrases, ...computeNotDocumented(), activeTrendSummary(), analysis.vitalsSentence].filter(Boolean).join(" ");
   }, [analysis, answers, confirmedNegatives, computeNotDocumented, activeTrendSummary]);
 
   // Save-ready snapshot the host (e.g. SmartNoteAssistant) persists to the chart.
@@ -168,16 +178,21 @@ export default function ConstrainedNoteReviewer({ roughNote, serviceLine = "home
     return { finalNote: text, coverageScore, draftScore: analysis.draftScore, presence: analysis.presence, required: analysis.required, answeredIds, confirmedNegativeIds, answers, chartFindings, sustainedTrends, comparisons, acknowledgment };
   };
 
-  const verifyNote = useCallback(async (text) => {
+  // `groundingText` is the subset of `text` worth grounding (default: all of it).
+  // On a fresh generate we pass only the LLM-authored note so the deterministic
+  // verbatim extras aren't re-classified; on a re-check after a manual edit we
+  // ground the whole note (the nurse may have changed anything).
+  const verifyNote = useCallback(async (text, groundingText = text) => {
     const allowed = buildAllowedInput();
     const vg = valueGuard(text, allowed);
     if (!vg.ok) return { ok: false, fix: { values: vg.unverified, sentences: [], offlinePending: false } };
     if (navigator.onLine) {
+      if (!groundingText.trim()) return { ok: true, offline: false };
       let g;
       try {
         // Bound the grounding call so a hung request can't leave the note stuck
         // mid-verification — surface it as a re-checkable error instead.
-        g = await withTimeout(groundNote(text, allowed, { userKey: currentUser?.email || "anon" }), 30000, "Verification timed out — check your connection and re-check.");
+        g = await withTimeout(groundNote(groundingText, allowed, { userKey: currentUser?.email || "anon" }), 30000, "Verification timed out — check your connection and re-check.");
       } catch (timeoutErr) {
         return { ok: false, fix: { values: [], sentences: [], groundingError: timeoutErr.message, offlinePending: false } };
       }
@@ -210,7 +225,7 @@ export default function ConstrainedNoteReviewer({ roughNote, serviceLine = "home
       let generated;
       try {
         const res = await withTimeout(
-          generateConstrainedNote({ draftSentences, answers: answersPayload, confirmedNegatives: negPhrases }, { userKey: currentUser?.email || "anon" }),
+          generateConstrainedNote({ draftSentences, answers: answersPayload, confirmedNegatives: negPhrases }, { userKey: currentUser?.email || "anon", serviceLine, visitType }),
           45000,
           "Note generation timed out. Please try again.",
         );
@@ -224,10 +239,13 @@ export default function ConstrainedNoteReviewer({ roughNote, serviceLine = "home
       // Append the opted-in trend summary and any "not documented" fallbacks. The
       // trend summary is a deterministic, factual sentence (no LLM), so it is added
       // verbatim rather than risk the scribe re-voicing its paired values.
-      const extras = [activeTrendSummary(), ...computeNotDocumented()].filter(Boolean);
+      const extras = [activeTrendSummary(), analysis.vitalsSentence, ...computeNotDocumented()].filter(Boolean);
       const finalText = extras.length ? `${generated}\n\n${extras.join(" ")}` : generated;
       setFinalNote(finalText);
-      applyVerification(finalText, await verifyNote(finalText));
+      // Ground only the LLM-authored portion. The appended extras (trend summary,
+      // structured vitals, "not documented" fallbacks) are deterministic and
+      // already pass the value-guard, so re-grounding them only burns tokens.
+      applyVerification(finalText, await verifyNote(finalText, generated));
     } catch (err) {
       console.error("ConstrainedNoteReviewer generate error:", err);
       toast.error("Something went wrong building the note.");
