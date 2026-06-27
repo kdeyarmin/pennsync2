@@ -216,6 +216,7 @@ Return JSON with GRANULAR compliance analysis:
 
     } catch (error) {
       console.error('Error checking compliance:', error);
+      toast.error("The AI request didn't complete. Please try again.");
     }
   };
 

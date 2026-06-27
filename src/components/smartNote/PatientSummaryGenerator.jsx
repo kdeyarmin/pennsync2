@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAICall } from "@/hooks/useAICall";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -61,6 +62,7 @@ Keep each section to 1-2 sentences. Use professional medical language. Return JS
       setSummary(result);
     } catch (err) {
       console.error("Summary generation failed:", err);
+      toast.error("The AI request didn't complete. Please try again.");
     }
   };
 

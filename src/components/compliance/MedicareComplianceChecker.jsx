@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { useAICall } from "@/hooks/useAICall";
+import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -135,6 +136,7 @@ Return JSON with overall_compliance_score (0-100), rule_violations array with ru
       setComplianceResults(result);
     } catch (error) {
       console.error('Compliance check error:', error);
+      toast.error("The AI request didn't complete. Please try again.");
     }
   }, [noteContent, complianceRules, visitType, diagnosis, nurseType, patientData]);
 

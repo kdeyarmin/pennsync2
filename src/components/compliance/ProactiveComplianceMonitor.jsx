@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { useAICall } from "@/hooks/useAICall";
+import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -172,6 +173,7 @@ Return JSON with: critical_patterns array (with pattern, frequency, cop_referenc
       setAlerts(newAlerts);
     } catch (error) {
       console.error('Pattern analysis error:', error);
+      toast.error("The AI request didn't complete. Please try again.");
     }
   }, [medicareRules, recentAudits]);
 

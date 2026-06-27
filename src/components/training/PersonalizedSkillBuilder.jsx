@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAICall } from "@/hooks/useAICall";
+import { toast } from "sonner";
 import { safePercent } from "@/lib/safePercent";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -105,6 +106,7 @@ Return JSON:
 
     } catch (error) {
       console.error("Error analyzing skills:", error);
+      toast.error("The AI request didn't complete. Please try again.");
     }
   };
 

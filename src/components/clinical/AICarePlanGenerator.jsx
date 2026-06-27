@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAICall } from "@/hooks/useAICall";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -95,6 +96,7 @@ Make the care plan specific to home health nursing, focusing on skilled nursing 
       onCarePlanGenerated?.(result);
     } catch (error) {
       console.error("Error generating care plan:", error);
+      toast.error("The AI request didn't complete. Please try again.");
     }
   };
 

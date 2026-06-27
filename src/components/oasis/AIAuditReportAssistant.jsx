@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAICall } from "@/hooks/useAICall";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -94,6 +95,7 @@ Return JSON:
       setAiFindings(result);
     } catch (error) {
       console.error("Error generating audit findings:", error);
+      toast.error("The AI request didn't complete. Please try again.");
     }
   };
 

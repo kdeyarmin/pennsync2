@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { useAICall } from "@/hooks/useAICall";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -107,6 +108,7 @@ For each risk, provide:
       setRiskScore(response);
     } catch (error) {
       console.error("Risk calculation failed:", error);
+      toast.error("The AI request didn't complete. Please try again.");
     }
   }, [patient, incidents, clinicalEvents, recentVisits]);
 

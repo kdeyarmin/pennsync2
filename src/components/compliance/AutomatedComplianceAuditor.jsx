@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useAICall } from "@/hooks/useAICall";
+import { toast } from "sonner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -172,6 +173,7 @@ Return JSON:
 
       } catch (error) {
         console.error("Audit error for visit:", visit.id, error);
+        toast.error("The AI request didn't complete. Please try again.");
       }
 
       // Small delay to avoid rate limiting

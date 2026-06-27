@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAICall } from "@/hooks/useAICall";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -163,6 +164,7 @@ Return detailed JSON with exact dollar amounts:`,
       setCaseMixAnalysis(result);
     } catch (error) {
       console.error("Case-mix analysis error:", error);
+      toast.error("The AI request didn't complete. Please try again.");
     }
 
   }, [pdgmData, navigationData]);

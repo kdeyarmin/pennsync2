@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAICall } from "@/hooks/useAICall";
+import { toast } from "sonner";
 import { isSafeExternalUrl } from "@/components/utils/security";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -128,6 +129,7 @@ Be specific and actionable. Use actual data trends.`,
       setInsights(result);
     } catch (error) {
       console.error('Patient insights analysis error:', error);
+      toast.error("The AI request didn't complete. Please try again.");
     }
   }, [patient, visits, incidents, carePlans]);
 

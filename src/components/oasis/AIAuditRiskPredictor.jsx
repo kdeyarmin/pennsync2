@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { useAICall } from "@/hooks/useAICall";
+import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -137,6 +138,7 @@ Return JSON:
       setPrediction(result);
     } catch (error) {
       console.error("Error predicting audit risk:", error);
+      toast.error("The AI request didn't complete. Please try again.");
     }
   }, [analysisResults, historicalAudits, patientOASIS]);
 

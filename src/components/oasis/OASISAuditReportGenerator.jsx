@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useAICall } from "@/hooks/useAICall";
+import { toast } from "sonner";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Dialog,
@@ -161,6 +162,7 @@ Use proper markdown formatting with headers, bullet points, and tables where app
       setReportGenerated(true);
     } catch (error) {
       console.error("Error generating report:", error);
+      toast.error("The AI request didn't complete. Please try again.");
     }
 
   };

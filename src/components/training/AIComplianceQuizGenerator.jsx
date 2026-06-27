@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { safePercent } from "@/lib/safePercent";
 import { useAICall } from "@/hooks/useAICall";
+import { toast } from "sonner";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -143,6 +144,7 @@ Return JSON format:
       setShowResults(false);
     } catch (error) {
       console.error("Error generating quiz:", error);
+      toast.error("The AI request didn't complete. Please try again.");
     }
   };
 

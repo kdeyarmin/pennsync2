@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAICall } from "@/hooks/useAICall";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -254,6 +255,7 @@ Return detailed JSON analysis:`,
       }
     } catch (error) {
       console.error("PDGM impact analysis error:", error);
+      toast.error("The AI request didn't complete. Please try again.");
     }
 
   };

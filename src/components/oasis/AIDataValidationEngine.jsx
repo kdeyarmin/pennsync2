@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAICall } from "@/hooks/useAICall";
+import { toast } from "sonner";
 import { isSafeExternalUrl } from "@/components/utils/security";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -192,6 +193,7 @@ For each issue found, provide:
       setValidationResults(result);
     } catch (error) {
       console.error('Validation error:', error);
+      toast.error("The AI request didn't complete. Please try again.");
     }
   }, [oasisData, patientData, clinicalNotes, patientHistory]);
 

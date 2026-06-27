@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useAICall } from "@/hooks/useAICall";
+import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -176,6 +177,7 @@ Use professional medical terminology. Be objective and data-driven. Include spec
       setGeneratedReport(result.report);
     } catch (error) {
       console.error("Error generating progress report:", error);
+      toast.error("The AI request didn't complete. Please try again.");
     }
   };
 

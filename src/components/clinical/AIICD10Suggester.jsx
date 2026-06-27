@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAICall } from "@/hooks/useAICall";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -57,6 +58,7 @@ Return 5-10 most relevant codes, prioritized by relevance and specificity.`,
       setSuggestedCodes(result.codes || []);
     } catch (error) {
       console.error("Error searching ICD-10 codes:", error);
+      toast.error("The AI request didn't complete. Please try again.");
     }
   };
 

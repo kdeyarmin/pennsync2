@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useAICall } from "@/hooks/useAICall";
+import { toast } from "sonner";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -141,6 +142,7 @@ Provide detailed comparison showing what changed and why.`;
       setSimulationResult(result);
     } catch (error) {
       console.error('Simulation error:', error);
+      toast.error("The AI request didn't complete. Please try again.");
     }
   };
 

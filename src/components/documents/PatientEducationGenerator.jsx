@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAICall } from "@/hooks/useAICall";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -100,6 +101,7 @@ Keep language at ${readingLevel} reading level. Be encouraging and supportive in
       setGeneratedMaterial(result.material);
     } catch (error) {
       console.error("Error generating education material:", error);
+      toast.error("The AI request didn't complete. Please try again.");
     }
   };
 

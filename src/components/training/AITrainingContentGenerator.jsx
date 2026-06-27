@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAICall } from "@/hooks/useAICall";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -137,6 +138,7 @@ Use professional but accessible language.`,
       onContentGenerated?.(result);
     } catch (error) {
       console.error("Error generating training content:", error);
+      toast.error("The AI request didn't complete. Please try again.");
     }
   };
 

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAICall } from "@/hooks/useAICall";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -125,6 +126,7 @@ Provide a comprehensive yet concise dashboard summary in JSON:
       setSummary(result);
     } catch (error) {
       console.error("Error generating summary:", error);
+      toast.error("The AI request didn't complete. Please try again.");
     }
   }, [patient, visits, carePlans, tasks, incidents]);
 

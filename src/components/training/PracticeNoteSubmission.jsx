@@ -1,6 +1,7 @@
 import React from "react";
 import { base44 } from "@/api/base44Client";
 import { useAICall } from "@/hooks/useAICall";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -126,6 +127,7 @@ Return JSON with:
       onSubmit?.();
     } catch (error) {
       console.error('Error analyzing practice note:', error);
+      toast.error("The AI request didn't complete. Please try again.");
     }
   };
 

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAICall } from "@/hooks/useAICall";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -91,6 +92,7 @@ Be specific to home health/hospice Medicare documentation requirements.`,
       setSuggestions(result);
     } catch (error) {
       console.error("Error generating suggestions:", error);
+      toast.error("The AI request didn't complete. Please try again.");
     }
   };
 

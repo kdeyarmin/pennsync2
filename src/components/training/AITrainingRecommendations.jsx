@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { useAICall } from "@/hooks/useAICall";
+import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -200,6 +201,7 @@ Format recommendations to be actionable and motivating. Focus on improvement, no
       queryClient.invalidateQueries({ queryKey: ['trainingRecommendations', userEmail] });
     } catch (error) {
       console.error("Error analyzing training needs:", error);
+      toast.error("The AI request didn't complete. Please try again.");
     }
   }, [complianceAudits, trainingRecommendations, completedTraining, availableModules, userEmail, queryClient, getDueDate]);
 
