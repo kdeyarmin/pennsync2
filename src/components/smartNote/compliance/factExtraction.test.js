@@ -8,6 +8,7 @@ import {
   getSentencesContaining,
   formatVitalsSentence,
   toCanonicalVitalSigns,
+  extractCanonicalVitalsFromText,
 } from "./factExtraction.js";
 import { valueGuard } from "./valueGuard.js";
 
@@ -197,6 +198,39 @@ test("toCanonicalVitalSigns output flows cleanly into the value-guarded vitals s
   assert.match(sentence, /BP 138\/84/);
   assert.match(sentence, /O2 97%/);
   assert.equal(valueGuard(sentence, sentence).ok, true);
+});
+
+// ── extractCanonicalVitalsFromText (edited-draft text is the source of truth) ──
+
+test("extractCanonicalVitalsFromText parses the drafter's generated vitals line incl. pain", () => {
+  const line = "Vitals: BP 148/90 mmHg, HR 82 bpm, RR 16 breaths/min, O2 sat 95%, Temp 98.6°F, Pain 3/10.";
+  assert.deepEqual(extractCanonicalVitalsFromText(line), {
+    blood_pressure_systolic: 148, blood_pressure_diastolic: 90, heart_rate: 82,
+    respiratory_rate: 16, oxygen_saturation: 95, temperature: 98.6, pain_level: 3,
+  });
+});
+
+test("extractCanonicalVitalsFromText honors an in-text edit over a stale value", () => {
+  // The bug this guards: a nurse corrects BP in the draft text; the saved value
+  // must follow the text, not a separate stale form state.
+  assert.equal(extractCanonicalVitalsFromText("Vitals: BP 138/84 mmHg").blood_pressure_systolic, 138);
+  assert.equal(extractCanonicalVitalsFromText("Vitals: BP 138/84 mmHg").blood_pressure_diastolic, 84);
+});
+
+test("extractCanonicalVitalsFromText returns null when the text has no vitals", () => {
+  assert.equal(extractCanonicalVitalsFromText("Patient ambulated in the hallway."), null);
+  assert.equal(extractCanonicalVitalsFromText(""), null);
+});
+
+test("text-sourced vitals take precedence in a per-key merge with grid vitals", () => {
+  // Mirrors StructuredNoteDrafter.useInNoteBuilder: { ...grid, ...text } so an
+  // edited text value wins while a grid-only field (removed from the text) survives.
+  const fromGrid = toCanonicalVitalSigns({ bp_systolic: "148", bp_diastolic: "90", heart_rate: "82" });
+  const fromText = extractCanonicalVitalsFromText("BP 138/84 mmHg"); // nurse corrected BP in text
+  const merged = { ...fromGrid, ...fromText };
+  assert.equal(merged.blood_pressure_systolic, 138); // text wins
+  assert.equal(merged.blood_pressure_diastolic, 84);
+  assert.equal(merged.heart_rate, 82); // grid-only field preserved
 });
 
 test("a draft plus the whitelisted vitals sentence value-guards a note that quotes those vitals", () => {

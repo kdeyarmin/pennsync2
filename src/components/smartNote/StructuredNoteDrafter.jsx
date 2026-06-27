@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Sparkles, Copy, CheckCircle2, ClipboardList, ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
 import VoiceNoteIntegration from "./VoiceNoteIntegration";
-import { toCanonicalVitalSigns } from "./compliance/factExtraction";
+import { toCanonicalVitalSigns, extractCanonicalVitalsFromText, extractVitals } from "./compliance/factExtraction";
 
 const VISIT_TYPES = [
   { value: "routine_visit", label: "Routine Visit" },
@@ -81,16 +81,22 @@ export default function StructuredNoteDrafter({ onDraftReady }) {
 
   const useInNoteBuilder = () => {
     if (!onDraftReady) return;
-    // Map to the canonical vital_signs shape so the values reach the verified
-    // pipeline (coverage, trends, critical-vital escalation, chart cross-check)
-    // instead of living only in the draft prose.
-    const structuredVitals = toCanonicalVitalSigns(vitals);
+    // Vitals must reach the verified pipeline (vital_signs field, coverage,
+    // escalation). Source them from the (possibly hand-edited) draft TEXT first so
+    // an in-text correction wins over the grid; fall back to the grid only for a
+    // field the nurse removed from the text. This prevents a stale grid value from
+    // overriding an edit and being saved as the chart's vital_signs.
+    const fromText = extractCanonicalVitalsFromText(draft) || {};
+    const fromGrid = toCanonicalVitalSigns(vitals) || {};
+    const merged = { ...fromGrid, ...fromText }; // both omit absent fields, so text wins per-key
+    const structuredVitals = Object.keys(merged).length ? merged : null;
     // The pipeline appends the BP/HR/RR/O2/temp/pain values verbatim via
     // formatVitalsSentence, so strip the drafter's own "Vitals:" line to avoid
     // duplicating them. Weight isn't carried by formatVitalsSentence — preserve it
-    // as its own line so it isn't lost.
+    // (text first, then grid) as its own line so it isn't lost.
     let handoff = draft.replace(/^Vitals:.*$/m, "").replace(/\n{3,}/g, "\n\n").trim();
-    const weight = vitals.weight && String(vitals.weight).trim() !== "" ? String(vitals.weight).trim() : "";
+    const gridWeight = vitals.weight && String(vitals.weight).trim() !== "" ? parseFloat(vitals.weight) : null;
+    const weight = extractVitals(draft).weight ?? gridWeight;
     if (weight) handoff = `${handoff}\nWeight: ${weight} lbs.`.trim();
     onDraftReady(handoff, visitType, structuredVitals);
   };

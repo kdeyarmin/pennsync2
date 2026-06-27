@@ -130,10 +130,21 @@ export function formatVitalsSentence(vitals) {
  * are parsed to numbers; blanks become null. Returns null when no canonical vital
  * is set, so callers can skip threading an empty object.
  */
+// Keep only finite numeric fields; return null if nothing usable remains. Omitting
+// (rather than nulling) absent fields lets callers merge two sources per-key with a
+// plain spread.
+function compactVitals(obj) {
+  const out = {};
+  for (const [k, v] of Object.entries(obj)) {
+    if (v !== null && v !== undefined && Number.isFinite(v)) out[k] = v;
+  }
+  return Object.keys(out).length ? out : null;
+}
+
 export function toCanonicalVitalSigns(legacy) {
   if (!legacy || typeof legacy !== "object") return null;
   const num = (v) => (v !== null && v !== undefined && String(v).trim() !== "" ? parseFloat(v) : null);
-  const canonical = {
+  return compactVitals({
     blood_pressure_systolic: num(legacy.bp_systolic),
     blood_pressure_diastolic: num(legacy.bp_diastolic),
     heart_rate: num(legacy.heart_rate),
@@ -141,8 +152,29 @@ export function toCanonicalVitalSigns(legacy) {
     oxygen_saturation: num(legacy.o2_sat),
     temperature: num(legacy.temperature),
     pain_level: num(legacy.pain_level),
-  };
-  return Object.values(canonical).some((v) => v !== null && Number.isFinite(v)) ? canonical : null;
+  });
+}
+
+/**
+ * Extract canonical vital_signs from FREE TEXT (e.g. a nurse-edited draft line),
+ * reusing extractVitals plus an explicit pain parse. The point is that when a draft
+ * is hand-edited, the text — not a separate form-state object — is the source of
+ * truth, so the saved vital_signs can never diverge from what the note actually says.
+ * Returns null when no vital is found.
+ */
+export function extractCanonicalVitalsFromText(text) {
+  if (!text) return null;
+  const v = extractVitals(text);
+  const pain = text.match(/\bpain\b\s*:?\s*(\d{1,2})\s*\/\s*10/i);
+  return compactVitals({
+    blood_pressure_systolic: v.bp_sys ?? null,
+    blood_pressure_diastolic: v.bp_dia ?? null,
+    heart_rate: v.hr ?? null,
+    respiratory_rate: v.rr ?? null,
+    oxygen_saturation: v.o2 ?? null,
+    temperature: v.temp ?? null,
+    pain_level: pain ? parseInt(pain[1], 10) : null,
+  });
 }
 
 // ── Value extraction for the hallucination value-guard ─────────────────────
