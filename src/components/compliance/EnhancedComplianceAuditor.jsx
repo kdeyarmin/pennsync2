@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -39,7 +39,7 @@ import { toast } from 'sonner';
 
 export default function EnhancedComplianceAuditor({ onAuditComplete }) {
   const queryClient = useQueryClient();
-  const [isAuditing, setIsAuditing] = useState(false);
+  const ai = useAICall();
   const [auditProgress, setAuditProgress] = useState({ current: 0, total: 0, currentRule: '' });
   const [auditResults, setAuditResults] = useState(null);
   const [dateRange, setDateRange] = useState("7");
@@ -86,7 +86,6 @@ export default function EnhancedComplianceAuditor({ onAuditComplete }) {
       return;
     }
 
-    setIsAuditing(true);
     setAuditResults(null);
     
     const cutoffDate = subDays(new Date(), parseInt(dateRange));
@@ -144,7 +143,7 @@ Required Elements: ${rule.required_elements?.join(', ') || 'N/A'}
 Keywords to look for: ${rule.keywords?.join(', ') || 'N/A'}`
         ).join('\n\n');
 
-        const auditResult = await invokeLLM({
+        const auditResult = await ai.run({
           prompt: `Perform a detailed compliance audit on this clinical documentation against specific rules.
 
 VISIT TYPE: ${visit.visit_type || 'routine_visit'}
@@ -289,7 +288,6 @@ Return JSON:
     });
 
     setAuditResults(results);
-    setIsAuditing(false);
     queryClient.invalidateQueries({ queryKey: ['existingAudits'] });
     if (onAuditComplete) onAuditComplete(results);
   };
@@ -405,10 +403,10 @@ Return JSON:
           <div className="flex items-end">
             <Button
               onClick={runComplianceAudit}
-              disabled={isAuditing || activeRules.length === 0}
+              disabled={ai.loading || activeRules.length === 0}
               className="w-full bg-indigo-600 hover:bg-indigo-700"
             >
-              {isAuditing ? (
+              {ai.loading ? (
                 <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Auditing...</>
               ) : (
                 <><Play className="w-4 h-4 mr-2" /> Run Audit</>
@@ -467,7 +465,7 @@ Return JSON:
         </div>
 
         {/* Progress */}
-        {isAuditing && (
+        {ai.loading && (
           <div className="space-y-2">
             <div className="flex items-center justify-between text-sm">
               <span>{auditProgress.currentRule}</span>

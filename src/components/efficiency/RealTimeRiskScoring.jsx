@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -9,7 +9,7 @@ import { useQuery } from "@tanstack/react-query";
 
 export default function RealTimeRiskScoring({ patientId, compact = false }) {
   const [riskScore, setRiskScore] = useState(null);
-  const [isCalculating, setIsCalculating] = useState(false);
+  const ai = useAICall();
 
   // Fetch patient data
   const { data: patient } = useQuery({
@@ -47,10 +47,9 @@ export default function RealTimeRiskScoring({ patientId, compact = false }) {
   const calculateRiskScore = useCallback(async () => {
     if (!patient) return;
 
-    setIsCalculating(true);
     try {
       // Real-time AI risk calculation
-      const response = await invokeLLM({
+      const response = await ai.run({
         prompt: `Analyze this patient's risk across multiple dimensions and provide a comprehensive risk assessment:
 
 Patient Data:
@@ -108,16 +107,14 @@ For each risk, provide:
       setRiskScore(response);
     } catch (error) {
       console.error("Risk calculation failed:", error);
-    } finally {
-      setIsCalculating(false);
     }
   }, [patient, incidents, clinicalEvents, recentVisits]);
 
   useEffect(() => {
-    if (patient && recentVisits.length > 0 && !riskScore && !isCalculating) {
+    if (patient && recentVisits.length > 0 && !riskScore && !ai.loading) {
       calculateRiskScore();
     }
-  }, [patient, recentVisits, riskScore, isCalculating, calculateRiskScore]);
+  }, [patient, recentVisits, riskScore, ai.loading, calculateRiskScore]);
 
   const getRiskColor = (level) => {
     switch (level?.toLowerCase()) {
@@ -145,7 +142,7 @@ For each risk, provide:
   if (compact) {
     return (
       <div className="flex items-center gap-2">
-        {isCalculating ? (
+        {ai.loading ? (
           <Badge className="bg-slate-400 animate-pulse">Calculating...</Badge>
         ) : riskScore ? (
           <>
@@ -175,7 +172,7 @@ For each risk, provide:
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3 pt-4">
-        {isCalculating && (
+        {ai.loading && (
           <Alert className="bg-blue-50 border-blue-300">
             <Activity className="w-4 h-4 text-blue-600 animate-pulse" />
             <AlertDescription className="text-blue-900">

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -24,7 +24,7 @@ export default function InteractiveSimulation({ scenario, onComplete }) {
   const [feedback, setFeedback] = useState({});
   const [showResults, setShowResults] = useState(false);
   const [score, setScore] = useState(0);
-  const [isEvaluating, setIsEvaluating] = useState(false);
+  const ai = useAICall();
   const [evalError, setEvalError] = useState(null);
 
   const steps = scenario?.steps || [];
@@ -43,15 +43,14 @@ export default function InteractiveSimulation({ scenario, onComplete }) {
 
   const handleResponseSubmit = async () => {
     const response = responses[currentStep];
-    if (!response || isEvaluating) return;
+    if (!response || ai.loading) return;
 
-    setIsEvaluating(true);
     setEvalError(null);
 
     try {
       // Evaluate the nurse's response against Medicare home health documentation
       // standards using the LLM integration (replaces the prior random placeholder).
-      const evaluation = await invokeLLM({
+      const evaluation = await ai.run({
         prompt: `You are a Medicare home health documentation expert evaluating a nurse's response in a clinical documentation training simulation.
 
 SCENARIO: ${scenario.title || "Clinical documentation simulation"}
@@ -103,8 +102,6 @@ Evaluate whether the response meets Medicare home health documentation standards
       // Don't fabricate a result on failure — let the learner retry.
       console.error("Error evaluating simulation response:", error);
       setEvalError("We couldn't evaluate your response just now. Please try submitting again.");
-    } finally {
-      setIsEvaluating(false);
     }
   };
 
@@ -273,10 +270,10 @@ Evaluate whether the response meets Medicare home health documentation standards
           {!currentFeedback && (
             <Button
               onClick={handleResponseSubmit}
-              disabled={!responses[currentStep] || isEvaluating}
+              disabled={!responses[currentStep] || ai.loading}
               className="w-full"
             >
-              {isEvaluating ? (
+              {ai.loading ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   Evaluating Response…

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { isSafeExternalUrl } from "@/components/utils/security";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -27,14 +27,13 @@ export default function AIDataValidationEngine({
   autoValidate = false,
   onCorrection
 }) {
-  const [isValidating, setIsValidating] = useState(false);
+  const ai = useAICall();
   const [validationResults, setValidationResults] = useState(null);
   const [appliedCorrections, setAppliedCorrections] = useState(new Set());
 
   const performValidation = useCallback(async () => {
     if (!oasisData || !patientData) return;
 
-    setIsValidating(true);
     try {
       const prompt = `You are an expert OASIS validator and Medicare compliance specialist. Analyze OASIS data for accuracy, consistency, and reimbursement optimization.
 
@@ -77,7 +76,7 @@ For each issue found, provide:
 - Plain-language explanation of the rule
 - Specific do's and don'ts examples`;
 
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt,
         response_json_schema: {
           type: "object",
@@ -194,7 +193,6 @@ For each issue found, provide:
     } catch (error) {
       console.error('Validation error:', error);
     }
-    setIsValidating(false);
   }, [oasisData, patientData, clinicalNotes, patientHistory]);
 
   useEffect(() => {
@@ -244,9 +242,9 @@ For each issue found, provide:
           <CardTitle className="flex items-center gap-2">
             <Brain className="w-5 h-5 text-navy-600" />
             AI Data Validation Engine
-            {isValidating && <Loader2 className="w-4 h-4 animate-spin text-navy-500" />}
+            {ai.loading && <Loader2 className="w-4 h-4 animate-spin text-navy-500" />}
           </CardTitle>
-          {!validationResults && !isValidating && (
+          {!validationResults && !ai.loading && (
             <Button onClick={performValidation} className="bg-navy-600 hover:bg-navy-700">
               <Brain className="w-4 h-4 mr-2" />
               Validate Data
@@ -256,14 +254,14 @@ For each issue found, provide:
       </CardHeader>
 
       <CardContent>
-        {isValidating && (
+        {ai.loading && (
           <div className="text-center py-8">
             <Loader2 className="w-12 h-12 animate-spin text-navy-600 mx-auto mb-4" />
             <p className="text-sm text-navy-700">Analyzing OASIS data for accuracy and optimization...</p>
           </div>
         )}
 
-        {!isValidating && !validationResults && (
+        {!ai.loading && !validationResults && (
           <div className="text-center py-8">
             <Shield className="w-12 h-12 text-navy-400 mx-auto mb-4" />
             <p className="text-sm text-slate-600">Click "Validate Data" to check for inconsistencies and optimization opportunities</p>

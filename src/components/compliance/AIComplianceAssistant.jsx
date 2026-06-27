@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,7 +21,7 @@ import {
 export default function AIComplianceAssistant({ compact = false, context = null }) {
   const [question, setQuestion] = useState("");
   const [conversation, setConversation] = useState([]);
-  const [isAsking, setIsAsking] = useState(false);
+  const ai = useAICall();
 
   const { data: complianceRules = [] } = useQuery({
     queryKey: ['medicareComplianceRules'],
@@ -44,7 +44,6 @@ export default function AIComplianceAssistant({ compact = false, context = null 
     const userMessage = { role: "user", content: questionText };
     setConversation(prev => [...prev, userMessage]);
     setQuestion("");
-    setIsAsking(true);
 
     try {
       // Build regulation context
@@ -52,7 +51,7 @@ export default function AIComplianceAssistant({ compact = false, context = null 
         `${rule.cop_reference} - ${rule.rule_name}: ${rule.description}`
       ).join('\n\n');
 
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `You are an expert Medicare compliance advisor for home health agencies, specializing in 42 CFR 484 regulations and Pennsylvania state requirements.
 
 QUESTION: ${questionText}
@@ -118,7 +117,6 @@ Format your response in clear sections. Be specific and actionable.`,
       };
       setConversation(prev => [...prev, errorMessage]);
     }
-    setIsAsking(false);
   };
 
   return (
@@ -269,14 +267,14 @@ Format your response in clear sections. Be specific and actionable.`,
               }
             }}
             className="min-h-[60px]"
-            disabled={isAsking}
+            disabled={ai.loading}
           />
           <Button
             onClick={() => askQuestion()}
-            disabled={isAsking || !question.trim()}
+            disabled={ai.loading || !question.trim()}
             className="bg-navy-600 hover:bg-navy-700"
           >
-            {isAsking ? (
+            {ai.loading ? (
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
             ) : (
               <Send className="w-4 h-4" />

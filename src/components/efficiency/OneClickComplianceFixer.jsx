@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,7 +13,7 @@ export default function OneClickComplianceFixer({
   _patientId,
   onContentFixed
 }) {
-  const [isChecking, setIsChecking] = useState(false);
+  const ai = useAICall();
   const [complianceIssues, setComplianceIssues] = useState([]);
   const [fixedContent, setFixedContent] = useState(null);
   const [appliedFixes, setAppliedFixes] = useState(new Set());
@@ -21,9 +21,8 @@ export default function OneClickComplianceFixer({
   const checkCompliance = useCallback(async () => {
     if (!documentContent) return;
 
-    setIsChecking(true);
     try {
-      const response = await invokeLLM({
+      const response = await ai.run({
         prompt: `Perform a comprehensive Medicare compliance check on this ${documentType}:
 
 Document Content:
@@ -86,8 +85,6 @@ For each issue found, provide:
     } catch (error) {
       console.error("Compliance check failed:", error);
       toast.error("Compliance check failed");
-    } finally {
-      setIsChecking(false);
     }
   }, [documentContent, documentType]);
 
@@ -145,10 +142,10 @@ For each issue found, provide:
   };
 
   useEffect(() => {
-    if (documentContent && !isChecking && complianceIssues.length === 0) {
+    if (documentContent && !ai.loading && complianceIssues.length === 0) {
       checkCompliance();
     }
-  }, [documentContent, isChecking, complianceIssues.length, checkCompliance]);
+  }, [documentContent, ai.loading, complianceIssues.length, checkCompliance]);
 
   const getSeverityColor = (severity) => {
     switch (severity?.toLowerCase()) {
@@ -176,7 +173,7 @@ For each issue found, provide:
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
-        {isChecking && (
+        {ai.loading && (
           <Alert className="bg-blue-50 border-blue-300">
             <Shield className="w-4 h-4 text-blue-600 animate-pulse" />
             <AlertDescription className="text-blue-900">
@@ -186,7 +183,7 @@ For each issue found, provide:
           </Alert>
         )}
 
-        {!isChecking && complianceIssues.length === 0 && documentContent && (
+        {!ai.loading && complianceIssues.length === 0 && documentContent && (
           <Alert className="bg-green-50 border-green-300">
             <CheckCircle2 className="w-4 h-4 text-green-600" />
             <AlertDescription className="text-green-900">

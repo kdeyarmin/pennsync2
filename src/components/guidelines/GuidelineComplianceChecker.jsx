@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -32,13 +32,12 @@ export default function GuidelineComplianceChecker({
   onApplySuggestion
 }) {
   const [complianceResults, setComplianceResults] = useState(null);
-  const [isChecking, setIsChecking] = useState(false);
+  const ai = useAICall();
   const [appliedGuidelines, setAppliedGuidelines] = useState([]);
 
   const checkCompliance = async () => {
     if (!noteContent || noteContent.length < 50) return;
 
-    setIsChecking(true);
     try {
       // Retrieve relevant guidelines
       const guidelines = await retrieveRelevantGuidelines({
@@ -146,7 +145,7 @@ Return JSON with GRANULAR compliance analysis:
   "strengths": ["Areas where documentation meets or exceeds guidelines"]
 }`;
 
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt,
         response_json_schema: {
           type: "object",
@@ -218,7 +217,6 @@ Return JSON with GRANULAR compliance analysis:
     } catch (error) {
       console.error('Error checking compliance:', error);
     }
-    setIsChecking(false);
   };
 
   const getStatusIcon = (status) => {
@@ -267,10 +265,10 @@ Return JSON with GRANULAR compliance analysis:
           </CardTitle>
           <Button
             onClick={checkCompliance}
-            disabled={isChecking || !noteContent || noteContent.length < 50}
+            disabled={ai.loading || !noteContent || noteContent.length < 50}
             className="bg-navy-600 hover:bg-navy-700"
           >
-            {isChecking ? (
+            {ai.loading ? (
               <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Checking...</>
             ) : (
               <><Shield className="w-4 h-4 mr-2" /> Check Compliance</>
@@ -280,7 +278,7 @@ Return JSON with GRANULAR compliance analysis:
       </CardHeader>
 
       <CardContent className="space-y-4">
-        {!complianceResults && !isChecking && (
+        {!complianceResults && !ai.loading && (
           <Alert className="bg-blue-50 border-blue-200">
             <BookOpen className="w-4 h-4 text-blue-600" />
             <AlertDescription className="text-blue-900 text-sm">

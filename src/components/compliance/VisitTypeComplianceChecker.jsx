@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -29,14 +29,13 @@ export default function VisitTypeComplianceChecker({
   autoCheck = true,
   onIssuesDetected
 }) {
-  const [isChecking, setIsChecking] = useState(false);
+  const ai = useAICall();
   const [complianceResults, setComplianceResults] = useState(null);
   const [isExpanded, setIsExpanded] = useState(true);
 
   const performComplianceCheck = useCallback(async () => {
     if (!visitType || !noteContent) return;
 
-    setIsChecking(true);
     try {
       const visitTypeRequirements = {
         admission: {
@@ -160,7 +159,7 @@ PERFORM COMPREHENSIVE COMPLIANCE CHECK:
 
 Return detailed compliance analysis in JSON format.`;
 
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt,
         response_json_schema: {
           type: "object",
@@ -243,7 +242,6 @@ Return detailed compliance analysis in JSON format.`;
       console.error("Compliance check error:", error);
       setComplianceResults({ error: "Failed to perform compliance check" });
     }
-    setIsChecking(false);
   }, [visitType, noteContent, careType, oasisData, patientData, vitalSigns, onIssuesDetected]);
 
   useEffect(() => {
@@ -311,7 +309,7 @@ Return detailed compliance analysis in JSON format.`;
             )}
           </CardTitle>
           <div className="flex items-center gap-2">
-            {!isChecking && !complianceResults && (
+            {!ai.loading && !complianceResults && (
               <Button
                 size="sm"
                 onClick={(e) => {
@@ -330,7 +328,7 @@ Return detailed compliance analysis in JSON format.`;
 
       {isExpanded && (
         <CardContent className="space-y-4">
-          {isChecking && (
+          {ai.loading && (
             <div className="flex items-center justify-center py-6 gap-2">
               <Loader2 className="w-5 h-5 animate-spin text-navy-600" />
               <span className="text-sm text-navy-700">Running compliance check...</span>
@@ -638,9 +636,9 @@ Return detailed compliance analysis in JSON format.`;
                   variant="outline"
                   size="sm"
                   onClick={performComplianceCheck}
-                  disabled={isChecking}
+                  disabled={ai.loading}
                 >
-                  {isChecking ? (
+                  {ai.loading ? (
                     <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Re-checking...</>
                   ) : (
                     <><Shield className="w-4 h-4 mr-2" /> Re-check Compliance</>

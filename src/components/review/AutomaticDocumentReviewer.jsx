@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -39,7 +39,7 @@ export default function AutomaticDocumentReviewer({
   onReviewComplete,
   onApplySuggestion
 }) {
-  const [isReviewing, setIsReviewing] = useState(false);
+  const ai = useAICall();
   const [reviewResults, setReviewResults] = useState(null);
   const queryClient = useQueryClient();
 
@@ -60,7 +60,6 @@ export default function AutomaticDocumentReviewer({
       return;
     }
 
-    setIsReviewing(true);
     try {
       // Get relevant Medicare rules
       const relevantRules = medicareRules.filter(rule => 
@@ -71,7 +70,7 @@ export default function AutomaticDocumentReviewer({
         rule.category === 'plan_of_care'
       );
 
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `You are an expert Medicare home health compliance auditor and clinical documentation specialist for Pennsylvania home health agencies. Perform a comprehensive review of this clinical note.
 
 CLINICAL NOTE TO REVIEW:
@@ -271,7 +270,6 @@ Return detailed JSON analysis.`,
       console.error('Error reviewing document:', error);
       toast.error('Failed to review document. Please try again.');
     }
-    setIsReviewing(false);
   }, [currentUser?.email, diagnosis, medicareRules, noteContent, nurseEmail, onReviewComplete, patientData.date_of_birth, queryClient, visitId, visitType, vitalSigns]);
 
   useEffect(() => {
@@ -294,7 +292,7 @@ Return detailed JSON analysis.`,
     return 'bg-red-600';
   };
 
-  if (isReviewing) {
+  if (ai.loading) {
     return (
       <Card className="border-2 border-navy-200">
         <CardContent className="p-8 text-center">
