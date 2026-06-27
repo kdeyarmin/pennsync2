@@ -63,6 +63,11 @@ export default [
       // Surface missing/incorrect effect dependencies (the class of bug behind
       // several stale-closure issues found in review) as a non-blocking warning.
       "react-hooks/exhaustive-deps": "warn",
+      // App code already follows an errors/warns-only convention (no stray
+      // console.log/debug/info). Lock it in: `warn`/`error` stay allowed for
+      // intentional diagnostics; everything else should route through
+      // `@/lib/logger` (which is exempt via a file-level eslint-disable).
+      "no-console": ["error", { allow: ["warn", "error"] }],
     },
   },
 ];

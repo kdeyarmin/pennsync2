@@ -1,5 +1,6 @@
 import { QueryClient, QueryCache } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 
 export const queryClientInstance = new QueryClient({
@@ -13,7 +14,7 @@ export const queryClientInstance = new QueryClient({
 		onError: (error) => {
 			const status = error?.response?.status ?? error?.status;
 			if (status === 401 || status === 403 || status === 404) return;
-			console.error('Query failed:', error);
+			logger.error('Query failed:', error);
 			toast.error("Couldn't load some data. Check your connection and try again.", {
 				id: 'query-load-error',
 			});
@@ -27,7 +28,7 @@ export const queryClientInstance = new QueryClient({
 			// "didn't do anything"). Mutations that need bespoke error handling can
 			// still override onError — react-query uses this only as the default.
 			onError: (error) => {
-				console.error('Mutation failed:', error);
+				logger.error('Mutation failed:', error);
 				const message =
 					typeof error?.message === 'string' && error.message.trim()
 						? error.message
