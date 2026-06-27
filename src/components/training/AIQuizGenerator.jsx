@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { safePercent } from "@/lib/safePercent";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,7 @@ import { Sparkles, CheckCircle2, XCircle, HelpCircle, ArrowRight, RotateCcw, Tro
 import { toast } from 'sonner';
 
 export default function AIQuizGenerator({ trainingContent, moduleTitle, onComplete }) {
-  const [generating, setGenerating] = useState(false);
+  const ai = useAICall();
   const [quiz, setQuiz] = useState(null);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState({});
@@ -19,9 +19,8 @@ export default function AIQuizGenerator({ trainingContent, moduleTitle, onComple
   const [quizResults, setQuizResults] = useState(null);
 
   const generateQuiz = async () => {
-    setGenerating(true);
     try {
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `Generate a comprehensive nursing quiz based on the following training content.
 
 TRAINING CONTENT:
@@ -83,7 +82,6 @@ Return JSON with:
       console.error('Quiz generation error:', error);
       toast.error('Failed to generate quiz. Please try again.');
     }
-    setGenerating(false);
   };
 
   const handleAnswerSelect = (questionIndex, answerIndex) => {
@@ -130,11 +128,11 @@ Return JSON with:
           </p>
           <Button
             onClick={generateQuiz}
-            disabled={generating || !trainingContent}
+            disabled={ai.loading || !trainingContent}
             className="bg-navy-600 hover:bg-navy-700"
             size="lg"
           >
-            {generating ? (
+            {ai.loading ? (
               <>
                 <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2" />
                 Generating Quiz...

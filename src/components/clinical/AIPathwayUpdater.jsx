@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -9,12 +9,11 @@ import { Loader2, RefreshCw, TrendingUp, BookOpen, CheckCircle2, AlertTriangle }
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function AIPathwayUpdater({ pathway, onPathwayUpdated }) {
-  const [analyzing, setAnalyzing] = useState(false);
+  const ai = useAICall();
   const [recommendations, setRecommendations] = useState(null);
   const [error, setError] = useState(null);
 
   const analyzePathway = async () => {
-    setAnalyzing(true);
     setError(null);
     setRecommendations(null);
 
@@ -53,7 +52,7 @@ Also indicate:
 
 Return ONLY valid JSON.`;
 
-      const response = await invokeLLM({
+      const response = await ai.run({
         prompt,
         add_context_from_internet: true,
         response_json_schema: {
@@ -98,8 +97,6 @@ Return ONLY valid JSON.`;
     } catch (err) {
       console.error("Pathway analysis error:", err);
       setError(err.message || "Failed to analyze pathway");
-    } finally {
-      setAnalyzing(false);
     }
   };
 
@@ -165,10 +162,10 @@ Return ONLY valid JSON.`;
         {!recommendations && (
           <Button
             onClick={analyzePathway}
-            disabled={analyzing}
+            disabled={ai.loading}
             className="w-full bg-blue-600 hover:bg-blue-700"
           >
-            {analyzing ? (
+            {ai.loading ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 Analyzing Pathway Against Latest Guidelines...

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -19,7 +19,7 @@ export default function AICarePlanSuggestionEngine({
   onCarePlansGenerated,
   autoGenerate = false 
 }) {
-  const [generating, setGenerating] = useState(false);
+  const ai = useAICall();
   const [carePlans, setCarePlans] = useState([]);
   const [editingIndex, setEditingIndex] = useState(null);
   const [editedPlan, setEditedPlan] = useState(null);
@@ -45,7 +45,6 @@ export default function AICarePlanSuggestionEngine({
       return;
     }
 
-    setGenerating(true);
     setGenerationStage(0);
 
     const progressInterval = setInterval(() => {
@@ -54,7 +53,7 @@ export default function AICarePlanSuggestionEngine({
     progressIntervalRef.current = progressInterval;
 
     try {
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `You are an expert home health clinical care planning specialist with expertise in Medicare compliance and evidence-based practice.
 
 Analyze the following patient data and generate comprehensive, individualized care plans:
@@ -170,16 +169,15 @@ Generate care plans prioritized by clinical importance. Focus on what requires S
       console.error('Error generating care plans:', error);
       toast.error('Failed to generate care plans. Please try again.');
     } finally {
-      setGenerating(false);
       setGenerationStage(0);
     }
   }, [referralData, oasisData, generationStages, onCarePlansGenerated]);
 
   useEffect(() => {
-    if (autoGenerate && referralData && !carePlans.length && !generating) {
+    if (autoGenerate && referralData && !carePlans.length && !ai.loading) {
       generateCarePlans();
     }
-  }, [autoGenerate, referralData, carePlans.length, generating, generateCarePlans]);
+  }, [autoGenerate, referralData, carePlans.length, ai.loading, generateCarePlans]);
 
   const handleEditPlan = (index) => {
     setEditingIndex(index);
@@ -236,7 +234,7 @@ Generate care plans prioritized by clinical importance. Focus on what requires S
     return colors[priority] || colors.medium;
   };
 
-  if (generating) {
+  if (ai.loading) {
     return (
       <Card>
         <CardContent className="p-6">

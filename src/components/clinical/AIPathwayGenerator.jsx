@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -14,7 +14,7 @@ export default function AIPathwayGenerator({ onPathwayGenerated }) {
   const [diagnosis, setDiagnosis] = useState("");
   const [careType, setCareType] = useState("home_health");
   const [demographics, setDemographics] = useState("");
-  const [generating, setGenerating] = useState(false);
+  const ai = useAICall();
   const [generatedPathways, setGeneratedPathways] = useState([]);
   const [error, setError] = useState(null);
 
@@ -24,7 +24,6 @@ export default function AIPathwayGenerator({ onPathwayGenerated }) {
       return;
     }
 
-    setGenerating(true);
     setError(null);
     setGeneratedPathways([]);
 
@@ -65,7 +64,7 @@ Base recommendations on current Medicare guidelines, evidence-based practice, an
 
 Return ONLY valid JSON without any markdown formatting or explanations.`;
 
-      const response = await invokeLLM({
+      const response = await ai.run({
         prompt,
         response_json_schema: {
           type: "object",
@@ -145,8 +144,6 @@ Return ONLY valid JSON without any markdown formatting or explanations.`;
     } catch (err) {
       console.error("Pathway generation error:", err);
       setError(err.message || "Failed to generate pathways");
-    } finally {
-      setGenerating(false);
     }
   };
 
@@ -212,10 +209,10 @@ Return ONLY valid JSON without any markdown formatting or explanations.`;
 
         <Button
           onClick={generatePathways}
-          disabled={generating || !diagnosis.trim()}
+          disabled={ai.loading || !diagnosis.trim()}
           className="w-full bg-navy-600 hover:bg-navy-700"
         >
-          {generating ? (
+          {ai.loading ? (
             <>
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
               Generating AI Pathways...

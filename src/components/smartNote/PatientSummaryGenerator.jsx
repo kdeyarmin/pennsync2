@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -7,17 +7,16 @@ import { Loader2, FileText, Copy, CheckCircle2, ChevronDown, ChevronUp, User } f
 
 export default function PatientSummaryGenerator({ patient, visitTranscript, visitType }) {
   const [summary, setSummary] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const ai = useAICall();
   const [copied, setCopied] = useState(false);
   const [expanded, setExpanded] = useState(true);
 
   if (!patient || !visitTranscript || visitTranscript.trim().length < 30) return null;
 
   const generateSummary = async () => {
-    setLoading(true);
     try {
       const meds = patient.current_medications?.map(m => `${m.name} ${m.dosage}`).join(", ") || "none";
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `You are a home health clinical documentation expert. Generate a concise, structured patient summary from this visit transcript/note.
 
 PATIENT: ${patient.first_name} ${patient.last_name}
@@ -62,8 +61,6 @@ Keep each section to 1-2 sentences. Use professional medical language. Return JS
       setSummary(result);
     } catch (err) {
       console.error("Summary generation failed:", err);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -104,7 +101,7 @@ Plan: ${summary.plan}` : "";
             )}
           </div>
           <div className="flex items-center gap-2">
-            {!summary && !loading && (
+            {!summary && !ai.loading && (
               <Button size="sm" onClick={generateSummary} className="h-7 text-xs bg-navy-600 hover:bg-navy-700">
                 <FileText className="w-3 h-3 mr-1" /> Generate Summary
               </Button>
@@ -126,7 +123,7 @@ Plan: ${summary.plan}` : "";
           </div>
         </div>
 
-        {loading && (
+        {ai.loading && (
           <div className="flex items-center gap-2 text-sm text-navy-600 py-2">
             <Loader2 className="w-4 h-4 animate-spin" /> Generating patient summary from your notes...
           </div>

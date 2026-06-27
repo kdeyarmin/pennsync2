@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,7 +11,7 @@ import { format } from "date-fns";
 import { toast } from 'sonner';
 
 export default function DiseaseProgressionPredictor({ patients, visits }) {
-  const [analyzing, setAnalyzing] = useState(false);
+  const ai = useAICall();
   const [progressionData, setProgressionData] = useState(null);
   const [selectedPatient, setSelectedPatient] = useState(null);
 
@@ -102,7 +102,6 @@ export default function DiseaseProgressionPredictor({ patients, visits }) {
   };
 
   const generateProgressionPrediction = async (patientData) => {
-    setAnalyzing(true);
     setSelectedPatient(patientData);
 
     try {
@@ -132,7 +131,7 @@ Provide:
 4. Monitoring frequency recommendation
 5. Care plan adjustments needed`;
 
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt,
         response_json_schema: {
           type: "object",
@@ -152,7 +151,6 @@ Provide:
       toast.error("Failed to generate prediction");
     }
 
-    setAnalyzing(false);
   };
 
   const getTrendColor = (trend) => {
@@ -213,11 +211,11 @@ Provide:
                   </div>
                   <Button
                     onClick={() => generateProgressionPrediction(data)}
-                    disabled={analyzing}
+                    disabled={ai.loading}
                     size="sm"
                     className="bg-navy-600 hover:bg-navy-700"
                   >
-                    {analyzing && selectedPatient?.patient.id === data.patient.id ? (
+                    {ai.loading && selectedPatient?.patient.id === data.patient.id ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
                     ) : (
                       <Brain className="w-4 h-4" />

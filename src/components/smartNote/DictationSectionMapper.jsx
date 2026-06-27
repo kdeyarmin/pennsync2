@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { Button } from "@/components/ui/button";
 import { Loader2, ChevronUp, ChevronDown, Activity, Target, ClipboardList, BookOpen, Shield } from "lucide-react";
 import { toast } from 'sonner';
@@ -30,17 +30,16 @@ const SECTION_LABELS = {
 
 export default function DictationSectionMapper({ transcript, onSectionsMapped }) {
   const [mapping, setMapping] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const ai = useAICall();
   const [expandedSection, setExpandedSection] = useState(null);
   const [editedSections, setEditedSections] = useState({});
 
   const mapSections = async () => {
     if (!transcript?.trim()) return;
-    setLoading(true);
     setMapping(null);
     
     try {
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `Analyze this medical dictation and categorize it into distinct clinical sections.
 
 DICTATION: "${transcript}"
@@ -84,8 +83,6 @@ Rules:
     } catch (err) {
       console.error("Section mapping error:", err);
       toast.error("Failed to map sections. Please try again.");
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -118,10 +115,10 @@ Rules:
       {!mapping ? (
         <Button
           onClick={mapSections}
-          disabled={loading}
+          disabled={ai.loading}
           className="w-full bg-indigo-600 hover:bg-indigo-700 h-10 gap-2"
         >
-          {loading ? (
+          {ai.loading ? (
             <>
               <Loader2 className="w-4 h-4 animate-spin" />
               Mapping sections...

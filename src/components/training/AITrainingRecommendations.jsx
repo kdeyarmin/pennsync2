@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,7 +21,7 @@ import {
 import { formatEastern } from "../utils/timezone";
 
 export default function AITrainingRecommendations({ _userId, userEmail }) {
-  const [analyzing, setAnalyzing] = useState(false);
+  const ai = useAICall();
   const [recommendations, setRecommendations] = useState(null);
   const queryClient = useQueryClient();
 
@@ -62,7 +62,6 @@ export default function AITrainingRecommendations({ _userId, userEmail }) {
 
   // Analyze and generate recommendations
   const analyzeTrainingNeeds = useCallback(async () => {
-    setAnalyzing(true);
     try {
       // Get common compliance issues from recent audits
       const recentIssues = complianceAudits
@@ -117,7 +116,7 @@ For each recommendation:
 
 Format recommendations to be actionable and motivating. Focus on improvement, not criticism.`;
 
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt,
         response_json_schema: {
           type: "object",
@@ -202,7 +201,6 @@ Format recommendations to be actionable and motivating. Focus on improvement, no
     } catch (error) {
       console.error("Error analyzing training needs:", error);
     }
-    setAnalyzing(false);
   }, [complianceAudits, trainingRecommendations, completedTraining, availableModules, userEmail, queryClient, getDueDate]);
 
   // Mark training as started
@@ -254,10 +252,10 @@ Format recommendations to be actionable and motivating. Focus on improvement, no
             size="sm"
             variant="outline"
             onClick={analyzeTrainingNeeds}
-            disabled={analyzing}
+            disabled={ai.loading}
             className="gap-2"
           >
-            {analyzing ? (
+            {ai.loading ? (
               <><div className="animate-spin rounded-full h-4 w-4 border-b-2 border-navy-600" /> Analyzing...</>
             ) : (
               <><Sparkles className="w-4 h-4" /> Re-analyze</>
@@ -387,7 +385,7 @@ Format recommendations to be actionable and motivating. Focus on improvement, no
         )}
 
         {/* Empty State */}
-        {pendingTraining.length === 0 && !recommendations && !analyzing && (
+        {pendingTraining.length === 0 && !recommendations && !ai.loading && (
           <div className="text-center py-8">
             <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto mb-3" />
             <p className="text-sm font-medium text-slate-900">All Caught Up!</p>
@@ -396,7 +394,7 @@ Format recommendations to be actionable and motivating. Focus on improvement, no
         )}
 
         {/* Loading State */}
-        {analyzing && !recommendations && (
+        {ai.loading && !recommendations && (
           <div className="text-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-navy-600 mx-auto mb-3" />
             <p className="text-sm text-slate-600">Analyzing your performance...</p>

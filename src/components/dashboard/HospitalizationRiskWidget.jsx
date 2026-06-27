@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -15,7 +15,7 @@ import { createPageUrl } from "@/utils";
 import { toast } from 'sonner';
 
 export default function HospitalizationRiskWidget({ autoAnalyze = false }) {
-  const [analyzing, setAnalyzing] = useState(false);
+  const ai = useAICall();
   const [riskScores, setRiskScores] = useState(null);
   const [lastAnalyzed, setLastAnalyzed] = useState(null);
 
@@ -32,7 +32,6 @@ export default function HospitalizationRiskWidget({ autoAnalyze = false }) {
   });
 
   const analyzeHospitalizationRisk = useCallback(async () => {
-    setAnalyzing(true);
     try {
       const analysisPromises = patients.map(async (patient) => {
         // Get patient-specific data
@@ -72,7 +71,7 @@ export default function HospitalizationRiskWidget({ autoAnalyze = false }) {
           }));
 
         // Analyze with AI
-        const analysis = await invokeLLM({
+        const analysis = await ai.run({
           prompt: `You are a clinical risk assessment AI analyzing home health patient data to predict hospitalization risk.
 
 PATIENT: ${patient.first_name} ${patient.last_name}
@@ -195,8 +194,6 @@ Return detailed risk assessment:`,
     } catch (error) {
       console.error('Risk analysis error:', error);
       toast.error('Failed to analyze hospitalization risk');
-    } finally {
-      setAnalyzing(false);
     }
   }, [patients, recentVisits]);
 
@@ -234,18 +231,18 @@ Return detailed risk assessment:`,
           </CardTitle>
           <Button
             onClick={analyzeHospitalizationRisk}
-            disabled={analyzing || patients.length === 0}
+            disabled={ai.loading || patients.length === 0}
             size="sm"
             variant="outline"
             className="min-h-[44px]"
           >
             <RefreshCw className={`w-4 h-4 mr-2 ${analyzing ? 'animate-spin' : ''}`} />
-            {analyzing ? 'Analyzing...' : 'Analyze'}
+            {ai.loading ? 'Analyzing...' : 'Analyze'}
           </Button>
         </div>
       </CardHeader>
       <CardContent>
-        {!riskScores && !analyzing && (
+        {!riskScores && !ai.loading && (
           <div className="text-center py-8">
             <Activity className="w-12 h-12 text-slate-300 mx-auto mb-3" />
             <p className="text-slate-600 mb-4">Click "Analyze" to assess hospitalization risk for all active patients</p>
@@ -253,7 +250,7 @@ Return detailed risk assessment:`,
           </div>
         )}
 
-        {analyzing && (
+        {ai.loading && (
           <div className="text-center py-8">
             <RefreshCw className="w-12 h-12 text-blue-500 mx-auto mb-3 animate-spin" />
             <p className="text-slate-600 font-medium">Analyzing {patients.length} patients...</p>

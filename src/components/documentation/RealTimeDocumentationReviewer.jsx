@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -27,7 +27,7 @@ export default function RealTimeDocumentationReviewer({
   _onApplySuggestion,
   autoAnalyze = false
 }) {
-  const [analyzing, setAnalyzing] = useState(false);
+  const ai = useAICall();
   const [analysis, setAnalysis] = useState(null);
   const [_complianceScore, setComplianceScore] = useState(0);
 
@@ -37,10 +37,9 @@ export default function RealTimeDocumentationReviewer({
       return;
     }
 
-    setAnalyzing(true);
 
     try {
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `You are an expert Medicare compliance auditor and clinical documentation specialist with 20+ years of experience reviewing home health nursing documentation.
 
 Analyze the following nursing note for completeness, accuracy, Medicare/OASIS compliance, and PDGM optimization:
@@ -239,8 +238,6 @@ Be thorough, specific, and actionable. Provide actual example text for suggestio
     } catch (error) {
       console.error('Error analyzing documentation:', error);
       toast.error('Failed to analyze documentation. Please try again.');
-    } finally {
-      setAnalyzing(false);
     }
   }, [noteContent, noteType, patientData]);
 
@@ -273,7 +270,7 @@ Be thorough, specific, and actionable. Provide actual example text for suggestio
     navigator.clipboard.writeText(text);
   };
 
-  if (analyzing) {
+  if (ai.loading) {
     return (
       <Card className="border-2 border-blue-300">
         <CardContent className="p-6 text-center">

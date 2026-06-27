@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -10,7 +10,7 @@ import RealTimeDocumentationReviewer from "../documentation/RealTimeDocumentatio
 import { toast } from 'sonner';
 
 export default function AIAdmissionNoteGenerator({ referralData, onNoteGenerated, autoGenerate = false }) {
-  const [generating, setGenerating] = useState(false);
+  const ai = useAICall();
   const [generatedNote, setGeneratedNote] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [editedNote, setEditedNote] = useState("");
@@ -38,7 +38,6 @@ export default function AIAdmissionNoteGenerator({ referralData, onNoteGenerated
       return;
     }
 
-    setGenerating(true);
     setGenerationStage(0);
 
     const progressInterval = setInterval(() => {
@@ -47,7 +46,7 @@ export default function AIAdmissionNoteGenerator({ referralData, onNoteGenerated
     progressIntervalRef.current = progressInterval;
 
     try {
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `You are an expert home health nurse with 20+ years of experience writing comprehensive, Medicare-compliant admission notes.
 
 Using the extracted referral data below, generate a complete, professional admission nursing assessment note that is ready for clinical documentation.
@@ -242,16 +241,15 @@ Generate a complete, detailed admission note that a skilled nurse would write af
       console.error('Error generating admission note:', error);
       toast.error('Failed to generate admission note. Please try again.');
     } finally {
-      setGenerating(false);
       setGenerationStage(0);
     }
   }, [generationStages, onNoteGenerated, referralData]);
 
   useEffect(() => {
-    if (autoGenerate && referralData && !generatedNote && !generating) {
+    if (autoGenerate && referralData && !generatedNote && !ai.loading) {
       generateAdmissionNote();
     }
-  }, [autoGenerate, referralData, generateAdmissionNote, generatedNote, generating]);
+  }, [autoGenerate, referralData, generateAdmissionNote, generatedNote, ai.loading]);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(isEditing ? editedNote : generatedNote);
@@ -265,7 +263,7 @@ Generate a complete, detailed admission note that a skilled nurse would write af
     }
   };
 
-  if (generating) {
+  if (ai.loading) {
     return (
       <Card>
         <CardContent className="p-6">
