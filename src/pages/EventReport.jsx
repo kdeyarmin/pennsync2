@@ -8,10 +8,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Send, Loader2 } from "lucide-react";
+import { Send, Loader2, AlertTriangle } from "lucide-react";
 import PageContainer from "@/components/ui/PageContainer";
+import PageHeader from "@/components/ui/PageHeader";
 
 export default function EventReport() {
   const { data: _currentUser } = useQuery({
@@ -228,21 +229,17 @@ export default function EventReport() {
 
   return (
     <PageContainer>
-      <Card>
-        <CardHeader className="text-center border-b">
-          <CardTitle className="text-2xl font-bold">Event Report</CardTitle>
-          <Button 
-            variant="outline" 
-            onClick={handleCancel}
-            className="mt-4"
-          >
+      <PageHeader
+        icon={AlertTriangle}
+        title="Event Report"
+        description='Fields preceded with "*" are required.'
+        actions={
+          <Button variant="outline" onClick={handleCancel}>
             Cancel
           </Button>
-          <p className="text-sm text-slate-600 mt-4">
-            Fields preceded with "*" are required.
-          </p>
-        </CardHeader>
-
+        }
+      />
+      <Card>
         <CardContent className="p-6">
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Patient ID */}
