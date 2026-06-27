@@ -122,6 +122,29 @@ export function formatVitalsSentence(vitals) {
   return `Vital signs: ${parts.join(", ")}.`;
 }
 
+/**
+ * Map the legacy StructuredNoteDrafter vitals shape (bp_systolic, bp_diastolic,
+ * heart_rate, resp_rate, o2_sat, temperature, pain_level — `weight` is not part of
+ * the canonical vital_signs shape and is intentionally dropped) to the canonical
+ * `vital_signs` shape that VitalSignsForm + formatVitalsSentence use. String inputs
+ * are parsed to numbers; blanks become null. Returns null when no canonical vital
+ * is set, so callers can skip threading an empty object.
+ */
+export function toCanonicalVitalSigns(legacy) {
+  if (!legacy || typeof legacy !== "object") return null;
+  const num = (v) => (v !== null && v !== undefined && String(v).trim() !== "" ? parseFloat(v) : null);
+  const canonical = {
+    blood_pressure_systolic: num(legacy.bp_systolic),
+    blood_pressure_diastolic: num(legacy.bp_diastolic),
+    heart_rate: num(legacy.heart_rate),
+    respiratory_rate: num(legacy.resp_rate),
+    oxygen_saturation: num(legacy.o2_sat),
+    temperature: num(legacy.temperature),
+    pain_level: num(legacy.pain_level),
+  };
+  return Object.values(canonical).some((v) => v !== null && Number.isFinite(v)) ? canonical : null;
+}
+
 // ── Value extraction for the hallucination value-guard ─────────────────────
 // We intentionally extract only UNIT-BEARING / clinically-significant values
 // (vitals, doses, measurements, scores) rather than every bare integer, so the

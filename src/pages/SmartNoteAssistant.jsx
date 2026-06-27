@@ -496,9 +496,13 @@ export default function SmartNoteAssistant({ visitId = null }) {
       {activeTab === "drafter" && (
         <StructuredNoteDrafter
           patient={patient}
-          onDraftReady={(draft, vType) => {
+          onDraftReady={(draft, vType, structuredVitals) => {
             setNote(draft);
             setVisitType(vType);
+            // Carry the structured vitals into the same canonical state the main
+            // form uses, so they reach the verified pipeline (coverage, trends,
+            // critical-vital escalation, chart cross-check) — not just the prose.
+            if (structuredVitals) setVitals(structuredVitals);
             setActiveTab("builder");
           }}
         />

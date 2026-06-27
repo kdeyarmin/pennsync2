@@ -7,6 +7,7 @@ import {
   extractMedications,
   getSentencesContaining,
   formatVitalsSentence,
+  toCanonicalVitalSigns,
 } from "./factExtraction.js";
 import { valueGuard } from "./valueGuard.js";
 
@@ -165,6 +166,37 @@ test("formatVitalsSentence output survives the value-guard against itself", () =
     const sentence = formatVitalsSentence(v);
     assert.equal(valueGuard(sentence, sentence).ok, true, `value-guard rejected its own vitals sentence: ${sentence}`);
   }
+});
+
+// ── toCanonicalVitalSigns (StructuredNoteDrafter legacy shape → canonical) ──
+
+test("toCanonicalVitalSigns maps the legacy drafter field names to canonical keys", () => {
+  const out = toCanonicalVitalSigns({
+    bp_systolic: "148", bp_diastolic: "90", heart_rate: "82", resp_rate: "16",
+    o2_sat: "95", temperature: "98.6", pain_level: "3", weight: "180",
+  });
+  assert.deepEqual(out, {
+    blood_pressure_systolic: 148, blood_pressure_diastolic: 90, heart_rate: 82,
+    respiratory_rate: 16, oxygen_saturation: 95, temperature: 98.6, pain_level: 3,
+  });
+  // weight is intentionally not part of the canonical vital_signs shape.
+  assert.equal("weight" in out, false);
+});
+
+test("toCanonicalVitalSigns returns null when nothing usable is set", () => {
+  assert.equal(toCanonicalVitalSigns(null), null);
+  assert.equal(toCanonicalVitalSigns({}), null);
+  assert.equal(toCanonicalVitalSigns({ bp_systolic: "", weight: "180" }), null);
+});
+
+test("toCanonicalVitalSigns output flows cleanly into the value-guarded vitals sentence", () => {
+  // The drafter's mapped vitals must survive the same value-guard the main form's
+  // vitals do — otherwise routing them through the pipeline would flag them.
+  const canonical = toCanonicalVitalSigns({ bp_systolic: "138", bp_diastolic: "84", o2_sat: "97", pain_level: "2" });
+  const sentence = formatVitalsSentence(canonical);
+  assert.match(sentence, /BP 138\/84/);
+  assert.match(sentence, /O2 97%/);
+  assert.equal(valueGuard(sentence, sentence).ok, true);
 });
 
 test("a draft plus the whitelisted vitals sentence value-guards a note that quotes those vitals", () => {
