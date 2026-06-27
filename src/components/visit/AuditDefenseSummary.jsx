@@ -208,6 +208,8 @@ export default function AuditDefenseSummary({
                     size="sm"
                     variant="ghost"
                     className="h-6 text-xs text-blue-600"
+                    aria-label="Copy checklist item"
+                    title="Copy checklist item"
                     onClick={() => onCopy(fix, `checklist-${idx}`)}
                   >
                     {copiedText === `checklist-${idx}` ? (

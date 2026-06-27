@@ -51,9 +51,7 @@ describe("AuditDefenseSummary", () => {
     renderWithProviders(
       <AuditDefenseSummary summary={SUMMARY} onQuickFix={vi.fn()} onCopy={onCopy} />,
     );
-    // The copy button is the icon-only ghost button following "Apply Fix".
-    const buttons = screen.getAllByRole("button");
-    fireEvent.click(buttons[buttons.length - 1]);
+    fireEvent.click(screen.getByRole("button", { name: "Copy checklist item" }));
     expect(onCopy).toHaveBeenCalledWith("Document specific bathing assistance", "checklist-0");
   });
 
