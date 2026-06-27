@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 
 export default function AIPersonalizedTrainingHub({ nurseEmail }) {
-  const [isGeneratingPath, setIsGeneratingPath] = useState(false);
+  const ai = useAICall();
   const [learningPath, setLearningPath] = useState(null);
   const [_selectedModule, _setSelectedModule] = useState(null);
 
@@ -118,7 +118,6 @@ export default function AIPersonalizedTrainingHub({ nurseEmail }) {
 
   // Generate AI-powered learning path
   const generateLearningPath = async () => {
-    setIsGeneratingPath(true);
     try {
       const prompt = `You are an expert clinical training specialist. Analyze this nurse's performance data and create a personalized learning path.
 
@@ -147,7 +146,7 @@ Create a personalized 4-week learning path with:
 4. Weekly goals and milestones
 5. Expected compliance improvement`;
 
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt,
         response_json_schema: {
           type: "object",
@@ -218,7 +217,6 @@ Create a personalized 4-week learning path with:
     } catch (error) {
       console.error('Error generating learning path:', error);
     }
-    setIsGeneratingPath(false);
   };
 
   const getSeverityColor = (severity) => {
@@ -308,10 +306,10 @@ Create a personalized 4-week learning path with:
               <p className="text-slate-600 mb-6">AI will analyze your performance data, compliance history, and skill gaps to create a personalized 4-week training plan.</p>
               <Button
                 onClick={generateLearningPath}
-                disabled={isGeneratingPath}
+                disabled={ai.loading}
                 className="bg-gradient-to-r from-indigo-600 to-navy-600 hover:from-indigo-700 hover:to-navy-700"
               >
-                {isGeneratingPath ? (
+                {ai.loading ? (
                   <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Analyzing Performance Data...</>
                 ) : (
                   <><Sparkles className="w-4 h-4 mr-2" /> Generate Learning Path</>

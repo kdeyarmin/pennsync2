@@ -1,6 +1,6 @@
 import React from "react";
 import { base44 } from "@/api/base44Client";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -34,13 +34,12 @@ const PRACTICE_SCENARIOS = [
 export default function PracticeNoteSubmission({ userEmail, onSubmit }) {
   const [selectedScenario, setSelectedScenario] = React.useState(null);
   const [practiceNote, setPracticeNote] = React.useState("");
-  const [isAnalyzing, setIsAnalyzing] = React.useState(false);
+  const ai = useAICall();
   const [feedback, setFeedback] = React.useState(null);
 
   const handleSubmitPractice = async () => {
     if (!practiceNote.trim() || !selectedScenario) return;
 
-    setIsAnalyzing(true);
     try {
       const prompt = `You are an expert clinical documentation instructor. A nurse has written a practice visit note for the following scenario. Provide detailed, constructive feedback.
 
@@ -82,7 +81,7 @@ Return JSON with:
   "summary": "Brief overall assessment"
 }`;
 
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt,
         response_json_schema: {
           type: "object",
@@ -128,7 +127,6 @@ Return JSON with:
     } catch (error) {
       console.error('Error analyzing practice note:', error);
     }
-    setIsAnalyzing(false);
   };
 
   if (!selectedScenario) {
@@ -220,10 +218,10 @@ Return JSON with:
             {!feedback && (
               <Button
                 onClick={handleSubmitPractice}
-                disabled={isAnalyzing || practiceNote.length < 100}
+                disabled={ai.loading || practiceNote.length < 100}
                 className="w-full bg-indigo-600 hover:bg-indigo-700"
               >
-                {isAnalyzing ? (
+                {ai.loading ? (
                   <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Analyzing Your Note...</>
                 ) : (
                   <><Send className="w-4 h-4 mr-2" /> Submit for AI Feedback</>

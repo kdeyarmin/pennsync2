@@ -2,7 +2,7 @@ import { useState } from "react";
 import { openExternalUrl } from "@/components/utils/security";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,7 +17,7 @@ import { formatDistanceToNow } from "date-fns";
 export default function FaxLogsDashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("all");
-  const [aiInsightsLoading, setAiInsightsLoading] = useState(false);
+  const ai = useAICall();
   const [aiInsights, setAiInsights] = useState(null);
 
   const { data: faxLogs = [], isLoading, refetch } = useQuery({
@@ -48,7 +48,6 @@ export default function FaxLogsDashboard() {
   const failedLogs = faxLogs.filter(f => f.status === 'failed');
 
   const generateAIInsights = async () => {
-    setAiInsightsLoading(true);
     try {
       const failureAnalysis = failedLogs.map(log => ({
         to: log.to_number,
@@ -59,7 +58,7 @@ export default function FaxLogsDashboard() {
         date: log.created_date,
       }));
 
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `Analyze these fax transmission failures and provide:
 1. Common failure patterns and root causes
 2. Specific recommendations for each failure type
@@ -103,8 +102,6 @@ Provide actionable insights in a structured format with clear sections.`,
       toast.success("AI insights generated successfully");
     } catch (error) {
       toast.error("Failed to generate insights: " + error.message);
-    } finally {
-      setAiInsightsLoading(false);
     }
   };
 
@@ -161,11 +158,11 @@ Provide actionable insights in a structured format with clear sections.`,
       <div className="flex justify-end">
         <Button
           onClick={generateAIInsights}
-          disabled={aiInsightsLoading || failedLogs.length === 0}
+          disabled={ai.loading || failedLogs.length === 0}
           className="bg-gradient-to-r from-navy-600 to-indigo-600"
         >
           <Brain className="w-4 h-4 mr-2" />
-          {aiInsightsLoading ? "Analyzing..." : "Generate AI Insights"}
+          {ai.loading ? "Analyzing..." : "Generate AI Insights"}
         </Button>
       </div>
 
