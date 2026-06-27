@@ -464,4 +464,46 @@ all are fixed here:
 The audit also confirmed **no dead code** (all 20 components in
 `src/components/smartNote/` are wired in) and **no TODO/FIXME debt**.
 
+## Update — efficiency / usability / note-quality pass (2026-06-27)
+
+A fresh deep review found five remaining gaps; all are fixed here. None weaken the
+anti-hallucination guarantees — two of them *close* holes in it.
+
+1. **Structured vitals reached the chart but never the note (silent data loss).**
+   Vitals entered in the Step 1 `VitalSignsForm` were saved to `Visit.vital_signs`
+   but were never passed to `ConstrainedNoteReviewer`, so a nurse who used the form
+   (instead of retyping vitals into the draft) got a note with no vitals *and* a
+   false "vitals not documented this visit" gap. New pure `formatVitalsSentence`
+   (`compliance/factExtraction.js`) maps the canonical `vital_signs` shape to one
+   factual sentence using the exact measurement token spellings the value-guard
+   recognizes; the reviewer now (a) folds it into presence/coverage detection so
+   vitals score as documented, (b) whitelists it as source for the value-guard /
+   grounding, and (c) appends it verbatim to the note — the same treatment the
+   deterministic trend summary already gets. A node test asserts the sentence
+   value-guards against itself (guards the token shapes).
+2. **Generation prompt was home-health-only.** `generateConstrainedNote` hardcoded
+   "Medicare-compliant **home health** nursing note" even for hospice. It now takes
+   `serviceLine` + `visitType` and selects a framing phrase (home health → 42 CFR
+   484; hospice → 42 CFR 418, comfort/terminal-plan framing; plus an
+   admission/recert/discharge/PRN clause). The "ABSOLUTE RULES" anti-hallucination
+   block is unchanged byte-for-byte; only the role/framing sentence varies.
+3. **Step 1 input overload + an anti-hallucination side-door.** `VoiceClinicalNoteRecorder`
+   ran its *own* GPT pass that rewrote the audio into polished narrative *before*
+   the constrained scribe saw it — pre-embellishing the "rough draft" the whole
+   architecture is built to avoid. Removed from Step 1 (one of four redundant voice
+   paths); the remaining voice inputs (live dictation, record-and-transcribe, SOAP)
+   are now grouped under one labeled "Voice input" control.
+4. **Misleading two-step "Generate".** The Step 1 button read "Generate Note" with a
+   Sparkles icon but only opened a deterministic review/questions screen — the real
+   LLM generation is the Step 2 "Generate Final Note". Relabeled to "Review &
+   Complete" (and `StepIndicator` to "Review & Generate"); Sparkles now marks only
+   the true generation.
+5. **S3 (efficiency) — grounding trimmed, calls kept separate.** Merging generation
+   + grounding was rejected (it makes the model self-grade its own output in one
+   turn — weak verification). Instead, on a fresh generate, the grounding pass now
+   classifies only the LLM-authored note; the deterministic verbatim extras (trend
+   summary, vitals sentence, "not documented" fallbacks) are already value-guarded
+   and are excluded, shrinking that call without weakening the check. A re-check
+   after a manual edit still grounds the whole note.
+
 </content>

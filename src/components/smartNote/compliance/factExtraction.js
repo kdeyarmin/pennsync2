@@ -85,6 +85,43 @@ export function extractVitals(text) {
   return vitals;
 }
 
+/**
+ * Format the canonical structured `vital_signs` object (the shape produced by
+ * VitalSignsForm: blood_pressure_systolic/diastolic, heart_rate, respiratory_rate,
+ * oxygen_saturation, temperature, pain_level) into ONE factual sentence.
+ *
+ * The token spellings here are deliberately chosen to match the patterns
+ * extractNumbersAndMeasurements / extractVitals already recognize ("BP 148/90",
+ * "HR 82 bpm", "O2 95%", "Temp 98.6°F", "RR 16 breaths/min", "pain 3/10") so the
+ * sentence survives the value-guard when it is whitelisted as source material —
+ * exactly like the deterministic trend summary. Emits only fields that are
+ * present; returns "" when nothing was captured.
+ */
+export function formatVitalsSentence(vitals) {
+  if (!vitals || typeof vitals !== "object") return "";
+  const num = (v) => {
+    if (v === null || v === undefined || v === "") return null;
+    const n = Number(v);
+    return Number.isFinite(n) ? n : null;
+  };
+  const sys = num(vitals.blood_pressure_systolic);
+  const dia = num(vitals.blood_pressure_diastolic);
+  const hr = num(vitals.heart_rate);
+  const rr = num(vitals.respiratory_rate);
+  const o2 = num(vitals.oxygen_saturation);
+  const temp = num(vitals.temperature);
+  const pain = num(vitals.pain_level);
+  const parts = [];
+  if (sys !== null && dia !== null) parts.push(`BP ${sys}/${dia} mmHg`);
+  if (hr !== null) parts.push(`HR ${hr} bpm`);
+  if (rr !== null) parts.push(`RR ${rr} breaths/min`);
+  if (o2 !== null) parts.push(`O2 ${o2}%`);
+  if (temp !== null) parts.push(`Temp ${temp}°F`);
+  if (pain !== null) parts.push(`pain ${pain}/10`);
+  if (!parts.length) return "";
+  return `Vital signs: ${parts.join(", ")}.`;
+}
+
 // ── Value extraction for the hallucination value-guard ─────────────────────
 // We intentionally extract only UNIT-BEARING / clinically-significant values
 // (vitals, doses, measurements, scores) rather than every bare integer, so the

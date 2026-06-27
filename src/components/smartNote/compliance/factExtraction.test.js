@@ -6,7 +6,9 @@ import {
   extractNumbersAndMeasurements,
   extractMedications,
   getSentencesContaining,
+  formatVitalsSentence,
 } from "./factExtraction.js";
+import { valueGuard } from "./valueGuard.js";
 
 test("splitSentences breaks on punctuation and newlines, stripping bullets", () => {
   const out = splitSentences("• BP 148/90\n- taught meds. Patient stable!");
@@ -115,4 +117,63 @@ test("extractMedications does not return case-duplicated canonical names", () =>
   const meds = extractMedications("patient on atorvastatin");
   const lowered = meds.map((m) => m.toLowerCase());
   assert.equal(new Set(lowered).size, lowered.length);
+});
+
+// ── formatVitalsSentence (structured vitals → note source) ──────────────────
+
+test("formatVitalsSentence returns empty when no vitals are captured", () => {
+  assert.equal(formatVitalsSentence(null), "");
+  assert.equal(formatVitalsSentence({}), "");
+  assert.equal(formatVitalsSentence({ blood_pressure_systolic: null, heart_rate: "" }), "");
+});
+
+test("formatVitalsSentence formats the canonical vital_signs shape", () => {
+  const s = formatVitalsSentence({
+    blood_pressure_systolic: 148, blood_pressure_diastolic: 90,
+    heart_rate: 82, respiratory_rate: 16, oxygen_saturation: 95,
+    temperature: 98.6, pain_level: 3,
+  });
+  assert.match(s, /BP 148\/90 mmHg/);
+  assert.match(s, /HR 82 bpm/);
+  assert.match(s, /RR 16 breaths\/min/);
+  assert.match(s, /O2 95%/);
+  assert.match(s, /Temp 98\.6°F/);
+  assert.match(s, /pain 3\/10/);
+});
+
+test("formatVitalsSentence omits BP unless both systolic and diastolic are present", () => {
+  assert.equal(formatVitalsSentence({ blood_pressure_systolic: 120 }), "");
+  assert.match(formatVitalsSentence({ blood_pressure_systolic: 120, blood_pressure_diastolic: 80 }), /BP 120\/80/);
+});
+
+test("formatVitalsSentence includes a genuine pain score of 0", () => {
+  assert.match(formatVitalsSentence({ pain_level: 0 }), /pain 0\/10/);
+});
+
+test("formatVitalsSentence output survives the value-guard against itself", () => {
+  // The whole point of injecting vitals this way: the deterministic sentence is
+  // whitelisted as source material, so every value it contains must trace back
+  // to that same source. A token-shape mismatch here would flag captured vitals
+  // as hallucinated.
+  const samples = [
+    { blood_pressure_systolic: 148, blood_pressure_diastolic: 90, heart_rate: 82, oxygen_saturation: 95, temperature: 98.6, respiratory_rate: 16, pain_level: 3 },
+    { blood_pressure_systolic: 120, blood_pressure_diastolic: 80 },
+    { oxygen_saturation: 88, pain_level: 7 },
+    { temperature: 101, heart_rate: 110 },
+  ];
+  for (const v of samples) {
+    const sentence = formatVitalsSentence(v);
+    assert.equal(valueGuard(sentence, sentence).ok, true, `value-guard rejected its own vitals sentence: ${sentence}`);
+  }
+});
+
+test("a draft plus the whitelisted vitals sentence value-guards a note that quotes those vitals", () => {
+  const vitalsSentence = formatVitalsSentence({ blood_pressure_systolic: 148, blood_pressure_diastolic: 90, oxygen_saturation: 95 });
+  const allowed = `Patient assessed, wound stable. ${vitalsSentence}`;
+  // A note that repeats the captured vitals must pass when the vitals sentence is
+  // part of the allowed source — mirroring how the reviewer whitelists it.
+  const note = `Skilled nursing visit completed; wound stable. ${vitalsSentence}`;
+  assert.equal(valueGuard(note, allowed).ok, true);
+  // But a value NOT in the source is still caught.
+  assert.equal(valueGuard("BP 200/110 noted.", allowed).ok, false);
 });

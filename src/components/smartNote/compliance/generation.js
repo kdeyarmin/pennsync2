@@ -12,6 +12,29 @@ import { GenerationResponse, GroundingResponse, safeParseLLM } from "./schemas";
 
 const DEFAULT_MODEL = "claude_sonnet_4_6";
 
+// Framing only — the regulatory frame + note type. This selects terminology and
+// emphasis (e.g. comfort-focused hospice voicing vs. skilled-need home-health
+// voicing); it adds NO clinical facts. The anti-hallucination "ABSOLUTE RULES"
+// block below is identical regardless of service line.
+const SERVICE_FRAMING = {
+  hospice:
+    "ONE Medicare-compliant hospice nursing visit note, framed under the hospice Conditions of Participation (42 CFR Part 418), focused on comfort and the terminal plan of care",
+  home_health:
+    "ONE Medicare-compliant home health nursing note (42 CFR Part 484)",
+};
+
+const VISIT_CLAUSE = {
+  admission: " documenting the start of care",
+  recertification: " documenting recertification for continued eligibility",
+  discharge: " documenting the discharge",
+  prn: " documenting this as-needed (PRN) visit",
+};
+
+function framingPhrase(serviceLine, visitType) {
+  const base = SERVICE_FRAMING[serviceLine] || SERVICE_FRAMING.home_health;
+  return `${base}${VISIT_CLAUSE[visitType] || ""}`;
+}
+
 function buildSourceBlock({ draftSentences = [], answers = [], confirmedNegatives = [] }) {
   const draft = draftSentences.length ? draftSentences.map((s) => `- ${s}`).join("\n") : "(none)";
   const ans = answers.length
@@ -26,9 +49,9 @@ function buildSourceBlock({ draftSentences = [], answers = [], confirmedNegative
  * @returns {Promise<{ note: string }>}
  * @throws if the LLM response fails schema validation
  */
-export async function generateConstrainedNote(inputs, { userKey, model = DEFAULT_MODEL } = {}) {
+export async function generateConstrainedNote(inputs, { userKey, model = DEFAULT_MODEL, serviceLine = "home_health", visitType = "routine_visit" } = {}) {
   const { draft, ans, neg } = buildSourceBlock(inputs);
-  const prompt = `You are a clinical scribe producing ONE Medicare-compliant home health nursing note.
+  const prompt = `You are a clinical scribe producing ${framingPhrase(serviceLine, visitType)}.
 
 ABSOLUTE RULES (a violation makes the note unusable):
 - Use ONLY the material in the three sections below. Add NO clinical fact, value,
