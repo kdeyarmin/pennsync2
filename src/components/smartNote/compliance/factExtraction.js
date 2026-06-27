@@ -130,9 +130,28 @@ export function formatVitalsSentence(vitals) {
  * are parsed to numbers; blanks become null. Returns null when no canonical vital
  * is set, so callers can skip threading an empty object.
  */
+/**
+ * Canonical vital_signs shape (all fields optional/finite numbers). Declared so
+ * checkJs infers a concrete return type for the vitals helpers below instead of
+ * the empty `{}` an inline object literal would widen to — otherwise callers that
+ * read a field off the merged result fail typecheck (TS2339).
+ * @typedef {Object} CanonicalVitals
+ * @property {number} [blood_pressure_systolic]
+ * @property {number} [blood_pressure_diastolic]
+ * @property {number} [heart_rate]
+ * @property {number} [respiratory_rate]
+ * @property {number} [oxygen_saturation]
+ * @property {number} [temperature]
+ * @property {number} [pain_level]
+ */
+
 // Keep only finite numeric fields; return null if nothing usable remains. Omitting
 // (rather than nulling) absent fields lets callers merge two sources per-key with a
 // plain spread.
+/**
+ * @param {Record<string, number|null|undefined>} obj
+ * @returns {CanonicalVitals | null}
+ */
 function compactVitals(obj) {
   const out = {};
   for (const [k, v] of Object.entries(obj)) {
