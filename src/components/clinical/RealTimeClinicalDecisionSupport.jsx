@@ -8,7 +8,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Brain,
   Stethoscope,
-  Pill,
   BookOpen,
   AlertTriangle,
   CheckCircle2,
@@ -16,7 +15,6 @@ import {
   ChevronDown,
   ChevronUp,
   Lightbulb,
-  Shield,
   Heart,
   FileText,
   Plus,
@@ -29,7 +27,6 @@ export default function RealTimeClinicalDecisionSupport({
   vitalSigns,
   narrativeText,
   carePlans,
-  _medications,
   onInsertText
 }) {
   const [analysis, setAnalysis] = useState(null);
@@ -107,15 +104,11 @@ ${(narrativeText || '').substring(0, 800) || 'No notes yet'}
 ACTIVE CARE PLANS:
 ${activeCarePlans || 'None'}
 
-KNOWN MEDICATIONS (if documented in notes):
-${extractMedicationsFromText(narrativeText || '')}
-
 Provide comprehensive clinical decision support:
 
 1. DIFFERENTIAL DIAGNOSES: Based on symptoms, vitals, and notes, suggest conditions that may need investigation
-2. DRUG INTERACTIONS: Flag any potential interactions or contraindications based on medications mentioned
-3. TREATMENT RECOMMENDATIONS: Evidence-based interventions appropriate for this patient's condition and care stage
-4. PATIENT EDUCATION: Relevant education materials based on conditions and risks
+2. TREATMENT RECOMMENDATIONS: Evidence-based interventions appropriate for this patient's condition and care stage
+3. PATIENT EDUCATION: Relevant education materials based on conditions and risks
 
 Return JSON:
 {
@@ -127,16 +120,6 @@ Return JSON:
       "recommended_workup": ["Test/assessment 1"],
       "red_flags": ["Warning sign to watch"],
       "urgency": "immediate|soon|routine"
-    }
-  ],
-  "drug_interactions": [
-    {
-      "interaction_type": "drug-drug|drug-condition|drug-allergy|contraindication",
-      "severity": "critical|major|moderate|minor",
-      "medications_involved": ["Med 1", "Med 2"],
-      "description": "Description of interaction",
-      "recommendation": "What to do",
-      "monitoring": "What to monitor"
     }
   ],
   "treatment_recommendations": [
@@ -184,20 +167,6 @@ Return JSON:
                   recommended_workup: { type: "array", items: { type: "string" } },
                   red_flags: { type: "array", items: { type: "string" } },
                   urgency: { type: "string" }
-                }
-              }
-            },
-            drug_interactions: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  interaction_type: { type: "string" },
-                  severity: { type: "string" },
-                  medications_involved: { type: "array", items: { type: "string" } },
-                  description: { type: "string" },
-                  recommendation: { type: "string" },
-                  monitoring: { type: "string" }
                 }
               }
             },
@@ -292,16 +261,6 @@ Return JSON:
     setAddedItems([...addedItems, id]);
   };
 
-  const getSeverityColor = (severity) => {
-    switch (severity) {
-      case 'critical': return 'bg-red-500 text-white';
-      case 'major': return 'bg-orange-500 text-white';
-      case 'moderate': return 'bg-yellow-500 text-black';
-      case 'minor': return 'bg-blue-500 text-white';
-      default: return 'bg-slate-500 text-white';
-    }
-  };
-
   const getLikelihoodColor = (likelihood) => {
     switch (likelihood) {
       case 'high': return 'bg-red-100 text-red-800 border-red-200';
@@ -312,7 +271,6 @@ Return JSON:
   };
 
   const criticalAlerts = analysis?.clinical_alerts?.filter(a => a.alert_type === 'critical') || [];
-  const criticalInteractions = analysis?.drug_interactions?.filter(i => i.severity === 'critical') || [];
 
   if (!patient) return null;
 
@@ -325,9 +283,9 @@ Return JSON:
             Real-Time Clinical Decision Support
           </CardTitle>
           <div className="flex items-center gap-2">
-            {(criticalAlerts.length > 0 || criticalInteractions.length > 0) && (
+            {criticalAlerts.length > 0 && (
               <Badge className="bg-red-500 text-white animate-pulse">
-                {criticalAlerts.length + criticalInteractions.length} Critical
+                {criticalAlerts.length} Critical
               </Badge>
             )}
             <Button
@@ -389,17 +347,10 @@ Return JSON:
 
           {analysis && (
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-4 mb-4">
+              <TabsList className="grid w-full grid-cols-3 mb-4">
                 <TabsTrigger value="diagnoses" className="text-xs">
                   <Stethoscope className="w-3 h-3 mr-1" />
                   Diagnoses
-                </TabsTrigger>
-                <TabsTrigger value="drugs" className="text-xs">
-                  <Pill className="w-3 h-3 mr-1" />
-                  Drugs
-                  {criticalInteractions.length > 0 && (
-                    <Badge className="ml-1 bg-red-500 text-white text-xs px-1">!</Badge>
-                  )}
                 </TabsTrigger>
                 <TabsTrigger value="treatment" className="text-xs">
                   <Heart className="w-3 h-3 mr-1" />
@@ -469,51 +420,6 @@ Return JSON:
                   ))
                 ) : (
                   <p className="text-slate-500 text-center py-4">No differential diagnoses identified</p>
-                )}
-              </TabsContent>
-
-              {/* Drug Interactions Tab */}
-              <TabsContent value="drugs" className="space-y-3">
-                {analysis.drug_interactions?.length > 0 ? (
-                  analysis.drug_interactions.map((interaction, idx) => (
-                    <div key={idx} className={`p-3 rounded-lg border ${
-                      interaction.severity === 'critical' ? 'bg-red-50 border-red-300' :
-                      interaction.severity === 'major' ? 'bg-orange-50 border-orange-300' :
-                      'bg-white'
-                    }`}>
-                      <div className="flex items-start justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          {interaction.severity === 'critical' && <XCircle className="w-4 h-4 text-red-600" />}
-                          {interaction.severity === 'major' && <AlertTriangle className="w-4 h-4 text-orange-600" />}
-                          {interaction.severity === 'moderate' && <Shield className="w-4 h-4 text-yellow-600" />}
-                          <span className="font-medium text-sm">
-                            {interaction.medications_involved?.join(' + ')}
-                          </span>
-                        </div>
-                        <Badge className={getSeverityColor(interaction.severity)}>
-                          {interaction.severity}
-                        </Badge>
-                      </div>
-                      
-                      <p className="text-sm text-slate-700 mb-2">{interaction.description}</p>
-                      
-                      <div className="grid gap-2 text-xs">
-                        <div className="p-2 bg-blue-50 rounded">
-                          <strong>Recommendation:</strong> {interaction.recommendation}
-                        </div>
-                        {interaction.monitoring && (
-                          <div className="p-2 bg-green-50 rounded">
-                            <strong>Monitor:</strong> {interaction.monitoring}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-center py-4">
-                    <CheckCircle2 className="w-10 h-10 text-green-500 mx-auto mb-2" />
-                    <p className="text-green-700">No drug interactions identified</p>
-                  </div>
                 )}
               </TabsContent>
 
@@ -656,20 +562,4 @@ function calculateAge(dob) {
     age--;
   }
   return age;
-}
-
-function extractMedicationsFromText(text) {
-  // Common medication patterns
-  const commonMeds = [
-    'metoprolol', 'lisinopril', 'amlodipine', 'metformin', 'insulin',
-    'warfarin', 'coumadin', 'aspirin', 'lasix', 'furosemide',
-    'hydrochlorothiazide', 'atorvastatin', 'omeprazole', 'levothyroxine',
-    'gabapentin', 'prednisone', 'albuterol', 'morphine', 'oxycodone',
-    'lorazepam', 'sertraline', 'duloxetine', 'carvedilol', 'digoxin'
-  ];
-  
-  const lowerText = text.toLowerCase();
-  const found = commonMeds.filter(med => lowerText.includes(med));
-  
-  return found.length > 0 ? found.join(', ') : 'No medications documented in notes';
 }

@@ -645,13 +645,12 @@ CLINICAL DOCUMENTATION:
 ${enhancedNote}
 
 Analyze for:
-1. DRUG INTERACTIONS: Check medications mentioned for potential interactions
-2. CONTRAINDICATIONS: Identify any treatments/medications contraindicated for the diagnosis
-3. VITAL SIGN ALERTS: Flag any concerning vital sign values or trends
-4. BEST PRACTICE DEVIATIONS: Note any care that deviates from evidence-based guidelines
-5. MISSING ASSESSMENTS: Identify standard assessments that should be done but weren't documented
-6. SUGGESTED DIAGNOSTICS: Recommend relevant tests or assessments to consider
-7. INTERVENTION RECOMMENDATIONS: Suggest evidence-based interventions
+1. CONTRAINDICATIONS: Identify any treatments/medications contraindicated for the diagnosis
+2. VITAL SIGN ALERTS: Flag any concerning vital sign values or trends
+3. BEST PRACTICE DEVIATIONS: Note any care that deviates from evidence-based guidelines
+4. MISSING ASSESSMENTS: Identify standard assessments that should be done but weren't documented
+5. SUGGESTED DIAGNOSTICS: Recommend relevant tests or assessments to consider
+6. INTERVENTION RECOMMENDATIONS: Suggest evidence-based interventions
 
 Be specific and actionable. Only flag genuine clinical concerns, not minor documentation issues.
 

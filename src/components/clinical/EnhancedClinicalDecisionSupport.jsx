@@ -132,7 +132,7 @@ ${currentNoteText}
 PERFORM COMPREHENSIVE ANALYSIS:
 
 1. **CRITICAL ALERTS**: Identify any immediately dangerous findings requiring urgent action
-2. **DRUG INTERACTIONS**: Check for potential medication interactions or contraindications with diagnosis
+2. **CONTRAINDICATIONS & ALLERGY SAFETY**: Check for contraindications with the diagnosis and allergy/cross-reactivity concerns
 3. **VITAL SIGN ANALYSIS**: Analyze current vitals AND trends - flag deterioration patterns
 4. **DIFFERENTIAL CONSIDERATIONS**: Based on symptoms, suggest conditions to rule out or consider
 5. **EVIDENCE-BASED RECOMMENDATIONS**: Provide specific, actionable clinical recommendations
@@ -146,7 +146,7 @@ Return comprehensive JSON:
   "critical_alerts": [
     {
       "id": "unique_id",
-      "alert_type": "vital_critical" | "drug_interaction" | "symptom_cluster" | "deterioration",
+      "alert_type": "vital_critical" | "symptom_cluster" | "deterioration",
       "title": "Brief alert title",
       "description": "What was detected",
       "clinical_significance": "Why this matters",
@@ -155,15 +155,6 @@ Return comprehensive JSON:
     }
   ],
   "drug_safety": {
-    "interactions": [
-      {
-        "drugs": ["Drug A", "Drug B"],
-        "interaction_type": "major" | "moderate" | "minor",
-        "effect": "What happens",
-        "recommendation": "What to do",
-        "monitoring": "What to monitor"
-      }
-    ],
     "contraindications": [
       {
         "drug": "Drug name",
@@ -322,7 +313,6 @@ Return comprehensive JSON:
 
   const totalAlerts = cdsResults ? (
     (cdsResults.critical_alerts?.length || 0) +
-    (cdsResults.drug_safety?.interactions?.length || 0) +
     (cdsResults.drug_safety?.contraindications?.length || 0) +
     (cdsResults.vital_sign_analysis?.abnormal_findings?.length || 0)
   ) : 0;
@@ -415,7 +405,7 @@ Return comprehensive JSON:
                 </TabsTrigger>
                 <TabsTrigger value="drugs" className="text-xs px-1">
                   <Pill className="w-3 h-3 mr-1" />
-                  Drugs
+                  Safety
                 </TabsTrigger>
                 <TabsTrigger value="vitals" className="text-xs px-1">
                   <HeartPulse className="w-3 h-3 mr-1" />
@@ -520,28 +510,13 @@ Return comprehensive JSON:
                 )}
               </TabsContent>
 
-              {/* Drug Safety Tab */}
+              {/* Contraindication & Allergy Safety Tab */}
               <TabsContent value="drugs" className="space-y-2 mt-0">
-                {cdsResults.drug_safety?.interactions?.length > 0 ? (
-                  <div>
-                    <p className="text-xs font-semibold text-red-800 mb-1">Drug Interactions</p>
-                    {cdsResults.drug_safety.interactions.map((di, idx) => (
-                      <Alert key={idx} className={`mb-1 ${di.interaction_type === 'major' ? 'bg-red-50 border-red-300' : 'bg-yellow-50 border-yellow-300'}`}>
-                        <Pill className="w-3 h-3" />
-                        <AlertDescription className="text-xs">
-                          <strong>{di.drugs?.join(' + ')}</strong>
-                          <Badge variant="outline" className="ml-2 text-xs">{di.interaction_type}</Badge>
-                          <p className="mt-1">{di.effect}</p>
-                          <p className="text-slate-700 mt-1">→ {di.recommendation}</p>
-                          {di.monitoring && <p className="text-slate-600 italic">Monitor: {di.monitoring}</p>}
-                        </AlertDescription>
-                      </Alert>
-                    ))}
-                  </div>
-                ) : (
+                {!(cdsResults.drug_safety?.contraindications?.length > 0) &&
+                  !(cdsResults.drug_safety?.allergy_concerns?.length > 0) && (
                   <Alert className="bg-green-50 border-green-200">
                     <CheckCircle2 className="w-4 h-4 text-green-600" />
-                    <AlertDescription className="text-xs">No drug interactions identified</AlertDescription>
+                    <AlertDescription className="text-xs">No contraindication or allergy concerns identified</AlertDescription>
                   </Alert>
                 )}
 
