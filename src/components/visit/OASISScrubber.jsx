@@ -10,6 +10,7 @@ import ClinicalGroupSummary from "./ClinicalGroupSummary";
 import ClinicalIndicatorsGrid from "./ClinicalIndicatorsGrid";
 import ClinicalIndicatorsDetail from "./ClinicalIndicatorsDetail";
 import FunctionalPhrasesPanel from "./FunctionalPhrasesPanel";
+import CollapsibleResultHeader from "./CollapsibleResultHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -1274,25 +1275,16 @@ export default function OASISScrubber({
               {/* OASIS-Narrative Mismatches (from uploaded OASIS) */}
               {oasisResults.oasis_narrative_mismatches && oasisResults.oasis_narrative_mismatches.length > 0 && (
                 <div className="space-y-3">
-                  <div 
-                    className="flex items-center justify-between cursor-pointer bg-navy-50 p-4 rounded-lg border-2 border-navy-200"
-                    onClick={() => toggleCategory('mismatches')}
-                  >
-                    <div className="flex items-center gap-3">
-                      <AlertTriangle className="w-6 h-6 text-navy-600" />
-                      <div>
-                        <h4 className="font-bold text-navy-900 text-lg">
-                          🔍 OASIS vs Narrative Mismatches ({oasisResults.oasis_narrative_mismatches.length})
-                        </h4>
-                        <p className="text-xs text-navy-700">Uploaded OASIS scores don't match clinical documentation</p>
-                      </div>
-                    </div>
-                    {expandedCategories.includes('mismatches') ? (
-                      <ChevronUp className="w-5 h-5 text-navy-600" />
-                    ) : (
-                      <ChevronDown className="w-5 h-5 text-navy-600" />
-                    )}
-                  </div>
+                  <CollapsibleResultHeader
+                    name="mismatches"
+                    icon={AlertTriangle}
+                    color="navy"
+                    title="🔍 OASIS vs Narrative Mismatches"
+                    count={oasisResults.oasis_narrative_mismatches.length}
+                    subtitle="Uploaded OASIS scores don't match clinical documentation"
+                    isExpanded={expandedCategories.includes('mismatches')}
+                    onToggle={toggleCategory}
+                  />
 
                   {expandedCategories.includes('mismatches') && (
                     <div className="space-y-3">
@@ -1336,25 +1328,16 @@ export default function OASISScrubber({
               {/* Cross-Validation Failures */}
               {oasisResults.cross_validation_failures && oasisResults.cross_validation_failures.length > 0 && (
                 <div className="space-y-3">
-                  <div 
-                    className="flex items-center justify-between cursor-pointer bg-orange-50 p-4 rounded-lg border-2 border-orange-200"
-                    onClick={() => toggleCategory('crossvalidation')}
-                  >
-                    <div className="flex items-center gap-3">
-                      <AlertTriangle className="w-6 h-6 text-orange-600" />
-                      <div>
-                        <h4 className="font-bold text-orange-900 text-lg">
-                          🔗 Cross-Validation Issues ({oasisResults.cross_validation_failures.length})
-                        </h4>
-                        <p className="text-xs text-orange-700">Related OASIS items don't align per CMS rules</p>
-                      </div>
-                    </div>
-                    {expandedCategories.includes('crossvalidation') ? (
-                      <ChevronUp className="w-5 h-5 text-orange-600" />
-                    ) : (
-                      <ChevronDown className="w-5 h-5 text-orange-600" />
-                    )}
-                  </div>
+                  <CollapsibleResultHeader
+                    name="crossvalidation"
+                    icon={AlertTriangle}
+                    color="orange"
+                    title="🔗 Cross-Validation Issues"
+                    count={oasisResults.cross_validation_failures.length}
+                    subtitle="Related OASIS items don't align per CMS rules"
+                    isExpanded={expandedCategories.includes('crossvalidation')}
+                    onToggle={toggleCategory}
+                  />
 
                   {expandedCategories.includes('crossvalidation') && (
                     <div className="space-y-3">
@@ -1748,25 +1731,16 @@ export default function OASISScrubber({
               {/* Incomplete Assessments */}
               {oasisResults.incomplete_assessments && oasisResults.incomplete_assessments.length > 0 && (
                 <div className="space-y-3">
-                  <div 
-                    className="flex items-center justify-between cursor-pointer bg-yellow-50 p-4 rounded-lg border-2 border-yellow-200"
-                    onClick={() => toggleCategory('incomplete')}
-                  >
-                    <div className="flex items-center gap-3">
-                      <AlertTriangle className="w-6 h-6 text-yellow-600" />
-                      <div>
-                        <h4 className="font-bold text-yellow-900 text-lg">
-                          Incomplete Assessments ({oasisResults.incomplete_assessments.length})
-                        </h4>
-                        <p className="text-xs text-yellow-700">These items need more specific detail</p>
-                      </div>
-                    </div>
-                    {expandedCategories.includes('incomplete') ? (
-                      <ChevronUp className="w-5 h-5 text-yellow-600" />
-                    ) : (
-                      <ChevronDown className="w-5 h-5 text-yellow-600" />
-                    )}
-                  </div>
+                  <CollapsibleResultHeader
+                    name="incomplete"
+                    icon={AlertTriangle}
+                    color="yellow"
+                    title="Incomplete Assessments"
+                    count={oasisResults.incomplete_assessments.length}
+                    subtitle="These items need more specific detail"
+                    isExpanded={expandedCategories.includes('incomplete')}
+                    onToggle={toggleCategory}
+                  />
 
                   {expandedCategories.includes('incomplete') && (
                     <div className="space-y-3">
@@ -1923,25 +1897,16 @@ export default function OASISScrubber({
               {/* Inconsistencies */}
               {oasisResults.inconsistencies && oasisResults.inconsistencies.length > 0 && (
                 <div className="space-y-3">
-                  <div 
-                    className="flex items-center justify-between cursor-pointer bg-orange-50 p-4 rounded-lg border-2 border-orange-200"
-                    onClick={() => toggleCategory('inconsistencies')}
-                  >
-                    <div className="flex items-center gap-3">
-                      <AlertTriangle className="w-6 h-6 text-orange-600" />
-                      <div>
-                        <h4 className="font-bold text-orange-900 text-lg">
-                          Inconsistencies Found ({oasisResults.inconsistencies.length})
-                        </h4>
-                        <p className="text-xs text-orange-700">Conflicting information that needs resolution</p>
-                      </div>
-                    </div>
-                    {expandedCategories.includes('inconsistencies') ? (
-                      <ChevronUp className="w-5 h-5 text-orange-600" />
-                    ) : (
-                      <ChevronDown className="w-5 h-5 text-orange-600" />
-                    )}
-                  </div>
+                  <CollapsibleResultHeader
+                    name="inconsistencies"
+                    icon={AlertTriangle}
+                    color="orange"
+                    title="Inconsistencies Found"
+                    count={oasisResults.inconsistencies.length}
+                    subtitle="Conflicting information that needs resolution"
+                    isExpanded={expandedCategories.includes('inconsistencies')}
+                    onToggle={toggleCategory}
+                  />
 
                   {expandedCategories.includes('inconsistencies') && (
                     <div className="space-y-3">
@@ -2014,25 +1979,16 @@ export default function OASISScrubber({
               {/* Compliant Items */}
               {oasisResults.compliant_items && oasisResults.compliant_items.length > 0 && (
                 <div className="space-y-3">
-                  <div 
-                    className="flex items-center justify-between cursor-pointer bg-green-50 p-4 rounded-lg border-2 border-green-200"
-                    onClick={() => toggleCategory('compliant')}
-                  >
-                    <div className="flex items-center gap-3">
-                      <CheckCircle2 className="w-6 h-6 text-green-600" />
-                      <div>
-                        <h4 className="font-bold text-green-900 text-lg">
-                          Compliant OASIS Items ({oasisResults.compliant_items.length})
-                        </h4>
-                        <p className="text-xs text-green-700">These items are properly documented</p>
-                      </div>
-                    </div>
-                    {expandedCategories.includes('compliant') ? (
-                      <ChevronUp className="w-5 h-5 text-green-600" />
-                    ) : (
-                      <ChevronDown className="w-5 h-5 text-green-600" />
-                    )}
-                  </div>
+                  <CollapsibleResultHeader
+                    name="compliant"
+                    icon={CheckCircle2}
+                    color="green"
+                    title="Compliant OASIS Items"
+                    count={oasisResults.compliant_items.length}
+                    subtitle="These items are properly documented"
+                    isExpanded={expandedCategories.includes('compliant')}
+                    onToggle={toggleCategory}
+                  />
 
                   {expandedCategories.includes('compliant') && (
                     <div className="grid grid-cols-2 gap-2">
