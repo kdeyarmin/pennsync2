@@ -22,10 +22,11 @@ export function calculatePatientMatchScore(extractedName, patient, extractedDOB,
   const matchFactors = [];
   let dobMatch = false;
 
-  const extractedNameClean = extractedName.toLowerCase().replace(/[^a-z\s]/g, '').trim();
+  const extractedNameRaw = String(extractedName ?? '');
+  const extractedNameClean = extractedNameRaw.toLowerCase().replace(/[^a-z\s]/g, '').trim();
   const nameParts = extractedNameClean.split(/\s+/).filter(p => p.length > 1);
 
-  const fullName = `${patient.first_name} ${patient.last_name}`.toLowerCase();
+  const fullName = `${patient.first_name || ''} ${patient.last_name || ''}`.trim().toLowerCase();
   const firstName = (patient.first_name || '').toLowerCase();
   const lastName = (patient.last_name || '').toLowerCase();
 
@@ -70,8 +71,8 @@ export function calculatePatientMatchScore(extractedName, patient, extractedDOB,
   }
 
   // Strategy 2: Handle "LastName, FirstName" format
-  if (extractedName.includes(',')) {
-    const [lastPart, firstPart] = extractedName.split(',').map(s => s.trim().toLowerCase().replace(/[^a-z\s]/g, ''));
+  if (extractedNameRaw.includes(',')) {
+    const [lastPart, firstPart] = extractedNameRaw.split(',').map(s => s.trim().toLowerCase().replace(/[^a-z\s]/g, ''));
     const lastSim = similarity(lastPart, lastName);
     const firstSim = similarity(firstPart, firstName);
 
@@ -254,9 +255,22 @@ export function calculatePatientMatchScore(extractedName, patient, extractedDOB,
       const patientStreetNum = patient.address.match(/^\d+/)?.[0];
 
       if (extractedStreetNum && extractedStreetNum === patientStreetNum) {
-        // Extract street name (second word typically)
-        const extractedStreetName = extractedAddrNorm.split(/\s+/)[1];
-        const patientStreetName = patientAddrNorm.split(/\s+/)[1];
+        // Derive the street name, skipping the house number and keeping an optional
+        // leading directional (n/s/e/w) as part of the key — otherwise "123 N Main"
+        // and "123 N Oak" both reduce to the directional "n" and falsely match.
+        const streetKeyOf = (normalized) => {
+          const tokens = normalized.split(/\s+/).filter(Boolean);
+          let i = 0;
+          while (i < tokens.length && /^\d+$/.test(tokens[i])) i++; // skip house number
+          let dir = '';
+          if (i < tokens.length && /^[nsew]$/.test(tokens[i])) { dir = tokens[i]; i++; }
+          while (i < tokens.length && /^\d+$/.test(tokens[i])) i++; // skip stray numbers
+          const name = tokens[i];
+          if (!name) return undefined;
+          return dir ? `${dir} ${name}` : name;
+        };
+        const extractedStreetName = streetKeyOf(extractedAddrNorm);
+        const patientStreetName = streetKeyOf(patientAddrNorm);
 
         if (extractedStreetName && patientStreetName && similarity(extractedStreetName, patientStreetName) >= 80) {
           confidence += 18;

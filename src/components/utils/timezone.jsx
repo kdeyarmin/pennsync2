@@ -73,12 +73,12 @@ export const todayEastern = () => {
 export const formatRelativeEastern = (date) => {
   if (!date) return '';
   try {
-    // Convert both dates to Eastern Time for accurate comparison
+    // Elapsed time is timezone-independent: subtract the raw UTC instants
+    // directly. Converting both to a zoned wall-clock first would skew the
+    // result by an hour when the two instants straddle a DST transition.
     const utcDate = new Date(date);
     const utcNow = new Date();
-    const easternDate = toZonedTime(utcDate, EASTERN_TIMEZONE);
-    const easternNow = toZonedTime(utcNow, EASTERN_TIMEZONE);
-    const diffMs = easternNow - easternDate;
+    const diffMs = utcNow - utcDate;
     const diffMins = Math.floor(diffMs / 60000);
     const diffHours = Math.floor(diffMins / 60);
     const diffDays = Math.floor(diffHours / 24);

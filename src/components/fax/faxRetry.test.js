@@ -118,3 +118,9 @@ test("isFaxRetryDue respects the max-retries ceiling and kill switch", () => {
   assert.equal(isFaxRetryDue({ ...dueFax, retry_count: 4 }, NOW, { max_retries: 3 }), false);
   assert.equal(isFaxRetryDue(dueFax, NOW, { auto_retry_enabled: false }), false);
 });
+
+test("faxRetryConfig coerces numeric-string config values", () => {
+  const c = faxRetryConfig({ max_retries: "5", retry_delay_minutes: "10" });
+  assert.equal(c.maxRetries, 5);
+  assert.equal(c.baseDelayMinutes, 10);
+});

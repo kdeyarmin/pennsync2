@@ -103,3 +103,23 @@ test('confidence is always an integer in [0, 100]', () => {
   assert.ok(Number.isInteger(r.confidence));
   assert.ok(r.confidence >= 0 && r.confidence <= 100);
 });
+
+test('different streets sharing a directional are not a false address match', () => {
+  // "123 N Main St" vs "123 N Oak St": the leading directional must not be
+  // mistaken for the street name, which would collapse two distinct streets.
+  const p = { first_name: 'Jane', last_name: 'Smith', address: '123 N Oak St, Springfield, 62704' };
+  const r = calculatePatientMatchScore('Jane Smith', p, undefined, undefined, '123 N Main St, Springfield 62704');
+  assert.ok(!r.matchFactors.includes('✓ Street number and name match'));
+});
+
+test('a null extracted name does not throw and yields no name match', () => {
+  const r = calculatePatientMatchScore(null, patient);
+  assert.ok(Number.isInteger(r.confidence));
+  assert.ok(!r.matchFactors.some(f => /name match/i.test(f)));
+});
+
+test('a patient missing first_name does not score a spurious "undefined" name match', () => {
+  // fullName must not become "undefined smith" and inflate the score.
+  const r = calculatePatientMatchScore('undefined Smith', { last_name: 'Smith' });
+  assert.ok(!r.matchFactors.includes('Exact name match'));
+});

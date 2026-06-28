@@ -50,3 +50,12 @@ test("withinSendCap treats absent/non-positive caps as unlimited", () => {
 test("monthStartISO is the first instant of the UTC month", () => {
   assert.equal(monthStartISO(new Date("2026-06-19T15:30:00Z")), "2026-06-01T00:00:00.000Z");
 });
+
+test("a malformed +1 number is invalid, not treated as international", () => {
+  // Wrong NANP digit count must never be dialed even when international is enabled.
+  assert.deepEqual(isAllowedDestination("+1215555010"), { allowed: false, reason: "invalid_destination" });
+  assert.deepEqual(
+    isAllowedDestination("+1215555010", { allow_international: true }),
+    { allowed: false, reason: "invalid_destination" }
+  );
+});

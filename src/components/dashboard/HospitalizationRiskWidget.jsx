@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { invokeLLM } from "@/lib/invokeLLM";
@@ -18,6 +18,10 @@ export default function HospitalizationRiskWidget({ autoAnalyze = false }) {
   const [analyzing, setAnalyzing] = useState(false);
   const [riskScores, setRiskScores] = useState(null);
   const [lastAnalyzed, setLastAnalyzed] = useState(null);
+  // Guards against a second concurrent run (the analysis spans many LLM calls and
+  // writes PatientAlert rows; riskScores stays null throughout, so the effect's
+  // !riskScores guard alone can't prevent re-entrant runs on query invalidation).
+  const runningRef = useRef(false);
 
   const { data: patients = [] } = useQuery({
     queryKey: ['activePatients'],
@@ -32,6 +36,8 @@ export default function HospitalizationRiskWidget({ autoAnalyze = false }) {
   });
 
   const analyzeHospitalizationRisk = useCallback(async () => {
+    if (runningRef.current) return; // already analyzing — don't start a duplicate run
+    runningRef.current = true;
     setAnalyzing(true);
     try {
       const analysisPromises = patients.map(async (patient) => {
@@ -197,6 +203,7 @@ Return detailed risk assessment:`,
       toast.error('Failed to analyze hospitalization risk');
     } finally {
       setAnalyzing(false);
+      runningRef.current = false;
     }
   }, [patients, recentVisits]);
 

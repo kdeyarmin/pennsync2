@@ -165,11 +165,13 @@ Return JSON:
   }, [nurseEmail, skillGap]);
 
   useEffect(() => {
-    if (skillGap) {
+    // Guard with !moduleContent && !generatingAi.loading so a skillGap reference change
+    // or re-mount can't re-fire the LLM call and create a duplicate progress row.
+    if (skillGap && !moduleContent && !generatingAi.loading) {
       generateLearningContent();
       setStartTime(Date.now());
     }
-  }, [skillGap, generateLearningContent]);
+  }, [skillGap, moduleContent, generatingAi.loading, generateLearningContent]);
 
   const handleQuizSubmit = () => {
     const questions = moduleContent?.quiz?.questions;

@@ -33,6 +33,10 @@ export function isAllowedDestination(e164, settings = {}) {
     return { allowed: true, reason: "allowed" };
   }
 
+  // A +1-prefixed number that isn't exactly 10 NANP digits is malformed, not
+  // international — never let the international toggle dial/text a broken US number.
+  if (/^\+1/.test(e)) return { allowed: false, reason: "invalid_destination" };
+
   // Not a +1 NANP number → treat as international.
   if (!/^\+\d{8,15}$/.test(e)) return { allowed: false, reason: "invalid_destination" };
   if (s.allow_international === true) return { allowed: true, reason: "international_allowed" };

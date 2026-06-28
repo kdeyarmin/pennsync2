@@ -260,10 +260,12 @@ Be specific, actionable, and encouraging. Focus on growth and development, not c
   }, [existingRecommendations, nurseEmail, visits, completedTraining, allModules]);
 
   useEffect(() => {
-    if (nurseEmail && visits.length > 0 && existingRecommendations.length > 0) {
+    // Guard with !recommendations && !ai.loading so a query refetch (which gives the
+    // dependency arrays new identities) can't re-fire an expensive LLM call.
+    if (nurseEmail && visits.length > 0 && existingRecommendations.length > 0 && !recommendations && !ai.loading) {
       analyzeAndRecommend();
     }
-  }, [nurseEmail, visits, existingRecommendations, analyzeAndRecommend]);
+  }, [nurseEmail, visits, existingRecommendations, recommendations, ai.loading, analyzeAndRecommend]);
 
   const handleEnrollModule = async (moduleId) => {
     try {
