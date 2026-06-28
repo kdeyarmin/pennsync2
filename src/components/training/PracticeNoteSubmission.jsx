@@ -163,7 +163,7 @@ Return JSON with:
                       {scenario.scenario.split('\n').slice(0, 3).join('\n')}...
                     </div>
                   </div>
-                  <Button>
+                  <Button onClick={() => setSelectedScenario(scenario)}>
                     Start Practice
                   </Button>
                 </div>

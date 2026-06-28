@@ -466,7 +466,11 @@ Return comprehensive analysis with actionable coordination alerts.`,
                 </Button>
               )}
               {patient.physician_phone && (
-                <Button size="sm" variant="outline">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => { window.location.href = `tel:${patient.physician_phone}`; }}
+                >
                   <Phone className="w-4 h-4 mr-1" />
                   {patient.physician_phone}
                 </Button>

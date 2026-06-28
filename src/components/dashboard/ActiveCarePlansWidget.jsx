@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -8,6 +9,8 @@ import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 
 export default function ActiveCarePlansWidget({ carePlans, _patientId, expanded = false }) {
+  const [showAll, setShowAll] = useState(false);
+  const isExpanded = expanded || showAll;
   const activeCarePlans = carePlans.filter(cp => cp.status === 'active');
   const metGoals = carePlans.filter(cp => cp.status === 'met').length;
   const totalGoals = carePlans.length;
@@ -22,7 +25,7 @@ export default function ActiveCarePlansWidget({ carePlans, _patientId, expanded 
     }
   };
 
-  const displayPlans = expanded ? activeCarePlans : activeCarePlans.slice(0, 3);
+  const displayPlans = isExpanded ? activeCarePlans : activeCarePlans.slice(0, 3);
 
   return (
     <Card>
@@ -104,8 +107,8 @@ export default function ActiveCarePlansWidget({ carePlans, _patientId, expanded 
               );
             })}
             
-            {!expanded && activeCarePlans.length > 3 && (
-              <Button variant="outline" size="sm" className="w-full">
+            {!isExpanded && activeCarePlans.length > 3 && (
+              <Button variant="outline" size="sm" className="w-full" onClick={() => setShowAll(true)}>
                 View All {activeCarePlans.length} Care Plans
               </Button>
             )}

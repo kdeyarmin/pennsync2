@@ -52,6 +52,12 @@ export default function UserActivityReport() {
 
   const [searchParams, setSearchParams] = useSearchParams();
   const requestedTab = searchParams.get("tab");
+  // Deep-link from e.g. the Security anomaly "Investigate" action: ?user=<email>
+  // pre-fills the search so the report opens scoped to that user.
+  const userParam = searchParams.get("user");
+  useEffect(() => {
+    if (userParam) setSearchQuery(userParam);
+  }, [userParam]);
   const activeTab = TAB_KEYS.includes(requestedTab) ? requestedTab : "report";
   // Reflect the active tab in the URL so tabs are shareable/bookmarkable and the
   // retired Activity Log page deep-links correctly. "report" is the default, so it
