@@ -84,16 +84,29 @@ Deno.serve(async (req) => {
         if (!newStatus) return;
 
         if (newStatus !== fax.status) {
-          await base44.asServiceRole.entities.FaxLog.update(fax.id, {
-            status: newStatus,
-            telnyx_fax_id: faxData?.data?.id
-          });
+          // Share the webhook's idempotency markers (delivery_confirmation_sent /
+          // final_failure_notified) so the poller and handleTelnyxStatusWebhook
+          // can't both notify the sender for the same terminal transition.
+          const update = { status: newStatus, telnyx_fax_id: faxData?.data?.id };
+          let notifyType = null;
+          if (newStatus === 'delivered' && fax.sent_by && !fax.delivery_confirmation_sent) {
+            update.delivery_confirmation_sent = true;
+            notifyType = 'fax_delivered';
+          } else if (newStatus === 'failed' && fax.sent_by && !fax.final_failure_notified) {
+            update.final_failure_notified = true;
+            notifyType = 'fax_failed';
+          } else if (newStatus === 'sent' && fax.sent_by) {
+            // Non-terminal progress update; no webhook counterpart, no flag.
+            notifyType = 'fax_delivered';
+          }
 
-          if (['sent', 'delivered', 'failed'].includes(newStatus) && fax.sent_by) {
+          await base44.asServiceRole.entities.FaxLog.update(fax.id, update);
+
+          if (notifyType) {
             await base44.asServiceRole.entities.Notification.create({
               user_email: fax.sent_by,
-              type: newStatus === 'failed' ? 'fax_failed' : 'fax_delivered',
-              title: newStatus === 'failed' ? 'Fax Failed' : 'Fax Status Update',
+              type: notifyType,
+              title: notifyType === 'fax_failed' ? 'Fax Failed' : 'Fax Status Update',
               message: getNotificationMessage(newStatus, fax),
               metadata: { related_entity: 'FaxLog', related_entity_id: fax.id },
               is_read: false

@@ -221,6 +221,11 @@
         }
       },
       "description": "Complete audit trail of all signature events"
+    },
+    "admin_notified": {
+      "type": "boolean",
+      "default": false,
+      "description": "Set once the completion admin email has been sent for this signature, so entity-trigger re-fires don't re-email admins."
     }
   },
   "required": [

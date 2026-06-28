@@ -85,11 +85,31 @@ Deno.serve(async (req) => {
 
         if (newStatus !== faxLog.status) {
           console.log(`Updating fax ${faxLog.id} from ${faxLog.status} to ${newStatus}`);
-          await base44.asServiceRole.entities.FaxLog.update(faxLog.id, {
+          const failureReason = telnyxData?.data?.failure_reason || 'Unknown failure';
+          // When a missed webhook is reconciled to 'failed' here, the sender
+          // previously got no notice at all. Notify once (guarded by the shared
+          // final_failure_notified flag so the webhook can't also re-notify).
+          const notifyFailure = newStatus === 'failed' && faxLog.sent_by && !faxLog.final_failure_notified;
+          const update = {
             status: newStatus,
-            failure_reason: newStatus === 'failed' ? (telnyxData?.data?.failure_reason || 'Unknown failure') : null,
+            failure_reason: newStatus === 'failed' ? failureReason : null,
             pages: telnyxData?.data?.page_count || faxLog.pages
-          });
+          };
+          if (notifyFailure) update.final_failure_notified = true;
+          await base44.asServiceRole.entities.FaxLog.update(faxLog.id, update);
+
+          if (notifyFailure) {
+            const recipient = faxLog.to_name ? `${faxLog.to_name} (${faxLog.to_number})` : faxLog.to_number;
+            await base44.asServiceRole.entities.Notification.create({
+              user_email: faxLog.sent_by,
+              type: 'fax_failed',
+              title: '❌ Fax failed',
+              message: `"${faxLog.document_name || 'Your document'}" to ${recipient} could not be delivered (${failureReason}).`,
+              priority: 'high',
+              metadata: { related_entity: 'FaxLog', related_entity_id: faxLog.id },
+              is_read: false
+            }).catch((err) => console.error(`Failed to send fax failure notification for ${faxLog.id}:`, err.message));
+          }
           updatedCount++;
         }
       } catch (error) {

@@ -82,29 +82,37 @@ Deno.serve(async (req) => {
     // rather than the previous hardcoded 'admin@agency.com' placeholder, which
     // never reached a real inbox and risked leaking signer details to an
     // address the agency doesn't control.
-    try {
-      const admins = await base44.asServiceRole.entities.User.filter({ role: 'admin' });
-      if (admins && admins.length > 0) {
-        // Signer identity lives in the signers[] array, not flat fields. Report
-        // the signers that have completed on this document.
-        const signedSigners = (Array.isArray(signature.signers) ? signature.signers : [])
-          .filter((s) => s?.status === 'completed' || s?.signed_date);
-        const signedByText = signedSigners.length > 0
-          ? signedSigners.map((s) => `${s.name || 'Signer'}${s.email ? ` (${s.email})` : ''}`).join(', ')
-          : 'A signer';
-        await Promise.all(
-          admins.map((admin) =>
-            base44.integrations.Core.SendEmail({
-              to: admin.email,
-              subject: `Document Signed: ${signature.document_title || pkg.package_name}`,
-              body: `${signedByText} has signed the document.\n\nDocument: ${signature.document_title || 'Document'}\nPackage: ${pkg.package_name}\nStatus: ${allSigned ? 'COMPLETE - All documents signed' : 'In Progress'}`,
-            })
-          )
-        );
+    // Idempotency: this entity-trigger re-fires on every later DocumentSignature
+    // update (a re-save to set signed_pdf_url, an integrity stamp, a platform
+    // retry), and the sibling notifyAdminOfSignedDocument trigger emails admins
+    // too. Send the admin notice at most once per signature by claiming the
+    // shared admin_notified flag first.
+    if (!signature.admin_notified) {
+      try {
+        await base44.asServiceRole.entities.DocumentSignature.update(signature.id, { admin_notified: true });
+        const admins = await base44.asServiceRole.entities.User.filter({ role: 'admin' });
+        if (admins && admins.length > 0) {
+          // Signer identity lives in the signers[] array, not flat fields. Report
+          // the signers that have completed on this document.
+          const signedSigners = (Array.isArray(signature.signers) ? signature.signers : [])
+            .filter((s) => s?.status === 'completed' || s?.signed_date);
+          const signedByText = signedSigners.length > 0
+            ? signedSigners.map((s) => `${s.name || 'Signer'}${s.email ? ` (${s.email})` : ''}`).join(', ')
+            : 'A signer';
+          await Promise.all(
+            admins.map((admin) =>
+              base44.integrations.Core.SendEmail({
+                to: admin.email,
+                subject: `Document Signed: ${signature.document_title || pkg.package_name}`,
+                body: `${signedByText} has signed the document.\n\nDocument: ${signature.document_title || 'Document'}\nPackage: ${pkg.package_name}\nStatus: ${allSigned ? 'COMPLETE - All documents signed' : 'In Progress'}`,
+              })
+            )
+          );
+        }
+      } catch (emailError) {
+        console.error('Failed to send notification email:', emailError);
+        // Continue even if email fails
       }
-    } catch (emailError) {
-      console.error('Failed to send notification email:', emailError);
-      // Continue even if email fails
     }
 
     return Response.json({

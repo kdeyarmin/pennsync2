@@ -22,7 +22,6 @@ Deno.serve(async (req) => {
 
     const today = new Date();
     const certificates = await base44.asServiceRole.entities.TrainingCertificate.filter({ revoked: false }, '-expiration_date', 5000);
-    const assignments = await base44.asServiceRole.entities.TrainingAssignment.list('-created_date', 5000);
     let renewalAssignmentsCreated = 0;
 
     for (const certificate of certificates) {
@@ -34,9 +33,15 @@ Deno.serve(async (req) => {
       // check below prevents a duplicate assignment once one has been created.
       if (daysUntilExpiration > 30) continue;
 
-      const existingRenewal = assignments.find((assignment) =>
-        assignment.course_id === certificate.course_id &&
-        assignment.assigned_to_user_id === certificate.user_id &&
+      // Query the renewal scoped to this course+user rather than scanning a
+      // global 5000-row prefetch — in a tenant with >5000 assignments a user's
+      // existing renewal could fall outside the window and be re-created each run.
+      const existingForUserCourse = await base44.asServiceRole.entities.TrainingAssignment.filter(
+        { course_id: certificate.course_id, assigned_to_user_id: certificate.user_id },
+        '-created_date',
+        50,
+      ).catch(() => []);
+      const existingRenewal = existingForUserCourse.find((assignment) =>
         ['assigned', 'in_progress', 'overdue', 'failed', 'locked'].includes(assignment.status) &&
         assignment.id !== certificate.assignment_id
       );

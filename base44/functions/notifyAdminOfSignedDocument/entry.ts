@@ -24,6 +24,15 @@ Deno.serve(async (req) => {
       return Response.json({ success: true, skipped: 'Not a completed status' });
     }
 
+    // Shared idempotency with onDocumentSigned: both functions may be wired to
+    // the same DocumentSignature-update trigger, and the trigger re-fires on
+    // every later update. Claim the shared admin_notified flag so admins get at
+    // most one "Document Signed" email per signature, whichever fires first.
+    if (signature.admin_notified) {
+      return Response.json({ success: true, skipped: 'admin already notified' });
+    }
+    await base44.asServiceRole.entities.DocumentSignature.update(signature.id, { admin_notified: true }).catch(() => {});
+
     // Fetch package info
     let pkg = null;
     try {
