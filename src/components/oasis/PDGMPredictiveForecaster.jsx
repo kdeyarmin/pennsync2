@@ -342,7 +342,7 @@ Return JSON:
   };
 
   const chartData = predictions?.scenarios?.map(s => ({
-    name: s.name.split(' ')[0],
+    name: (s.name || '').split(' ')[0],
     Payment: s.projected_payment,
     Increase: s.payment_increase
   })) || [];

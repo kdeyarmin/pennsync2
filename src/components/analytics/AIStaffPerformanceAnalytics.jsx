@@ -542,7 +542,7 @@ Return detailed analysis suitable for management dashboard.`,
                           profile.performance_level === 'good' ? 'bg-blue-600' :
                           profile.performance_level === 'needs_improvement' ? 'bg-yellow-600' : 'bg-red-600'
                         }>
-                          {profile.performance_level.replace('_', ' ')}
+                          {(profile.performance_level || '').replace('_', ' ')}
                         </Badge>
                         <Badge className={getRiskBadge(profile.risk_level)}>
                           {profile.risk_level} risk

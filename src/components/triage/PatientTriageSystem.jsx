@@ -718,7 +718,7 @@ function TriageResultCard({ result, rank }) {
                         {result.recentIncidents.map((incident, idx) => (
                           <div key={idx} className="flex items-center gap-2 text-sm">
                             <Badge variant="outline" className="capitalize">
-                              {incident.incident_type.replace(/_/g, ' ')}
+                              {(incident.incident_type || '').replace(/_/g, ' ')}
                             </Badge>
                             <span className="text-slate-600">
                               {format(parseISO(incident.incident_date), 'MMM d, yyyy')}

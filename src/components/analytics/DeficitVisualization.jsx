@@ -23,7 +23,7 @@ export default function DeficitVisualization({ analysis, compact = false }) {
     .sort((a, b) => b.value - a.value);
 
   const deficitData = analysis.deficits.slice(0, 5).map(d => ({
-    name: d.name.length > 15 ? d.name.substring(0, 15) + '...' : d.name,
+    name: (d.name || '').length > 15 ? (d.name || '').substring(0, 15) + '...' : (d.name || ''),
     count: d.count,
     percentage: d.percentage,
     severity: d.severity

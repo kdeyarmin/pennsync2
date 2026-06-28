@@ -222,7 +222,7 @@ export default function OASISToPatientChartPusher({
                     </Badge>
                   </div>
                   <p className="text-xs text-slate-600 mb-1">{rec.description}</p>
-                  <Badge variant="outline" className="text-xs">{rec.type.replace(/_/g, ' ')}</Badge>
+                  <Badge variant="outline" className="text-xs">{(rec.type || '').replace(/_/g, ' ')}</Badge>
                 </div>
               </div>
             </div>

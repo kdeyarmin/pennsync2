@@ -189,7 +189,7 @@ export default function ClinicalEventsTimeline({ patientId, limit = 20 }) {
                             {format(new Date(event.event_date), 'MMM d, yyyy')}
                           </p>
                           <Badge className="text-xs">
-                            {event.event_type.replace(/_/g, ' ')}
+                            {(event.event_type || '').replace(/_/g, ' ')}
                           </Badge>
                           <Badge variant="outline" className={`text-xs ${
                             event.severity === 'critical' ? 'border-red-500 text-red-700' :

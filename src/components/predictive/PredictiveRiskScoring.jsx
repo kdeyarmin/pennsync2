@@ -453,7 +453,7 @@ Return JSON array:
                         <div>
                           <h3 className="font-semibold text-slate-900">{assessment.patient_name}</h3>
                           <Badge className={getRiskLevelColor(assessment.overall_risk_level)}>
-                            {assessment.overall_risk_level.toUpperCase()} RISK
+                            {(assessment.overall_risk_level || '').toUpperCase()} RISK
                           </Badge>
                         </div>
                       </div>

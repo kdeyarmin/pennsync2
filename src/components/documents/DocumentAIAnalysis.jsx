@@ -115,7 +115,7 @@ export default function DocumentAIAnalysis({ document, compact = false }) {
                       flag.severity === 'high' ? 'bg-orange-600 text-white' :
                       'bg-yellow-600 text-white'
                     }>
-                      {flag.severity.toUpperCase()}
+                      {(flag.severity || '').toUpperCase()}
                     </Badge>
                     <div className="flex-1">
                       <p className="font-semibold text-sm">{flag.finding}</p>

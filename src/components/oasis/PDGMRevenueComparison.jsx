@@ -925,7 +925,7 @@ export default function PDGMRevenueComparison({ analysisResults, pdgmData, onPay
                         <div className="flex-1">
                           <div className="flex items-center gap-2 flex-wrap">
                             <Badge variant="outline" className="text-xs py-0 capitalize">
-                              {correction.type.replace('_', ' ')}
+                              {(correction.type || '').replace('_', ' ')}
                             </Badge>
                             {correction.item && correction.item !== 'multiple' && (
                               <span className="font-mono text-navy-700">{correction.item}</span>

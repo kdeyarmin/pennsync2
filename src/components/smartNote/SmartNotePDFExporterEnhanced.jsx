@@ -238,7 +238,7 @@ export default function SmartNotePDFExporterEnhanced({
           }
           doc.setFont(undefined, "bold");
           doc.setTextColor(0, 0, 0);
-          doc.text(`• [${finding.severity.toUpperCase()}] ${finding.issue}`, margin + 2, y);
+          doc.text(`• [${(finding.severity || '').toUpperCase()}] ${finding.issue}`, margin + 2, y);
           y += 4.5;
           doc.setFont(undefined, "normal");
           doc.setTextColor(60, 60, 60);

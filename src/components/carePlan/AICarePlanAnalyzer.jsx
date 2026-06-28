@@ -374,7 +374,25 @@ Return JSON:
                         </h4>
                         <Badge variant="outline" className="mt-1">{template.template_type}</Badge>
                       </div>
-                      <Button size="sm" variant="ghost" className="gap-1">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="gap-1"
+                        onClick={async () => {
+                          const text = [
+                            template.template_name,
+                            template.template_type ? `Type: ${template.template_type}` : '',
+                            template.key_sections?.length ? `\nKey Sections:\n${template.key_sections.map((s) => `- ${s}`).join('\n')}` : '',
+                            template.compliance_notes ? `\nCompliance Notes:\n${template.compliance_notes}` : '',
+                          ].filter(Boolean).join('\n');
+                          try {
+                            await navigator.clipboard.writeText(text);
+                            toast.success('Template copied to clipboard');
+                          } catch {
+                            toast.error('Could not copy to clipboard');
+                          }
+                        }}
+                      >
                         <Copy className="w-3 h-3" /> Copy
                       </Button>
                     </div>

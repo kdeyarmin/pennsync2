@@ -293,7 +293,7 @@ Return detailed JSON analysis suitable for executive dashboard.`,
 
   const riskColors = getRiskColor(riskAnalysis.overall_risk_score);
   const radarData = riskAnalysis.category_risk_scores?.map(cat => ({
-    category: cat.category.split(' ').slice(0, 2).join(' '),
+    category: (cat.category || '').split(' ').slice(0, 2).join(' '),
     score: cat.risk_score,
     fullMark: 100
   }));
@@ -318,7 +318,7 @@ Return detailed JSON analysis suitable for executive dashboard.`,
           <Alert className={`${riskColors.bg.replace('bg-', 'bg-').replace('-500', '-50')} border-2 ${riskColors.border}`}>
             <Shield className={`w-4 h-4 ${riskColors.text}`} />
             <AlertDescription>
-              <p className="font-bold mb-1">Risk Level: {riskAnalysis.risk_level.toUpperCase()}</p>
+              <p className="font-bold mb-1">Risk Level: {(riskAnalysis.risk_level || '').toUpperCase()}</p>
               <p className="text-sm">{riskAnalysis.executive_summary}</p>
             </AlertDescription>
           </Alert>

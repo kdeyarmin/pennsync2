@@ -217,7 +217,7 @@ export default function ScenarioBuilder({ courseId, onSave }) {
                   : 'border-slate-200 bg-white hover:border-slate-300'
               }`}
             >
-              <p className="font-medium text-sm">{node.text.substring(0, 40)}...</p>
+              <p className="font-medium text-sm">{(node.text || '').substring(0, 40)}...</p>
               <p className="text-xs text-slate-600 mt-1">{node.choices?.length || 0} options</p>
               {nodeId !== 'node-start' && nodeId !== 'node-end' && (
                 <button

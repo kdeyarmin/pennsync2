@@ -325,7 +325,7 @@ Return JSON:
                               <div className="flex items-center gap-2 mb-1">
                                 <span className="font-semibold text-sm">{rec.problem}</span>
                                 <Badge variant="outline" className="text-xs">
-                                  {rec.type.replace(/_/g, ' ')}
+                                  {(rec.type || '').replace(/_/g, ' ')}
                                 </Badge>
                                 <Badge className={getSeverityColor(rec.severity)}>
                                   {rec.severity}

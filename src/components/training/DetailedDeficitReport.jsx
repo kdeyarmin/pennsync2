@@ -202,7 +202,7 @@ export default function DetailedDeficitReport({
                   <div className="space-y-2">
                     {deficit.examples.map((ex, i) => (
                       <div key={i} className="text-xs text-slate-600 pl-3 border-l-2 border-slate-300">
-                        <p className="italic mb-1">"{ex.text.substring(0, 120)}..."</p>
+                        <p className="italic mb-1">"{(ex.text || '').substring(0, 120)}..."</p>
                         <p className="text-[10px] text-slate-500">
                           {ex.element && `${ex.element} • `}
                           {ex.source} • {format(new Date(ex.date), 'MMM d, h:mm a')}

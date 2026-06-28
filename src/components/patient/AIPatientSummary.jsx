@@ -70,7 +70,7 @@ PATIENT PROFILE:
 - Allergies: ${patient.allergies || 'NKDA'}
 
 RECENT VISITS (Last 5):
-${recentVisits.length > 0 ? recentVisits.map(v => `- ${v.visit_date}: ${v.visit_type.replace(/_/g, ' ')} - ${v.status}
+${recentVisits.length > 0 ? recentVisits.map(v => `- ${v.visit_date}: ${(v.visit_type || '').replace(/_/g, ' ')} - ${v.status}
   ${v.vital_signs ? `Vitals: BP ${v.vital_signs.blood_pressure_systolic || '?'}/${v.vital_signs.blood_pressure_diastolic || '?'}, HR ${v.vital_signs.heart_rate || '?'}, O2 ${v.vital_signs.oxygen_saturation || '?'}%` : ''}
   ${v.nurse_notes ? `Notes excerpt: ${v.nurse_notes.substring(0, 200)}...` : ''}`).join('\n') : 'No recent visits'}
 
@@ -80,7 +80,7 @@ ${activeCarePlans.length > 0 ? activeCarePlans.map(cp => `- Problem: ${cp.proble
   Status: ${cp.status}`).join('\n') : 'No active care plans'}
 
 RECENT INCIDENTS:
-${recentIncidents.length > 0 ? recentIncidents.map(i => `- ${i.incident_date}: ${i.incident_type.replace(/_/g, ' ')} (${i.severity || 'unknown'} severity)`).join('\n') : 'No recent incidents'}
+${recentIncidents.length > 0 ? recentIncidents.map(i => `- ${i.incident_date}: ${(i.incident_type || '').replace(/_/g, ' ')} (${i.severity || 'unknown'} severity)`).join('\n') : 'No recent incidents'}
 
 Generate a clinical summary in JSON format:
 {

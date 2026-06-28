@@ -336,7 +336,7 @@ export default function PDGMMultiReportComparison({
   // Bar chart for functional scores
   const functionalBarData = comparisonResult?.functionalChanges?.length > 0 
     ? comparisonResult.functionalChanges.map(fc => ({
-        name: fc.label.replace('M18', 'M18').split(' ')[0],
+        name: (fc.label || '').replace('M18', 'M18').split(' ')[0],
         [comparisonResult.labelA]: fc.valueA,
         [comparisonResult.labelB]: fc.valueB
       }))

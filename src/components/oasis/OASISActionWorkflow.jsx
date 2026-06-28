@@ -213,7 +213,7 @@ export default function OASISActionWorkflow({
           patient_name: patientName,
           action_type: 'correction',
           category: getCategoryFromField(change.field),
-          oasis_item: change.field.toUpperCase().replace('_', ''),
+          oasis_item: (change.field || '').toUpperCase().replace('_', ''),
           current_value: change.original_value,
           proposed_value: change.new_value,
           rationale: `From scenario "${scenario.scenario_name}": Change ${change.field} to optimize PDGM payment`,

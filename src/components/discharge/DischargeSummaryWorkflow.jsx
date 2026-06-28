@@ -298,7 +298,7 @@ export default function DischargeSummaryWorkflow({ patientId, onClose, onComplet
                               outcome.outcome === 'partially_met' ? 'bg-yellow-100 text-yellow-800' :
                               'bg-slate-100 text-slate-800'
                             }>
-                              {outcome.outcome.replace('_', ' ')}
+                              {(outcome.outcome || '').replace('_', ' ')}
                             </Badge>
                           </div>
                           <p className="text-sm text-slate-700">{outcome.notes}</p>
@@ -331,7 +331,7 @@ export default function DischargeSummaryWorkflow({ patientId, onClose, onComplet
                           {summary.medication_summary.medication_changes.map((change, idx) => (
                             <div key={idx} className="text-sm border-l-4 border-blue-500 pl-3 py-1">
                               <Badge variant="outline" className="mb-1">
-                                {change.change_type.replace('_', ' ')}
+                                {(change.change_type || '').replace('_', ' ')}
                               </Badge>
                               <p>{change.medication}</p>
                               <p className="text-slate-600 text-xs">{change.reason}</p>
