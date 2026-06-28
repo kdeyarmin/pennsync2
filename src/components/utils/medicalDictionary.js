@@ -150,24 +150,30 @@ export function suggestMedicalCorrections(word) {
   ];
   
   const lowerWord = word.toLowerCase();
-  
+
+  // The same term can live in more than one category array (e.g. "Heart" is
+  // both a diagnosis and a clinical term), so de-duplicate case-insensitively
+  // before returning — otherwise the user sees the same suggestion twice and
+  // the duplicates also eat into the partial-match `.slice(0, 5)` budget.
+  const uniq = (arr) => [...new Map(arr.map((t) => [t.toLowerCase(), t])).values()];
+
   // Check for exact matches first
-  const exactMatches = allTerms.filter(t => t.toLowerCase() === lowerWord);
+  const exactMatches = uniq(allTerms.filter(t => t.toLowerCase() === lowerWord));
   if (exactMatches.length > 0) return exactMatches;
-  
+
   // Check for partial matches (starts with or contains)
   // A term is a candidate when it starts with the typed word (prefix
   // completion) or the typed word starts with the full term (the user typed
   // extra trailing chars). The old `lowerWord.startsWith(lower.substring(0,3))`
   // matched on only the first 3 letters, so "metf" fanned out to Metformin,
   // Metoprolol, Metronidazole, Metastatic — drop that noisy clause.
-  const partialMatches = allTerms
+  const partialMatches = uniq(allTerms
     .filter(t => {
       const lower = t.toLowerCase();
       return lower.startsWith(lowerWord) || lowerWord.startsWith(lower);
-    })
+    }))
     .slice(0, 5); // Limit suggestions
-  
+
   return partialMatches;
 }
 

@@ -191,15 +191,10 @@ export default function OASISReview() {
         </TabsList>
 
         <TabsContent value="review" className="space-y-4">
-          {filteredItems.length === 0 ? (
-            <Card>
-              <CardContent className="p-12 text-center">
-                <CheckCircle2 className="w-16 h-16 text-green-400 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-slate-900 mb-2">All caught up!</h3>
-                <p className="text-slate-600">No OASIS suggestions pending review.</p>
-              </CardContent>
-            </Card>
-          ) : selectedPatient ? (
+          {/* Check selectedPatient first: a reviewer mid-review must not lose
+              the open comparison view if the filtered list empties out (e.g.
+              they type in search or the records query is invalidated). */}
+          {selectedPatient ? (
             <OASISComparisonView
               patient={selectedPatient.patient}
               oasisRecord={selectedPatient.oasis}
@@ -210,6 +205,14 @@ export default function OASISReview() {
                 setSelectedPatient(null);
               }}
             />
+          ) : filteredItems.length === 0 ? (
+            <Card>
+              <CardContent className="p-12 text-center">
+                <CheckCircle2 className="w-16 h-16 text-green-400 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-slate-900 mb-2">All caught up!</h3>
+                <p className="text-slate-600">No OASIS suggestions pending review.</p>
+              </CardContent>
+            </Card>
           ) : (
             filteredItems.map((item) => (
               <Card key={item.patientId} className="hover:shadow-lg transition-shadow">
@@ -247,6 +250,8 @@ export default function OASISReview() {
 
                     <Button
                       onClick={() => setSelectedPatient(item)}
+                      disabled={!item.patient}
+                      title={!item.patient ? "Patient record not found" : undefined}
                       className="bg-blue-600 hover:bg-blue-700"
                     >
                       Review OASIS

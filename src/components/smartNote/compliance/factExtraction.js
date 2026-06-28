@@ -56,7 +56,9 @@ export function extractVitals(text) {
     }
   }
 
-  const hrMatch = text.match(/(?:hr|heart\s*rate)\s*(\d{2,3})/i);
+  // Anchor the trailing edge like BP above so a typo like "hr 1100" can't be
+  // silently truncated to a plausible-looking 110 (dropping the extra digit).
+  const hrMatch = text.match(/(?:hr|heart\s*rate)\s*(\d{2,3})(?!\d)/i);
   if (hrMatch) vitals.hr = parseInt(hrMatch[1]);
 
   // Allow the filler words nurses routinely write between the keyword and the
@@ -65,7 +67,7 @@ export function extractVitals(text) {
   // escalation was silently missed for the most common SpO2 phrasings.
   const o2Match =
     text.match(/(?:o2|spo2|oxygen|pulse\s*ox)\s*(?:sat(?:uration)?)?\s*(?:of)?\s*:?\s*(\d{2,3})\s*%/i) ||
-    text.match(/(\d{2,3})\s*%\s*(?:ra|on ra|o2|room air)/i);
+    text.match(/(\d{2,3})\s*%\s*(?:on\s+)?(?:ra\b|o2\b|room\s*air)/i);
   if (o2Match) vitals.o2 = parseInt(o2Match[1]);
 
   // Anchor the "t" shorthand with word boundaries so it can't match the

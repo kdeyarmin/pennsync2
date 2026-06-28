@@ -96,11 +96,13 @@ export default function UserActivityReport() {
     const stats = {};
     
     filteredActivities.forEach(activity => {
-      const email = activity.user_email;
+      // Coerce to a safe string key: imported/legacy rows may lack user_email,
+      // and an undefined email later crashes the search filter (stat.email.toLowerCase()).
+      const email = activity.user_email || '';
       if (!stats[email]) {
         stats[email] = {
           email,
-          name: activity.user_name || email,
+          name: activity.user_name || email || 'Unknown',
           total_actions: 0,
           logins: 0,
           pages_visited: new Set(),
@@ -438,7 +440,7 @@ export default function UserActivityReport() {
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 bg-navy-600 rounded-full flex items-center justify-center text-white font-bold">
-                            {stat.name.charAt(0).toUpperCase()}
+                            {(stat.name || '?').charAt(0).toUpperCase()}
                           </div>
                           <div>
                             <p className="font-semibold text-slate-900">{stat.name}</p>

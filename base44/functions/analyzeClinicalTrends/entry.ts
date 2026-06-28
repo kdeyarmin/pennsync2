@@ -54,13 +54,13 @@ Deno.serve(async (req) => {
 
     // Group events by type
     const medicationEvents = clinicalEvents.filter(e =>
-      e.event_type.includes('medication')
+      e.event_type?.includes('medication')
     );
     const symptomEvents = clinicalEvents.filter(e =>
-      e.event_type.includes('symptom')
+      e.event_type?.includes('symptom')
     );
     const labEvents = clinicalEvents.filter(e =>
-      e.event_type.includes('lab')
+      e.event_type?.includes('lab')
     );
 
     // Analyze trends with AI

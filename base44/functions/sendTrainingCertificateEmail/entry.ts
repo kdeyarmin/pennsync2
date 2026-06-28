@@ -120,10 +120,15 @@ Deno.serve(async (req) => {
 
     const [employee] = await base44.asServiceRole.entities.User.filter({ email: certificate.user_id }, '-created_date', 1);
     const allUsers = await base44.asServiceRole.entities.User.list('-created_date', 300);
-    const agencyAdmins = allUsers.filter((candidate) =>
-      candidate.account_type === 'agency_admin' &&
-      (!employee?.agency_name || candidate.agency_name === employee.agency_name)
-    );
+    // Only notify admins of the employee's OWN agency. If the employee can't be
+    // resolved (deleted/renamed user) we have no agency to scope to, so notify
+    // no one rather than broadcasting the certificate (PHI) to every tenant's
+    // admins.
+    const agencyAdmins = employee?.agency_name
+      ? allUsers.filter((candidate) =>
+          candidate.account_type === 'agency_admin' &&
+          candidate.agency_name === employee.agency_name)
+      : [];
 
     const pdfBytes = await buildCertificatePdf({
       userName: safeText(certificate.user_name, employee?.full_name || certificate.user_id),

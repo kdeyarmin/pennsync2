@@ -71,10 +71,19 @@ Return ONLY valid JSON array, no other text.`;
     const alertsToCreate = [];
 
     for (const extracted of extractedSupplies) {
+      // The LLM schema marks no field required, so guard against a missing name
+      // or a non-numeric/zero quantity: an unchecked value would throw on
+      // .toLowerCase() or write NaN into the shared SupplyItem inventory.
+      const qty = Number(extracted?.quantity);
+      if (!extracted?.name || !Number.isFinite(qty) || qty <= 0) continue;
+
       // Find matching supply (case-insensitive fuzzy match)
-      const matchedSupply = allSupplies.find(s => 
-        s.name.toLowerCase().includes(extracted.name.toLowerCase()) ||
-        extracted.name.toLowerCase().includes(s.name.toLowerCase())
+      const extractedName = extracted.name.toLowerCase();
+      const matchedSupply = allSupplies.find(s =>
+        typeof s.name === 'string' && (
+          s.name.toLowerCase().includes(extractedName) ||
+          extractedName.includes(s.name.toLowerCase())
+        )
       );
 
       if (matchedSupply) {
@@ -84,7 +93,7 @@ Return ONLY valid JSON array, no other text.`;
           supply_name: matchedSupply.name,
           patient_id: patientId,
           visit_id: visitId,
-          quantity_used: extracted.quantity,
+          quantity_used: qty,
           unit: extracted.unit,
           usage_date: new Date().toISOString().split('T')[0],
           documented_by: user.email,
@@ -96,7 +105,7 @@ Return ONLY valid JSON array, no other text.`;
         usageLogs.push(usageLog);
 
         // Update supply inventory
-        const newQuantity = Math.max(0, matchedSupply.current_quantity - extracted.quantity);
+        const newQuantity = Math.max(0, (Number(matchedSupply.current_quantity) || 0) - qty);
         await base44.asServiceRole.entities.SupplyItem.update(matchedSupply.id, {
           current_quantity: newQuantity,
           status: newQuantity === 0 ? 'out_of_stock' : 

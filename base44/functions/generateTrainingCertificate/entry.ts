@@ -115,7 +115,7 @@ Deno.serve(async (req) => {
     doc.setFontSize(28);
     doc.setFont(undefined, 'bold');
     doc.setTextColor(0, 0, 0);
-    doc.text(user.full_name, 148.5, 110, { align: 'center' });
+    doc.text(user.full_name || 'User', 148.5, 110, { align: 'center' });
 
     // Line under name
     doc.setDrawColor(79, 70, 229);
@@ -179,7 +179,7 @@ Deno.serve(async (req) => {
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename=Training_Certificate_${user.full_name.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`
+        'Content-Disposition': `attachment; filename=Training_Certificate_${(user.full_name || 'User').replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`
       }
     });
   } catch (error) {

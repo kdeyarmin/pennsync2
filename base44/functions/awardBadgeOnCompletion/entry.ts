@@ -22,7 +22,10 @@ Deno.serve(async (req) => {
     // Authorization: a user may only earn badges from their OWN attempt. The
     // attempt was read with the user-scoped client, but enforce ownership
     // explicitly so a forwarded/guessed attempt_id can't award to this account.
-    if (user.role !== 'admin' && attemptData.user_id && attemptData.user_id !== user.email) {
+    // Fail closed: do NOT short-circuit when attemptData.user_id is falsy — a
+    // legacy/imported attempt with a missing user_id must not award to whoever
+    // forwards its id; treat an unknown owner as not-this-user.
+    if (user.role !== 'admin' && attemptData.user_id !== user.email) {
       return Response.json({ error: 'Forbidden' }, { status: 403 });
     }
 

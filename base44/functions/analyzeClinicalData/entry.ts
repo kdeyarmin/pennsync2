@@ -271,9 +271,9 @@ async function analyzeTrends(base44, params) {
     .filter(v => v.vital_signs)
     .map(v => ({ date: v.visit_date, vitals: v.vital_signs }));
 
-  const medicationEvents = clinicalEvents.filter(e => e.event_type.includes('medication'));
-  const symptomEvents = clinicalEvents.filter(e => e.event_type.includes('symptom'));
-  const labEvents = clinicalEvents.filter(e => e.event_type.includes('lab'));
+  const medicationEvents = clinicalEvents.filter(e => e.event_type?.includes('medication'));
+  const symptomEvents = clinicalEvents.filter(e => e.event_type?.includes('symptom'));
+  const labEvents = clinicalEvents.filter(e => e.event_type?.includes('lab'));
 
   const result = await base44.integrations.Core.InvokeLLM({
     model: "claude_opus_4_8",

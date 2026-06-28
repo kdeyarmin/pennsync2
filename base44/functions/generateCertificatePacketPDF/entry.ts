@@ -47,7 +47,7 @@ Deno.serve(async (req) => {
 
     doc.setFontSize(14);
     doc.setTextColor(80, 80, 80);
-    doc.text(employee.full_name, pageWidth / 2, 60, { align: 'center' });
+    doc.text(employee.full_name || employeeId, pageWidth / 2, 60, { align: 'center' });
 
     doc.setFontSize(10);
     doc.setTextColor(100, 100, 100);
@@ -91,7 +91,7 @@ Deno.serve(async (req) => {
         doc.setFontSize(10);
         doc.setTextColor(80, 80, 80);
         doc.text(`Certificate of Completion`, pageWidth / 2, 70, { align: 'center' });
-        doc.text(`Presented to: ${employee.full_name}`, pageWidth / 2, 100, { align: 'center' });
+        doc.text(`Presented to: ${employee.full_name || employeeId}`, pageWidth / 2, 100, { align: 'center' });
         doc.text(`Date Earned: ${new Date(cert.issued_at).toLocaleDateString()}`, pageWidth / 2, 120, { align: 'center' });
         doc.text(`Certificate ID: ${cert.certificate_id}`, pageWidth / 2, 140, { align: 'center' });
       } else {
