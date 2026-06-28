@@ -83,6 +83,10 @@ Deno.serve(async (req) => {
         compliance_score: parseInt(score),
         compliance_issues: complianceIssues
       });
+    } else {
+      // Unrecognized entity_type would otherwise fall through to a bogus
+      // "success" with completeness_score 0; reject it explicitly.
+      return Response.json({ error: `Unsupported entity_type: ${entity_type}` }, { status: 400 });
     }
 
     return Response.json({

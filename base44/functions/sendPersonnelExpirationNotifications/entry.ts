@@ -23,7 +23,14 @@ Deno.serve(async (req) => {
         updates.push(base44.asServiceRole.entities.PersonnelCredential.update(item.id, { status: 'expired' }));
       }
 
-      if (!reminderOffsets.includes(daysUntilExpiration) || sentOffsets.includes(daysUntilExpiration)) continue;
+      // Fire AT or BELOW an unsent tier rather than on an exact-day match, so a
+      // missed cron run (downtime/deploy/DST) doesn't skip a tier permanently;
+      // per-record reminder_offsets_sent still prevents re-sending a fired tier.
+      // Only remind before expiration (the status->expired update is above).
+      const dueOffsets = daysUntilExpiration >= 0
+        ? reminderOffsets.filter((o) => daysUntilExpiration <= o && !sentOffsets.includes(o))
+        : [];
+      if (dueOffsets.length === 0) continue;
 
       const employee = users.find((user) => user.email === item.user_id);
       const agencyAdmins = users.filter((user) => user.account_type === 'agency_admin' && (!employee?.agency_name || user.agency_name === employee.agency_name));
@@ -72,7 +79,7 @@ Deno.serve(async (req) => {
 
       updates.push(
         base44.asServiceRole.entities.PersonnelCredential.update(item.id, {
-          reminder_offsets_sent: [...sentOffsets, daysUntilExpiration],
+          reminder_offsets_sent: [...sentOffsets, ...dueOffsets],
           last_reminder_sent_at: new Date().toISOString()
         })
       );
