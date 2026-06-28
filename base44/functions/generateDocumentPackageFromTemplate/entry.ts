@@ -43,8 +43,8 @@ Deno.serve(async (req) => {
     };
 
     // Populate template content
-    let populatedContent = template.content;
-    template.placeholders.forEach((placeholder) => {
+    let populatedContent = template.content || '';
+    (template.placeholders || []).forEach((placeholder) => {
       const value = substitutions[placeholder.key] || '';
       populatedContent = populatedContent.replace(
         new RegExp(`{{${placeholder.key}}}`, 'g'),

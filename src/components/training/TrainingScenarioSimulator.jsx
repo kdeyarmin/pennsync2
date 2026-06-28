@@ -36,6 +36,9 @@ export default function TrainingScenarioSimulator({ onComplete }) {
   const [currentStep, setCurrentStep] = useState(0);
   const [userResponses, setUserResponses] = useState({});
   const [feedback, setFeedback] = useState(null);
+  // Per-step AI scores, keyed by step index, so the final average reflects each
+  // step rather than repeating the last step's score.
+  const [stepScores, setStepScores] = useState({});
   const evalAi = useAICall();
   const [finalScore, setFinalScore] = useState(null);
 
@@ -140,6 +143,7 @@ Return JSON:
       setScenario(result);
       setCurrentStep(0);
       setUserResponses({});
+      setStepScores({});
       setFeedback(null);
       setFinalScore(null);
     } catch (error) {
@@ -206,6 +210,7 @@ Evaluate the response and provide feedback:
       });
 
       setFeedback(evalResult);
+      setStepScores(prev => ({ ...prev, [currentStep]: evalResult?.score ?? 70 }));
     } catch (error) {
       console.error('Error evaluating response:', error);
     }
@@ -221,10 +226,10 @@ Evaluate the response and provide feedback:
   };
 
   const calculateFinalScore = () => {
-    const scores = Object.values(userResponses).map((_, _idx) => {
-      return feedback?.score || 70;
-    });
-    const avgScore = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+    const scores = Object.values(stepScores);
+    const avgScore = scores.length
+      ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
+      : 0;
     setFinalScore({
       score: avgScore,
       completed: true,

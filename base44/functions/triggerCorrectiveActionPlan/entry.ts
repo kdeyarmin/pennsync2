@@ -96,6 +96,17 @@ Deno.serve(async (req) => {
       return Response.json({ success: true, skipped: true, reason: 'No failed attempt to process' });
     }
 
+    // Idempotency: this is a TrainingAttempt entity-trigger and re-fires on
+    // retries / later row updates. If a corrective action plan already exists for
+    // this attempt, don't create a duplicate plan or re-spam the employee +
+    // every admin (the supplemental-assignment reuse guard below only dedups
+    // assignments, not the plan/notifications).
+    const existingPlans = await base44.asServiceRole.entities.CorrectiveActionPlan
+      .filter({ training_attempt_id: attempt.id }, '-created_date', 1).catch(() => []);
+    if (existingPlans.length > 0) {
+      return Response.json({ success: true, skipped: true, reason: 'Corrective action plan already exists for this attempt' });
+    }
+
     const [assignment] = await base44.asServiceRole.entities.TrainingAssignment.filter({ id: attempt.assignment_id }, '-created_date', 1);
     const [sourceCourse] = await base44.asServiceRole.entities.TrainingCourse.filter({ id: attempt.course_id }, '-created_date', 1);
     if (!assignment || !sourceCourse) {

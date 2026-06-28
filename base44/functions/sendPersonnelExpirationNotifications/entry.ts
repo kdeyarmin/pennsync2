@@ -5,6 +5,22 @@ const reminderOffsets = [90, 60, 30, 14];
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
+
+    // Authorization: opt-in lockdown for this privileged scheduled job (mirrors
+    // processTrainingRenewals / syncFaxStatuses). When INTERNAL_FN_SECRET is set,
+    // require an admin OR the internal-secret header; the no-identity cron path is
+    // allowed only while no secret is configured.
+    const me = await base44.auth.me().catch(() => null);
+    const isAdmin = me?.role === 'admin';
+    const internalSecret = Deno.env.get('INTERNAL_FN_SECRET');
+    if (internalSecret) {
+      if (!isAdmin && req.headers.get('x-internal-secret') !== internalSecret) {
+        return Response.json({ error: 'Forbidden' }, { status: 403 });
+      }
+    } else if (me && !isAdmin) {
+      return Response.json({ error: 'Forbidden: admin access required' }, { status: 403 });
+    }
+
     const today = new Date();
     const items = await base44.asServiceRole.entities.PersonnelCredential.list('-expiration_date', 1000);
     const users = await base44.asServiceRole.entities.User.list('-created_date', 400);
@@ -23,7 +39,14 @@ Deno.serve(async (req) => {
         updates.push(base44.asServiceRole.entities.PersonnelCredential.update(item.id, { status: 'expired' }));
       }
 
-      if (!reminderOffsets.includes(daysUntilExpiration) || sentOffsets.includes(daysUntilExpiration)) continue;
+      // Fire AT or BELOW an unsent tier rather than on an exact-day match, so a
+      // missed cron run (downtime/deploy/DST) doesn't skip a tier permanently;
+      // per-record reminder_offsets_sent still prevents re-sending a fired tier.
+      // Only remind before expiration (the status->expired update is above).
+      const dueOffsets = daysUntilExpiration >= 0
+        ? reminderOffsets.filter((o) => daysUntilExpiration <= o && !sentOffsets.includes(o))
+        : [];
+      if (dueOffsets.length === 0) continue;
 
       const employee = users.find((user) => user.email === item.user_id);
       const agencyAdmins = users.filter((user) => user.account_type === 'agency_admin' && (!employee?.agency_name || user.agency_name === employee.agency_name));
@@ -72,7 +95,7 @@ Deno.serve(async (req) => {
 
       updates.push(
         base44.asServiceRole.entities.PersonnelCredential.update(item.id, {
-          reminder_offsets_sent: [...sentOffsets, daysUntilExpiration],
+          reminder_offsets_sent: [...sentOffsets, ...dueOffsets],
           last_reminder_sent_at: new Date().toISOString()
         })
       );

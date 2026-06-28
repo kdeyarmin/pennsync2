@@ -164,15 +164,15 @@ Format the response professionally for OASIS documentation. Be specific and use 
                 <Button
                   size="sm"
                   variant="ghost"
-                  onClick={() => copyToClipboard(draftedAssessment.homebound_status.justification)}
+                  onClick={() => copyToClipboard(draftedAssessment.homebound_status?.justification)}
                 >
                   <Copy className="w-3 h-3" />
                 </Button>
               </div>
-              <Badge className="mb-2">{draftedAssessment.homebound_status.status}</Badge>
-              <p className="text-sm text-slate-700 mb-2">{draftedAssessment.homebound_status.justification}</p>
+              <Badge className="mb-2">{draftedAssessment.homebound_status?.status}</Badge>
+              <p className="text-sm text-slate-700 mb-2">{draftedAssessment.homebound_status?.justification}</p>
               <ul className="text-sm text-slate-600 space-y-1">
-                {draftedAssessment.homebound_status.supporting_details?.map((detail, idx) => (
+                {draftedAssessment.homebound_status?.supporting_details?.map((detail, idx) => (
                   <li key={idx}>• {detail}</li>
                 ))}
               </ul>
@@ -197,19 +197,19 @@ Format the response professionally for OASIS documentation. Be specific and use 
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div>
                   <p className="font-medium text-navy-800">Ambulation:</p>
-                  <p className="text-slate-700">{draftedAssessment.functional_status.ambulation}</p>
+                  <p className="text-slate-700">{draftedAssessment.functional_status?.ambulation}</p>
                 </div>
                 <div>
                   <p className="font-medium text-navy-800">Transfers:</p>
-                  <p className="text-slate-700">{draftedAssessment.functional_status.transfers}</p>
+                  <p className="text-slate-700">{draftedAssessment.functional_status?.transfers}</p>
                 </div>
                 <div>
                   <p className="font-medium text-navy-800">ADL Independence:</p>
-                  <p className="text-slate-700">{draftedAssessment.functional_status.adl_independence}</p>
+                  <p className="text-slate-700">{draftedAssessment.functional_status?.adl_independence}</p>
                 </div>
                 <div>
                   <p className="font-medium text-navy-800">Assistive Devices:</p>
-                  <p className="text-slate-700">{draftedAssessment.functional_status.assistive_devices}</p>
+                  <p className="text-slate-700">{draftedAssessment.functional_status?.assistive_devices}</p>
                 </div>
               </div>
             </div>

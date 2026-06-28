@@ -100,7 +100,7 @@ Deno.serve(async (req) => {
         doc.roundedRect(15, y + 9, 30, 4, 1, 1, 'F');
         doc.setTextColor(255, 255, 255);
         doc.setFontSize(8);
-        doc.text(skill.level.toUpperCase(), 17, y + 12);
+        doc.text((skill.level || 'unknown').toUpperCase(), 17, y + 12);
         doc.setTextColor(0, 0, 0);
         
         y += 18;

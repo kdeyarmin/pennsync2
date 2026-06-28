@@ -32,6 +32,7 @@ Deno.serve(async (req) => {
 
     if (entity_type === 'Patient') {
       entity = await base44.asServiceRole.entities.Patient.get(entity_id);
+      if (!entity) return Response.json({ error: 'Patient not found' }, { status: 404 });
       criticalFields = [
         'first_name', 'last_name', 'date_of_birth', 'phone', 'address',
         'emergency_contact_name', 'emergency_contact_phone', 
@@ -49,6 +50,7 @@ Deno.serve(async (req) => {
 
     } else if (entity_type === 'User') {
       entity = await base44.asServiceRole.entities.User.get(entity_id);
+      if (!entity) return Response.json({ error: 'User not found' }, { status: 404 });
       criticalFields = [
         'credential_type', 'phone', 'care_scope', 'license_number'
       ];
@@ -63,6 +65,7 @@ Deno.serve(async (req) => {
 
     } else if (entity_type === 'Visit') {
       entity = await base44.asServiceRole.entities.Visit.get(entity_id);
+      if (!entity) return Response.json({ error: 'Visit not found' }, { status: 404 });
       criticalFields = [
         'nurse_notes', 'homebound_justification', 'vital_signs', 'skilled_intervention_documented'
       ];
@@ -83,6 +86,10 @@ Deno.serve(async (req) => {
         compliance_score: parseInt(score),
         compliance_issues: complianceIssues
       });
+    } else {
+      // Unrecognized entity_type would otherwise fall through to a bogus
+      // "success" with completeness_score 0; reject it explicitly.
+      return Response.json({ error: `Unsupported entity_type: ${entity_type}` }, { status: 400 });
     }
 
     return Response.json({

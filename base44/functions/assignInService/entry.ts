@@ -43,8 +43,19 @@ Deno.serve(async (req) => {
       if (filters.employment_type && filters.employment_type !== 'all') candidates = candidates.filter((candidate) => candidate.employment_type === filters.employment_type);
     }
 
-    const existingAssignments = await base44.asServiceRole.entities.TrainingAssignment.filter({ course_id: courseId }, '-created_date', 1000);
-    const assignedEmails = new Set(existingAssignments.map((assignment) => assignment.assigned_to_user_id));
+    // Dedup against existing assignments scoped to THESE candidates (via $in)
+    // rather than the newest 1000 for the course — a course with >1000 prior
+    // assignees would otherwise re-assign + re-notify older ones.
+    const candidateEmails = candidates.map((candidate) => candidate.email).filter(Boolean);
+    let assignedEmails = new Set();
+    if (candidateEmails.length > 0) {
+      const existingAssignments = await base44.asServiceRole.entities.TrainingAssignment.filter(
+        { course_id: courseId, assigned_to_user_id: { $in: candidateEmails } },
+        '-created_date',
+        Math.max(1000, candidateEmails.length * 3),
+      );
+      assignedEmails = new Set(existingAssignments.map((assignment) => assignment.assigned_to_user_id));
+    }
 
     const assignmentsToCreate = candidates
       .filter((candidate) => !assignedEmails.has(candidate.email))

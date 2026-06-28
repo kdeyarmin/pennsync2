@@ -57,11 +57,11 @@ export default function SignatureTracker({ patientId = null }) {
     // Count signed among REQUIRED signers so the progress ratio stays consistent
     // with countRequiredSigners — otherwise an optional signer signing pushed the
     // numerator above the denominator (e.g. "2/1").
-    return signers.filter(s => s.required && s.signed_date).length;
+    return (signers || []).filter(s => s.required && s.signed_date).length;
   };
 
   const countRequiredSigners = (signers) => {
-    return signers.filter(s => s.required).length;
+    return (signers || []).filter(s => s.required).length;
   };
 
   const handleSendReminder = async (documentId) => {
@@ -71,7 +71,7 @@ export default function SignatureTracker({ patientId = null }) {
       if (!doc) return;
 
       // Send reminder emails to unsigned signers
-      const unsignedSigners = doc.signers.filter(s => !s.signed_date);
+      const unsignedSigners = (doc.signers || []).filter(s => !s.signed_date);
       for (let signer of unsignedSigners) {
         await base44.integrations.Core.SendEmail({
           to: signer.email,
@@ -186,7 +186,7 @@ export default function SignatureTracker({ patientId = null }) {
                   Signature Progress: {countSignedSigners(doc.signers)}/{countRequiredSigners(doc.signers)}
                 </p>
                 <div className="space-y-2">
-                  {doc.signers.map((signer) => (
+                  {(doc.signers || []).map((signer) => (
                     <div key={signer.id} className="flex items-center justify-between p-2 bg-slate-50 rounded-lg border border-slate-200">
                       <div className="flex items-center gap-3">
                         {getSignerStatusIcon(signer)}

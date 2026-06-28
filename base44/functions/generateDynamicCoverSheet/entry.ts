@@ -95,6 +95,11 @@ Deno.serve(async (req) => {
     // Two-column layout for sender/recipient
     const colWidth = (pageWidth - 3 * margin) / 2;
 
+    // Both columns share this top baseline. (The FROM column previously
+    // recomputed its own start from a formula that omitted the header height,
+    // drawing ~35mm too high and overprinting the title/urgency area.)
+    const colTop = yPos;
+
     // TO Section
     doc.setFontSize(12);
     doc.setFont('helvetica', 'bold');
@@ -116,9 +121,8 @@ Deno.serve(async (req) => {
       yPos += 5;
     }
 
-    // FROM Section (right column)
-    const fromYStart = 10 + (urgency === 'urgent' || urgency === 'stat' ? 15 : 0) + (document_type_disclaimer ? 12 : 0) + 10 + 10;
-    let fromY = fromYStart;
+    // FROM Section (right column) — aligned to the same top baseline as TO.
+    let fromY = colTop;
 
     doc.setFontSize(12);
     doc.setFont('helvetica', 'bold');

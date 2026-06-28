@@ -231,7 +231,11 @@ Be constructive and educational.`,
 
   const completeSimulation = async () => {
     const totalScore = userResponses.reduce((sum, r) => sum + (r.feedback?.score || 0), 0);
-    const avgScore = Math.round(totalScore / simulation.steps.length);
+    // Average over actually-recorded responses, not total steps: a step whose
+    // evaluation failed isn't in userResponses, and dividing by 0 yields NaN.
+    const avgScore = userResponses.length
+      ? Math.round(totalScore / userResponses.length)
+      : 0;
     
     setFinalScore(avgScore);
     setCompleted(true);

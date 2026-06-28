@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -398,11 +398,19 @@ export default function PDGMRevenueComparison({ analysisResults, pdgmData, onPay
     }
   }, [pdgmData]);
 
+  // Guards so an in-flight calculatePDGM await (which debounce.cancel() can't
+  // stop once dispatched) can't write stale revenue when pdgmData changes, or
+  // setState after the component unmounts.
+  const whatIfReqIdRef = useRef(0);
+  const isMountedRef = useRef(true);
+  useEffect(() => () => { isMountedRef.current = false; }, []);
+
   // Debounced What-If calculation
   const calculateWhatIfRevenue = useMemo(
     () => debounce(async (scenarioData) => {
       if (!pdgmData || !scenarioData) return;
 
+      const myReqId = ++whatIfReqIdRef.current;
       setIsCalculatingWhatIf(true);
       try {
         const mergedScenario = {
@@ -419,11 +427,16 @@ export default function PDGMRevenueComparison({ analysisResults, pdgmData, onPay
           correctedPdgmData: mergedScenario
         });
 
-        setWhatIfRevenue(response.data?.corrected?.totalPayment || 0);
+        if (isMountedRef.current && myReqId === whatIfReqIdRef.current) {
+          setWhatIfRevenue(response.data?.corrected?.totalPayment || 0);
+        }
       } catch (err) {
         console.error("What-If calculation error:", err);
+      } finally {
+        if (isMountedRef.current && myReqId === whatIfReqIdRef.current) {
+          setIsCalculatingWhatIf(false);
+        }
       }
-      setIsCalculatingWhatIf(false);
     }, 500),
     [pdgmData]
   );

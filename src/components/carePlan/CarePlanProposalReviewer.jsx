@@ -233,7 +233,7 @@ export default function CarePlanProposalReviewer({ patientId = null, compact = f
                         {proposal.ai_analysis?.severity_level?.toUpperCase()}
                       </Badge>
                       <Badge variant="outline" className="text-xs">
-                        {proposal.proposal_type.replace(/_/g, ' ')}
+                        {proposal.proposal_type?.replace(/_/g, ' ')}
                       </Badge>
                     </div>
                     <p className="text-sm text-slate-700 font-medium">

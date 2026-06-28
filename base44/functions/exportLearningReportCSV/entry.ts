@@ -23,6 +23,20 @@ Deno.serve(async (req) => {
     let data = [];
     let headers = [];
 
+    // Guard date cells: a null/invalid date would otherwise render "Invalid Date"
+    // (or 1970), and date subtraction would yield NaN.
+    const fmtDate = (d) => {
+      if (!d) return 'N/A';
+      const t = new Date(d);
+      return Number.isNaN(t.getTime()) ? 'N/A' : t.toLocaleDateString();
+    };
+    const daysBetween = (a, b) => {
+      const x = new Date(a), y = new Date(b);
+      return (Number.isNaN(x.getTime()) || Number.isNaN(y.getTime()))
+        ? 'N/A'
+        : Math.ceil((x - y) / (1000 * 60 * 60 * 24));
+    };
+
     if (reportType === 'transcript') {
       // Employee transcript CSV
       const certificates = await base44.asServiceRole.entities.TrainingCertificate.filter(
@@ -32,7 +46,7 @@ Deno.serve(async (req) => {
 
       headers = ['Completion Date', 'Course', 'Score', 'Pass', 'Certificate ID'];
       data = certificates.map(cert => ({
-        'Completion Date': new Date(cert.issued_at).toLocaleDateString(),
+        'Completion Date': fmtDate(cert.issued_at),
         'Course': cert.course_title || 'Unknown',
         'Score': cert.score ? `${cert.score}%` : 'N/A',
         'Pass': cert.score && cert.score >= 80 ? 'Yes' : 'No',
@@ -50,7 +64,7 @@ Deno.serve(async (req) => {
       headers = ['Employee', 'Assigned Date', 'Due Date', 'Status', 'Completion Date', 'Score', 'Attempts'];
       data = assignments.map(a => ({
         'Employee': a.assigned_to_user_id || 'N/A',
-        'Assigned Date': new Date(a.created_date).toLocaleDateString(),
+        'Assigned Date': fmtDate(a.created_date),
         'Due Date': a.due_date || 'N/A',
         'Status': a.status || 'pending',
         'Completion Date': a.completion_date ? new Date(a.completion_date).toLocaleDateString() : 'Not Completed',
@@ -67,7 +81,7 @@ Deno.serve(async (req) => {
       headers = ['Employee', 'Enrollment Date', 'Status', 'Progress %', 'Completed / Total'];
       data = enrollments.map(e => ({
         'Employee': e.user_name || 'Unknown',
-        'Enrollment Date': new Date(e.enrolled_at).toLocaleDateString(),
+        'Enrollment Date': fmtDate(e.enrolled_at),
         'Status': e.status || 'active',
         'Progress %': Math.round(e.progress_percentage || 0),
         'Completed / Total': `${e.courses_completed || 0} / ${e.courses_total || 0}`
@@ -86,7 +100,7 @@ Deno.serve(async (req) => {
         'Employee': a.assigned_to_user_id || 'N/A',
         'Course': a.course_title || 'Unknown',
         'Due Date': a.due_date || 'N/A',
-        'Days Overdue': Math.ceil((new Date() - new Date(a.due_date)) / (1000 * 60 * 60 * 24))
+        'Days Overdue': daysBetween(new Date(), a.due_date)
       }));
     } else if (reportType === 'expiring') {
       // Certificate expiration CSV
@@ -102,12 +116,12 @@ Deno.serve(async (req) => {
 
       headers = ['Employee', 'Course', 'Issued Date', 'Expiration Date', 'Days Until Expiry'];
       data = expiring.map(c => {
-        const daysUntilExpiry = Math.ceil((new Date(c.expiration_date) - new Date()) / (1000 * 60 * 60 * 24));
+        const daysUntilExpiry = daysBetween(c.expiration_date, new Date());
         return {
           'Employee': c.user_name || 'Unknown',
           'Course': c.course_title || 'Unknown',
-          'Issued Date': new Date(c.issued_at).toLocaleDateString(),
-          'Expiration Date': new Date(c.expiration_date).toLocaleDateString(),
+          'Issued Date': fmtDate(c.issued_at),
+          'Expiration Date': fmtDate(c.expiration_date),
           'Days Until Expiry': daysUntilExpiry
         };
       });

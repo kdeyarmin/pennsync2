@@ -422,16 +422,16 @@ Use clinical judgment based on established risk prediction models (LACE, HOSPITA
                     <div className="flex-1">
                       <div className="flex items-center gap-4 mb-2">
                         <span className="text-3xl font-bold text-red-600">
-                          {predictions.deterioration_prediction.risk_score}
+                          {predictions.deterioration_prediction?.risk_score}
                         </span>
-                        <Badge className={`${getRiskColor(predictions.deterioration_prediction.risk_level)} text-white`}>
-                          {predictions.deterioration_prediction.risk_level.toUpperCase()}
+                        <Badge className={`${getRiskColor(predictions.deterioration_prediction?.risk_level)} text-white`}>
+                          {predictions.deterioration_prediction?.risk_level?.toUpperCase()}
                         </Badge>
                       </div>
-                      <Progress value={predictions.deterioration_prediction.risk_score} className="mb-2" />
+                      <Progress value={predictions.deterioration_prediction?.risk_score} className="mb-2" />
                       <p className="text-sm text-slate-600">
-                        Predicted timeframe: <strong>{predictions.deterioration_prediction.timeframe}</strong> • 
-                        Confidence: <strong>{predictions.deterioration_prediction.confidence}%</strong>
+                        Predicted timeframe: <strong>{predictions.deterioration_prediction?.timeframe}</strong> • 
+                        Confidence: <strong>{predictions.deterioration_prediction?.confidence}%</strong>
                       </p>
                     </div>
                   </div>
@@ -439,7 +439,7 @@ Use clinical judgment based on established risk prediction models (LACE, HOSPITA
                   <div>
                     <p className="font-semibold text-sm mb-2">Key Risk Factors:</p>
                     <div className="space-y-1">
-                      {predictions.deterioration_prediction.key_risk_factors?.slice(0, 5).map((factor, i) => (
+                      {predictions.deterioration_prediction?.key_risk_factors?.slice(0, 5).map((factor, i) => (
                         <div key={i} className="flex items-center justify-between text-sm bg-red-50 p-2 rounded">
                           <span>{factor.factor}</span>
                           <Badge variant="outline">{factor.weight}</Badge>
@@ -448,13 +448,13 @@ Use clinical judgment based on established risk prediction models (LACE, HOSPITA
                     </div>
                   </div>
 
-                  {predictions.deterioration_prediction.clinical_indicators?.length > 0 && (
+                  {predictions.deterioration_prediction?.clinical_indicators?.length > 0 && (
                     <Alert className="bg-yellow-50 border-yellow-300">
                       <AlertTriangle className="w-4 h-4 text-yellow-600" />
                       <AlertDescription>
                         <p className="font-semibold text-sm mb-1">Monitor for these indicators:</p>
                         <ul className="text-xs space-y-1">
-                          {predictions.deterioration_prediction.clinical_indicators.slice(0, 4).map((indicator, i) => (
+                          {predictions.deterioration_prediction?.clinical_indicators.slice(0, 4).map((indicator, i) => (
                             <li key={i}>• {indicator}</li>
                           ))}
                         </ul>
@@ -477,15 +477,15 @@ Use clinical judgment based on established risk prediction models (LACE, HOSPITA
                     <div className="flex-1">
                       <div className="flex items-center gap-4 mb-2">
                         <span className="text-3xl font-bold text-orange-600">
-                          {predictions.readmission_prediction.risk_score}
+                          {predictions.readmission_prediction?.risk_score}
                         </span>
-                        <Badge className={`${getRiskColor(predictions.readmission_prediction.risk_level)} text-white`}>
-                          {predictions.readmission_prediction.risk_level.toUpperCase()}
+                        <Badge className={`${getRiskColor(predictions.readmission_prediction?.risk_level)} text-white`}>
+                          {predictions.readmission_prediction?.risk_level?.toUpperCase()}
                         </Badge>
                       </div>
-                      <Progress value={predictions.readmission_prediction.risk_score} className="mb-2" />
+                      <Progress value={predictions.readmission_prediction?.risk_score} className="mb-2" />
                       <p className="text-sm text-slate-600">
-                        Confidence: <strong>{predictions.readmission_prediction.confidence}%</strong>
+                        Confidence: <strong>{predictions.readmission_prediction?.confidence}%</strong>
                       </p>
                     </div>
                   </div>
@@ -493,29 +493,29 @@ Use clinical judgment based on established risk prediction models (LACE, HOSPITA
                   <div className="grid grid-cols-3 gap-3">
                     <div className="bg-orange-50 p-3 rounded-lg">
                       <p className="text-xs text-slate-600">7-Day Risk</p>
-                      <p className="text-xl font-bold text-orange-600">{predictions.readmission_prediction.timeframe_7day}%</p>
+                      <p className="text-xl font-bold text-orange-600">{predictions.readmission_prediction?.timeframe_7day}%</p>
                     </div>
                     <div className="bg-orange-50 p-3 rounded-lg">
                       <p className="text-xs text-slate-600">30-Day Risk</p>
-                      <p className="text-xl font-bold text-orange-600">{predictions.readmission_prediction.timeframe_30day}%</p>
+                      <p className="text-xl font-bold text-orange-600">{predictions.readmission_prediction?.timeframe_30day}%</p>
                     </div>
                     <div className="bg-orange-50 p-3 rounded-lg">
                       <p className="text-xs text-slate-600">90-Day Risk</p>
-                      <p className="text-xl font-bold text-orange-600">{predictions.readmission_prediction.timeframe_90day}%</p>
+                      <p className="text-xl font-bold text-orange-600">{predictions.readmission_prediction?.timeframe_90day}%</p>
                     </div>
                   </div>
 
                   <Alert className="bg-blue-50 border-blue-300">
                     <Clock className="w-4 h-4 text-blue-600" />
                     <AlertDescription className="text-sm">
-                      Intervention window: <strong>{predictions.readmission_prediction.intervention_window_days} days</strong> to prevent predicted readmission
+                      Intervention window: <strong>{predictions.readmission_prediction?.intervention_window_days} days</strong> to prevent predicted readmission
                     </AlertDescription>
                   </Alert>
 
                   <div>
                     <p className="font-semibold text-sm mb-2">Contributing Factors:</p>
                     <div className="space-y-1">
-                      {predictions.readmission_prediction.contributing_factors?.slice(0, 5).map((factor, i) => (
+                      {predictions.readmission_prediction?.contributing_factors?.slice(0, 5).map((factor, i) => (
                         <div key={i} className="flex items-center justify-between text-sm bg-orange-50 p-2 rounded">
                           <span>{factor.factor}</span>
                           <Badge variant="outline">{factor.weight}</Badge>

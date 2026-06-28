@@ -149,13 +149,23 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Update streak
-    const newStreak = (leaderboardEntry.current_streak || 0) + 1;
+    // Only a PASSING attempt advances the streak / course count. A failed attempt
+    // must not inflate current_streak / courses_completed or trip a streak badge.
+    const passingScore = (assignment && assignment[0]?.passing_score_required) ?? 80;
+    const passed = attemptData.pass_fail_result
+      ? attemptData.pass_fail_result === 'passed'
+      : (Number(attemptData.score) || 0) >= passingScore;
+
+    // Update streak (unchanged on a failed attempt rather than incremented)
+    const newStreak = passed
+      ? (leaderboardEntry.current_streak || 0) + 1
+      : (leaderboardEntry.current_streak || 0);
     const longestStreak = Math.max(newStreak, leaderboardEntry.longest_streak || 0);
 
-    // Check for Streak Badge (5, 10, 20, 50 completions)
+    // Check for Streak Badge (5, 10, 20, 50 completions) — only when a pass
+    // actually advanced the streak.
     const streakMilestones = [5, 10, 20, 50];
-    if (streakMilestones.includes(newStreak)) {
+    if (passed && streakMilestones.includes(newStreak)) {
       const streakBadge = allBadges.find(b => b.badge_type === 'streak');
       if (streakBadge) {
         const userBadge = await base44.entities.UserBadge.create({
@@ -181,7 +191,7 @@ Deno.serve(async (req) => {
     await base44.entities.Leaderboard.update(leaderboardEntry.id, {
       total_points: (leaderboardEntry.total_points || 0) + totalPointsFromBadges,
       badges_earned: (leaderboardEntry.badges_earned || 0) + badgesAwarded.length,
-      courses_completed: (leaderboardEntry.courses_completed || 0) + 1,
+      courses_completed: (leaderboardEntry.courses_completed || 0) + (passed ? 1 : 0),
       current_streak: newStreak,
       longest_streak: longestStreak,
       last_activity: new Date().toISOString()

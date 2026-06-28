@@ -88,10 +88,15 @@ Generate a comprehensive discharge summary with the following sections:
 
 Format as a professional medical summary. Be detailed, objective, and Medicare-compliant.`;
 
-    const aiResponse = await base44.integrations.Core.InvokeLLM({
+    const aiResponseRaw = await base44.integrations.Core.InvokeLLM({
       prompt: aiPrompt,
       model: 'gpt_5_5'
     });
+    // InvokeLLM may return a structured object rather than a raw string; coerce so
+    // the .split() parsing below can't throw "split is not a function".
+    const aiResponse = typeof aiResponseRaw === 'string'
+      ? aiResponseRaw
+      : (aiResponseRaw?.text ?? JSON.stringify(aiResponseRaw ?? ''));
 
     // Extract visit highlights
     const visitHighlights = visits.slice(0, 5).map(v => {

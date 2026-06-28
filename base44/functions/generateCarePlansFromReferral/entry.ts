@@ -86,7 +86,7 @@ For each care plan provide:
     const createdCarePlans = [];
     const targetDate = new Date();
     
-    for (const plan of result.care_plans) {
+    for (const plan of (result?.care_plans || [])) {
       const planTargetDate = new Date(targetDate);
       planTargetDate.setDate(planTargetDate.getDate() + (plan.target_days || 60));
 

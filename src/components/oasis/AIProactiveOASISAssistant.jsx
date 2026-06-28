@@ -232,7 +232,7 @@ Provide detailed, actionable recommendations that a home health nurse can immedi
           audit_date: new Date().toISOString(),
           compliance_score: result.completeness_score,
           status: result.compliance_risk_level === 'critical' ? 'critical' : 'flagged',
-          issues: result.critical_gaps.map(gap => ({
+          issues: (result.critical_gaps || []).map(gap => ({
             element: gap.oasis_item,
             severity: result.compliance_risk_level,
             problem: gap.description,

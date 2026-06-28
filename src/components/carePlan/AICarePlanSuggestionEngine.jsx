@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { toast } from "sonner";
 import { base44 } from "@/api/base44Client";
 import { useAICall } from "@/hooks/useAICall";
@@ -31,6 +31,9 @@ export default function AICarePlanSuggestionEngine({
 }) {
   const ai = useAICall();
   const [suggestions, setSuggestions] = useState(null);
+  // Monotonic id so a slower, older "Generate New Suggestions" run can't overwrite
+  // the result of a newer one.
+  const genReqIdRef = useRef(0);
   const [acceptedSuggestions, setAcceptedSuggestions] = useState(new Set());
 
   const { data: medicareRules = [] } = useQuery({
@@ -48,6 +51,7 @@ export default function AICarePlanSuggestionEngine({
   const generateSuggestions = useCallback(async () => {
     if (!diagnosis) return;
 
+    const myReqId = ++genReqIdRef.current;
     try {
       const _existingProblems = existingCarePlans.map(cp => cp.problem);
       const _existingGoals = existingCarePlans.map(cp => cp.goal);
@@ -116,10 +120,14 @@ Return JSON with suggestions array.`,
         }
       });
 
+      // A newer generation superseded this one while it was in flight — discard.
+      if (myReqId !== genReqIdRef.current) return;
       setSuggestions(result.suggestions || []);
     } catch (error) {
       console.error('Error generating care plan suggestions:', error);
-      toast.error("Failed to generate care plan suggestions. Please try again.");
+      if (myReqId === genReqIdRef.current) {
+        toast.error("Failed to generate care plan suggestions. Please try again.");
+      }
     }
   }, [diagnosis, existingCarePlans, patientData, medicareRules, educationMaterials]);
 
@@ -262,7 +270,7 @@ Return JSON with suggestions array.`,
                   <div className="bg-blue-50 p-3 rounded border border-blue-200">
                     <p className="text-xs font-semibold text-blue-900 mb-2">Nursing Interventions:</p>
                     <ul className="space-y-1">
-                      {suggestion.interventions.map((intervention, i) => (
+                      {suggestion.interventions?.map((intervention, i) => (
                         <li key={i} className="text-xs text-blue-800 flex items-start gap-2">
                           <span className="text-blue-600">•</span>
                           <span>{intervention}</span>

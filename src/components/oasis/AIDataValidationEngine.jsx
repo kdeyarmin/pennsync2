@@ -407,17 +407,17 @@ For each issue found, provide:
                           </div>
                         )}
 
-                        {!appliedCorrections.has(issue.m_item_code || `inc-${idx}`) && (
+                        {!appliedCorrections.has(`inc-${issue.m_item_code || idx}`) && (
                           <Button
                             size="sm"
-                            onClick={() => applyCorrection(issue, issue.m_item_code || `inc-${idx}`)}
+                            onClick={() => applyCorrection(issue, `inc-${issue.m_item_code || idx}`)}
                             className="bg-green-600 hover:bg-green-700 text-white"
                           >
                             <CheckCircle2 className="w-3 h-3 mr-1" />
                             Apply Correction
                           </Button>
                         )}
-                        {appliedCorrections.has(issue.m_item_code || `inc-${idx}`) && (
+                        {appliedCorrections.has(`inc-${issue.m_item_code || idx}`) && (
                           <Badge className="bg-green-600 text-white">
                             <CheckCircle2 className="w-3 h-3 mr-1" />
                             Applied
@@ -484,10 +484,10 @@ For each issue found, provide:
                         </Alert>
                       )}
 
-                      {!appliedCorrections.has(opt.m_item_code || `opt-${idx}`) && (
+                      {!appliedCorrections.has(`opt-${opt.m_item_code || idx}`) && (
                         <Button
                           size="sm"
-                          onClick={() => applyCorrection(opt, opt.m_item_code || `opt-${idx}`)}
+                          onClick={() => applyCorrection(opt, `opt-${opt.m_item_code || idx}`)}
                           className="bg-green-600 hover:bg-green-700 text-white mt-2"
                         >
                           Apply Optimization

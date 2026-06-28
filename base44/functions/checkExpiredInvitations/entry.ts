@@ -40,7 +40,17 @@ Deno.serve(async (req) => {
 
     for (const invitation of pendingInvitations) {
       const expiresAt = new Date(invitation.expires_at);
-      
+
+      // A missing/unparseable expiry would otherwise make both comparisons below
+      // false, leaving the invitation pending forever. Fail closed: treat a
+      // malformed expiry as expired so it can't remain actionable indefinitely.
+      if (Number.isNaN(expiresAt.getTime())) {
+        console.warn(`Invitation ${invitation.id} has invalid/missing expires_at; marking expired.`);
+        expired.push(invitation);
+        await base44.asServiceRole.entities.UserInvitation.update(invitation.id, { status: 'expired' });
+        continue;
+      }
+
       if (now > expiresAt) {
         // Already expired
         expired.push(invitation);

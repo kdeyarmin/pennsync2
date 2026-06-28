@@ -686,6 +686,12 @@ Deno.serve(async (req) => {
       throw new Error(`PDF generation failed: ${pdfError.message}`);
     }
 
+    // An email request with no recipient previously fell through to the download
+    // path and reported success without sending anything — surface it instead.
+    if (action === 'email' && !patientEmail) {
+      return Response.json({ error: 'patientEmail is required to email the handout' }, { status: 400 });
+    }
+
     // Email delivery path.
     if (action === 'email' && patientEmail) {
       diagnostics.stage = 'sending_email';

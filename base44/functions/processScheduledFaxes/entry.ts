@@ -4,6 +4,21 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
 
+    // Authorization: opt-in lockdown for this privileged scheduled job (mirrors
+    // processTrainingRenewals / syncFaxStatuses). When INTERNAL_FN_SECRET is set,
+    // require an admin OR the internal-secret header; the no-identity cron path is
+    // allowed only while no secret is configured.
+    const me = await base44.auth.me().catch(() => null);
+    const isAdmin = me?.role === 'admin';
+    const internalSecret = Deno.env.get('INTERNAL_FN_SECRET');
+    if (internalSecret) {
+      if (!isAdmin && req.headers.get('x-internal-secret') !== internalSecret) {
+        return Response.json({ error: 'Forbidden' }, { status: 403 });
+      }
+    } else if (me && !isAdmin) {
+      return Response.json({ error: 'Forbidden: admin access required' }, { status: 403 });
+    }
+
     const now = new Date().toISOString();
 
     // Get scheduled faxes that are due

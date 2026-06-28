@@ -550,7 +550,7 @@ Keep language simple and non-technical. Include specific button names and field 
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(24);
     doc.setFont(undefined, 'bold');
-    doc.text(guideContent.title, pageWidth / 2, 20, { align: 'center' });
+    doc.text(guideContent.title || 'User Guide', pageWidth / 2, 20, { align: 'center' });
 
     yPosition = 45;
 
@@ -570,17 +570,18 @@ Keep language simple and non-technical. Include specific button names and field 
       doc.setTextColor(...color);
       doc.setFont(undefined, isBold ? 'bold' : 'normal');
       const lines = doc.splitTextToSize(text, contentWidth);
-      
-      checkNewPage(lines.length * (fontSize * 0.4));
-      
+
+      // Page-break per line so a block taller than a page doesn't draw off the
+      // bottom edge (the single up-front check couldn't catch that).
       lines.forEach(line => {
+        checkNewPage(fontSize * 0.4);
         doc.text(line, margin, yPosition);
         yPosition += fontSize * 0.4;
       });
     };
 
-    // Process sections
-    guideContent.sections.forEach((section, sectionIndex) => {
+    // Process sections (guideContent is LLM output — sections may be absent)
+    (guideContent.sections || []).forEach((section, sectionIndex) => {
       // Section header with background
       checkNewPage(15);
       doc.setFillColor(243, 244, 246);

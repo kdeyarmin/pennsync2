@@ -87,7 +87,7 @@ export default function PatientMatchReview({ referral, onConfirmMatch, onCreateN
                 <span className="text-xs font-medium text-slate-600">Confidence Level</span>
                 <div className="mt-1">
                   <Badge className={getConfidenceColor(matchAnalysis.confidence_level) + " text-sm"}>
-                    {matchAnalysis.confidence_level.toUpperCase()}
+                    {(matchAnalysis.confidence_level || 'unknown').toUpperCase()}
                   </Badge>
                 </div>
               </div>

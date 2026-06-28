@@ -133,33 +133,37 @@ Deno.serve(async (req) => {
         v.visit_type?.toLowerCase().includes('ot')
       );
       
-      if (!patient.admission_date) continue;
-      const admissionDate = new Date(patient.admission_date);
-      if (isNaN(admissionDate.getTime())) continue;
-      const daysInEpisode = Math.floor((currentDate - admissionDate) / (1000 * 60 * 60 * 24));
-      
-      if (daysInEpisode < 60 && daysInEpisode > 7 && therapyVisits.length < 4) {
-        patientAlerts.push({
-          patient_id: patient.id,
-          alert_type: 'readmission_risk',
-          severity: 'high',
-          title: 'Potential LUPA Risk - Low Therapy Utilization',
-          message: `Only ${therapyVisits.length} therapy visits documented ${daysInEpisode} days into episode.`,
-          contributing_factors: [
-            `Episode day: ${daysInEpisode}`,
-            `Therapy visits: ${therapyVisits.length}`,
-            'Medicare LUPA threshold is typically 4 visits in 60-day episode',
-            'Low utilization may trigger payment adjustment'
-          ],
-          recommended_actions: [
-            'Review therapy orders and appropriateness',
-            'Schedule additional PT/OT visits if clinically indicated',
-            'Document medical necessity for therapy',
-            'Consider therapy consultation for assessment'
-          ],
-          risk_score: 75,
-          data_sources: { episode_day: daysInEpisode, therapy_visits: therapyVisits.length }
-        });
+      // Gate ONLY the episode-day (LUPA) check on a valid admission_date — do not
+      // `continue`, or RISK 5/6 and the alert-persistence block below would be
+      // skipped for any patient missing/with an unparseable admission_date,
+      // silently discarding the RISK 1-3 alerts already queued for them.
+      const admissionDate = patient.admission_date ? new Date(patient.admission_date) : null;
+      if (admissionDate && !isNaN(admissionDate.getTime())) {
+        const daysInEpisode = Math.floor((currentDate - admissionDate) / (1000 * 60 * 60 * 24));
+
+        if (daysInEpisode < 60 && daysInEpisode > 7 && therapyVisits.length < 4) {
+          patientAlerts.push({
+            patient_id: patient.id,
+            alert_type: 'readmission_risk',
+            severity: 'high',
+            title: 'Potential LUPA Risk - Low Therapy Utilization',
+            message: `Only ${therapyVisits.length} therapy visits documented ${daysInEpisode} days into episode.`,
+            contributing_factors: [
+              `Episode day: ${daysInEpisode}`,
+              `Therapy visits: ${therapyVisits.length}`,
+              'Medicare LUPA threshold is typically 4 visits in 60-day episode',
+              'Low utilization may trigger payment adjustment'
+            ],
+            recommended_actions: [
+              'Review therapy orders and appropriateness',
+              'Schedule additional PT/OT visits if clinically indicated',
+              'Document medical necessity for therapy',
+              'Consider therapy consultation for assessment'
+            ],
+            risk_score: 75,
+            data_sources: { episode_day: daysInEpisode, therapy_visits: therapyVisits.length }
+          });
+        }
       }
       
       // RISK 5: Homebound status not documented in recent notes

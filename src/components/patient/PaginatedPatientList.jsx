@@ -48,7 +48,7 @@ export default function PaginatedPatientList({
       } else if (sortBy === 'status') {
         return (a.status || '').localeCompare(b.status || '');
       } else if (sortBy === 'created') {
-        return new Date(b.created_date) - new Date(a.created_date);
+        return (new Date(b.created_date).getTime() || 0) - (new Date(a.created_date).getTime() || 0);
       }
       return 0;
     });

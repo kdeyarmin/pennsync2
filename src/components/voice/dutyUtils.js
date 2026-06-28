@@ -79,8 +79,10 @@ export function isPastAutoOffHour(settings, now = new Date()) {
   return h >= hour;
 }
 
-/** Calendar date key (YYYY-MM-DD) for `date` in `timeZone`. */
+/** Calendar date key (YYYY-MM-DD) for `date` in `timeZone`, or null when it
+ *  can't be computed (e.g. an invalid/garbage date). */
 export function dateKeyInZone(date, timeZone) {
+  if (!(date instanceof Date) || Number.isNaN(date.getTime())) return null;
   try {
     return new Intl.DateTimeFormat("en-CA", { timeZone: timeZone || undefined, year: "numeric", month: "2-digit", day: "2-digit" }).format(date);
   } catch {

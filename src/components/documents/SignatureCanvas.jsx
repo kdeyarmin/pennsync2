@@ -8,31 +8,33 @@ import { RotateCcw, Check } from "lucide-react";
 import { toast } from "sonner";
 
 export default function SignatureCanvas({ onSave, onCancel, signerName, isInitials = false }) {
-  const canvasRef = useRef(null);
+  // Separate refs for the two tab panels. The Draw and Type panels each render
+  // their own <canvas>; sharing one ref is fragile (and breaks outright if the
+  // tabs are ever force-mounted), so keep them distinct.
+  const drawCanvasRef = useRef(null);
+  const typeCanvasRef = useRef(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [typedSignature, setTypedSignature] = useState("");
   const [selectedFont, setSelectedFont] = useState("cursive");
   const [signatureMethod, setSignatureMethod] = useState("draw");
 
-  useEffect(() => {
-    const canvas = canvasRef.current;
+  const startDrawing = (e) => {
+    const canvas = drawCanvasRef.current;
     if (!canvas) return;
-    
+    const rect = canvas.getBoundingClientRect();
     const ctx = canvas.getContext("2d");
+
+    // Configure the stroke here rather than in a one-time mount effect: Radix
+    // unmounts the inactive tab, so the draw canvas can remount fresh (resetting
+    // its context to defaults) when the user toggles Type -> Draw.
     ctx.strokeStyle = "#000";
     ctx.lineWidth = 2;
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
-  }, []);
 
-  const startDrawing = (e) => {
-    const canvas = canvasRef.current;
-    const rect = canvas.getBoundingClientRect();
-    const ctx = canvas.getContext("2d");
-    
     const x = e.clientX ? e.clientX - rect.left : e.touches[0].clientX - rect.left;
     const y = e.clientY ? e.clientY - rect.top : e.touches[0].clientY - rect.top;
-    
+
     ctx.beginPath();
     ctx.moveTo(x, y);
     setIsDrawing(true);
@@ -40,15 +42,16 @@ export default function SignatureCanvas({ onSave, onCancel, signerName, isInitia
 
   const draw = (e) => {
     if (!isDrawing) return;
-    
+
     e.preventDefault();
-    const canvas = canvasRef.current;
+    const canvas = drawCanvasRef.current;
+    if (!canvas) return;
     const rect = canvas.getBoundingClientRect();
     const ctx = canvas.getContext("2d");
-    
+
     const x = e.clientX ? e.clientX - rect.left : e.touches[0].clientX - rect.left;
     const y = e.clientY ? e.clientY - rect.top : e.touches[0].clientY - rect.top;
-    
+
     ctx.lineTo(x, y);
     ctx.stroke();
   };
@@ -58,16 +61,18 @@ export default function SignatureCanvas({ onSave, onCancel, signerName, isInitia
   };
 
   const clearCanvas = () => {
-    const canvas = canvasRef.current;
+    const canvas = drawCanvasRef.current;
+    if (!canvas) return;
     const ctx = canvas.getContext("2d");
     ctx.clearRect(0, 0, canvas.width, canvas.height);
   };
 
   const generateTypedSignature = useCallback(() => {
-    const canvas = canvasRef.current;
+    const canvas = typeCanvasRef.current;
+    if (!canvas) return;
     const ctx = canvas.getContext("2d");
 
-    clearCanvas();
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     const text = isInitials ? typedSignature.substring(0, 3) : typedSignature;
     const fontSize = isInitials ? 60 : 40;
@@ -80,33 +85,35 @@ export default function SignatureCanvas({ onSave, onCancel, signerName, isInitia
   }, [isInitials, typedSignature, selectedFont]);
 
   const handleSave = () => {
-    const canvas = canvasRef.current;
-    
+    if (signatureMethod === "type") {
+      if (!typedSignature) {
+        toast.error("Please enter your signature");
+        return;
+      }
+      generateTypedSignature();
+      // Defer the read so the just-drawn text is rasterized before toDataURL.
+      setTimeout(() => {
+        const canvas = typeCanvasRef.current;
+        if (!canvas) return;
+        onSave(canvas.toDataURL("image/png"), signatureMethod);
+      }, 100);
+      return;
+    }
+
+    const canvas = drawCanvasRef.current;
+    if (!canvas) return;
+
     // Check if canvas is empty
     const ctx = canvas.getContext("2d");
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
     const isEmpty = !imageData.data.some(channel => channel !== 0);
-    
-    if (isEmpty && signatureMethod === "draw") {
+
+    if (isEmpty) {
       toast.error("Please draw your signature before saving");
       return;
     }
-    
-    if (!typedSignature && signatureMethod === "type") {
-      toast.error("Please enter your signature");
-      return;
-    }
-    
-    if (signatureMethod === "type") {
-      generateTypedSignature();
-      setTimeout(() => {
-        const dataUrl = canvas.toDataURL("image/png");
-        onSave(dataUrl, signatureMethod);
-      }, 100);
-    } else {
-      const dataUrl = canvas.toDataURL("image/png");
-      onSave(dataUrl, signatureMethod);
-    }
+
+    onSave(canvas.toDataURL("image/png"), signatureMethod);
   };
 
   useEffect(() => {
@@ -132,7 +139,7 @@ export default function SignatureCanvas({ onSave, onCancel, signerName, isInitia
         <TabsContent value="draw" className="space-y-4">
           <Card className="p-4">
             <canvas
-              ref={canvasRef}
+              ref={drawCanvasRef}
               width={500}
               height={200}
               className="border-2 border-slate-300 rounded-lg w-full cursor-crosshair touch-none"
@@ -149,7 +156,7 @@ export default function SignatureCanvas({ onSave, onCancel, signerName, isInitia
               {isInitials ? "Draw your initials" : "Sign your name"} in the box above
             </p>
           </Card>
-          
+
           <Button
             variant="outline"
             onClick={clearCanvas}
@@ -193,7 +200,7 @@ export default function SignatureCanvas({ onSave, onCancel, signerName, isInitia
 
           <Card className="p-4">
             <canvas
-              ref={canvasRef}
+              ref={typeCanvasRef}
               width={500}
               height={200}
               className="border-2 border-slate-300 rounded-lg w-full"

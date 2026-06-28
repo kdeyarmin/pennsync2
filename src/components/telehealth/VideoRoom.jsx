@@ -226,6 +226,10 @@ export default function VideoRoom({ roomName, identity, onDisconnect, onParticip
       }
       syncParticipants(room);
     } catch (err) {
+      // Stop the local camera/mic we acquired before the failure so the device
+      // LED doesn't stay on, and so a later Retry can't orphan this stream.
+      localStreamRef.current?.getTracks().forEach((t) => t.stop());
+      localStreamRef.current = null;
       const friendly = configNotReadyMessage(err);
       if (!friendly) console.error("Video connect error:", err);
       setError(friendly || err.message);

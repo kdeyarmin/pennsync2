@@ -339,8 +339,9 @@ export default function ReferralIntake() {
 
     try {
       const referral = referrals.find(r => r.id === referralId);
+      if (!referral) return;
       const nurse = users.find(u => u.email === nurseEmail);
-      
+
       await base44.entities.Referral.update(referralId, { assigned_to: nurseEmail });
 
       // Send secure message to assigned nurse with PROCESSED PDF document (not original upload)
@@ -875,24 +876,26 @@ Actions available:
   const handleCreateNewFromReview = async () => {
     try {
       const referralToUpdate = verificationReferral || matchReviewReferral;
-      const data = referralToUpdate.extracted_data;
-      const nameParts = (data.demographics.full_name || '').split(' ');
+      if (!referralToUpdate) return;
+      const data = referralToUpdate.extracted_data || {};
+      const demo = data.demographics || {};
+      const nameParts = (demo.full_name || '').split(' ');
       
       const newPatient = await base44.entities.Patient.create({
         first_name: nameParts[0] || '',
         middle_name: nameParts.length > 2 ? nameParts.slice(1, -1).join(' ') : '',
         last_name: nameParts.length > 1 ? nameParts[nameParts.length - 1] : '',
-        medical_record_number: data.demographics?.medical_record_number || data.demographics?.mrn || null,
-        date_of_birth: data.demographics.date_of_birth,
-        address: data.demographics.address,
-        phone: data.demographics.phone,
-        email: data.demographics.email || null,
-        payor: data.demographics.insurance_primary || 'Unknown',
-        emergency_contact_name: data.demographics.emergency_contact,
-        emergency_contact_phone: data.demographics.emergency_phone,
-        emergency_contact_relationship: data.demographics.emergency_relationship,
-        physician_name: data.demographics.referring_physician || data.demographics.primary_care_physician,
-        physician_phone: data.demographics.referring_physician_contact || data.demographics.pcp_contact,
+        medical_record_number: demo?.medical_record_number || demo?.mrn || null,
+        date_of_birth: demo.date_of_birth,
+        address: demo.address,
+        phone: demo.phone,
+        email: demo.email || null,
+        payor: demo.insurance_primary || 'Unknown',
+        emergency_contact_name: demo.emergency_contact,
+        emergency_contact_phone: demo.emergency_phone,
+        emergency_contact_relationship: demo.emergency_relationship,
+        physician_name: demo.referring_physician || demo.primary_care_physician,
+        physician_phone: demo.referring_physician_contact || demo.pcp_contact,
         primary_diagnosis: data.diagnoses?.primary_diagnosis,
         secondary_diagnoses: data.diagnoses?.secondary_diagnoses || [],
         allergies: data.diagnoses?.allergies,

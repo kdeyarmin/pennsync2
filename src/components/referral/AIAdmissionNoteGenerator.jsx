@@ -17,6 +17,9 @@ export default function AIAdmissionNoteGenerator({ referralData, onNoteGenerated
   const [generationStage, setGenerationStage] = useState(0);
   const [showReviewer, setShowReviewer] = useState(false);
   const progressIntervalRef = useRef(null);
+  // Monotonic id so a slower, older generation (e.g. an earlier Regenerate click)
+  // can't overwrite the result of a newer one.
+  const generateReqIdRef = useRef(0);
 
   // Clear the progress interval if the component unmounts mid-generation so it
   // doesn't keep firing setState on an unmounted component.
@@ -39,6 +42,7 @@ export default function AIAdmissionNoteGenerator({ referralData, onNoteGenerated
     }
 
     setGenerationStage(0);
+    const myReqId = ++generateReqIdRef.current;
 
     const progressInterval = setInterval(() => {
       setGenerationStage(prev => Math.min(prev + 1, generationStages.length - 1));
@@ -224,10 +228,12 @@ Generate a complete, detailed admission note that a skilled nurse would write af
       });
 
       clearInterval(progressInterval);
+      // A newer generation started while this one was in flight — discard this result.
+      if (myReqId !== generateReqIdRef.current) return;
       setGenerationStage(generationStages.length - 1);
-      setGeneratedNote(result.admission_note);
-      setEditedNote(result.admission_note);
-      
+      setGeneratedNote(result.admission_note || "");
+      setEditedNote(result.admission_note || "");
+
       if (onNoteGenerated) {
         onNoteGenerated({
           note: result.admission_note,
@@ -239,9 +245,11 @@ Generate a complete, detailed admission note that a skilled nurse would write af
     } catch (error) {
       clearInterval(progressInterval);
       console.error('Error generating admission note:', error);
-      toast.error('Failed to generate admission note. Please try again.');
+      if (myReqId === generateReqIdRef.current) {
+        toast.error('Failed to generate admission note. Please try again.');
+      }
     } finally {
-      setGenerationStage(0);
+      if (myReqId === generateReqIdRef.current) setGenerationStage(0);
     }
   }, [generationStages, onNoteGenerated, referralData]);
 

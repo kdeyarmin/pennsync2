@@ -845,7 +845,7 @@ export default function CarePlanManagement() {
                               <div className="flex items-center gap-2 mb-1">
                                 <h4 className="font-semibold text-slate-900">{plan.problem}</h4>
                                 <Badge className={getStatusColor(plan.status)}>
-                                  {plan.status.replace('_', ' ')}
+                                  {(plan.status || '').replace('_', ' ')}
                                 </Badge>
                               </div>
                               <p className="text-sm text-slate-600 mb-2">{plan.goal}</p>

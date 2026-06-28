@@ -45,6 +45,7 @@ Deno.serve(async (req) => {
 
     // Summary Section
     if (navigationData?.summary) {
+      if (y > 250) { doc.addPage(); y = 20; }
       doc.setFontSize(14);
       doc.setFont(undefined, 'bold');
       doc.text('Summary', 20, y);
@@ -66,6 +67,7 @@ Deno.serve(async (req) => {
 
     // Clinical Group
     if (navigationData?.clinical_group) {
+      if (y > 250) { doc.addPage(); y = 20; }
       doc.setFontSize(14);
       doc.setFont(undefined, 'bold');
       doc.text('Clinical Group', 20, y);
@@ -82,6 +84,7 @@ Deno.serve(async (req) => {
 
     // Functional Level
     if (navigationData?.functional_level) {
+      if (y > 250) { doc.addPage(); y = 20; }
       doc.setFontSize(14);
       doc.setFont(undefined, 'bold');
       doc.text('Functional Impairment', 20, y);

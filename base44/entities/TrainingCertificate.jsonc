@@ -81,6 +81,11 @@
     "revoked_reason": {
       "type": "string",
       "description": "Reason for revocation"
+    },
+    "last_renewal_reminder_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date the most recent renewal reminder was sent, so a same-day cron re-run doesn't re-notify."
     }
   },
   "required": [

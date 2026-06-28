@@ -241,6 +241,9 @@ For each patient, provide:
             <div className="space-y-4">
               {predictions.map((pred, idx) => {
                 const patient = riskAnalysis[pred.patient_number - 1];
+                // patient_number is AI-supplied and may be out of range — skip
+                // rather than crash the whole prediction list.
+                if (!patient?.patient) return null;
                 return (
                   <Alert key={idx} className={pred.readmission_probability >= 70 ? "border-red-300 bg-red-50" : "border-yellow-300 bg-yellow-50"}>
                     <AlertDescription>

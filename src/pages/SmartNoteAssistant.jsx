@@ -69,9 +69,13 @@ export default function SmartNoteAssistant({ visitId = null }) {
   const queryVisitType = searchParams.get("visitType") || searchParams.get("visit_type") || "";
   const referralDraftNote = useMemo(() => {
     if (searchParams.get("referral_mode") !== "true") return "";
-    const raw = searchParams.get("referral_data");
-    if (!raw) return "";
+    // The prepopulation payload (PHI) is passed via sessionStorage keyed by
+    // referral id, not the URL, so it can't leak into history/proxy logs.
+    const referralId = searchParams.get("referral_id");
+    if (!referralId) return "";
     try {
+      const raw = sessionStorage.getItem(`referral_prepopulate:${referralId}`);
+      if (!raw) return "";
       const parsed = JSON.parse(raw);
       return String(parsed.roughNote || "").trim();
     } catch {

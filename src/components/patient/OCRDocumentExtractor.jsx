@@ -42,16 +42,17 @@ export default function OCRDocumentExtractor({ onDataExtracted }) {
         file_url: fileUrl
       });
 
-      if (extractionResponse.data.status === 'success') {
-        setExtractedData(extractionResponse.data.patient_data);
+      const data = extractionResponse?.data;
+      if (data?.status === 'success') {
+        setExtractedData(data.patient_data);
         toast.success('Patient data extracted successfully!');
-        
+
         // Auto-populate form
         if (onDataExtracted) {
-          onDataExtracted(extractionResponse.data.patient_data);
+          onDataExtracted(data.patient_data);
         }
       } else {
-        setError(extractionResponse.data.details || 'Failed to extract patient data');
+        setError(data?.details || 'Failed to extract patient data');
         toast.error('Extraction failed - please try another document or enter manually');
       }
     } catch (err) {

@@ -42,8 +42,10 @@ Deno.serve(async (req) => {
       const lastSent = pkg.last_reminder_sent_at ? new Date(pkg.last_reminder_sent_at).getTime() : 0;
       if (lastSent && (now.getTime() - lastSent) < 20 * 60 * 60 * 1000) continue;
 
-      // Get patient to retrieve caregiver email
-      const patient = await base44.entities.Patient.get(pkg.patient_id);
+      // Get patient to retrieve caregiver email. Tolerate a deleted/invalid
+      // patient_id: without the catch a single bad row throws and aborts the
+      // whole reminder run, skipping every remaining package.
+      const patient = await base44.entities.Patient.get(pkg.patient_id).catch(() => null);
       if (!patient?.caregiver_email) continue;
 
       // Get document count info

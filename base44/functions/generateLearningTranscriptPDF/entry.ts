@@ -112,12 +112,16 @@ Deno.serve(async (req) => {
       yPosition += 6;
     });
 
-    // Footer
-    yPosition += 5;
-    doc.setFontSize(8);
-    doc.setTextColor(120, 120, 120);
-    doc.text('Internal Use Only', pageWidth / 2, pageHeight - 10, { align: 'center' });
-    doc.text(`Page 1 of 1`, pageWidth - 20, pageHeight - 10, { align: 'right' });
+    // Footer on every page with real page numbers (the transcript paginates; the
+    // footer was previously stamped once as a hardcoded "Page 1 of 1").
+    const totalPages = doc.getNumberOfPages();
+    for (let i = 1; i <= totalPages; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.setTextColor(120, 120, 120);
+      doc.text('Internal Use Only', pageWidth / 2, pageHeight - 10, { align: 'center' });
+      doc.text(`Page ${i} of ${totalPages}`, pageWidth - 20, pageHeight - 10, { align: 'right' });
+    }
 
     const pdfBytes = doc.output('arraybuffer');
 

@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { FileText, Building, User, Phone, AlertTriangle } from 'lucide-react';
-import PhysicianSelector from './PhysicianSelector';
+import PhysicianSelector from '../physician/PhysicianSelector';
 
 const DOCUMENT_TYPES = [
   { value: 'orders', label: 'Orders', disclaimer: 'URGENT - PHYSICIAN ORDERS ENCLOSED' },

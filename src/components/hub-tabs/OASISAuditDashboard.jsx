@@ -314,7 +314,7 @@ export default function OASISAuditDashboard() {
                         <p className="font-medium">{audit.patient_name || 'Unknown Patient'}</p>
                         <Badge className={getPriorityBadge(audit.priority)}>{audit.priority}</Badge>
                         <Badge className={getStatusBadge(audit.status)}>
-                          {audit.status.replace('_', ' ')}
+                          {audit.status?.replace('_', ' ')}
                         </Badge>
                       </div>
                       <p className="text-sm text-slate-600 capitalize">

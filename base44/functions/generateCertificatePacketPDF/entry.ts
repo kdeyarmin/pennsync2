@@ -69,6 +69,13 @@ Deno.serve(async (req) => {
       doc.text(`Issued: ${issuedDate}`, 30, listY + 5);
       doc.setTextColor(20, 20, 20);
       listY += 12;
+
+      // Page-break when the cover-page list runs long (mirrors
+      // generateAndCacheCertificatePacket); ~13+ certs otherwise draw off-page.
+      if (listY > pageHeight - 30) {
+        doc.addPage();
+        listY = 20;
+      }
     });
 
     // Add individual certificate pages (or placeholders)

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { toCsvRows } from "@/components/admin/csvExport";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,7 +33,13 @@ export default function BatchOASISAnalyzer({ onSingleAnalysis, onBatchComplete }
   const [files, setFiles] = useState([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
-  const [isCancelled, setIsCancelled] = useState(false);
+  // Only the setter is needed for UI state; the loop reads cancelledRef instead.
+  const [, setIsCancelled] = useState(false);
+  // The async processBatch loop closes over state values captured at call time,
+  // so toggling isPaused/isCancelled via setState never reaches the running loop.
+  // Mirror them into refs the loop can read live.
+  const pausedRef = useRef(false);
+  const cancelledRef = useRef(false);
   const [currentStep, setCurrentStep] = useState('');
   const [currentFileIndex, setCurrentFileIndex] = useState(0);
   const [batchResults, setBatchResults] = useState(null);
@@ -86,6 +92,8 @@ export default function BatchOASISAnalyzer({ onSingleAnalysis, onBatchComplete }
     setIsProcessing(true);
     setIsPaused(false);
     setIsCancelled(false);
+    pausedRef.current = false;
+    cancelledRef.current = false;
     setError(null);
     setBatchResults(null);
     setOverallProgress(0);
@@ -100,12 +108,12 @@ export default function BatchOASISAnalyzer({ onSingleAnalysis, onBatchComplete }
       setCurrentStep('uploading');
       for (let i = 0; i < files.length; i++) {
         // Check for pause
-        while (isPaused && !isCancelled) {
+        while (pausedRef.current && !cancelledRef.current) {
           await new Promise(resolve => setTimeout(resolve, 500));
         }
 
         // Check for cancel
-        if (isCancelled) {
+        if (cancelledRef.current) {
           setError('Batch processing cancelled by user');
           break;
         }
@@ -143,7 +151,7 @@ export default function BatchOASISAnalyzer({ onSingleAnalysis, onBatchComplete }
         setOverallProgress(Math.round(((i + 1) / files.length) * 30));
       }
 
-      if (isCancelled) {
+      if (cancelledRef.current) {
         setIsProcessing(false);
         return;
       }
@@ -211,14 +219,18 @@ export default function BatchOASISAnalyzer({ onSingleAnalysis, onBatchComplete }
   };
 
   const handlePause = () => {
+    pausedRef.current = true;
     setIsPaused(true);
   };
 
   const handleResume = () => {
+    pausedRef.current = false;
     setIsPaused(false);
   };
 
   const handleCancel = () => {
+    cancelledRef.current = true;
+    pausedRef.current = false;
     setIsCancelled(true);
     setIsPaused(false);
   };
