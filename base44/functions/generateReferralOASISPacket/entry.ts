@@ -143,10 +143,14 @@ Also provide:
       return selectedSections.includes(section);
     };
 
+    // Hoist the shared referralData sub-objects: several are read across sibling
+    // section blocks (e.g. the insurance block reads `demo`, the OASIS block reads
+    // `dx`), so block-scoping them to their own section threw ReferenceError on
+    // the default (all-sections) request.
+
     // PATIENT DEMOGRAPHICS
     if (shouldInclude('demographics')) {
       addSectionHeader('PATIENT DEMOGRAPHICS', [37, 99, 235]);
-    const demo = referralData.demographics || {};
     addKeyValue('Full Name', demo.full_name);
     addKeyValue('Date of Birth', demo.date_of_birth);
     addKeyValue('Age', demo.age);
@@ -175,7 +179,6 @@ Also provide:
     // ADMISSION DETAILS
     if (shouldInclude('admission')) {
       addSectionHeader('ADMISSION INFORMATION', [139, 92, 246]);
-    const admission = referralData.admission_details || {};
     addKeyValue('Admission Source', admission.admission_source);
     addKeyValue('Admission Date', admission.referral_date);
     addKeyValue('Physician Order Date', admission.admission_date);
@@ -189,7 +192,6 @@ Also provide:
     // DIAGNOSES - HIGHLIGHTED
     if (shouldInclude('diagnoses')) {
       addSectionHeader('DIAGNOSES & MEDICAL HISTORY', [220, 38, 38]);
-    const dx = referralData.diagnoses || {};
     
     checkPageBreak(18);
     doc.setFillColor(254, 226, 226);
@@ -283,7 +285,6 @@ Also provide:
       doc.addPage();
       yPos = 20;
       addSectionHeader('FUNCTIONAL STATUS (OASIS-E RELEVANT)', [168, 85, 247]);
-    const func = referralData.functional_status || {};
     addKeyValue('Ambulation', func.ambulation);
     addKeyValue('ADL Status', func.adl_status);
     addKeyValue('Fall Risk', func.fall_risk);
@@ -300,7 +301,6 @@ Also provide:
     // CLINICAL INFORMATION
     if (shouldInclude('clinical_info')) {
       addSectionHeader('CLINICAL INFORMATION', [236, 72, 153]);
-    const clinical = referralData.clinical_info || {};
     addKeyValue('Vital Signs', clinical.vital_signs);
     addKeyValue('Weight', clinical.weight);
     addKeyValue('Lab Values', clinical.lab_values);
@@ -417,7 +417,6 @@ Also provide:
     // SAFETY CONCERNS
     if (shouldInclude('safety_concerns')) {
       addSectionHeader('SAFETY CONCERNS', [239, 68, 68]);
-    const safety = referralData.safety_concerns || {};
     addKeyValue('Environmental Hazards', safety.environmental_hazards);
     if (safety.safety_equipment_needed?.length > 0) {
       addKeyValue('Safety Equipment Needed', safety.safety_equipment_needed.join(', '));
@@ -700,7 +699,7 @@ Also provide:
                         riskAnalysis.overall_risk_score >= 50 ? [251, 146, 60] :
                         riskAnalysis.overall_risk_score >= 25 ? [234, 179, 8] : [34, 197, 94];
       doc.setTextColor(...riskColor);
-      doc.text(`Risk Score: ${Math.round(riskAnalysis.overall_risk_score)}/100 - ${riskAnalysis.overall_risk_level.toUpperCase()}`, margin + 5, yPos);
+      doc.text(`Risk Score: ${Math.round(riskAnalysis.overall_risk_score || 0)}/100 - ${(riskAnalysis.overall_risk_level || 'unknown').toUpperCase()}`, margin + 5, yPos);
       yPos += 18;
       doc.setTextColor(0, 0, 0);
 
@@ -747,7 +746,7 @@ Also provide:
         doc.setFontSize(10);
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(...riskTextColor);
-        doc.text(`${risk.risk_name.toUpperCase()} - ${risk.level.toUpperCase()} (${Math.round(risk.score)}/100)`, margin, yPos);
+        doc.text(`${(risk.risk_name || 'Risk').toUpperCase()} - ${(risk.level || 'unknown').toUpperCase()} (${Math.round(risk.score || 0)}/100)`, margin, yPos);
         yPos += 10;
         doc.setTextColor(0, 0, 0);
 

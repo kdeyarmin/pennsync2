@@ -48,7 +48,7 @@ Recipient Fax: ${recipient_number || ''}
 Date: ${dateStr} at ${timeStr}
 Subject: ${subject || (patient ? `RE: Patient ${patient.first_name} ${patient.last_name}` : 'Medical Communication')}
 Urgency: ${urgency}
-Total Pages (including cover): ${page_count + 1}
+Total Pages (including cover): ${(Number(page_count) || 0) + 1}
 Additional Notes: ${notes || ''}
 
 Patient Info (if provided):

@@ -28,7 +28,7 @@ Deno.serve(async (req) => {
     // Analyze performance and gaps
     const recentAudits = audits.slice(0, 10);
     const avgComplianceScore = recentAudits.length > 0
-      ? recentAudits.reduce((sum, a) => sum + a.compliance_score, 0) / recentAudits.length
+      ? recentAudits.reduce((sum, a) => sum + (a.compliance_score || 0), 0) / recentAudits.length
       : 0;
 
     const unaddressedRecs = recommendations.filter(r => !r.addressed);
@@ -98,7 +98,7 @@ Return JSON format.
     });
 
     // Enrich with module details
-    const enrichedPath = aiResponse.learning_path.map(item => {
+    const enrichedPath = (aiResponse?.learning_path || []).map(item => {
       const module = allModules.find(m => m.id === item.module_id || m.title === item.module_id);
       return {
         ...item,

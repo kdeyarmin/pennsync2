@@ -13,7 +13,11 @@ Deno.serve(async (req) => {
       const dueDate = new Date(assignment.due_date);
       const daysUntilDue = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
 
-      if ([14, 7, 3, 1].includes(daysUntilDue)) {
+      // last_reminder_date is written below but was never read back — a cron that
+      // ran more than once a day (or was retried) re-sent the same reminder. Skip
+      // if this assignment was already reminded today.
+      const todayKey = today.toISOString().slice(0, 10);
+      if ([14, 7, 3, 1].includes(daysUntilDue) && assignment.last_reminder_date !== todayKey) {
         const notification = await base44.asServiceRole.entities.Notification.create({
           user_email: assignment.assigned_to_user_id,
           title: `Training due in ${daysUntilDue} day${daysUntilDue > 1 ? 's' : ''}`,

@@ -89,20 +89,29 @@ Deno.serve(async (req) => {
             color: rgb(0, 0, 0),
           });
         } else if (annotation.type === 'signature' && annotation.signatureDataUrl) {
-          // Convert base64 signature to bytes
-          const signatureBase64 = annotation.signatureDataUrl.split(',')[1];
-          const signatureBytes = Uint8Array.from(atob(signatureBase64), c => c.charCodeAt(0));
+          // Embed the signature image. A bad/empty data URI or a non-PNG image
+          // (canvas can emit JPEG) would otherwise throw and abort the whole
+          // batch — guard the format and isolate per-annotation failures.
+          try {
+            const dataUrl = String(annotation.signatureDataUrl);
+            const signatureBase64 = dataUrl.split(',')[1];
+            if (signatureBase64) {
+              const signatureBytes = Uint8Array.from(atob(signatureBase64), c => c.charCodeAt(0));
+              const isJpeg = /^data:image\/jpe?g/i.test(dataUrl);
+              const signatureImage = isJpeg
+                ? await pdfDoc.embedJpg(signatureBytes)
+                : await pdfDoc.embedPng(signatureBytes);
 
-          // Embed the signature image
-          const signatureImage = await pdfDoc.embedPng(signatureBytes);
-
-          // Draw signature image
-          page.drawImage(signatureImage, {
-            x: annotation.x,
-            y: pdfY - annotation.height,
-            width: annotation.width,
-            height: annotation.height,
-          });
+              page.drawImage(signatureImage, {
+                x: annotation.x,
+                y: pdfY - (annotation.height || 0),
+                width: annotation.width || signatureImage.width,
+                height: annotation.height || signatureImage.height,
+              });
+            }
+          } catch (sigErr) {
+            console.error('Failed to embed signature annotation:', sigErr.message);
+          }
         }
       }
     }
@@ -121,7 +130,7 @@ Deno.serve(async (req) => {
 
     // Count signatures
     const signatureCount = Object.values(annotations).reduce((count, pageAnnots) => {
-      return count + pageAnnots.filter(a => a.type === 'signature').length;
+      return count + (Array.isArray(pageAnnots) ? pageAnnots.filter(a => a.type === 'signature').length : 0);
     }, 0);
 
     // Log the signature event
