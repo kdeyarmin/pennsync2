@@ -91,56 +91,34 @@ export default function PatientDetails() {
     }
   }, [patientId, currentUser?.email]);
 
-  const { data: patientArr = [], isLoading } = useQuery({
-    queryKey: ['patient', patientId],
-    queryFn: () => base44.entities.Patient.filter({ id: patientId }),
-    initialData: [],
+  // One server-side fetch (getPatientContext) replaces six per-load entity
+  // queries. Its queryFn SEEDS the per-entity caches that this page's child
+  // components read (['patient',id], ['patientVisits',id], …) so they get cache
+  // hits instead of each firing their own request. Re-seeding on every (re)fetch
+  // keeps those mirrors fresh after an invalidation. OASIS uploads are
+  // intentionally left to the children — that cache key is shape-inconsistent
+  // across components (financial-stripped function result vs. raw entity).
+  const { data: ctx = {}, isLoading } = useQuery({
+    queryKey: ['patientContext', patientId],
+    queryFn: async () => {
+      const data = (await base44.functions.invoke('getPatientContext', { patientId }))?.data || {};
+      queryClient.setQueryData(['patient', patientId], data.patient ? [data.patient] : []);
+      queryClient.setQueryData(['patientVisits', patientId], data.visits || []);
+      queryClient.setQueryData(['patientCarePlans', patientId], data.carePlans || []);
+      queryClient.setQueryData(['patientIncidents', patientId], data.incidents || []);
+      queryClient.setQueryData(['patientTasks', patientId], data.tasks || []);
+      queryClient.setQueryData(['patientActiveAlerts', patientId], data.activeAlerts || []);
+      return data;
+    },
     enabled: !!patientId,
   });
 
-  const patient = patientArr?.[0] ?? null;
-
-  const { data: visits } = useQuery({
-    queryKey: ['patientVisits', patientId],
-    queryFn: () => base44.entities.Visit.filter({ patient_id: patientId }, '-visit_date'),
-    initialData: [],
-    enabled: !!patientId,
-  });
-
-  const { data: carePlans } = useQuery({
-    queryKey: ['patientCarePlans', patientId],
-    queryFn: () => base44.entities.CarePlan.filter({ patient_id: patientId }),
-    initialData: [],
-    enabled: !!patientId,
-  });
-
-  const { data: incidents } = useQuery({
-    queryKey: ['patientIncidents', patientId],
-    queryFn: () => base44.entities.Incident.filter({ patient_id: patientId }, '-incident_date'),
-    initialData: [],
-    enabled: !!patientId,
-  });
-
-  const { data: tasks } = useQuery({
-    queryKey: ['patientTasks', patientId],
-    queryFn: () => base44.entities.Task.filter({ patient_id: patientId }),
-    initialData: [],
-    enabled: !!patientId,
-  });
-
-  const { data: _patientOASIS = [] } = useQuery({
-    queryKey: ['patientOASIS', patientId],
-    queryFn: async () => (await base44.functions.invoke('listOASISUploads', { patientId, sort: '-created_date' }))?.data?.uploads || [],
-    initialData: [],
-    enabled: !!patientId,
-  });
-
-  const { data: activeAlerts = [] } = useQuery({
-    queryKey: ['patientActiveAlerts', patientId],
-    queryFn: () => base44.entities.PatientAlert.filter({ patient_id: patientId, status: 'active' }),
-    initialData: [],
-    enabled: !!patientId,
-  });
+  const patient = ctx.patient ?? null;
+  const visits = ctx.visits ?? [];
+  const carePlans = ctx.carePlans ?? [];
+  const incidents = ctx.incidents ?? [];
+  const tasks = ctx.tasks ?? [];
+  const activeAlerts = ctx.activeAlerts ?? [];
 
   const [_detectedCarePlanGaps, _setDetectedCarePlanGaps] = useState(null);
 
@@ -150,6 +128,9 @@ export default function PatientDetails() {
   const createCarePlanMutation = useMutation({
     mutationFn: (carePlanData) => base44.entities.CarePlan.create({ ...carePlanData, patient_id: patientId }),
     onSuccess: (newPlan) => {
+      // Refetch the consolidated context (re-seeds the care-plan mirror the page
+      // renders from); also invalidate the per-key cache for any mounted child.
+      queryClient.invalidateQueries({ queryKey: ['patientContext', patientId] });
       queryClient.invalidateQueries({ queryKey: ['patientCarePlans', patientId] });
       logActivity(ActivityActions.CARE_PLAN_CREATE, {
         entity_type: 'CarePlan',
@@ -165,6 +146,7 @@ export default function PatientDetails() {
   const createVisitMutation = useMutation({
     mutationFn: (visitData) => base44.entities.Visit.create({ ...visitData, patient_id: patientId }),
     onSuccess: (newVisit) => {
+      queryClient.invalidateQueries({ queryKey: ['patientContext', patientId] });
       queryClient.invalidateQueries({ queryKey: ['patientVisits', patientId] });
       setShowVisitForm(false);
       setNewVisit({
@@ -602,6 +584,7 @@ export default function PatientDetails() {
                   patientId={patientId} 
                   patientName={`${patient.first_name} ${patient.last_name}`}
                   onAlertsCreated={(_count) => {
+                    queryClient.invalidateQueries({ queryKey: ['patientContext', patientId] });
                     queryClient.invalidateQueries({ queryKey: ['patientActiveAlerts', patientId] });
                   }}
                   autoAnalyze={false}

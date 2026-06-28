@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { base44 } from "@/api/base44Client";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { calculatePatientMatchScore } from "@/components/oasis/patientMatchScore";
@@ -44,31 +44,31 @@ import { generateOASISReportPDF } from "@/functions/generateOASISReportPDF";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 
-import BatchOASISAnalyzer from "@/components/oasis/BatchOASISAnalyzer";
-import PDGMRevenueComparison from "@/components/oasis/PDGMRevenueComparison";
+const BatchOASISAnalyzer = lazy(() => import("@/components/oasis/BatchOASISAnalyzer"));
+const PDGMRevenueComparison = lazy(() => import("@/components/oasis/PDGMRevenueComparison"));
 import FinancialGate from "@/components/ui/FinancialGate";
-import EnhancedMultiReportComparison from "@/components/oasis/EnhancedMultiReportComparison";
+const EnhancedMultiReportComparison = lazy(() => import("@/components/oasis/EnhancedMultiReportComparison"));
 import KeyTakeawaysSummary from "@/components/oasis/KeyTakeawaysSummary";
 import AuditRiskPredictor from "@/components/oasis/AuditRiskPredictor";
 import DocumentationQualitySuggestions from "@/components/oasis/DocumentationQualitySuggestions";
-import OASISScenarioManager from "@/components/oasis/OASISScenarioManager";
+const OASISScenarioManager = lazy(() => import("@/components/oasis/OASISScenarioManager"));
 import OASISActionWorkflow from "@/components/oasis/OASISActionWorkflow";
-import AIDocumentationQualityAnalyzer from "@/components/oasis/AIDocumentationQualityAnalyzer";
+const AIDocumentationQualityAnalyzer = lazy(() => import("@/components/oasis/AIDocumentationQualityAnalyzer"));
 import AIDocumentationAssistant from "@/components/oasis/AIDocumentationAssistant";
-import AIAuditRiskPredictor from "@/components/oasis/AIAuditRiskPredictor";
+const AIAuditRiskPredictor = lazy(() => import("@/components/oasis/AIAuditRiskPredictor"));
 import OASISDocumentationQualityScorer from "@/components/oasis/OASISDocumentationQualityScorer";
-import AutomatedPDGMNavigator from "@/components/oasis/AutomatedPDGMNavigator";
+const AutomatedPDGMNavigator = lazy(() => import("@/components/oasis/AutomatedPDGMNavigator"));
 import OASISTaskGenerator from "@/components/oasis/OASISTaskGenerator";
 import SmartNoteDataImport from "@/components/oasis/SmartNoteDataImport";
 import { useAutoFlagOASIS, THRESHOLDS } from "@/components/oasis/OASISAutoFlagger";
-import OASISExportManager from "@/components/oasis/OASISExportManager";
+const OASISExportManager = lazy(() => import("@/components/oasis/OASISExportManager"));
 import AIProactiveDocumentationAssistant from "@/components/oasis/AIProactiveDocumentationAssistant";
 import AIDocumentationGenerator from "@/components/oasis/AIDocumentationGenerator";
 import OASISValidationPanel from "@/components/oasis/OASISValidationPanel";
 import ClinicalPathwayTrigger from "@/components/oasis/ClinicalPathwayTrigger";
 import PDGMPredictiveForecaster from "@/components/oasis/PDGMPredictiveForecaster";
 import PDGMImpactAnalyzer from "@/components/oasis/PDGMImpactAnalyzer";
-import EnhancedPDGMCaseMixAnalyzer from "@/components/oasis/EnhancedPDGMCaseMixAnalyzer";
+const EnhancedPDGMCaseMixAnalyzer = lazy(() => import("@/components/oasis/EnhancedPDGMCaseMixAnalyzer"));
 import PatientMatchSelector from "@/components/oasis/PatientMatchSelector";
 import { logActivity, ActivityActions } from "@/components/utils/activityLogger";
 import InlineDocumentationAssistant from "@/components/oasis/InlineDocumentationAssistant";
@@ -79,11 +79,11 @@ import OASISDataEntryAssistant from "@/components/oasis/OASISDataEntryAssistant"
 import { BarChart3 } from "lucide-react";
 import OASISAutomationSettings from "@/components/oasis/OASISAutomationSettings";
 import OASISExecutiveSummary from "@/components/oasis/OASISExecutiveSummary";
-import PDGMTrendDashboard from "@/components/oasis/PDGMTrendDashboard";
-import WorkflowExecutionEngine from "@/components/oasis/WorkflowExecutionEngine";
-import WorkflowMonitoringDashboard from "@/components/oasis/WorkflowMonitoringDashboard";
+const PDGMTrendDashboard = lazy(() => import("@/components/oasis/PDGMTrendDashboard"));
+const WorkflowExecutionEngine = lazy(() => import("@/components/oasis/WorkflowExecutionEngine"));
+const WorkflowMonitoringDashboard = lazy(() => import("@/components/oasis/WorkflowMonitoringDashboard"));
 import OASISToPatientChartPusher from "@/components/oasis/OASISToPatientChartPusher";
-import PredictiveOutcomesAnalyzer from "@/components/oasis/PredictiveOutcomesAnalyzer";
+const PredictiveOutcomesAnalyzer = lazy(() => import("@/components/oasis/PredictiveOutcomesAnalyzer"));
 import VisitTypeComplianceChecker from "@/components/compliance/VisitTypeComplianceChecker";
 import AIDataValidationEngine from "@/components/oasis/AIDataValidationEngine";
 import ClinicalNoteToOASISMapper from "@/components/oasis/ClinicalNoteToOASISMapper";
@@ -91,7 +91,7 @@ import OASISDraftGenerator from "@/components/oasis/OASISDraftGenerator";
 import ProactiveRescoringEngine from "@/components/oasis/ProactiveRescoringEngine";
 import AutomatedQualityAssurance from "@/components/oasis/AutomatedQualityAssurance";
 import ProactiveDocumentationAssistant from "@/components/oasis/ProactiveDocumentationAssistant";
-import ComprehensiveOASISReviewer from "@/components/oasis/ComprehensiveOASISReviewer";
+const ComprehensiveOASISReviewer = lazy(() => import("@/components/oasis/ComprehensiveOASISReviewer"));
 import OASISPDFComparison from "@/components/oasis/OASISPDFComparison";
 import { toast } from 'sonner';
 
@@ -1213,6 +1213,11 @@ Return scores (0-100) and top 3-5 issues in each category.`,
           </TabsList>
         </div>
 
+        {/* One Suspense boundary covers every tab's lazily-loaded feature
+            components (below), so a lazy child can never suspend without an
+            ancestor boundary. TabsList stays outside it so the tabs remain
+            visible while a tab's chunk loads. */}
+        <Suspense fallback={<div className="flex justify-center p-8"><Loader2 className="w-6 h-6 animate-spin text-slate-400" /></div>}>
         {/* Saved OASIS Tab */}
         <TabsContent value="saved" className="mt-4">
           <Card>
@@ -2622,6 +2627,7 @@ Return scores (0-100) and top 3-5 issues in each category.`,
         </div>
       )}
         </TabsContent>
+        </Suspense>
       </Tabs>
     </div>
   );

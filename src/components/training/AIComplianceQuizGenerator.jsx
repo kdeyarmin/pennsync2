@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { safePercent } from "@/lib/safePercent";
+import { DEFAULT_PASSING_SCORE } from "@/constants/training";
 import { useAICall } from "@/hooks/useAICall";
 import { toast } from "sonner";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -166,7 +167,7 @@ Return JSON format:
     }, 0);
 
     const score = safePercent(correctCount, quiz.questions.length);
-    const passed = score >= 70;
+    const passed = score >= DEFAULT_PASSING_SCORE;
 
     const results = {
       score,
