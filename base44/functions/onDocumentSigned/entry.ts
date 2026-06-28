@@ -88,8 +88,12 @@ Deno.serve(async (req) => {
     // too. Send the admin notice at most once per signature by claiming the
     // shared admin_notified flag first.
     if (!signature.admin_notified) {
+      // Claim the shared flag first so concurrent / re-fired triggers don't
+      // double-send. But RELEASE it again if no email actually goes out, so a
+      // transient SendEmail outage doesn't permanently suppress the admin notice.
+      await base44.asServiceRole.entities.DocumentSignature.update(signature.id, { admin_notified: true }).catch(() => {});
+      let releaseClaim = false;
       try {
-        await base44.asServiceRole.entities.DocumentSignature.update(signature.id, { admin_notified: true });
         const admins = await base44.asServiceRole.entities.User.filter({ role: 'admin' });
         if (admins && admins.length > 0) {
           // Signer identity lives in the signers[] array, not flat fields. Report
@@ -99,7 +103,7 @@ Deno.serve(async (req) => {
           const signedByText = signedSigners.length > 0
             ? signedSigners.map((s) => `${s.name || 'Signer'}${s.email ? ` (${s.email})` : ''}`).join(', ')
             : 'A signer';
-          await Promise.all(
+          const results = await Promise.allSettled(
             admins.map((admin) =>
               base44.integrations.Core.SendEmail({
                 to: admin.email,
@@ -108,10 +112,19 @@ Deno.serve(async (req) => {
               })
             )
           );
+          // Every send failed (transient integration outage) — release the claim
+          // so a later trigger re-fire retries instead of permanently skipping.
+          if (results.every((r) => r.status === 'rejected')) releaseClaim = true;
         }
+        // No admins to email = nothing to send; leave it claimed so toggling the
+        // flag doesn't churn the update-trigger.
       } catch (emailError) {
         console.error('Failed to send notification email:', emailError);
-        // Continue even if email fails
+        // Recipient lookup threw (transient) — release so a re-fire can retry.
+        releaseClaim = true;
+      }
+      if (releaseClaim) {
+        await base44.asServiceRole.entities.DocumentSignature.update(signature.id, { admin_notified: false }).catch(() => {});
       }
     }
 
