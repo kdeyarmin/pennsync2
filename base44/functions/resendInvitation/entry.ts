@@ -20,6 +20,15 @@ Deno.serve(async (req) => {
     }
 
     const invitation = invitations[0];
+    // Don't resurrect a closed invitation: flipping an already-accepted invite back
+    // to 'pending' re-opens the onUserSignup / autoApproveInvitedUser approval path
+    // for an account that has already completed signup.
+    if (invitation.status === 'accepted') {
+      return Response.json(
+        { error: 'This invitation was already accepted and cannot be resent.' },
+        { status: 409 }
+      );
+    }
     const now = new Date();
     const newExpiresAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
