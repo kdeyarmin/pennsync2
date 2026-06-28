@@ -338,10 +338,11 @@ function EducationMaterialCard({
                 <h5 className="font-semibold text-sm text-slate-900">Mark as Delivered</h5>
 
                 <div>
-                  <label className="text-xs font-medium text-slate-600 block mb-2">
+                  <label htmlFor={`delivery-method-${material.id}`} className="text-xs font-medium text-slate-600 block mb-2">
                     Delivery Method
                   </label>
                   <select
+                    id={`delivery-method-${material.id}`}
                     value={deliveryMethod}
                     onChange={(e) => setDeliveryMethod(e.target.value)}
                     className="w-full border rounded px-3 py-2 text-sm"
@@ -355,10 +356,11 @@ function EducationMaterialCard({
                 </div>
 
                 <div>
-                  <label className="text-xs font-medium text-slate-600 block mb-2">
+                  <label htmlFor={`teach-back-notes-${material.id}`} className="text-xs font-medium text-slate-600 block mb-2">
                     Teach-Back Notes (Patient Understanding)
                   </label>
                   <Textarea
+                    id={`teach-back-notes-${material.id}`}
                     value={teachBackNotes}
                     onChange={(e) => setTeachBackNotes(e.target.value)}
                     placeholder="Document patient's understanding via teach-back method..."

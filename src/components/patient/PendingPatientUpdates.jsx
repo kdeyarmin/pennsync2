@@ -354,8 +354,9 @@ export default function PendingPatientUpdates() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-2">Review Notes (Optional)</label>
+                  <label htmlFor="pending-review-notes" className="block text-sm font-medium mb-2">Review Notes (Optional)</label>
                   <Textarea
+                    id="pending-review-notes"
                     value={reviewNotes}
                     onChange={(e) => setReviewNotes(e.target.value)}
                     placeholder="Add any notes about this review..."

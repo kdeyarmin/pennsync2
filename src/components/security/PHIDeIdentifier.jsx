@@ -163,7 +163,7 @@ export default function PHIDeIdentifier({ text, onDeIdentified }) {
 
         <div>
           <div className="flex items-center justify-between mb-2">
-            <label className="text-sm font-medium">Original Text (Contains PHI)</label>
+            <label htmlFor="phi-original-text" className="text-sm font-medium">Original Text (Contains PHI)</label>
             <Button
               variant="ghost"
               size="sm"
@@ -173,6 +173,7 @@ export default function PHIDeIdentifier({ text, onDeIdentified }) {
             </Button>
           </div>
           <Textarea
+            id="phi-original-text"
             value={originalText}
             onChange={(e) => setOriginalText(e.target.value)}
             placeholder="Paste clinical note or text containing PHI..."
@@ -199,7 +200,7 @@ export default function PHIDeIdentifier({ text, onDeIdentified }) {
         {deIdentifiedText && (
           <div className="space-y-3 pt-4 border-t">
             <div className="flex items-center justify-between">
-              <label className="text-sm font-medium flex items-center gap-2">
+              <label htmlFor="phi-redacted-text" className="text-sm font-medium flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-green-600" />
                 Redacted Text (review before sharing)
               </label>
@@ -214,6 +215,7 @@ export default function PHIDeIdentifier({ text, onDeIdentified }) {
               </Button>
             </div>
             <Textarea
+              id="phi-redacted-text"
               value={deIdentifiedText}
               readOnly
               className="min-h-[200px] font-mono text-sm bg-green-50 border-green-300"

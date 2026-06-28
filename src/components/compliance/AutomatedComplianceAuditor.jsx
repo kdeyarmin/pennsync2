@@ -217,9 +217,9 @@ Return JSON:
         {/* Configuration */}
         <div className="grid grid-cols-3 gap-4">
           <div>
-            <label className="text-xs font-medium text-slate-600 mb-1 block">Date Range</label>
+            <label htmlFor="date-range" className="text-xs font-medium text-slate-600 mb-1 block">Date Range</label>
             <Select value={dateRange} onValueChange={setDateRange}>
-              <SelectTrigger>
+              <SelectTrigger id="date-range">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -231,9 +231,9 @@ Return JSON:
             </Select>
           </div>
           <div>
-            <label className="text-xs font-medium text-slate-600 mb-1 block">Quality Threshold</label>
+            <label htmlFor="quality-threshold" className="text-xs font-medium text-slate-600 mb-1 block">Quality Threshold</label>
             <Select value={qualityThreshold} onValueChange={setQualityThreshold}>
-              <SelectTrigger>
+              <SelectTrigger id="quality-threshold">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

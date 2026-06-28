@@ -37,8 +37,8 @@ export default function AssignmentWizard({ users = [], onAssign }) {
         <CardHeader><CardTitle>Eligible Employees</CardTitle></CardHeader>
         <CardContent className="space-y-2 max-h-[720px] overflow-y-auto">
           {filteredUsers.map((user) => (
-            <label key={user.email} className="flex items-start gap-3 rounded-xl border p-4 bg-white">
-              <Checkbox checked={selectedUsers.includes(user.email)} onCheckedChange={() => toggle(user.email)} />
+            <label key={user.email} htmlFor={`assign-user-${user.email}`} className="flex items-start gap-3 rounded-xl border p-4 bg-white">
+              <Checkbox id={`assign-user-${user.email}`} checked={selectedUsers.includes(user.email)} onCheckedChange={() => toggle(user.email)} />
               <div>
                 <p className="font-semibold text-slate-900">{user.full_name || user.email}</p>
                 <p className="text-sm text-slate-500">{user.job_title || user.credential_type || user.role}</p>

@@ -107,9 +107,9 @@ export default function CourseManager() {
         <CardContent className="pt-6">
           <div className="flex flex-wrap gap-4">
             <div className="flex-1 min-w-[200px]">
-              <label className="text-sm font-medium text-slate-700 mb-2 block">Category</label>
+              <label htmlFor="course-category-filter" className="text-sm font-medium text-slate-700 mb-2 block">Category</label>
               <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                <SelectTrigger>
+                <SelectTrigger id="course-category-filter">
                   <SelectValue placeholder="All Categories" />
                 </SelectTrigger>
                 <SelectContent>
@@ -127,9 +127,9 @@ export default function CourseManager() {
               </Select>
             </div>
             <div className="flex-1 min-w-[200px]">
-              <label className="text-sm font-medium text-slate-700 mb-2 block">Status</label>
+              <label htmlFor="course-status-filter" className="text-sm font-medium text-slate-700 mb-2 block">Status</label>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger>
+                <SelectTrigger id="course-status-filter">
                   <SelectValue placeholder="All Status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -142,9 +142,9 @@ export default function CourseManager() {
               </Select>
             </div>
             <div className="flex-1 min-w-[200px]">
-              <label className="text-sm font-medium text-slate-700 mb-2 block">Business Line</label>
+              <label htmlFor="course-business-line-filter" className="text-sm font-medium text-slate-700 mb-2 block">Business Line</label>
               <Select value={businessLineFilter} onValueChange={setBusinessLineFilter}>
-                <SelectTrigger>
+                <SelectTrigger id="course-business-line-filter">
                   <SelectValue placeholder="All Business Lines" />
                 </SelectTrigger>
                 <SelectContent>

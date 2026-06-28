@@ -218,9 +218,9 @@ export default function CredentialComplianceReport() {
             </div>
             <div className="flex flex-wrap items-end gap-2">
               <div>
-                <label className="text-xs text-slate-500 block mb-1">Item type</label>
+                <label htmlFor="item-type" className="text-xs text-slate-500 block mb-1">Item type</label>
                 <Select value={itemType} onValueChange={setItemType}>
-                  <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+                  <SelectTrigger id="item-type" className="w-40"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All items</SelectItem>
                     <SelectItem value="license">Licenses</SelectItem>
@@ -230,9 +230,9 @@ export default function CredentialComplianceReport() {
                 </Select>
               </div>
               <div>
-                <label className="text-xs text-slate-500 block mb-1">Window</label>
+                <label htmlFor="window-filter" className="text-xs text-slate-500 block mb-1">Window</label>
                 <Select value={windowFilter} onValueChange={setWindowFilter}>
-                  <SelectTrigger className="w-52"><SelectValue /></SelectTrigger>
+                  <SelectTrigger id="window-filter" className="w-52"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {WINDOW_OPTIONS.map(o => (
                       <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>

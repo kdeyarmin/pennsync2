@@ -146,8 +146,9 @@ export default function OASISFeedbackPanel({
           <div className="space-y-4 py-4">
             {feedbackAction === 'modified' && (
               <div className="space-y-2">
-                <label className="text-sm font-medium">Your Modified Version:</label>
+                <label htmlFor="feedback-modified-version" className="text-sm font-medium">Your Modified Version:</label>
                 <Textarea
+                  id="feedback-modified-version"
                   value={modifiedText}
                   onChange={(e) => setModifiedText(e.target.value)}
                   rows={4}
@@ -174,9 +175,9 @@ export default function OASISFeedbackPanel({
 
             {reimbursementImpact && (
               <div className="space-y-2">
-                <label className="text-sm font-medium">Reimbursement Impact Accuracy:</label>
+                <label htmlFor="feedback-reimbursement-accuracy" className="text-sm font-medium">Reimbursement Impact Accuracy:</label>
                 <Select value={reimbursementAccuracy} onValueChange={setReimbursementAccuracy}>
-                  <SelectTrigger className="text-sm">
+                  <SelectTrigger id="feedback-reimbursement-accuracy" className="text-sm">
                     <SelectValue placeholder="How accurate was the impact estimate?" />
                   </SelectTrigger>
                   <SelectContent>

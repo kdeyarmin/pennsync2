@@ -323,12 +323,12 @@ export default function OASISScenarioManager({
           {/* Admission & Timing */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-medium text-slate-700 mb-1 block">Admission Source</label>
-              <Select 
-                value={currentScenario?.admission_source || 'community'} 
+              <label htmlFor="scenario-admission-source" className="text-xs font-medium text-slate-700 mb-1 block">Admission Source</label>
+              <Select
+                value={currentScenario?.admission_source || 'community'}
                 onValueChange={(v) => updateScenario('admission_source', v)}
               >
-                <SelectTrigger>
+                <SelectTrigger id="scenario-admission-source">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -338,12 +338,12 @@ export default function OASISScenarioManager({
               </Select>
             </div>
             <div>
-              <label className="text-xs font-medium text-slate-700 mb-1 block">Episode Timing</label>
-              <Select 
-                value={currentScenario?.episode_timing || 'early'} 
+              <label htmlFor="scenario-episode-timing" className="text-xs font-medium text-slate-700 mb-1 block">Episode Timing</label>
+              <Select
+                value={currentScenario?.episode_timing || 'early'}
                 onValueChange={(v) => updateScenario('episode_timing', v)}
               >
-                <SelectTrigger>
+                <SelectTrigger id="scenario-episode-timing">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -467,16 +467,18 @@ export default function OASISScenarioManager({
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div>
-                <label className="text-sm font-medium mb-1 block">Scenario Name</label>
-                <Input 
+                <label htmlFor="scenario-name" className="text-sm font-medium mb-1 block">Scenario Name</label>
+                <Input
+                  id="scenario-name"
                   value={scenarioName}
                   onChange={(e) => setScenarioName(e.target.value)}
                   placeholder="e.g., Higher Functional Scores"
                 />
               </div>
               <div>
-                <label className="text-sm font-medium mb-1 block">Description (Optional)</label>
-                <Textarea 
+                <label htmlFor="scenario-description" className="text-sm font-medium mb-1 block">Description (Optional)</label>
+                <Textarea
+                  id="scenario-description"
                   value={scenarioDescription}
                   onChange={(e) => setScenarioDescription(e.target.value)}
                   placeholder="Describe what this scenario represents..."

@@ -34,9 +34,9 @@ export default function ModuleFeedbackForm({ _moduleId, onSubmit }) {
       <CardContent className="space-y-4">
         {/* Effectiveness Rating */}
         <div>
-          <label className="text-sm font-medium text-slate-700 mb-2 block">
+          <span className="text-sm font-medium text-slate-700 mb-2 block">
             How effective was this module? *
-          </label>
+          </span>
           <div className="flex gap-2">
             {[1, 2, 3, 4, 5].map((num) => (
               <button
@@ -58,9 +58,9 @@ export default function ModuleFeedbackForm({ _moduleId, onSubmit }) {
 
         {/* Difficulty */}
         <div>
-          <label className="text-sm font-medium text-slate-700 mb-2 block">
+          <span className="text-sm font-medium text-slate-700 mb-2 block">
             Was the difficulty level appropriate? *
-          </label>
+          </span>
           <div className="flex gap-2">
             {[
               { value: 'too_easy', label: 'Too Easy' },
@@ -81,9 +81,9 @@ export default function ModuleFeedbackForm({ _moduleId, onSubmit }) {
 
         {/* Relevance */}
         <div>
-          <label className="text-sm font-medium text-slate-700 mb-2 block">
+          <span className="text-sm font-medium text-slate-700 mb-2 block">
             How relevant was this to your work? *
-          </label>
+          </span>
           <div className="flex gap-2">
             {[1, 2, 3, 4, 5].map((num) => (
               <button
@@ -105,9 +105,9 @@ export default function ModuleFeedbackForm({ _moduleId, onSubmit }) {
 
         {/* Would Recommend */}
         <div>
-          <label className="text-sm font-medium text-slate-700 mb-2 block">
+          <span className="text-sm font-medium text-slate-700 mb-2 block">
             Would you recommend this module to colleagues?
-          </label>
+          </span>
           <div className="flex gap-2">
             <Button
               variant={rating.would_recommend ? 'default' : 'outline'}
@@ -128,10 +128,11 @@ export default function ModuleFeedbackForm({ _moduleId, onSubmit }) {
 
         {/* Feedback */}
         <div>
-          <label className="text-sm font-medium text-slate-700 mb-2 block">
+          <label htmlFor="module-feedback" className="text-sm font-medium text-slate-700 mb-2 block">
             Additional feedback
           </label>
           <Textarea
+            id="module-feedback"
             value={feedback}
             onChange={(e) => setFeedback(e.target.value)}
             placeholder="What did you like? What could be better?"
@@ -141,10 +142,11 @@ export default function ModuleFeedbackForm({ _moduleId, onSubmit }) {
 
         {/* Suggestions */}
         <div>
-          <label className="text-sm font-medium text-slate-700 mb-2 block">
+          <label htmlFor="module-suggestions" className="text-sm font-medium text-slate-700 mb-2 block">
             Suggestions for improvement
           </label>
           <Textarea
+            id="module-suggestions"
             value={suggestions}
             onChange={(e) => setSuggestions(e.target.value)}
             placeholder="How can we make this module better?"

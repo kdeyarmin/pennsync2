@@ -246,32 +246,32 @@ export default function PatientMatchReview({ referral, onConfirmMatch, onCreateN
               </CardHeader>
               <CardContent className="space-y-3 pt-4">
                 <div>
-                  <label className="text-xs font-semibold text-slate-500">Full Name</label>
+                  <span className="block text-xs font-semibold text-slate-500">Full Name</span>
                   <p className="text-sm font-medium">{referralData.full_name || 'N/A'}</p>
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-slate-500">Date of Birth</label>
+                  <span className="block text-xs font-semibold text-slate-500">Date of Birth</span>
                   <p className="text-sm">{referralData.date_of_birth || 'N/A'}</p>
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-slate-500">Phone</label>
+                  <span className="block text-xs font-semibold text-slate-500">Phone</span>
                   <p className="text-sm">{referralData.phone || 'N/A'}</p>
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-slate-500">Address</label>
+                  <span className="block text-xs font-semibold text-slate-500">Address</span>
                   <p className="text-sm">{referralData.address || 'N/A'}</p>
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-slate-500">Medical Record #</label>
+                  <span className="block text-xs font-semibold text-slate-500">Medical Record #</span>
                   <p className="text-sm">{referralData.medical_record_number || referralData.mrn || 'N/A'}</p>
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-slate-500">Primary Diagnosis</label>
+                  <span className="block text-xs font-semibold text-slate-500">Primary Diagnosis</span>
                   <p className="text-sm">{referral.extracted_data?.diagnoses?.primary_diagnosis || 'N/A'}</p>
                 </div>
                 {referralData.referring_physician && (
                   <div>
-                    <label className="text-xs font-semibold text-slate-500">Referring Physician</label>
+                    <span className="block text-xs font-semibold text-slate-500">Referring Physician</span>
                     <p className="text-sm">{referralData.referring_physician}</p>
                   </div>
                 )}
@@ -288,7 +288,7 @@ export default function PatientMatchReview({ referral, onConfirmMatch, onCreateN
               </CardHeader>
               <CardContent className="space-y-3 pt-4">
                 <div>
-                  <label className="text-xs font-semibold text-slate-500">Full Name</label>
+                  <span className="block text-xs font-semibold text-slate-500">Full Name</span>
                   <p className={`text-sm font-medium ${
                     referralData.full_name?.toLowerCase() === `${selectedPatient.first_name} ${selectedPatient.last_name}`.toLowerCase()
                       ? 'text-green-600' : 'text-orange-600'
@@ -297,7 +297,7 @@ export default function PatientMatchReview({ referral, onConfirmMatch, onCreateN
                   </p>
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-slate-500">Date of Birth</label>
+                  <span className="block text-xs font-semibold text-slate-500">Date of Birth</span>
                   <p className={`text-sm ${
                     referralData.date_of_birth === selectedPatient.date_of_birth
                       ? 'text-green-600' : 'text-orange-600'
@@ -306,7 +306,7 @@ export default function PatientMatchReview({ referral, onConfirmMatch, onCreateN
                   </p>
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-slate-500">Phone</label>
+                  <span className="block text-xs font-semibold text-slate-500">Phone</span>
                   <p className={`text-sm ${
                     referralData.phone === selectedPatient.phone
                       ? 'text-green-600' : selectedPatient.phone ? 'text-orange-600' : ''
@@ -315,7 +315,7 @@ export default function PatientMatchReview({ referral, onConfirmMatch, onCreateN
                   </p>
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-slate-500">Address</label>
+                  <span className="block text-xs font-semibold text-slate-500">Address</span>
                   <p className={`text-sm ${
                     referralData.address === selectedPatient.address
                       ? 'text-green-600' : selectedPatient.address ? 'text-orange-600' : ''
@@ -324,16 +324,16 @@ export default function PatientMatchReview({ referral, onConfirmMatch, onCreateN
                   </p>
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-slate-500">Medical Record #</label>
+                  <span className="block text-xs font-semibold text-slate-500">Medical Record #</span>
                   <p className="text-sm">{selectedPatient.medical_record_number || 'N/A'}</p>
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-slate-500">Primary Diagnosis</label>
+                  <span className="block text-xs font-semibold text-slate-500">Primary Diagnosis</span>
                   <p className="text-sm">{selectedPatient.primary_diagnosis || 'N/A'}</p>
                 </div>
                 {selectedPatient.physician_name && (
                   <div>
-                    <label className="text-xs font-semibold text-slate-500">Physician</label>
+                    <span className="block text-xs font-semibold text-slate-500">Physician</span>
                     <p className="text-sm">{selectedPatient.physician_name}</p>
                   </div>
                 )}

@@ -41,13 +41,13 @@ export default function ReportFilters({
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
           {showBusinessLine && (
             <div>
-              <label className="text-sm font-medium text-slate-700">Business Line</label>
-              <Select 
+              <label htmlFor="report-business-line" className="text-sm font-medium text-slate-700">Business Line</label>
+              <Select
                 value={filters.businessLine}
                 onValueChange={(value) => handleFilterChange('businessLine', value)}
                 disabled={isAdmin && !isSuperAdmin}
               >
-                <SelectTrigger>
+                <SelectTrigger id="report-business-line">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -64,16 +64,18 @@ export default function ReportFilters({
           {showDateRange && (
             <>
               <div>
-                <label className="text-sm font-medium text-slate-700">From Date</label>
+                <label htmlFor="report-date-start" className="text-sm font-medium text-slate-700">From Date</label>
                 <Input
+                  id="report-date-start"
                   type="date"
                   value={filters.dateStart}
                   onChange={(e) => handleFilterChange('dateStart', e.target.value)}
                 />
               </div>
               <div>
-                <label className="text-sm font-medium text-slate-700">To Date</label>
+                <label htmlFor="report-date-end" className="text-sm font-medium text-slate-700">To Date</label>
                 <Input
+                  id="report-date-end"
                   type="date"
                   value={filters.dateEnd}
                   onChange={(e) => handleFilterChange('dateEnd', e.target.value)}
@@ -84,8 +86,9 @@ export default function ReportFilters({
 
           {showEmployee && (
             <div>
-              <label className="text-sm font-medium text-slate-700">Employee Name</label>
+              <label htmlFor="report-employee" className="text-sm font-medium text-slate-700">Employee Name</label>
               <Input
+                id="report-employee"
                 placeholder="Search employee..."
                 value={filters.employee}
                 onChange={(e) => handleFilterChange('employee', e.target.value)}
@@ -95,8 +98,9 @@ export default function ReportFilters({
 
           {showCourse && (
             <div>
-              <label className="text-sm font-medium text-slate-700">Course</label>
+              <label htmlFor="report-course" className="text-sm font-medium text-slate-700">Course</label>
               <Input
+                id="report-course"
                 placeholder="Search course..."
                 value={filters.course}
                 onChange={(e) => handleFilterChange('course', e.target.value)}
@@ -106,9 +110,9 @@ export default function ReportFilters({
 
           {showPlan && planOptions.length > 0 && (
             <div>
-              <label className="text-sm font-medium text-slate-700">Learning Plan</label>
+              <label htmlFor="report-plan" className="text-sm font-medium text-slate-700">Learning Plan</label>
               <Select value={filters.plan || "all"} onValueChange={(value) => handleFilterChange('plan', value === "all" ? "" : value)}>
-                <SelectTrigger>
+                <SelectTrigger id="report-plan">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -125,9 +129,9 @@ export default function ReportFilters({
 
           {showStatus && (
             <div>
-              <label className="text-sm font-medium text-slate-700">Status</label>
+              <label htmlFor="report-status" className="text-sm font-medium text-slate-700">Status</label>
               <Select value={filters.status} onValueChange={(value) => handleFilterChange('status', value)}>
-                <SelectTrigger>
+                <SelectTrigger id="report-status">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

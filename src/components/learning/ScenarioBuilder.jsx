@@ -127,8 +127,9 @@ export default function ScenarioBuilder({ courseId, onSave }) {
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <label className="text-sm font-medium">Title</label>
+            <label htmlFor="scenario-title" className="text-sm font-medium">Title</label>
             <Input
+              id="scenario-title"
               value={scenario.title}
               onChange={(e) => setScenario({ ...scenario, title: e.target.value })}
               placeholder="Scenario title"
@@ -136,8 +137,9 @@ export default function ScenarioBuilder({ courseId, onSave }) {
           </div>
 
           <div>
-            <label className="text-sm font-medium">Description</label>
+            <label htmlFor="scenario-description" className="text-sm font-medium">Description</label>
             <Textarea
+              id="scenario-description"
               value={scenario.description}
               onChange={(e) => setScenario({ ...scenario, description: e.target.value })}
               placeholder="Scenario description"
@@ -146,8 +148,9 @@ export default function ScenarioBuilder({ courseId, onSave }) {
           </div>
 
           <div>
-            <label className="text-sm font-medium">Patient Context</label>
+            <label htmlFor="scenario-patient-context" className="text-sm font-medium">Patient Context</label>
             <Textarea
+              id="scenario-patient-context"
               value={scenario.patientContext}
               onChange={(e) => setScenario({ ...scenario, patientContext: e.target.value })}
               placeholder="Patient age, condition, vitals, etc."
@@ -157,9 +160,9 @@ export default function ScenarioBuilder({ courseId, onSave }) {
 
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="text-sm font-medium">Difficulty</label>
+              <label htmlFor="scenario-difficulty" className="text-sm font-medium">Difficulty</label>
               <Select value={scenario.difficulty} onValueChange={(val) => setScenario({ ...scenario, difficulty: val })}>
-                <SelectTrigger>
+                <SelectTrigger id="scenario-difficulty">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -170,8 +173,9 @@ export default function ScenarioBuilder({ courseId, onSave }) {
               </Select>
             </div>
             <div>
-              <label className="text-sm font-medium">Est. Minutes</label>
+              <label htmlFor="scenario-estimated-minutes" className="text-sm font-medium">Est. Minutes</label>
               <Input
+                id="scenario-estimated-minutes"
                 type="number"
                 value={scenario.estimatedMinutes}
                 onChange={(e) => setScenario({ ...scenario, estimatedMinutes: parseInt(e.target.value) })}
@@ -180,8 +184,9 @@ export default function ScenarioBuilder({ courseId, onSave }) {
           </div>
 
           <div>
-            <label className="text-sm font-medium">Passing Score %</label>
+            <label htmlFor="scenario-passing-score" className="text-sm font-medium">Passing Score %</label>
             <Input
+              id="scenario-passing-score"
               type="number"
               min="0"
               max="100"
@@ -248,8 +253,9 @@ export default function ScenarioBuilder({ courseId, onSave }) {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <label className="text-sm font-medium">Scenario Text</label>
+              <label htmlFor="node-scenario-text" className="text-sm font-medium">Scenario Text</label>
               <Textarea
+                id="node-scenario-text"
                 value={currentNode.text}
                 onChange={(e) => updateNode({ text: e.target.value })}
                 className="h-20"
@@ -257,8 +263,9 @@ export default function ScenarioBuilder({ courseId, onSave }) {
             </div>
 
             <div>
-              <label className="text-sm font-medium">Feedback (if wrong choice)</label>
+              <label htmlFor="node-feedback" className="text-sm font-medium">Feedback (if wrong choice)</label>
               <Textarea
+                id="node-feedback"
                 value={currentNode.feedback}
                 onChange={(e) => updateNode({ feedback: e.target.value })}
                 className="h-16"
@@ -267,7 +274,7 @@ export default function ScenarioBuilder({ courseId, onSave }) {
 
             <div className="border-t pt-4">
               <div className="flex items-center justify-between mb-3">
-                <label className="text-sm font-medium">Decision Options</label>
+                <span className="text-sm font-medium">Decision Options</span>
                 <Button
                   variant="outline"
                   size="sm"

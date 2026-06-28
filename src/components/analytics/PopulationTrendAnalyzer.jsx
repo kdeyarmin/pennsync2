@@ -145,9 +145,9 @@ export default function PopulationTrendAnalyzer({ patients, visits, incidents })
         <CardContent className="p-4">
           <div className="flex flex-wrap gap-3">
             <div className="flex-1 min-w-[200px]">
-              <label className="text-xs font-medium text-slate-600 mb-1 block">Metric</label>
+              <label htmlFor="population-metric" className="text-xs font-medium text-slate-600 mb-1 block">Metric</label>
               <Select value={metric} onValueChange={setMetric}>
-                <SelectTrigger>
+                <SelectTrigger id="population-metric">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -158,9 +158,9 @@ export default function PopulationTrendAnalyzer({ patients, visits, incidents })
               </Select>
             </div>
             <div className="flex-1 min-w-[200px]">
-              <label className="text-xs font-medium text-slate-600 mb-1 block">Time Range</label>
+              <label htmlFor="population-time-range" className="text-xs font-medium text-slate-600 mb-1 block">Time Range</label>
               <Select value={timeRange} onValueChange={setTimeRange}>
-                <SelectTrigger>
+                <SelectTrigger id="population-time-range">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -172,9 +172,9 @@ export default function PopulationTrendAnalyzer({ patients, visits, incidents })
               </Select>
             </div>
             <div className="flex-1 min-w-[200px]">
-              <label className="text-xs font-medium text-slate-600 mb-1 block">Group By</label>
+              <label htmlFor="population-group-by" className="text-xs font-medium text-slate-600 mb-1 block">Group By</label>
               <Select value={groupBy} onValueChange={setGroupBy}>
-                <SelectTrigger>
+                <SelectTrigger id="population-group-by">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

@@ -385,10 +385,11 @@ export default function PatientMatchSelector({
             </div>
 
             <div>
-              <label className="text-sm font-medium text-slate-700 mb-2 block">
+              <label htmlFor="dispute-notes" className="text-sm font-medium text-slate-700 mb-2 block">
                 What's wrong with this match?
               </label>
               <Textarea
+                id="dispute-notes"
                 value={disputeNotes}
                 onChange={(e) => setDisputeNotes(e.target.value)}
                 placeholder="e.g., Different patient with similar name, wrong DOB, etc."

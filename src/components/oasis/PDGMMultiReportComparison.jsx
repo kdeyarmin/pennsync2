@@ -373,9 +373,9 @@ export default function PDGMMultiReportComparison({
             </Alert>
 
             <div>
-              <label className="text-xs font-medium text-slate-700 mb-1 block">Select Report to Compare</label>
+              <label htmlFor="pdgm-baseline-report" className="text-xs font-medium text-slate-700 mb-1 block">Select Report to Compare</label>
               <Select value={selectedReportA || 'current'} onValueChange={setSelectedReportA}>
-                <SelectTrigger>
+                <SelectTrigger id="pdgm-baseline-report">
                   <SelectValue placeholder="Select a report" />
                 </SelectTrigger>
                 <SelectContent>
@@ -403,9 +403,9 @@ export default function PDGMMultiReportComparison({
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-xs font-medium text-slate-700 mb-1 block">Report A</label>
+                <label htmlFor="pdgm-report-a" className="text-xs font-medium text-slate-700 mb-1 block">Report A</label>
                 <Select value={selectedReportA || ''} onValueChange={setSelectedReportA}>
-                  <SelectTrigger>
+                  <SelectTrigger id="pdgm-report-a">
                     <SelectValue placeholder="Select first report" />
                   </SelectTrigger>
                   <SelectContent>
@@ -418,9 +418,9 @@ export default function PDGMMultiReportComparison({
                 </Select>
               </div>
               <div>
-                <label className="text-xs font-medium text-slate-700 mb-1 block">Report B</label>
+                <label htmlFor="pdgm-report-b" className="text-xs font-medium text-slate-700 mb-1 block">Report B</label>
                 <Select value={selectedReportB || ''} onValueChange={setSelectedReportB}>
-                  <SelectTrigger>
+                  <SelectTrigger id="pdgm-report-b">
                     <SelectValue placeholder="Select second report" />
                   </SelectTrigger>
                   <SelectContent>

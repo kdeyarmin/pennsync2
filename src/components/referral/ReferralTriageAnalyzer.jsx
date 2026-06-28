@@ -115,10 +115,11 @@ export default function ReferralTriageAnalyzer({ onTriageComplete }) {
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <label className="text-sm font-semibold text-slate-700 block mb-2">
+            <label htmlFor="referral-text" className="text-sm font-semibold text-slate-700 block mb-2">
               Paste referral documentation or fax text
             </label>
             <Textarea
+              id="referral-text"
               value={referralText}
               onChange={(e) => setReferralText(e.target.value)}
               placeholder="Paste referral information here... Can include fax text, email content, or any unstructured clinical notes..."

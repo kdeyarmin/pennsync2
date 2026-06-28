@@ -182,14 +182,14 @@ export default function EducationTracker({ patient }) {
                               )}
 
                               <div>
-                                <label className="text-xs font-medium text-slate-600 block mb-1">
+                                <label htmlFor={`update-status-${assignment.id}`} className="text-xs font-medium text-slate-600 block mb-1">
                                   Update Status:
                                 </label>
                                 <Select
                                   value={assignment.status}
                                   onValueChange={(newStatus) => handleStatusChange(assignment.id, newStatus)}
                                 >
-                                  <SelectTrigger className="h-8">
+                                  <SelectTrigger id={`update-status-${assignment.id}`} className="h-8">
                                     <SelectValue />
                                   </SelectTrigger>
                                   <SelectContent>
@@ -203,10 +203,11 @@ export default function EducationTracker({ patient }) {
 
                               {assignment.status !== 'completed' && (
                                 <div>
-                                  <label className="text-xs font-medium text-slate-600 block mb-1">
+                                  <label htmlFor={`teach-back-notes-${assignment.id}`} className="text-xs font-medium text-slate-600 block mb-1">
                                     Teach-Back Notes (optional):
                                   </label>
                                   <Textarea
+                                    id={`teach-back-notes-${assignment.id}`}
                                     placeholder="Document patient's understanding..."
                                     value={teachBackNotes[assignment.id] || ''}
                                     onChange={(e) => setTeachBackNotes(prev => ({

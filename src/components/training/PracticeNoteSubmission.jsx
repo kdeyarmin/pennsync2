@@ -207,8 +207,9 @@ Return JSON with:
 
           <div className="space-y-4">
             <div>
-              <label className="text-sm font-medium mb-2 block">Write Your Visit Note:</label>
+              <label htmlFor="practice-note" className="text-sm font-medium mb-2 block">Write Your Visit Note:</label>
               <Textarea
+                id="practice-note"
                 value={practiceNote}
                 onChange={(e) => setPracticeNote(e.target.value)}
                 placeholder="Document this visit as if you were writing a real visit note in your EHR..."

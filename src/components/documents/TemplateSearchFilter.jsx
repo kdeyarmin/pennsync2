@@ -41,10 +41,11 @@ export default function TemplateSearchFilter({ templates, onFilter }) {
   return (
     <div className="space-y-3 p-4 border rounded-lg bg-slate-50">
       <div>
-        <label className="text-sm font-medium text-slate-700 block mb-2">Search Templates</label>
+        <label htmlFor="template-search" className="text-sm font-medium text-slate-700 block mb-2">Search Templates</label>
         <div className="relative">
           <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
           <Input
+            id="template-search"
             placeholder="Search by name or description..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -54,7 +55,7 @@ export default function TemplateSearchFilter({ templates, onFilter }) {
       </div>
 
       <div>
-        <label className="text-sm font-medium text-slate-700 block mb-2">Category</label>
+        <span className="text-sm font-medium text-slate-700 block mb-2">Category</span>
         <div className="flex flex-wrap gap-2">
           {categories.map(cat => (
             <Badge
@@ -70,7 +71,7 @@ export default function TemplateSearchFilter({ templates, onFilter }) {
       </div>
 
       <div>
-        <label className="text-sm font-medium text-slate-700 block mb-2">Status</label>
+        <span className="text-sm font-medium text-slate-700 block mb-2">Status</span>
         <div className="flex gap-2">
           {statuses.map(status => (
             <Badge

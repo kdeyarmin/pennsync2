@@ -71,8 +71,9 @@ export default function FieldConfigPanel({ onAdd, onCancel, initialData = null }
 
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-xs font-medium text-slate-700 mb-1">Label</label>
+          <label htmlFor="field-label" className="block text-xs font-medium text-slate-700 mb-1">Label</label>
           <Input
+            id="field-label"
             placeholder="e.g., Patient Name"
             value={formData.label}
             onChange={(e) => setFormData({ ...formData, label: e.target.value })}
@@ -80,8 +81,9 @@ export default function FieldConfigPanel({ onAdd, onCancel, initialData = null }
           />
         </div>
         <div>
-          <label className="block text-xs font-medium text-slate-700 mb-1">Field Name</label>
+          <label htmlFor="field-name" className="block text-xs font-medium text-slate-700 mb-1">Field Name</label>
           <Input
+            id="field-name"
             placeholder="e.g., patient_name"
             value={formData.field_name}
             onChange={(e) => setFormData({ ...formData, field_name: e.target.value })}
@@ -92,11 +94,11 @@ export default function FieldConfigPanel({ onAdd, onCancel, initialData = null }
 
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-xs font-medium text-slate-700 mb-1">Field Type</label>
+          <label htmlFor="field-type" className="block text-xs font-medium text-slate-700 mb-1">Field Type</label>
           <Select value={formData.field_type} onValueChange={(val) =>
             setFormData({ ...formData, field_type: val, select_options: [] })
           }>
-            <SelectTrigger className="text-sm">
+            <SelectTrigger id="field-type" className="text-sm">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -107,11 +109,11 @@ export default function FieldConfigPanel({ onAdd, onCancel, initialData = null }
           </Select>
         </div>
         <div>
-          <label className="block text-xs font-medium text-slate-700 mb-1">Data Source</label>
+          <label htmlFor="field-data-source" className="block text-xs font-medium text-slate-700 mb-1">Data Source</label>
           <Select value={formData.data_source} onValueChange={(val) =>
             setFormData({ ...formData, data_source: val, field_path: "" })
           }>
-            <SelectTrigger className="text-sm">
+            <SelectTrigger id="field-data-source" className="text-sm">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -125,11 +127,11 @@ export default function FieldConfigPanel({ onAdd, onCancel, initialData = null }
 
       {formData.data_source === "patient" && formData.field_type !== "signature" && (
         <div>
-          <label className="block text-xs font-medium text-slate-700 mb-1">Patient Field</label>
+          <label htmlFor="field-patient-field" className="block text-xs font-medium text-slate-700 mb-1">Patient Field</label>
           <Select value={formData.field_path} onValueChange={(val) =>
             setFormData({ ...formData, field_path: val })
           }>
-            <SelectTrigger className="text-sm">
+            <SelectTrigger id="field-patient-field" className="text-sm">
               <SelectValue placeholder="Select field..." />
             </SelectTrigger>
             <SelectContent>
@@ -144,8 +146,9 @@ export default function FieldConfigPanel({ onAdd, onCancel, initialData = null }
       {formData.field_type !== "signature" && (
         <>
           <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1">Placeholder</label>
+            <label htmlFor="field-placeholder" className="block text-xs font-medium text-slate-700 mb-1">Placeholder</label>
             <Input
+              id="field-placeholder"
               placeholder="Hint text..."
               value={formData.placeholder}
               onChange={(e) => setFormData({ ...formData, placeholder: e.target.value })}
@@ -154,8 +157,9 @@ export default function FieldConfigPanel({ onAdd, onCancel, initialData = null }
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1">Default Value</label>
+            <label htmlFor="field-default-value" className="block text-xs font-medium text-slate-700 mb-1">Default Value</label>
             <Input
+              id="field-default-value"
               placeholder="Default value..."
               value={formData.default_value}
               onChange={(e) => setFormData({ ...formData, default_value: e.target.value })}
@@ -167,9 +171,10 @@ export default function FieldConfigPanel({ onAdd, onCancel, initialData = null }
 
       {formData.field_type === "select" && (
         <div className="space-y-2">
-          <label className="block text-xs font-medium text-slate-700">Options</label>
+          <label htmlFor="field-option-input" className="block text-xs font-medium text-slate-700">Options</label>
           <div className="flex gap-2">
             <Input
+              id="field-option-input"
               placeholder="Add option..."
               value={newOption}
               onChange={(e) => setNewOption(e.target.value)}
@@ -193,10 +198,11 @@ export default function FieldConfigPanel({ onAdd, onCancel, initialData = null }
 
       <div className="flex items-center gap-2">
         <Checkbox
+          id="field-required"
           checked={formData.required}
           onCheckedChange={(checked) => setFormData({ ...formData, required: checked })}
         />
-        <label className="text-sm font-medium text-slate-700">Required field</label>
+        <label htmlFor="field-required" className="text-sm font-medium text-slate-700">Required field</label>
       </div>
 
       {/* Conditional Visibility */}
@@ -211,12 +217,12 @@ export default function FieldConfigPanel({ onAdd, onCancel, initialData = null }
       {showConditional && (
         <div className="p-3 bg-navy-50 rounded-lg space-y-2 text-sm">
           <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1">Show if field equals:</label>
-            <Input placeholder="Field name" className="text-xs" />
+            <label htmlFor="field-conditional-name" className="block text-xs font-medium text-slate-700 mb-1">Show if field equals:</label>
+            <Input id="field-conditional-name" placeholder="Field name" className="text-xs" />
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1">Value:</label>
-            <Input placeholder="Value" className="text-xs" />
+            <label htmlFor="field-conditional-value" className="block text-xs font-medium text-slate-700 mb-1">Value:</label>
+            <Input id="field-conditional-value" placeholder="Value" className="text-xs" />
           </div>
         </div>
       )}

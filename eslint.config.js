@@ -77,7 +77,9 @@ export default [
       "jsx-a11y/anchor-has-content": "warn",
       "jsx-a11y/aria-props": "warn",
       "jsx-a11y/aria-proptypes": "warn",
-      "jsx-a11y/aria-role": "warn",
+      // ignoreNonDOM: a custom component's `role` prop (e.g. <TelehealthCall role="staff" />)
+      // is a domain value, not a DOM ARIA role, so only validate roles on real DOM elements.
+      "jsx-a11y/aria-role": ["warn", { ignoreNonDOM: true }],
       "jsx-a11y/role-has-required-aria-props": "warn",
       "jsx-a11y/label-has-associated-control": "warn",
       "jsx-a11y/no-redundant-roles": "warn",

@@ -203,7 +203,7 @@ actions taken, and who was notified. Objective facts only. Return report text on
         )}
 
         <div className="space-y-2">
-          <label className="text-sm font-medium text-slate-700">Patient</label>
+          <span className="text-sm font-medium text-slate-700">Patient</span>
           <SearchablePatientSelect
             patients={patients}
             value={form.patient_id}
@@ -214,9 +214,9 @@ actions taken, and who was notified. Objective facts only. Return report text on
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-700">Incident type</label>
+            <label htmlFor="incident-type" className="text-sm font-medium text-slate-700">Incident type</label>
             <Select value={form.incident_type} onValueChange={(value) => update({ incident_type: value, state_event_type: "" })}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger id="incident-type"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {INCIDENT_TYPES.map((type) => (
                   <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
@@ -226,9 +226,9 @@ actions taken, and who was notified. Objective facts only. Return report text on
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-700">Severity</label>
+            <label htmlFor="incident-severity" className="text-sm font-medium text-slate-700">Severity</label>
             <Select value={form.severity} onValueChange={(value) => update({ severity: value })}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger id="incident-severity"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="low">Low</SelectItem>
                 <SelectItem value="medium">Medium</SelectItem>
@@ -241,14 +241,14 @@ actions taken, and who was notified. Objective facts only. Return report text on
         {/* Let the nurse explicitly flag/confirm a state-reportable category even
             when the incident type alone wouldn't trigger it. */}
         <div className="space-y-2">
-          <label className="text-sm font-medium text-slate-700">
+          <label htmlFor="state-reportable-category" className="text-sm font-medium text-slate-700">
             State reportable category <span className="text-slate-400 font-normal">(if applicable)</span>
           </label>
           <Select
             value={form.state_event_type || "none"}
             onValueChange={(value) => update({ state_event_type: value === "none" ? "" : value })}
           >
-            <SelectTrigger><SelectValue placeholder="Not state reportable" /></SelectTrigger>
+            <SelectTrigger id="state-reportable-category"><SelectValue placeholder="Not state reportable" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="none">Not state reportable</SelectItem>
               {STATE_REPORTABLE_EVENT_TYPES.map((type) => (
@@ -260,18 +260,19 @@ actions taken, and who was notified. Objective facts only. Return report text on
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-700">Date</label>
-            <Input type="date" value={form.incident_date} onChange={(e) => update({ incident_date: e.target.value })} />
+            <label htmlFor="incident-date" className="text-sm font-medium text-slate-700">Date</label>
+            <Input id="incident-date" type="date" value={form.incident_date} onChange={(e) => update({ incident_date: e.target.value })} />
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-700">Time</label>
-            <Input type="time" value={form.incident_time} onChange={(e) => update({ incident_time: e.target.value })} />
+            <label htmlFor="incident-time" className="text-sm font-medium text-slate-700">Time</label>
+            <Input id="incident-time" type="time" value={form.incident_time} onChange={(e) => update({ incident_time: e.target.value })} />
           </div>
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium text-slate-700">Short title</label>
+          <label htmlFor="incident-name" className="text-sm font-medium text-slate-700">Short title</label>
           <Input
+            id="incident-name"
             value={form.incident_name}
             onChange={(e) => update({ incident_name: e.target.value })}
             placeholder="Example: New sacral wound observed"
@@ -279,11 +280,12 @@ actions taken, and who was notified. Objective facts only. Return report text on
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium text-slate-700">
+          <label htmlFor="incident-location" className="text-sm font-medium text-slate-700">
             {isStateReportable ? "Location of event" : "Location"}
             {isStateReportable && <span className="text-red-600"> *</span>}
           </label>
           <Input
+            id="incident-location"
             value={form.location}
             onChange={(e) => update({ location: e.target.value })}
             placeholder="Example: Bathroom near shower"
@@ -292,7 +294,7 @@ actions taken, and who was notified. Objective facts only. Return report text on
 
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <label className="text-sm font-medium text-slate-700">
+            <label htmlFor="incident-report" className="text-sm font-medium text-slate-700">
               Narrative report{isStateReportable && <span className="text-red-600"> *</span>}
             </label>
             <Button type="button" variant="outline" size="sm" onClick={generateNarrative} disabled={ai.loading}>
@@ -301,6 +303,7 @@ actions taken, and who was notified. Objective facts only. Return report text on
             </Button>
           </div>
           <Textarea
+            id="incident-report"
             rows={6}
             value={form.report}
             onChange={(e) => update({ report: e.target.value })}
@@ -312,16 +315,16 @@ actions taken, and who was notified. Objective facts only. Return report text on
         {isStateReportable && (
           <div className="space-y-4 rounded-xl border border-red-200 bg-red-50/50 p-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-700">Medications (name & frequency)</label>
-              <Textarea rows={3} maxLength={600} value={form.medications} onChange={(e) => update({ medications: e.target.value })} placeholder="List current medications and frequency..." />
+              <label htmlFor="incident-medications" className="text-sm font-medium text-slate-700">Medications (name & frequency)</label>
+              <Textarea id="incident-medications" rows={3} maxLength={600} value={form.medications} onChange={(e) => update({ medications: e.target.value })} placeholder="List current medications and frequency..." />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-700">Diagnosis</label>
-              <Textarea rows={2} maxLength={250} value={form.diagnosis} onChange={(e) => update({ diagnosis: e.target.value })} placeholder="Primary and secondary diagnoses..." />
+              <label htmlFor="incident-diagnosis" className="text-sm font-medium text-slate-700">Diagnosis</label>
+              <Textarea id="incident-diagnosis" rows={2} maxLength={250} value={form.diagnosis} onChange={(e) => update({ diagnosis: e.target.value })} placeholder="Primary and secondary diagnoses..." />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-700">Follow-up action <span className="text-red-600">*</span></label>
-              <Textarea rows={4} maxLength={3500} value={form.followup_action} onChange={(e) => update({ followup_action: e.target.value })} placeholder="Describe actions taken or planned in response to this event..." />
+              <label htmlFor="incident-followup-action" className="text-sm font-medium text-slate-700">Follow-up action <span className="text-red-600">*</span></label>
+              <Textarea id="incident-followup-action" rows={4} maxLength={3500} value={form.followup_action} onChange={(e) => update({ followup_action: e.target.value })} placeholder="Describe actions taken or planned in response to this event..." />
             </div>
           </div>
         )}

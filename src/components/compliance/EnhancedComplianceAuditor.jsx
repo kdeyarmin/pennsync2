@@ -382,9 +382,9 @@ Return JSON:
         {/* Configuration */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label className="text-xs font-medium text-slate-600 mb-1 block">Date Range</label>
+            <label htmlFor="date-range" className="text-xs font-medium text-slate-600 mb-1 block">Date Range</label>
             <Select value={dateRange} onValueChange={setDateRange}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger id="date-range"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="7">Last 7 days</SelectItem>
                 <SelectItem value="14">Last 14 days</SelectItem>
@@ -394,9 +394,9 @@ Return JSON:
             </Select>
           </div>
           <div>
-            <label className="text-xs font-medium text-slate-600 mb-1 block">Care Type</label>
+            <label htmlFor="care-type" className="text-xs font-medium text-slate-600 mb-1 block">Care Type</label>
             <Select value={careType} onValueChange={setCareType}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger id="care-type"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="home_health">Home Health</SelectItem>
                 <SelectItem value="hospice">Hospice</SelectItem>

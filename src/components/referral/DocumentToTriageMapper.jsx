@@ -206,8 +206,9 @@ export default function DocumentToTriageMapper({ onTriageCreated }) {
             <h3 className="font-semibold text-slate-900 mb-3">Map to Patient & Workflow</h3>
 
             <div className="space-y-2">
-              <label className="flex items-center gap-3 p-3 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer">
+              <label htmlFor="triage-action-create" className="flex items-center gap-3 p-3 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer">
                 <input
+                  id="triage-action-create"
                   type="radio"
                   name="action"
                   checked={mapping.createPatient}
@@ -221,16 +222,17 @@ export default function DocumentToTriageMapper({ onTriageCreated }) {
                   }
                   className="w-4 h-4"
                 />
-                <div>
-                  <p className="font-medium text-slate-900">Create New Patient</p>
-                  <p className="text-xs text-slate-500">
+                <div className="font-medium text-slate-900">
+                  Create New Patient
+                  <p className="text-xs font-normal text-slate-500">
                     {extractedData.patient?.first_name} {extractedData.patient?.last_name}
                   </p>
                 </div>
               </label>
 
-              <label className="flex items-center gap-3 p-3 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer">
+              <label htmlFor="triage-action-update" className="flex items-center gap-3 p-3 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer">
                 <input
+                  id="triage-action-update"
                   type="radio"
                   name="action"
                   checked={mapping.updatePatient}
@@ -243,9 +245,9 @@ export default function DocumentToTriageMapper({ onTriageCreated }) {
                   }
                   className="w-4 h-4"
                 />
-                <div>
-                  <p className="font-medium text-slate-900">Update Existing Patient</p>
-                  <p className="text-xs text-slate-500">
+                <div className="font-medium text-slate-900">
+                  Update Existing Patient
+                  <p className="text-xs font-normal text-slate-500">
                     (Select patient from dropdown)
                   </p>
                 </div>

@@ -320,8 +320,9 @@ Generate care plans prioritized by clinical importance. Focus on what requires S
                 {editingIndex === index ? (
                   <div className="space-y-4">
                     <div>
-                      <label className="text-sm font-semibold text-slate-700">Problem/Diagnosis</label>
+                      <label htmlFor={`careplan-problem-${index}`} className="text-sm font-semibold text-slate-700">Problem/Diagnosis</label>
                       <Textarea
+                        id={`careplan-problem-${index}`}
                         value={editedPlan.problem}
                         onChange={(e) => setEditedPlan({ ...editedPlan, problem: e.target.value })}
                         className="mt-1"
@@ -329,8 +330,9 @@ Generate care plans prioritized by clinical importance. Focus on what requires S
                       />
                     </div>
                     <div>
-                      <label className="text-sm font-semibold text-slate-700">Goal</label>
+                      <label htmlFor={`careplan-goal-${index}`} className="text-sm font-semibold text-slate-700">Goal</label>
                       <Textarea
+                        id={`careplan-goal-${index}`}
                         value={editedPlan.goal}
                         onChange={(e) => setEditedPlan({ ...editedPlan, goal: e.target.value })}
                         className="mt-1"
@@ -338,16 +340,18 @@ Generate care plans prioritized by clinical importance. Focus on what requires S
                       />
                     </div>
                     <div>
-                      <label className="text-sm font-semibold text-slate-700">Baseline Measurement</label>
+                      <label htmlFor={`careplan-baseline-${index}`} className="text-sm font-semibold text-slate-700">Baseline Measurement</label>
                       <Input
+                        id={`careplan-baseline-${index}`}
                         value={editedPlan.baseline_measurement}
                         onChange={(e) => setEditedPlan({ ...editedPlan, baseline_measurement: e.target.value })}
                         className="mt-1"
                       />
                     </div>
                     <div>
-                      <label className="text-sm font-semibold text-slate-700">Frequency</label>
+                      <label htmlFor={`careplan-frequency-${index}`} className="text-sm font-semibold text-slate-700">Frequency</label>
                       <Input
+                        id={`careplan-frequency-${index}`}
                         value={editedPlan.frequency}
                         onChange={(e) => setEditedPlan({ ...editedPlan, frequency: e.target.value })}
                         className="mt-1"

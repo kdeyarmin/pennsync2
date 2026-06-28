@@ -125,11 +125,11 @@ export default function VisualPDFFieldEditor({ pdfUrl, onFieldsPlaced }) {
         <Card className="p-4 lg:col-span-1 h-fit">
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
+              <label htmlFor="field-type" className="block text-sm font-medium text-slate-700 mb-1">
                 Field Type
               </label>
               <Select value={selectedFieldType} onValueChange={setSelectedFieldType}>
-                <SelectTrigger className="text-sm">
+                <SelectTrigger id="field-type" className="text-sm">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -143,10 +143,11 @@ export default function VisualPDFFieldEditor({ pdfUrl, onFieldsPlaced }) {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
+              <label htmlFor="field-label" className="block text-sm font-medium text-slate-700 mb-1">
                 Field Label
               </label>
               <Input
+                id="field-label"
                 placeholder="e.g., Patient Name"
                 value={fieldLabel}
                 onChange={(e) => setFieldLabel(e.target.value)}
@@ -162,11 +163,11 @@ export default function VisualPDFFieldEditor({ pdfUrl, onFieldsPlaced }) {
             {selectedFieldType === "rich_text" && (
               <div className="space-y-2">
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">
+                  <label htmlFor="font-size" className="block text-xs font-medium text-slate-700 mb-1">
                     Font Size
                   </label>
                   <Select value={fontStyle.size} onValueChange={(size) => setFontStyle({...fontStyle, size})}>
-                    <SelectTrigger className="text-xs">
+                    <SelectTrigger id="font-size" className="text-xs">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -176,9 +177,9 @@ export default function VisualPDFFieldEditor({ pdfUrl, onFieldsPlaced }) {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">
+                  <span className="block text-xs font-medium text-slate-700 mb-1">
                     Text Color
-                  </label>
+                  </span>
                   <div className="flex gap-1">
                     {COLORS.map(color => (
                       <button
@@ -195,9 +196,9 @@ export default function VisualPDFFieldEditor({ pdfUrl, onFieldsPlaced }) {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">
+                  <span className="block text-xs font-medium text-slate-700 mb-1">
                     Styling
-                  </label>
+                  </span>
                   <div className="flex gap-1">
                     {TEXT_FORMATTING_OPTIONS.map(opt => (
                       <button
@@ -218,10 +219,11 @@ export default function VisualPDFFieldEditor({ pdfUrl, onFieldsPlaced }) {
             {selectedFieldType === "table" && (
               <div className="space-y-2">
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">
+                  <label htmlFor="table-rows" className="block text-xs font-medium text-slate-700 mb-1">
                     Rows
                   </label>
                   <Input
+                    id="table-rows"
                     type="number"
                     min="2"
                     max="20"
@@ -231,10 +233,11 @@ export default function VisualPDFFieldEditor({ pdfUrl, onFieldsPlaced }) {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">
+                  <label htmlFor="table-columns" className="block text-xs font-medium text-slate-700 mb-1">
                     Columns
                   </label>
                   <Input
+                    id="table-columns"
                     type="number"
                     min="2"
                     max="10"
