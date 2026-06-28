@@ -8,6 +8,7 @@ import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { FileText, Plus, Edit, Copy, Trash2, History, Search, Filter, Grid3x3, List } from "lucide-react";
 import { toast } from "sonner";
+import PDFTemplateBuilder from "@/components/documents/PDFTemplateBuilder";
 
 const CATEGORIES = ["consent", "assessment", "care_plan", "discharge", "admission", "other"];
 
@@ -17,6 +18,7 @@ export default function EnhancedPDFTemplateManager() {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [viewMode, setViewMode] = useState("grid"); // grid or list
   const [showVersions, setShowVersions] = useState(null);
+  const [showBuilder, setShowBuilder] = useState(false);
 
   const { data: templates = [], isLoading } = useQuery({
     queryKey: ["pdf-templates"],
@@ -31,6 +33,26 @@ export default function EnhancedPDFTemplateManager() {
       toast.success("Template deleted");
     },
     onError: () => toast.error("Failed to delete template")
+  });
+
+  const copyMutation = useMutation({
+    mutationFn: (template) => base44.entities.PDFTemplate.create({
+      template_name: `${template.template_name} (Copy)`,
+      template_category: template.template_category,
+      description: template.description || "",
+      template_file_url: template.template_file_url || "",
+      field_mappings: template.field_mappings || [],
+      signature_fields: template.signature_fields || [],
+      visual_elements: template.visual_elements || [],
+      is_active: template.is_active ?? true,
+      version: 1,
+      usage_count: 0,
+    }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["pdf-templates"] });
+      toast.success("Template duplicated");
+    },
+    onError: () => toast.error("Failed to duplicate template")
   });
 
   // Filter and search logic
@@ -78,7 +100,7 @@ export default function EnhancedPDFTemplateManager() {
             {filteredTemplates.length} of {templates.length} templates
           </p>
         </div>
-        <Button className="w-full sm:w-auto">
+        <Button className="w-full sm:w-auto" onClick={() => setShowBuilder(true)}>
           <Plus className="w-4 h-4 mr-2" />
           New Template
         </Button>
@@ -162,6 +184,8 @@ export default function EnhancedPDFTemplateManager() {
                   <TemplateGridCard
                     key={template.id}
                     template={template}
+                    onEdit={() => setShowBuilder(true)}
+                    onCopy={() => copyMutation.mutate(template)}
                     onDelete={() => deleteMutation.mutate(template.id)}
                     onViewVersions={() => setShowVersions(template.id)}
                   />
@@ -181,6 +205,7 @@ export default function EnhancedPDFTemplateManager() {
                 <TemplateListRow
                   key={template.id}
                   template={template}
+                  onEdit={() => setShowBuilder(true)}
                   onDelete={() => deleteMutation.mutate(template.id)}
                   onViewVersions={() => setShowVersions(template.id)}
                 />
@@ -197,11 +222,14 @@ export default function EnhancedPDFTemplateManager() {
           onClose={() => setShowVersions(null)}
         />
       )}
+
+      {/* New-template builder (the same dialog used by the Document Hub) */}
+      <PDFTemplateBuilder open={showBuilder} onClose={() => setShowBuilder(false)} />
     </div>
   );
 }
 
-function TemplateGridCard({ template, onDelete, onViewVersions }) {
+function TemplateGridCard({ template, onEdit, onCopy, onDelete, onViewVersions }) {
   return (
     <Card className="p-4 flex flex-col hover:shadow-md transition-shadow h-full">
       <div className="flex-1">
@@ -232,10 +260,10 @@ function TemplateGridCard({ template, onDelete, onViewVersions }) {
         )}
 
         <div className="flex gap-1 pt-2">
-          <Button variant="ghost" size="icon" className="h-8 w-8 flex-1">
+          <Button variant="ghost" size="icon" className="h-8 w-8 flex-1" onClick={onEdit} aria-label="Edit template">
             <Edit className="w-3 h-3" />
           </Button>
-          <Button variant="ghost" size="icon" className="h-8 w-8 flex-1">
+          <Button variant="ghost" size="icon" className="h-8 w-8 flex-1" onClick={onCopy} aria-label="Duplicate template">
             <Copy className="w-3 h-3" />
           </Button>
           <Button
@@ -260,7 +288,7 @@ function TemplateGridCard({ template, onDelete, onViewVersions }) {
   );
 }
 
-function TemplateListRow({ template, onDelete, onViewVersions }) {
+function TemplateListRow({ template, onEdit, onDelete, onViewVersions }) {
   return (
     <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors gap-2">
       <div className="flex-1 min-w-0">
@@ -283,7 +311,7 @@ function TemplateListRow({ template, onDelete, onViewVersions }) {
       </div>
 
       <div className="flex gap-1 shrink-0">
-        <Button variant="ghost" size="icon" className="h-8 w-8">
+        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onEdit} aria-label="Edit template">
           <Edit className="w-3 h-3" />
         </Button>
         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onViewVersions}>

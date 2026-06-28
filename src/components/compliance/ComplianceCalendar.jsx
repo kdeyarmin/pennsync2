@@ -511,9 +511,11 @@ export default function ComplianceCalendar() {
                           View Patient
                         </Button>
                       </Link>
-                      <Button size="sm" variant="outline" className="w-full">
-                        {alert.action}
-                      </Button>
+                      <Link to={`${createPageUrl("PatientDetails")}?patientId=${alert.patient.id}`} title={alert.action}>
+                        <Button size="sm" variant="outline" className="w-full">
+                          {alert.action}
+                        </Button>
+                      </Link>
                     </div>
                   </div>
                 </CardContent>
