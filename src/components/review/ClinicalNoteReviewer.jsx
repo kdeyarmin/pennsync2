@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from "react";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -31,15 +31,14 @@ export default function ClinicalNoteReviewer({
   onApplySuggestion,
   prominent = false
 }) {
-  const [isReviewing, setIsReviewing] = useState(false);
+  const ai = useAICall();
   const [reviewResults, setReviewResults] = useState(null);
 
   const reviewNote = useCallback(async () => {
     if (!noteContent || noteContent.length < 50) return;
 
-    setIsReviewing(true);
     try {
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `You are an expert clinical documentation auditor specializing in home health Medicare compliance and billing optimization.
 
 REVIEW THIS CLINICAL NOTE:
@@ -190,7 +189,6 @@ Return detailed analysis with:
       console.error('Error reviewing note:', error);
       toast.error('Failed to review note. Please try again.');
     }
-    setIsReviewing(false);
   }, [noteContent, visitType, diagnosis, patientData]);
 
   React.useEffect(() => {
@@ -216,7 +214,7 @@ Return detailed analysis with:
     return colors[severity] || 'bg-slate-100 text-slate-800';
   };
 
-  if (isReviewing) {
+  if (ai.loading) {
     return (
       <Card className="border-2 border-navy-300">
         <CardContent className="p-8 text-center">

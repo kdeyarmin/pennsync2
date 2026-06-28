@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -28,14 +28,13 @@ export default function AICarePlanOptimizer({
   onModifyCarePlan,
   autoAnalyze = false
 }) {
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const ai = useAICall();
   const [recommendations, setRecommendations] = useState(null);
   const [dismissedIds, setDismissedIds] = useState(new Set());
 
   const analyzeCarePlans = useCallback(async () => {
     if (!enhancedNote) return;
     
-    setIsAnalyzing(true);
     try {
       // Build comprehensive context
       const activeCarePlans = existingCarePlans.filter(cp => cp.status === 'active');
@@ -104,7 +103,7 @@ Return JSON:
   "strengths": ["strength1", "strength2"] // What's working well in current care plans
 }`;
 
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt,
         response_json_schema: {
           type: "object",
@@ -138,7 +137,6 @@ Return JSON:
     } catch (error) {
       console.error('Error analyzing care plans:', error);
     }
-    setIsAnalyzing(false);
   }, [enhancedNote, existingCarePlans, recentVisits, diagnosis, patientData]);
 
   useEffect(() => {
@@ -226,11 +224,11 @@ Return JSON:
           {!recommendations && (
             <Button
               onClick={analyzeCarePlans}
-              disabled={isAnalyzing}
+              disabled={ai.loading}
               size="sm"
               className="bg-indigo-600 hover:bg-indigo-700"
             >
-              {isAnalyzing ? (
+              {ai.loading ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   Analyzing...
@@ -246,7 +244,7 @@ Return JSON:
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        {isAnalyzing && (
+        {ai.loading && (
           <div className="flex items-center gap-3 p-4 bg-indigo-50 rounded-lg">
             <Loader2 className="w-5 h-5 text-indigo-600 animate-spin" />
             <div>

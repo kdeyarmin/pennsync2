@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,16 +9,15 @@ import { Loader2, Search, CheckCircle2, FileText } from "lucide-react";
 
 export default function AIICD10Suggester({ onCodesSelected }) {
   const [searchQuery, setSearchQuery] = useState("");
-  const [isSearching, setIsSearching] = useState(false);
+  const ai = useAICall();
   const [suggestedCodes, setSuggestedCodes] = useState([]);
   const [selectedCodes, setSelectedCodes] = useState([]);
 
   const searchCodes = async () => {
     if (!searchQuery.trim()) return;
     
-    setIsSearching(true);
     try {
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `You are an expert in ICD-10 medical coding. Based on the following clinical description, suggest the most appropriate ICD-10 codes:
 
 CLINICAL DESCRIPTION:
@@ -58,8 +58,8 @@ Return 5-10 most relevant codes, prioritized by relevance and specificity.`,
       setSuggestedCodes(result.codes || []);
     } catch (error) {
       console.error("Error searching ICD-10 codes:", error);
+      toast.error("The AI request didn't complete. Please try again.");
     }
-    setIsSearching(false);
   };
 
   const handleKeyPress = (e) => {
@@ -108,10 +108,10 @@ Return 5-10 most relevant codes, prioritized by relevance and specificity.`,
             />
             <Button
               onClick={searchCodes}
-              disabled={isSearching || !searchQuery.trim()}
+              disabled={ai.loading || !searchQuery.trim()}
               className="bg-indigo-600 hover:bg-indigo-700"
             >
-              {isSearching ? (
+              {ai.loading ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
                 <>
@@ -194,7 +194,7 @@ Return 5-10 most relevant codes, prioritized by relevance and specificity.`,
             </div>
           )}
 
-          {!isSearching && suggestedCodes.length === 0 && searchQuery && (
+          {!ai.loading && suggestedCodes.length === 0 && searchQuery && (
             <p className="text-sm text-slate-500 text-center py-4">
               No results. Try a different clinical description.
             </p>

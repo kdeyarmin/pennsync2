@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -80,7 +80,7 @@ export default function AIDocumentGenerator() {
   const [documentType, setDocumentType] = useState("");
   const [additionalContext, setAdditionalContext] = useState("");
   const [generatedDocument, setGeneratedDocument] = useState(null);
-  const [isGenerating, setIsGenerating] = useState(false);
+  const ai = useAICall();
   const [signatureWorkflowOpen, setSignatureWorkflowOpen] = useState(false);
 
   // Fetch patient data
@@ -113,7 +113,6 @@ export default function AIDocumentGenerator() {
       return;
     }
 
-    setIsGenerating(true);
     try {
       // Build comprehensive patient context
       const patientContext = `
@@ -162,7 +161,7 @@ IMPORTANT INSTRUCTIONS:
 
 Generate the complete document now with all available fields pre-filled:`;
 
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: prompt,
         add_context_from_internet: false
       });
@@ -172,8 +171,6 @@ Generate the complete document now with all available fields pre-filled:`;
     } catch (error) {
       console.error('Document generation error:', error);
       toast.error("Failed to generate document. Please try again.");
-    } finally {
-      setIsGenerating(false);
     }
   };
 
@@ -273,11 +270,11 @@ Generate the complete document now with all available fields pre-filled:`;
 
               <Button
                 onClick={handleGenerate}
-                disabled={!selectedPatientId || !documentType || isGenerating}
+                disabled={!selectedPatientId || !documentType || ai.loading}
                 className="w-full bg-navy-600 hover:bg-navy-700"
                 size="lg"
               >
-                {isGenerating ? (
+                {ai.loading ? (
                   <>
                     <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                     Generating with AI...

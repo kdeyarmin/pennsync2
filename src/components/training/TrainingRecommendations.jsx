@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -20,7 +20,7 @@ import { toast } from 'sonner';
 
 export default function TrainingRecommendations({ nurseEmail, onEnroll }) {
   const [recommendations, setRecommendations] = useState(null);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const ai = useAICall();
 
   const { data: skills = [] } = useQuery({
     queryKey: ['nurseSkills', nurseEmail],
@@ -50,7 +50,6 @@ export default function TrainingRecommendations({ nurseEmail, onEnroll }) {
   });
 
   const analyzeAndRecommend = async () => {
-    setIsAnalyzing(true);
     try {
       const skillsList = skills.map(s => `${s.skill_name} (${s.proficiency_level})`).join(', ');
       const completedModules = completions.filter(c => c.status === 'completed').map(c => c.training_module_id);
@@ -59,7 +58,7 @@ export default function TrainingRecommendations({ nurseEmail, onEnroll }) {
       const diagnoses = [...new Set(patients.map(p => p.primary_diagnosis).filter(Boolean))];
       const taskTypes = tasks.slice(0, 20).map(t => `${t.type}: ${t.title}`).join('\n');
 
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `You are an AI training coordinator for home health nurses. Analyze this nurse's profile and recommend personalized training.
 
 NURSE'S CURRENT SKILLS:
@@ -125,7 +124,6 @@ Return JSON:
       console.error("Error analyzing:", error);
       toast.error("Error generating recommendations. Please try again.");
     }
-    setIsAnalyzing(false);
   };
 
   const getUrgencyColor = (urgency) => {
@@ -154,10 +152,10 @@ Return JSON:
             </p>
             <Button
               onClick={analyzeAndRecommend}
-              disabled={isAnalyzing}
+              disabled={ai.loading}
               className="bg-navy-600 hover:bg-navy-700"
             >
-              {isAnalyzing ? (
+              {ai.loading ? (
                 <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Analyzing...</>
               ) : (
                 <><Sparkles className="w-4 h-4 mr-2" /> Get Recommendations</>

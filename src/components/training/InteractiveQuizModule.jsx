@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { toast } from "sonner";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -31,7 +31,7 @@ const quizCategories = [
 
 export default function InteractiveQuizModule({ _nurseEmail, onQuizCompleted }) {
   const [selectedCategory, setSelectedCategory] = useState(null);
-  const [isGenerating, setIsGenerating] = useState(false);
+  const ai = useAICall();
   const [questions, setQuestions] = useState([]);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
@@ -42,12 +42,11 @@ export default function InteractiveQuizModule({ _nurseEmail, onQuizCompleted }) 
   const [startTime, setStartTime] = useState(null);
 
   const generateQuiz = async (category) => {
-    setIsGenerating(true);
     setSelectedCategory(category);
     setStartTime(new Date());
     
     try {
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `Generate a professional quiz for home health nurses on: "${category.label}"
 
 Create ${category.questions} multiple-choice questions that test practical knowledge.
@@ -93,7 +92,6 @@ ${category.id === 'hipaa' ? '- Protected health information, patient rights, bre
       if (generated.length === 0) {
         toast.error('The quiz failed to generate. Please try again.');
         setSelectedCategory(null);
-        setIsGenerating(false);
         return;
       }
 
@@ -107,7 +105,6 @@ ${category.id === 'hipaa' ? '- Protected health information, patient rights, bre
       toast.error('The quiz failed to generate. Please try again.');
       setSelectedCategory(null);
     }
-    setIsGenerating(false);
   };
 
   const handleAnswer = () => {
@@ -193,7 +190,7 @@ ${category.id === 'hipaa' ? '- Protected health information, patient rights, bre
   }
 
   // Loading State
-  if (isGenerating) {
+  if (ai.loading) {
     return (
       <Card className="border-2 border-blue-200 bg-blue-50">
         <CardContent className="p-12 text-center">

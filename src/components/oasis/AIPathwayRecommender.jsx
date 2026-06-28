@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -28,7 +28,7 @@ export default function AIPathwayRecommender({
   navigationData,
   onPathwaysActivated 
 }) {
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const ai = useAICall();
   const [recommendations, setRecommendations] = useState(null);
   const [selectedPathways, setSelectedPathways] = useState([]);
   const [expandedPathway, setExpandedPathway] = useState(null);
@@ -47,10 +47,9 @@ export default function AIPathwayRecommender({
   });
 
   const analyzePathways = useCallback(async () => {
-    setIsAnalyzing(true);
 
     try {
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `You are a home health clinical pathway specialist and PDGM revenue analyst. Analyze this OASIS data and recommend specific clinical pathways and interventions.
 
 OASIS DATA:
@@ -209,14 +208,13 @@ Return JSON:
       setRecommendations({ error: "Failed to generate pathway recommendations." });
     }
 
-    setIsAnalyzing(false);
   }, [analysisResults, availablePathways, navigationData, patientId, pdgmData]);
 
   useEffect(() => {
-    if (pdgmData && analysisResults && !recommendations && !isAnalyzing) {
+    if (pdgmData && analysisResults && !recommendations && !ai.loading) {
       analyzePathways();
     }
-  }, [pdgmData, analysisResults, analyzePathways, isAnalyzing, recommendations]);
+  }, [pdgmData, analysisResults, analyzePathways, ai.loading, recommendations]);
 
   const handleActivatePathways = async () => {
     if (!recommendations || selectedPathways.length === 0) return;
@@ -290,7 +288,7 @@ Return JSON:
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4 pt-4">
-        {isAnalyzing ? (
+        {ai.loading ? (
           <div className="text-center py-8">
             <Loader2 className="w-8 h-8 animate-spin text-navy-600 mx-auto mb-3" />
             <p className="text-sm text-slate-600">Analyzing clinical pathways and interventions...</p>

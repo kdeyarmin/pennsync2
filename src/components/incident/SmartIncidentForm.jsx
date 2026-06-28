@@ -3,7 +3,7 @@ import { useMutation } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { submitIncidentReport } from "@/functions/submitIncidentReport";
 import { submitStateReportableIncident } from "@/functions/submitStateReportableIncident";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -53,7 +53,7 @@ export default function SmartIncidentForm({ patients = [], currentUser, onSubmit
   const [photoFiles, setPhotoFiles] = useState([]);
   const [form, setForm] = useState(blankForm());
   const [submitted, setSubmitted] = useState(false);
-  const [isGenerating, setIsGenerating] = useState(false);
+  const ai = useAICall();
   const [errorMessage, setErrorMessage] = useState("");
 
   const update = (patch) => setForm((prev) => ({ ...prev, ...patch }));
@@ -73,9 +73,8 @@ export default function SmartIncidentForm({ patients = [], currentUser, onSubmit
   const effectiveCategory = form.state_event_type || suggestedCategory || "";
 
   const generateNarrative = async () => {
-    setIsGenerating(true);
     try {
-      const text = await invokeLLM({
+      const text = await ai.run({
         prompt: `Write a professional, objective home-health incident report narrative.
 
 INCIDENT TYPE: ${INCIDENT_TYPES.find((t) => t.value === form.incident_type)?.label}
@@ -92,7 +91,6 @@ actions taken, and who was notified. Objective facts only. Return report text on
     } catch {
       toast.error("Could not generate the narrative. Please write it manually.");
     }
-    setIsGenerating(false);
   };
 
   const submitMutation = useMutation({
@@ -296,8 +294,8 @@ actions taken, and who was notified. Objective facts only. Return report text on
             <label className="text-sm font-medium text-slate-700">
               Narrative report{isStateReportable && <span className="text-red-600"> *</span>}
             </label>
-            <Button type="button" variant="outline" size="sm" onClick={generateNarrative} disabled={isGenerating}>
-              {isGenerating ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Sparkles className="w-4 h-4 mr-1" />}
+            <Button type="button" variant="outline" size="sm" onClick={generateNarrative} disabled={ai.loading}>
+              {ai.loading ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Sparkles className="w-4 h-4 mr-1" />}
               AI assist
             </Button>
           </div>

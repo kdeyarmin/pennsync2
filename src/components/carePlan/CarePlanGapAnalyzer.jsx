@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -22,13 +22,12 @@ export default function CarePlanGapAnalyzer({
   patientData,
   autoAnalyze = false 
 }) {
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const ai = useAICall();
   const [analysis, setAnalysis] = useState(null);
 
   const analyzeCarePlanGaps = useCallback(async () => {
     if (!diagnosis) return;
 
-    setIsAnalyzing(true);
     try {
       const activePlans = carePlans?.filter(cp => cp.status === 'active') || [];
       const recentProgress = recentVisits?.slice(0, 3).map(v => ({
@@ -36,7 +35,7 @@ export default function CarePlanGapAnalyzer({
         notes: v.nurse_notes?.substring(0, 300)
       })) || [];
 
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `You are a clinical care planning expert. Analyze this patient's care plan for gaps, deviations from best practices, and evidence-based recommendations.
 
 PRIMARY DIAGNOSIS: ${diagnosis}
@@ -144,7 +143,6 @@ Return comprehensive analysis including:
       console.error('Care plan analysis error:', error);
       setAnalysis({ error: error.message });
     }
-    setIsAnalyzing(false);
   }, [carePlans, diagnosis, patientData, recentVisits]);
 
   useEffect(() => {
@@ -171,7 +169,7 @@ Return comprehensive analysis including:
         </CardTitle>
       </CardHeader>
       <CardContent className="p-4 space-y-4">
-        {!analysis && !isAnalyzing && (
+        {!analysis && !ai.loading && (
           <Button
             onClick={analyzeCarePlanGaps}
             className="w-full bg-blue-600 hover:bg-blue-700"
@@ -181,7 +179,7 @@ Return comprehensive analysis including:
           </Button>
         )}
 
-        {isAnalyzing && (
+        {ai.loading && (
           <div className="text-center py-6">
             <Loader2 className="w-8 h-8 text-blue-600 animate-spin mx-auto mb-2" />
             <p className="text-sm text-slate-600">Comparing against clinical guidelines...</p>

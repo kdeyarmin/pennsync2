@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { safePercent } from "@/lib/safePercent";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -29,21 +29,20 @@ export default function TargetedLessonGenerator({
   onComplete,
   onExit
 }) {
-  const [isGenerating, setIsGenerating] = useState(false);
+  const generatingAi = useAICall();
   const [lessonContent, setLessonContent] = useState(null);
   const [currentSection, setCurrentSection] = useState(0);
   const [quizAnswers, setQuizAnswers] = useState({});
   const [quizResults, setQuizResults] = useState(null);
   const [practiceResponse, setPracticeResponse] = useState("");
   const [practiceFeedback, setPracticeFeedback] = useState(null);
-  const [isEvaluating, setIsEvaluating] = useState(false);
+  const evaluatingAi = useAICall();
   const [completed, setCompleted] = useState(false);
 
   const generateLesson = async () => {
-    setIsGenerating(true);
     
     try {
-      const result = await invokeLLM({
+      const result = await generatingAi.run({
         prompt: `Generate a comprehensive training lesson for home health nurses on: "${module.title}"
 
 Category: ${module.category}
@@ -122,15 +121,13 @@ Make it practical, specific to home health, and immediately applicable.`,
     } catch (error) {
       console.error("Error generating lesson:", error);
     }
-    setIsGenerating(false);
   };
 
   const evaluatePractice = async () => {
     if (!practiceResponse.trim()) return;
-    setIsEvaluating(true);
 
     try {
-      const result = await invokeLLM({
+      const result = await evaluatingAi.run({
         prompt: `Evaluate this nurse's documentation practice response.
 
 SCENARIO:
@@ -161,7 +158,6 @@ Provide constructive feedback:`,
     } catch (error) {
       console.error("Error evaluating practice:", error);
     }
-    setIsEvaluating(false);
   };
 
   const submitQuiz = () => {
@@ -198,7 +194,7 @@ Provide constructive feedback:`,
   };
 
   // Initial state - start button
-  if (!lessonContent && !isGenerating) {
+  if (!lessonContent && !generatingAi.loading) {
     return (
       <Card className="border-2 border-navy-200">
         <CardContent className="p-8 text-center">
@@ -220,7 +216,7 @@ Provide constructive feedback:`,
   }
 
   // Loading
-  if (isGenerating) {
+  if (generatingAi.loading) {
     return (
       <Card className="border-2 border-navy-200">
         <CardContent className="p-12 text-center">
@@ -358,10 +354,10 @@ Provide constructive feedback:`,
           {!practiceFeedback ? (
             <Button 
               onClick={evaluatePractice} 
-              disabled={!practiceResponse.trim() || isEvaluating}
+              disabled={!practiceResponse.trim() || evaluatingAi.loading}
               className="w-full bg-green-600 hover:bg-green-700"
             >
-              {isEvaluating ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Evaluating...</> : 'Submit for Feedback'}
+              {evaluatingAi.loading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Evaluating...</> : 'Submit for Feedback'}
             </Button>
           ) : (
             <div className="space-y-3">

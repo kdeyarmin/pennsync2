@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -27,14 +27,13 @@ export default function InterdisciplinaryTeamCoordinator({
   autoAnalyze = false 
 }) {
   const queryClient = useQueryClient();
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const ai = useAICall();
   const [recommendation, setRecommendation] = useState(null);
   const [isCreatingAlert, setIsCreatingAlert] = useState(false);
 
   const analyzeTeamMeetingNeed = useCallback(async () => {
     if (!patientData) return;
 
-    setIsAnalyzing(true);
     try {
       const complexityIndicators = {
         diagnoses_count: [patientData.primary_diagnosis, ...(patientData.secondary_diagnoses || [])].filter(Boolean).length,
@@ -54,7 +53,7 @@ export default function InterdisciplinaryTeamCoordinator({
         }).length || 0
       };
 
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `You are a care coordination expert. Analyze this patient's profile to determine if an interdisciplinary team (IDT) meeting is recommended.
 
 PATIENT PROFILE:
@@ -124,7 +123,6 @@ Return recommendation with:
       console.error('IDT analysis error:', error);
       setRecommendation({ error: error.message });
     }
-    setIsAnalyzing(false);
   }, [patientData, carePlans, incidents, alerts, recentVisits]);
 
   useEffect(() => {
@@ -179,7 +177,7 @@ Return recommendation with:
         </CardTitle>
       </CardHeader>
       <CardContent className="p-4 space-y-4">
-        {!recommendation && !isAnalyzing && (
+        {!recommendation && !ai.loading && (
           <Button
             onClick={analyzeTeamMeetingNeed}
             className="w-full bg-indigo-600 hover:bg-indigo-700"
@@ -189,7 +187,7 @@ Return recommendation with:
           </Button>
         )}
 
-        {isAnalyzing && (
+        {ai.loading && (
           <div className="text-center py-6">
             <Loader2 className="w-8 h-8 text-indigo-600 animate-spin mx-auto mb-2" />
             <p className="text-sm text-slate-600">Analyzing patient complexity...</p>

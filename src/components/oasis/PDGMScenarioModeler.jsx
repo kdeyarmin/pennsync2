@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
+import { toast } from "sonner";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -40,7 +41,7 @@ export default function PDGMScenarioModeler({ baselineOasisData, baselineNavigat
   });
   
   const [scenarios, setScenarios] = useState([]);
-  const [isSimulating, setIsSimulating] = useState(false);
+  const ai = useAICall();
   const [simulationResult, setSimulationResult] = useState(null);
   const [_compareMode, _setCompareMode] = useState(false);
   const [selectedScenarios, setSelectedScenarios] = useState([]);
@@ -56,7 +57,6 @@ export default function PDGMScenarioModeler({ baselineOasisData, baselineNavigat
   });
 
   const runSimulation = async () => {
-    setIsSimulating(true);
     try {
       const prompt = `You are a PDGM payment expert. Simulate the impact of these OASIS changes on case-mix weight, payment, and quality measures.
 
@@ -83,7 +83,7 @@ CALCULATE:
 
 Provide detailed comparison showing what changed and why.`;
 
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt,
         response_json_schema: {
           type: "object",
@@ -142,8 +142,8 @@ Provide detailed comparison showing what changed and why.`;
       setSimulationResult(result);
     } catch (error) {
       console.error('Simulation error:', error);
+      toast.error("The AI request didn't complete. Please try again.");
     }
-    setIsSimulating(false);
   };
 
   const updateFunctionalScore = (mItem, value) => {
@@ -367,10 +367,10 @@ Provide detailed comparison showing what changed and why.`;
             <div className="flex gap-2">
               <Button
                 onClick={runSimulation}
-                disabled={isSimulating}
+                disabled={ai.loading}
                 className="flex-1 bg-navy-600 hover:bg-navy-700"
               >
-                {isSimulating ? (
+                {ai.loading ? (
                   <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Simulating...</>
                 ) : (
                   <><Play className="w-4 h-4 mr-2" /> Run Simulation</>

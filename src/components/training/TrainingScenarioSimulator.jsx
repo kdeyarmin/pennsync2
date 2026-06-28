@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -32,15 +32,14 @@ const SCENARIO_TYPES = [
 export default function TrainingScenarioSimulator({ onComplete }) {
   const [selectedScenario, setSelectedScenario] = useState(null);
   const [scenario, setScenario] = useState(null);
-  const [isGenerating, setIsGenerating] = useState(false);
+  const genAi = useAICall();
   const [currentStep, setCurrentStep] = useState(0);
   const [userResponses, setUserResponses] = useState({});
   const [feedback, setFeedback] = useState(null);
-  const [isEvaluating, setIsEvaluating] = useState(false);
+  const evalAi = useAICall();
   const [finalScore, setFinalScore] = useState(null);
 
   const generateScenario = async (type) => {
-    setIsGenerating(true);
     setSelectedScenario(type);
     
     try {
@@ -94,7 +93,7 @@ Return JSON:
   "quality_measures": ["Relevant quality measures"]
 }`;
 
-      const result = await invokeLLM({
+      const result = await genAi.run({
         prompt,
         response_json_schema: {
           type: "object",
@@ -146,7 +145,6 @@ Return JSON:
     } catch (error) {
       console.error('Error generating scenario:', error);
     }
-    setIsGenerating(false);
   };
 
   const submitResponse = async () => {
@@ -158,7 +156,6 @@ Return JSON:
       return;
     }
 
-    setIsEvaluating(true);
     try {
       const evalPrompt = `Evaluate this nurse's response to a clinical training scenario.
 
@@ -192,7 +189,7 @@ Evaluate the response and provide feedback:
   "encouragement": "Positive, constructive message"
 }`;
 
-      const evalResult = await invokeLLM({
+      const evalResult = await evalAi.run({
         prompt: evalPrompt,
         response_json_schema: {
           type: "object",
@@ -212,7 +209,6 @@ Evaluate the response and provide feedback:
     } catch (error) {
       console.error('Error evaluating response:', error);
     }
-    setIsEvaluating(false);
   };
 
   const nextStep = () => {
@@ -253,7 +249,7 @@ Evaluate the response and provide feedback:
   };
 
   // Scenario Selection
-  if (!scenario && !isGenerating) {
+  if (!scenario && !genAi.loading) {
     return (
       <Card>
         <CardHeader>
@@ -292,7 +288,7 @@ Evaluate the response and provide feedback:
   }
 
   // Loading
-  if (isGenerating) {
+  if (genAi.loading) {
     return (
       <Card>
         <CardContent className="p-12 text-center">
@@ -398,10 +394,10 @@ Evaluate the response and provide feedback:
           {!feedback && (
             <Button 
               onClick={submitResponse} 
-              disabled={isEvaluating}
+              disabled={evalAi.loading}
               className="w-full"
             >
-              {isEvaluating ? (
+              {evalAi.loading ? (
                 <><RefreshCw className="w-4 h-4 mr-2 animate-spin" /> Evaluating...</>
               ) : (
                 'Submit Response'

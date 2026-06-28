@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Copy, CheckCircle2, Sparkles } from "lucide-react";
@@ -10,15 +10,14 @@ export default function InlineDocumentationAssistant({
   pdgmData,
   onInsertText 
 }) {
-  const [isGenerating, setIsGenerating] = useState(false);
+  const ai = useAICall();
   const [suggestion, setSuggestion] = useState(null);
   const [copied, setCopied] = useState(false);
 
   const generateSuggestion = async () => {
-    setIsGenerating(true);
     
     try {
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `You are a CMS OASIS documentation expert. Generate specific clinical documentation to address this issue.
 
 ISSUE DETAILS:
@@ -74,7 +73,6 @@ Return JSON:
       setSuggestion({ error: "Failed to generate suggestion. Please try again." });
     }
     
-    setIsGenerating(false);
   };
 
   const handleCopy = (text) => {
@@ -88,11 +86,11 @@ Return JSON:
       {!suggestion ? (
         <Button
           onClick={generateSuggestion}
-          disabled={isGenerating}
+          disabled={ai.loading}
           size="sm"
           className="w-full bg-indigo-600 hover:bg-indigo-700"
         >
-          {isGenerating ? (
+          {ai.loading ? (
             <><Loader2 className="w-3 h-3 mr-2 animate-spin" /> Generating...</>
           ) : (
             <><Sparkles className="w-3 h-3 mr-2" /> AI Documentation Assistant</>

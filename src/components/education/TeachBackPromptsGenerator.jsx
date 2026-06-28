@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,7 +41,7 @@ export default function TeachBackPromptsGenerator({
   const [condition, setCondition] = useState(diagnosis || "");
   const [educationTopic, setEducationTopic] = useState("");
   const [patientLiteracy, setPatientLiteracy] = useState("average");
-  const [isGenerating, setIsGenerating] = useState(false);
+  const generatingAi = useAICall();
   const [prompts, setPrompts] = useState(null);
   const [currentPromptIdx, setCurrentPromptIdx] = useState(0);
   const [responses, setResponses] = useState([]);
@@ -49,7 +49,7 @@ export default function TeachBackPromptsGenerator({
   const [currentLevel, setCurrentLevel] = useState("");
   const [showFollowUp, setShowFollowUp] = useState(false);
   const [followUpPrompt, setFollowUpPrompt] = useState(null);
-  const [isGeneratingFollowUp, setIsGeneratingFollowUp] = useState(false);
+  const generatingFollowUpAi = useAICall();
   const [isComplete, setIsComplete] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -66,13 +66,12 @@ export default function TeachBackPromptsGenerator({
       return;
     }
 
-    setIsGenerating(true);
     setResponses([]);
     setCurrentPromptIdx(0);
     setIsComplete(false);
 
     try {
-      const result = await invokeLLM({
+      const result = await generatingAi.run({
         prompt: `You are an expert in patient education and the teach-back method. Generate tailored teach-back prompts for a nurse to use during a patient education session.
 
 CONDITION/TOPIC: ${topic}
@@ -142,15 +141,13 @@ Return JSON:
       console.error("Error generating prompts:", error);
       toast.error("Error generating prompts. Please try again.");
     }
-    setIsGenerating(false);
   };
 
   const generateFollowUpPrompt = async (response, level) => {
-    setIsGeneratingFollowUp(true);
     try {
       const currentPrompt = prompts.prompts[currentPromptIdx];
       
-      const result = await invokeLLM({
+      const result = await generatingFollowUpAi.run({
         prompt: `Based on the patient's teach-back response, generate a tailored follow-up prompt.
 
 ORIGINAL QUESTION: "${currentPrompt.primary_question}"
@@ -192,7 +189,6 @@ Return JSON:
     } catch (error) {
       console.error("Error generating follow-up:", error);
     }
-    setIsGeneratingFollowUp(false);
   };
 
   const handleRecordResponse = () => {
@@ -342,10 +338,10 @@ Nurse Signature: _______________________`;
 
             <Button
               onClick={generatePrompts}
-              disabled={isGenerating || !condition.trim()}
+              disabled={generatingAi.loading || !condition.trim()}
               className="w-full bg-indigo-600 hover:bg-indigo-700"
             >
-              {isGenerating ? (
+              {generatingAi.loading ? (
                 <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Generating Prompts...</>
               ) : (
                 <><MessageSquare className="w-4 h-4 mr-2" /> Generate Teach-Back Prompts</>
@@ -477,7 +473,7 @@ Nurse Signature: _______________________`;
                 </div>
               </RadioGroup>
               
-              {isGeneratingFollowUp && (
+              {generatingFollowUpAi.loading && (
                 <p className="text-xs text-navy-600 mt-2 flex items-center gap-1">
                   <Loader2 className="w-3 h-3 animate-spin" />
                   Generating follow-up prompt...

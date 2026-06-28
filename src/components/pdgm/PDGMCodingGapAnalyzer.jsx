@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -20,13 +21,12 @@ import {
 } from "lucide-react";
 
 export default function PDGMCodingGapAnalyzer({ patient, visits = [], carePlans = [], onCodeSuggestion }) {
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const ai = useAICall();
   const [analysis, setAnalysis] = useState(null);
   const [expandedGaps, setExpandedGaps] = useState([]);
   const [copiedCode, setCopiedCode] = useState(null);
 
   const analyzecodingGaps = async () => {
-    setIsAnalyzing(true);
 
     try {
       // Gather all documentation
@@ -95,7 +95,7 @@ Return JSON:
   "top_recommendations": ["prioritized list of 3-5 actions"]
 }`;
 
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt,
         response_json_schema: {
           type: "object",
@@ -111,9 +111,9 @@ Return JSON:
       setAnalysis(result);
     } catch (error) {
       console.error("Coding gap analysis error:", error);
+      toast.error("The AI request didn't complete. Please try again.");
     }
 
-    setIsAnalyzing(false);
   };
 
   const toggleGap = (index) => {
@@ -157,11 +157,11 @@ Return JSON:
           </div>
           <Button
             onClick={analyzecodingGaps}
-            disabled={isAnalyzing || !patient}
+            disabled={ai.loading || !patient}
             size="sm"
             className="bg-amber-600 hover:bg-amber-700"
           >
-            {isAnalyzing ? (
+            {ai.loading ? (
               <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Analyzing...</>
             ) : (
               <><Search className="w-4 h-4 mr-2" /> Analyze Coding</>
@@ -170,7 +170,7 @@ Return JSON:
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-4 space-y-4">
-        {!analysis && !isAnalyzing && (
+        {!analysis && !ai.loading && (
           <Alert className="bg-amber-50 border-amber-200">
             <Lightbulb className="w-4 h-4 text-amber-600" />
             <AlertDescription className="text-amber-800 text-sm">

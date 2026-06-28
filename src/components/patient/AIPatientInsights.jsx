@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
+import { toast } from "sonner";
 import { isSafeExternalUrl } from "@/components/utils/security";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -25,11 +26,10 @@ import {
 } from "@/components/ui/accordion";
 
 export default function AIPatientInsights({ patient, visits, carePlans, incidents }) {
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const ai = useAICall();
   const [insights, setInsights] = useState(null);
 
   const analyzePatient = useCallback(async () => {
-    setIsAnalyzing(true);
     try {
       const recentVisits = visits.slice(0, 10);
       const recentIncidents = incidents.slice(0, 5);
@@ -41,7 +41,7 @@ export default function AIPatientInsights({ patient, visits, carePlans, incident
         notes_summary: v.nurse_notes?.substring(0, 200)
       }));
 
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `You are a predictive healthcare AI analyzing patient data to identify future health risks and care needs.
 
 PATIENT PROFILE:
@@ -129,8 +129,8 @@ Be specific and actionable. Use actual data trends.`,
       setInsights(result);
     } catch (error) {
       console.error('Patient insights analysis error:', error);
+      toast.error("The AI request didn't complete. Please try again.");
     }
-    setIsAnalyzing(false);
   }, [patient, visits, incidents, carePlans]);
 
   useEffect(() => {
@@ -165,7 +165,7 @@ Be specific and actionable. Use actual data trends.`,
     return '📅';
   };
 
-  if (isAnalyzing) {
+  if (ai.loading) {
     return (
       <Card className="border-2 border-navy-300">
         <CardContent className="p-6 text-center">

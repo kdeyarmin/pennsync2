@@ -1,21 +1,21 @@
 import { useState } from "react";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Target, Sparkles, CheckCircle2 } from "lucide-react";
 
 export default function AICarePlanGenerator({ patientDiagnosis, patientNeeds, onCarePlanGenerated }) {
-  const [isGenerating, setIsGenerating] = useState(false);
+  const ai = useAICall();
   const [generatedPlan, setGeneratedPlan] = useState(null);
   const [diagnosis, setDiagnosis] = useState(patientDiagnosis || "");
   const [needs, setNeeds] = useState(patientNeeds || "");
 
   const generateCarePlan = async () => {
-    setIsGenerating(true);
     
     try {
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `Generate a comprehensive home health care plan based on the following patient information:
 
 PRIMARY DIAGNOSIS:
@@ -96,8 +96,8 @@ Make the care plan specific to home health nursing, focusing on skilled nursing 
       onCarePlanGenerated?.(result);
     } catch (error) {
       console.error("Error generating care plan:", error);
+      toast.error("The AI request didn't complete. Please try again.");
     }
-    setIsGenerating(false);
   };
 
   return (
@@ -138,10 +138,10 @@ Make the care plan specific to home health nursing, focusing on skilled nursing 
 
           <Button
             onClick={generateCarePlan}
-            disabled={isGenerating || !diagnosis.trim()}
+            disabled={ai.loading || !diagnosis.trim()}
             className="w-full bg-green-600 hover:bg-green-700"
           >
-            {isGenerating ? (
+            {ai.loading ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 Generating Care Plan...

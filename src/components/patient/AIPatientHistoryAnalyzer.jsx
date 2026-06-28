@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -27,14 +28,13 @@ export default function AIPatientHistoryAnalyzer({
   incidents = []
 }) {
   const [analysis, setAnalysis] = useState(null);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const ai = useAICall();
   const [showDetails, setShowDetails] = useState(false);
   const [autoAnalyzed, setAutoAnalyzed] = useState(false);
 
   const analyzePatientHistory = useCallback(async () => {
     if (!patient) return;
     
-    setIsAnalyzing(true);
     try {
       const prompt = `You are a clinical analysis AI assistant. Analyze this patient's complete medical history and provide a comprehensive summary with gap detection.
 
@@ -131,7 +131,7 @@ Return as JSON with the following structure:
   "confidence_score": 0-100
 }`;
 
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt,
         response_json_schema: {
           type: "object",
@@ -190,8 +190,8 @@ Return as JSON with the following structure:
       setAnalysis(result);
     } catch (error) {
       console.error("Error analyzing patient history:", error);
+      toast.error("The AI request didn't complete. Please try again.");
     }
-    setIsAnalyzing(false);
   }, [patient, visits, carePlans, oasisData, incidents]);
 
   // Auto-analyze on component mount
@@ -238,7 +238,7 @@ Return as JSON with the following structure:
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        {isAnalyzing ? (
+        {ai.loading ? (
           <div className="text-center py-8">
             <Loader2 className="w-8 h-8 animate-spin text-navy-600 mx-auto mb-3" />
             <p className="text-sm text-slate-600">Analyzing {visits.length} visits, {carePlans.length} care plans, and {oasisData.length} assessments...</p>
@@ -421,10 +421,10 @@ Return as JSON with the following structure:
                 variant="outline"
                 size="sm"
                 onClick={analyzePatientHistory}
-                disabled={isAnalyzing}
+                disabled={ai.loading}
                 className="text-navy-600 border-navy-300 hover:bg-navy-50"
               >
-                {isAnalyzing ? (
+                {ai.loading ? (
                   <>
                     <Loader2 className="w-3 h-3 mr-2 animate-spin" />
                     Analyzing...

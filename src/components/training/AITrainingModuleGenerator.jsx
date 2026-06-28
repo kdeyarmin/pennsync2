@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -34,7 +34,7 @@ import { toast } from 'sonner';
 
 export default function AITrainingModuleGenerator() {
   const queryClient = useQueryClient();
-  const [isGenerating, setIsGenerating] = useState(false);
+  const ai = useAICall();
   const [selectedRecommendations, setSelectedRecommendations] = useState(new Set());
   const [selectedExemplars, setSelectedExemplars] = useState(new Set());
   const [moduleType, setModuleType] = useState("mixed");
@@ -69,12 +69,11 @@ export default function AITrainingModuleGenerator() {
       return;
     }
 
-    setIsGenerating(true);
     try {
       const selectedRecs = trainingRecommendations.filter(r => selectedRecommendations.has(r.id));
       const selectedExs = exemplaryDocs.filter(e => selectedExemplars.has(e.id));
 
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `You are an expert clinical education specialist for home health nursing. Create a comprehensive training module for Pennsylvania home health staff focusing on Medicare compliance (42 CFR 484).
 
 INPUT DATA FOR MODULE GENERATION:
@@ -211,7 +210,6 @@ Return structured JSON training module.`,
       console.error('Error generating training module:', error);
       toast.error('Failed to generate training module. Please try again.');
     }
-    setIsGenerating(false);
   };
 
   const publishModule = async () => {
@@ -380,10 +378,10 @@ Return structured JSON training module.`,
 
           <Button
             onClick={generateTrainingModule}
-            disabled={isGenerating || (selectedRecommendations.size === 0 && selectedExemplars.size === 0)}
+            disabled={ai.loading || (selectedRecommendations.size === 0 && selectedExemplars.size === 0)}
             className="w-full bg-navy-600 hover:bg-navy-700"
           >
-            {isGenerating ? (
+            {ai.loading ? (
               <>
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
                 Generating Module...

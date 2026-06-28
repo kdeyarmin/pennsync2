@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -41,7 +41,7 @@ export default function AIGroupAssignmentValidator({
   patientId,
   autoValidate = true 
 }) {
-  const [isValidating, setIsValidating] = useState(false);
+  const ai = useAICall();
   const [assignment, setAssignment] = useState(null);
   const [showOverrideDialog, setShowOverrideDialog] = useState(false);
   const [overrideReason, setOverrideReason] = useState('');
@@ -60,7 +60,6 @@ export default function AIGroupAssignmentValidator({
   const performValidation = useCallback(async () => {
     if (!oasisData || !pdgmData) return;
 
-    setIsValidating(true);
     try {
       const prompt = `You are a PDGM classification expert. Analyze this OASIS data and assign the patient to the correct PDGM Clinical Group and Functional Impairment Level.
 
@@ -105,7 +104,7 @@ PROVIDE:
 5. Clinical reasoning for the assignments
 6. Red flags or concerns requiring supervisor review`;
 
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt,
         response_json_schema: {
           type: "object",
@@ -182,7 +181,6 @@ PROVIDE:
       console.error('Group assignment validation error:', error);
       setAssignment({ error: 'Failed to validate group assignment' });
     }
-    setIsValidating(false);
   }, [oasisData, pdgmData, analysisResults]);
 
   useEffect(() => {
@@ -277,14 +275,14 @@ PROVIDE:
       </CardHeader>
 
       <CardContent className="pt-6">
-        {isValidating && (
+        {ai.loading && (
           <div className="text-center py-12">
             <Loader2 className="w-16 h-16 animate-spin text-indigo-600 mx-auto mb-4" />
             <p className="text-indigo-700 font-medium">AI analyzing PDGM group assignments...</p>
           </div>
         )}
 
-        {!isValidating && !assignment && (
+        {!ai.loading && !assignment && (
           <div className="text-center py-8">
             <Button onClick={performValidation} className="bg-indigo-600 hover:bg-indigo-700">
               <Brain className="w-4 h-4 mr-2" />
@@ -523,11 +521,11 @@ PROVIDE:
             <div className="flex gap-3 pt-4 border-t">
               <Button
                 onClick={performValidation}
-                disabled={isValidating}
+                disabled={ai.loading}
                 variant="outline"
                 className="flex-1"
               >
-                {isValidating ? (
+                {ai.loading ? (
                   <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Revalidating...</>
                 ) : (
                   'Re-run Validation'

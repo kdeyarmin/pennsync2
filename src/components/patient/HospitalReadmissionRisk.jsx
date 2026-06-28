@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -41,7 +41,7 @@ import { toast } from 'sonner';
 
 export default function HospitalReadmissionRisk({ patient }) {
   const [showInterventions, setShowInterventions] = useState(false);
-  const [isGeneratingPlan, setIsGeneratingPlan] = useState(false);
+  const ai = useAICall();
   const [interventionPlan, setInterventionPlan] = useState(null);
 
   const { data: visits = [] } = useQuery({
@@ -345,7 +345,6 @@ export default function HospitalReadmissionRisk({ patient }) {
 
   // Generate AI-powered intervention plan
   const generateInterventionPlan = async () => {
-    setIsGeneratingPlan(true);
     
     try {
       const prompt = `You are a home health clinical expert. Generate a comprehensive intervention plan to reduce hospital readmission risk for this patient.
@@ -393,7 +392,7 @@ Return JSON format:
   "expected_outcomes": "string describing expected improvements"
 }`;
 
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt,
         response_json_schema: {
           type: "object",
@@ -438,7 +437,6 @@ Return JSON format:
       toast.error('Error generating plan. Please try again.');
     }
     
-    setIsGeneratingPlan(false);
   };
 
   const getRiskIcon = () => {
@@ -486,10 +484,10 @@ Return JSON format:
             <Button
               size="sm"
               onClick={generateInterventionPlan}
-              disabled={isGeneratingPlan}
+              disabled={ai.loading}
               className="bg-indigo-600 hover:bg-indigo-700"
             >
-              {isGeneratingPlan ? (
+              {ai.loading ? (
                 <>
                   <Clock className="w-4 h-4 mr-2 animate-spin" />
                   Generating...

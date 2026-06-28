@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -14,13 +14,12 @@ import {
 import { toast } from 'sonner';
 
 export default function AIValidationHelper({ validationErrors, _onApplySuggestions }) {
-  const [isGenerating, setIsGenerating] = useState(false);
+  const ai = useAICall();
   const [suggestions, setSuggestions] = useState(null);
 
   const generateSuggestions = async () => {
-    setIsGenerating(true);
     try {
-      const response = await invokeLLM({
+      const response = await ai.run({
         prompt: `Analyze these patient data validation errors and provide specific correction suggestions:
 
 ${JSON.stringify(validationErrors, null, 2)}
@@ -67,7 +66,6 @@ Return a JSON array with this structure:
       console.error('Failed to generate AI suggestions:', error);
       toast.error('Failed to generate suggestions. Please try again.');
     }
-    setIsGenerating(false);
   };
 
   const getSeverityColor = (error) => {
@@ -96,10 +94,10 @@ Return a JSON array with this structure:
             </p>
             <Button
               onClick={generateSuggestions}
-              disabled={isGenerating}
+              disabled={ai.loading}
               className="bg-navy-600 hover:bg-navy-700"
             >
-              {isGenerating ? (
+              {ai.loading ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   Analyzing Errors...

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,7 @@ import { toast } from 'sonner';
 
 export default function AITrainingRecommendationEngine({ nurseEmail, onAssignTraining }) {
   const [recommendations, setRecommendations] = useState(null);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const ai = useAICall();
 
   const { data: trainingCompletions = [] } = useQuery({
     queryKey: ['nurseCompletions', nurseEmail],
@@ -45,7 +45,6 @@ export default function AITrainingRecommendationEngine({ nurseEmail, onAssignTra
   });
 
   const analyzeTrainingNeeds = async () => {
-    setIsAnalyzing(true);
     try {
       // Aggregate data for analysis
       const completedModules = trainingCompletions.filter(t => t.status === 'completed');
@@ -99,7 +98,7 @@ Return JSON:
   "skill_development_path": "string - suggested learning progression"
 }`;
 
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt,
         response_json_schema: {
           type: "object",
@@ -131,7 +130,6 @@ Return JSON:
       console.error('AI analysis failed:', error);
       toast.error('Failed to generate training recommendations');
     }
-    setIsAnalyzing(false);
   };
 
   const getPriorityColor = (priority) => {
@@ -159,10 +157,10 @@ Return JSON:
             </p>
             <Button
               onClick={analyzeTrainingNeeds}
-              disabled={isAnalyzing}
+              disabled={ai.loading}
               className="bg-navy-600 hover:bg-navy-700"
             >
-              {isAnalyzing ? (
+              {ai.loading ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   Analyzing...

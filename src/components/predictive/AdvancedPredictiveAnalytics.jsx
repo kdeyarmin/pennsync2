@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,7 +21,7 @@ import {
 import { toast } from 'sonner';
 
 export default function AdvancedPredictiveAnalytics({ patientId, autoAnalyze = false }) {
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const ai = useAICall();
   const [predictions, setPredictions] = useState(null);
   const queryClient = useQueryClient();
 
@@ -65,7 +65,6 @@ export default function AdvancedPredictiveAnalytics({ patientId, autoAnalyze = f
   const performPredictiveAnalysis = React.useCallback(async () => {
     if (!patient) return;
 
-    setIsAnalyzing(true);
     try {
       // Calculate vital signs trends
       const recentVisits = visits.slice(0, 10).filter(v => v.vital_signs);
@@ -122,7 +121,7 @@ export default function AdvancedPredictiveAnalytics({ patientId, autoAnalyze = f
         }
       };
 
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `You are an advanced predictive analytics AI specialized in home health patient outcomes forecasting using evidence-based clinical algorithms.
 
 **CRITICAL TASK:** Analyze this patient's comprehensive data and generate accurate predictions for clinical deterioration and hospital readmission risks, along with proactive care recommendations.
@@ -291,14 +290,13 @@ Use clinical judgment based on established risk prediction models (LACE, HOSPITA
       console.error('Error performing predictive analysis:', error);
       toast.error('Failed to perform predictive analysis. Please try again.');
     }
-    setIsAnalyzing(false);
   }, [patient, visits, incidents, carePlans]);
 
   React.useEffect(() => {
-    if (autoAnalyze && patient && !predictions && !isAnalyzing) {
+    if (autoAnalyze && patient && !predictions && !ai.loading) {
       performPredictiveAnalysis();
     }
-  }, [autoAnalyze, patient, predictions, isAnalyzing, performPredictiveAnalysis]);
+  }, [autoAnalyze, patient, predictions, ai.loading, performPredictiveAnalysis]);
 
   const checkAbnormalVitals = (vitalsHistory) => {
     if (!vitalsHistory || vitalsHistory.length < 2) return false;
@@ -372,11 +370,11 @@ Use clinical judgment based on established risk prediction models (LACE, HOSPITA
             </CardTitle>
             <Button
               onClick={performPredictiveAnalysis}
-              disabled={isAnalyzing || !patient}
+              disabled={ai.loading || !patient}
               size="sm"
               className="bg-navy-600 hover:bg-navy-700"
             >
-              {isAnalyzing ? (
+              {ai.loading ? (
                 <>
                   <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
                   Analyzing...
@@ -391,7 +389,7 @@ Use clinical judgment based on established risk prediction models (LACE, HOSPITA
           </div>
         </CardHeader>
         <CardContent>
-          {isAnalyzing && (
+          {ai.loading && (
             <Alert className="bg-navy-50 border-navy-200">
               <Brain className="w-4 h-4 text-navy-600 animate-pulse" />
               <AlertDescription className="text-navy-900">
@@ -400,7 +398,7 @@ Use clinical judgment based on established risk prediction models (LACE, HOSPITA
             </Alert>
           )}
 
-          {!isAnalyzing && !predictions && (
+          {!ai.loading && !predictions && (
             <Alert className="bg-blue-50 border-blue-200">
               <TrendingUp className="w-4 h-4 text-blue-600" />
               <AlertDescription className="text-blue-900">

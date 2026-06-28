@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -324,7 +324,7 @@ const CMS_OASIS_REFERENCE = {
 
 export default function CMSComplianceReference({ oasisItem, onInsertGuidance, compact = false }) {
   const [searchTerm, setSearchTerm] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const ai = useAICall();
   const [liveUpdates, setLiveUpdates] = useState(null);
   const [selectedItem, setSelectedItem] = useState(oasisItem || null);
   const [activeTab, setActiveTab] = useState("all");
@@ -346,9 +346,8 @@ export default function CMSComplianceReference({ oasisItem, onInsertGuidance, co
   }, [bookmarkedItems]);
 
   const fetchLiveUpdates = async () => {
-    setIsLoading(true);
     try {
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `Check for any recent CMS OASIS-E updates or guidance changes effective 2024-2025. Focus on:
 1. Any changes to functional scoring (GG items, M1800-M1860)
 2. PDGM calculation updates
@@ -381,7 +380,6 @@ Return JSON:
     } catch (error) {
       console.error("Error fetching updates:", error);
     }
-    setIsLoading(false);
   };
 
   const toggleBookmark = (itemKey) => {
@@ -546,8 +544,8 @@ Return JSON:
             <BookOpen className="w-4 h-4" />
             CMS Reference
           </h4>
-          <Button size="sm" variant="ghost" onClick={fetchLiveUpdates} disabled={isLoading}>
-            {isLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
+          <Button size="sm" variant="ghost" onClick={fetchLiveUpdates} disabled={ai.loading}>
+            {ai.loading ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
           </Button>
         </div>
         {selectedItem && findItemByKey(selectedItem) && (
@@ -595,10 +593,10 @@ Return JSON:
           <Button
             size="sm"
             onClick={fetchLiveUpdates}
-            disabled={isLoading}
+            disabled={ai.loading}
             className="bg-blue-600 hover:bg-blue-700"
           >
-            {isLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <RefreshCw className="w-4 h-4 mr-2" />}
+            {ai.loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <RefreshCw className="w-4 h-4 mr-2" />}
             Check for CMS Updates
           </Button>
           {liveUpdates && (

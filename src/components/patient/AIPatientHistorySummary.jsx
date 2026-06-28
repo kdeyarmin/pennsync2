@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -37,7 +38,7 @@ export default function AIPatientHistorySummary({
   prominent = true
 }) {
   const [summary, setSummary] = useState(null);
-  const [isGenerating, setIsGenerating] = useState(false);
+  const ai = useAICall();
   const [isExpanded, setIsExpanded] = useState(true);
   const [copied, setCopied] = useState(false);
 
@@ -53,7 +54,6 @@ export default function AIPatientHistorySummary({
   const generateSummary = useCallback(async () => {
     if (!patient) return;
 
-    setIsGenerating(true);
     try {
       const completedVisits = visits.filter(v => v.status === 'completed');
       const recentVisits = completedVisits.slice(0, 10);
@@ -77,7 +77,7 @@ export default function AIPatientHistorySummary({
           notes: v.nurse_notes?.substring(0, 500)
         }));
 
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `You are an expert clinical summarization AI. Generate a comprehensive yet concise patient history summary that gives nurses immediate context before a visit.
 
 PATIENT DEMOGRAPHICS:
@@ -193,8 +193,8 @@ Return JSON:
       setSummary(result);
     } catch (error) {
       console.error("Error generating patient history summary:", error);
+      toast.error("The AI request didn't complete. Please try again.");
     }
-    setIsGenerating(false);
   }, [patient, visits, carePlans, incidents, calculateAge]);
 
   // Auto-generate on patient selection
@@ -281,21 +281,21 @@ Return JSON:
                   size="sm"
                   variant="ghost"
                   onClick={(e) => { e.stopPropagation(); generateSummary(); }}
-                  disabled={isGenerating}
+                  disabled={ai.loading}
                   className="h-7 px-2"
                 >
-                  <RefreshCw className={`w-3 h-3 ${isGenerating ? 'animate-spin' : ''}`} />
+                  <RefreshCw className={`w-3 h-3 ${ai.loading ? 'animate-spin' : ''}`} />
                 </Button>
                 {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
               </>
             )}
-            {isGenerating && <Loader2 className="w-4 h-4 animate-spin text-indigo-600" />}
+            {ai.loading && <Loader2 className="w-4 h-4 animate-spin text-indigo-600" />}
           </div>
         </CardTitle>
       </CardHeader>
 
       <CardContent className="p-4">
-        {!summary && !isGenerating && (
+        {!summary && !ai.loading && (
           <div className="text-center py-6">
             <History className="w-12 h-12 text-indigo-300 mx-auto mb-3" />
             <p className="text-slate-600 mb-4">Generate a comprehensive patient history summary</p>
@@ -309,7 +309,7 @@ Return JSON:
           </div>
         )}
 
-        {isGenerating && !summary && (
+        {ai.loading && !summary && (
           <div className="flex flex-col items-center justify-center py-8">
             <Loader2 className="w-10 h-10 animate-spin text-indigo-600 mb-3" />
             <p className="text-slate-600">Analyzing patient history...</p>

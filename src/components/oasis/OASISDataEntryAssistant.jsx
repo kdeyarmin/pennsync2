@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,7 +26,7 @@ export default function OASISDataEntryAssistant({ onDataConfirmed }) {
   const [error, setError] = useState(null);
   const [fileUrl, setFileUrl] = useState(null);
   const [aiInsights, setAiInsights] = useState(null);
-  const [isAnalyzingInsights, setIsAnalyzingInsights] = useState(false);
+  const ai = useAICall();
   const [flaggedFields, setFlaggedFields] = useState([]);
   const [carePathways, setCarePathways] = useState([]);
 
@@ -140,11 +140,10 @@ export default function OASISDataEntryAssistant({ onDataConfirmed }) {
   };
 
   const analyzeExtractedData = async (data) => {
-    setIsAnalyzingInsights(true);
 
     try {
       // AI-powered validation and insights
-      const insights = await invokeLLM({
+      const insights = await ai.run({
         prompt: `Analyze this extracted OASIS data for compliance issues, clinical concerns, and care opportunities.
 
 EXTRACTED OASIS DATA:
@@ -224,7 +223,6 @@ Return structured JSON.`,
       // Don't fail the whole process if insights fail
     }
 
-    setIsAnalyzingInsights(false);
   };
 
   const handleFieldChange = (field, value) => {
@@ -348,7 +346,7 @@ Return structured JSON.`,
             </Alert>
 
             {/* AI Insights - Compliance Issues */}
-            {isAnalyzingInsights && (
+            {ai.loading && (
               <Card className="border-navy-200 bg-navy-50">
                 <CardContent className="p-4 flex items-center gap-3">
                   <Loader2 className="w-5 h-5 animate-spin text-navy-600" />
@@ -567,7 +565,7 @@ Return structured JSON.`,
               </Button>
               <Button
                 onClick={handleConfirm}
-                disabled={isAnalyzingInsights}
+                disabled={ai.loading}
                 className="flex-1 bg-navy-600 hover:bg-navy-700"
               >
                 <Send className="w-4 h-4 mr-2" />

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
+import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -25,7 +26,7 @@ import {
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 export default function PDGMCaseMixForecaster({ compact = false }) {
-  const [isForecasting, setIsForecasting] = useState(false);
+  const ai = useAICall();
   const [forecast, setForecast] = useState(null);
   const [timeframe, setTimeframe] = useState("30");
   const [_selectedPatient, _setSelectedPatient] = useState("all");
@@ -45,7 +46,6 @@ export default function PDGMCaseMixForecaster({ compact = false }) {
   });
 
   const generateForecast = async () => {
-    setIsForecasting(true);
 
     try {
       const patientSummaries = patients.slice(0, 20).map(p => ({
@@ -137,7 +137,7 @@ Return JSON:
   ]
 }`;
 
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt,
         response_json_schema: {
           type: "object",
@@ -156,9 +156,9 @@ Return JSON:
       setForecast(result);
     } catch (error) {
       console.error("Forecasting error:", error);
+      toast.error("The AI request didn't complete. Please try again.");
     }
 
-    setIsForecasting(false);
   };
 
   const formatCurrency = (amount) => {
@@ -186,8 +186,8 @@ Return JSON:
               <TrendingUp className="w-4 h-4 text-navy-600" />
               PDGM Revenue Forecast
             </div>
-            <Button size="sm" variant="ghost" onClick={generateForecast} disabled={isForecasting}>
-              {isForecasting ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+            <Button size="sm" variant="ghost" onClick={generateForecast} disabled={ai.loading}>
+              {ai.loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
             </Button>
           </CardTitle>
         </CardHeader>
@@ -215,8 +215,8 @@ Return JSON:
               )}
             </div>
           ) : (
-            <Button onClick={generateForecast} disabled={isForecasting} className="w-full" size="sm">
-              {isForecasting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <BarChart3 className="w-4 h-4 mr-2" />}
+            <Button onClick={generateForecast} disabled={ai.loading} className="w-full" size="sm">
+              {ai.loading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <BarChart3 className="w-4 h-4 mr-2" />}
               Generate Forecast
             </Button>
           )}
@@ -246,11 +246,11 @@ Return JSON:
             </Select>
             <Button
               onClick={generateForecast}
-              disabled={isForecasting}
+              disabled={ai.loading}
               size="sm"
               className="bg-navy-600 hover:bg-navy-700"
             >
-              {isForecasting ? (
+              {ai.loading ? (
                 <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Forecasting...</>
               ) : (
                 <><TrendingUp className="w-4 h-4 mr-2" /> Generate Forecast</>
@@ -260,7 +260,7 @@ Return JSON:
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-4 space-y-4">
-        {!forecast && !isForecasting && (
+        {!forecast && !ai.loading && (
           <Alert className="bg-navy-50 border-navy-200">
             <BarChart3 className="w-4 h-4 text-navy-600" />
             <AlertDescription className="text-navy-800 text-sm">

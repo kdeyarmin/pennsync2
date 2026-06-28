@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -28,7 +29,7 @@ export default function ProactiveDocumentationAssistant({
   autoAnalyze = true,
   onApplySuggestion
 }) {
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const ai = useAICall();
   const [gaps, setGaps] = useState(null);
   const [expandedGap, setExpandedGap] = useState(null);
   const [editingNarrative, setEditingNarrative] = useState({});
@@ -37,7 +38,6 @@ export default function ProactiveDocumentationAssistant({
   const analyzeDocumentation = useCallback(async () => {
     if (!oasisData) return;
 
-    setIsAnalyzing(true);
     try {
       const prompt = `You are a Medicare documentation expert. Analyze OASIS data and clinical notes to identify documentation gaps that could impact reimbursement, quality scores, or compliance.
 
@@ -101,7 +101,7 @@ For EACH gap found, provide:
 - Priority level
 - Estimated revenue/quality impact`;
 
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt,
         response_json_schema: {
           type: "object",
@@ -150,8 +150,8 @@ For EACH gap found, provide:
       setGaps(result);
     } catch (error) {
       console.error('Documentation analysis error:', error);
+      toast.error("The AI request didn't complete. Please try again.");
     }
-    setIsAnalyzing(false);
   }, [oasisData, clinicalNotes, patientData]);
 
   useEffect(() => {
@@ -221,9 +221,9 @@ For EACH gap found, provide:
           <CardTitle className="flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-navy-600" />
             AI Documentation Assistant
-            {isAnalyzing && <Loader2 className="w-4 h-4 animate-spin text-navy-500" />}
+            {ai.loading && <Loader2 className="w-4 h-4 animate-spin text-navy-500" />}
           </CardTitle>
-          {!gaps && !isAnalyzing && (
+          {!gaps && !ai.loading && (
             <Button onClick={analyzeDocumentation} className="bg-navy-600 hover:bg-navy-700">
               <Sparkles className="w-4 h-4 mr-2" />
               Analyze Documentation
@@ -233,7 +233,7 @@ For EACH gap found, provide:
       </CardHeader>
 
       <CardContent>
-        {isAnalyzing && (
+        {ai.loading && (
           <div className="text-center py-12">
             <Loader2 className="w-12 h-12 animate-spin text-navy-600 mx-auto mb-4" />
             <p className="text-navy-700 font-medium">AI analyzing documentation for gaps...</p>
@@ -489,10 +489,10 @@ For EACH gap found, provide:
               onClick={analyzeDocumentation}
               variant="outline"
               size="sm"
-              disabled={isAnalyzing}
+              disabled={ai.loading}
               className="w-full"
             >
-              {isAnalyzing ? (
+              {ai.loading ? (
                 <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Re-analyzing...</>
               ) : (
                 'Re-analyze Documentation'

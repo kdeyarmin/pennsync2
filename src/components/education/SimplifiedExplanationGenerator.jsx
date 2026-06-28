@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -27,7 +27,7 @@ export default function SimplifiedExplanationGenerator({ patient, diagnosis }) {
   const [nurseInput, setNurseInput] = useState("");
   const [explanationType, setExplanationType] = useState("condition");
   const [simplificationLevel, setSimplificationLevel] = useState("very_simple");
-  const [isGenerating, setIsGenerating] = useState(false);
+  const ai = useAICall();
   const [explanation, setExplanation] = useState(null);
   const [copied, setCopied] = useState(false);
 
@@ -52,9 +52,8 @@ export default function SimplifiedExplanationGenerator({ patient, diagnosis }) {
       return;
     }
 
-    setIsGenerating(true);
     try {
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `You are an expert health communicator specializing in translating complex medical information into patient-friendly language.
 
 NURSE'S INPUT (Medical Information):
@@ -125,7 +124,6 @@ Return JSON:
       console.error("Error generating explanation:", error);
       toast.error("Error generating explanation. Please try again.");
     }
-    setIsGenerating(false);
   };
 
   const handleCopy = (text) => {
@@ -199,10 +197,10 @@ Example: 'Patient has CHF with reduced ejection fraction of 35%. Needs to unders
 
           <Button
             onClick={generateExplanation}
-            disabled={isGenerating || !nurseInput.trim()}
+            disabled={ai.loading || !nurseInput.trim()}
             className="w-full bg-navy-600 hover:bg-navy-700"
           >
-            {isGenerating ? (
+            {ai.loading ? (
               <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Generating Simple Explanation...</>
             ) : (
               <><Sparkles className="w-4 h-4 mr-2" /> Generate Patient-Friendly Explanation</>

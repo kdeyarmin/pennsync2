@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -67,22 +67,21 @@ const simulationScenarios = [
 
 export default function ClinicalSimulationModule({ _nurseEmail, onSimulationCompleted }) {
   const [selectedScenario, setSelectedScenario] = useState(null);
-  const [isGenerating, setIsGenerating] = useState(false);
+  const generatingAi = useAICall();
   const [simulation, setSimulation] = useState(null);
   const [currentStep, setCurrentStep] = useState(0);
   const [userResponses, setUserResponses] = useState([]);
   const [currentResponse, setCurrentResponse] = useState("");
   const [feedback, setFeedback] = useState(null);
-  const [isEvaluating, setIsEvaluating] = useState(false);
+  const evaluatingAi = useAICall();
   const [completed, setCompleted] = useState(false);
   const [finalScore, setFinalScore] = useState(null);
 
   const generateSimulation = async (scenario) => {
-    setIsGenerating(true);
     setSelectedScenario(scenario);
     
     try {
-      const result = await invokeLLM({
+      const result = await generatingAi.run({
         prompt: `Create an interactive clinical simulation for home health nurses.
 
 SCENARIO: ${scenario.title}
@@ -146,7 +145,6 @@ Make it realistic, educational, and clinically accurate.`,
       const steps = Array.isArray(result?.steps) ? result.steps : [];
       if (!result?.patient_profile || steps.length === 0) {
         toast.error("The simulation couldn't be generated. Please try again.");
-        setIsGenerating(false);
         return;
       }
       setSimulation({
@@ -166,17 +164,15 @@ Make it realistic, educational, and clinically accurate.`,
       console.error("Error generating simulation:", error);
       toast.error("The simulation couldn't be generated. Please try again.");
     }
-    setIsGenerating(false);
   };
 
   const evaluateResponse = async () => {
     if (!currentResponse.trim()) return;
     
-    setIsEvaluating(true);
     const step = simulation.steps[currentStep];
     
     try {
-      const result = await invokeLLM({
+      const result = await evaluatingAi.run({
         prompt: `Evaluate this nurse's response in a clinical simulation.
 
 SCENARIO CONTEXT:
@@ -221,7 +217,6 @@ Be constructive and educational.`,
     } catch (error) {
       console.error("Error evaluating response:", error);
     }
-    setIsEvaluating(false);
   };
 
   const nextStep = () => {
@@ -305,7 +300,7 @@ Be constructive and educational.`,
   }
 
   // Loading
-  if (isGenerating) {
+  if (generatingAi.loading) {
     return (
       <Card className="border-2 border-navy-200 bg-navy-50">
         <CardContent className="p-12 text-center">
@@ -433,10 +428,10 @@ Be constructive and educational.`,
               />
               <Button
                 onClick={evaluateResponse}
-                disabled={!currentResponse.trim() || isEvaluating}
+                disabled={!currentResponse.trim() || evaluatingAi.loading}
                 className="w-full bg-navy-600 hover:bg-navy-700"
               >
-                {isEvaluating ? (
+                {evaluatingAi.loading ? (
                   <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Evaluating...</>
                 ) : (
                   <><Sparkles className="w-4 h-4 mr-2" /> Submit Response</>

@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -21,17 +22,16 @@ import {
 } from "lucide-react";
 
 export default function AIAuditSuggestions({ audit, _onApplySuggestion }) {
-  const [isGenerating, setIsGenerating] = useState(false);
+  const ai = useAICall();
   const [suggestions, setSuggestions] = useState(null);
   const [expandedIssues, setExpandedIssues] = useState(new Set());
   const [copiedIdx, setCopiedIdx] = useState(null);
 
   const generateSuggestions = async () => {
     if (!audit?.issues?.length) return;
-    setIsGenerating(true);
 
     try {
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `Analyze these compliance audit findings and provide specific, actionable improvement suggestions for each issue.
 
 AUDIT DETAILS:
@@ -92,8 +92,8 @@ Be specific to home health/hospice Medicare documentation requirements.`,
       setSuggestions(result);
     } catch (error) {
       console.error("Error generating suggestions:", error);
+      toast.error("The AI request didn't complete. Please try again.");
     }
-    setIsGenerating(false);
   };
 
   const toggleIssue = (idx) => {
@@ -143,10 +143,10 @@ Be specific to home health/hospice Medicare documentation requirements.`,
             <Button
               size="sm"
               onClick={generateSuggestions}
-              disabled={isGenerating}
+              disabled={ai.loading}
               className="bg-navy-600 hover:bg-navy-700 h-7 text-xs"
             >
-              {isGenerating ? (
+              {ai.loading ? (
                 <><Loader2 className="w-3 h-3 mr-1 animate-spin" /> Analyzing...</>
               ) : (
                 <><Sparkles className="w-3 h-3 mr-1" /> Generate Suggestions</>
@@ -157,7 +157,7 @@ Be specific to home health/hospice Medicare documentation requirements.`,
       </CardHeader>
 
       <CardContent className="p-4 space-y-4">
-        {isGenerating ? (
+        {ai.loading ? (
           <div className="text-center py-6">
             <Loader2 className="w-8 h-8 animate-spin text-navy-600 mx-auto mb-2" />
             <p className="text-sm text-slate-600">Analyzing audit findings...</p>

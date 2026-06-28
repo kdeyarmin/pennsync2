@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -21,13 +22,12 @@ export default function PDGMImpactAnalyzer({
   suggestedChanges,
   onAnalysisComplete
 }) {
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const ai = useAICall();
   const [impactAnalysis, setImpactAnalysis] = useState(null);
 
   const analyzePDGMImpact = async () => {
     if (!currentPdgmData || !suggestedChanges) return;
 
-    setIsAnalyzing(true);
 
     try {
       // Build modified PDGM data based on suggestions
@@ -62,7 +62,7 @@ export default function PDGMImpactAnalyzer({
       });
 
       // Get detailed AI analysis of the changes
-      const aiAnalysis = await invokeLLM({
+      const aiAnalysis = await ai.run({
         prompt: `You are a PDGM reimbursement optimization expert. Analyze the impact of suggested documentation improvements on PDGM payment.
 
 CURRENT PDGM DATA:
@@ -255,9 +255,9 @@ Return detailed JSON analysis:`,
       }
     } catch (error) {
       console.error("PDGM impact analysis error:", error);
+      toast.error("The AI request didn't complete. Please try again.");
     }
 
-    setIsAnalyzing(false);
   };
 
   const formatCurrency = (amount) => {
@@ -298,10 +298,10 @@ Return detailed JSON analysis:`,
             </p>
             <Button
               onClick={analyzePDGMImpact}
-              disabled={isAnalyzing || !currentPdgmData || !suggestedChanges}
+              disabled={ai.loading || !currentPdgmData || !suggestedChanges}
               className="bg-green-600 hover:bg-green-700"
             >
-              {isAnalyzing ? (
+              {ai.loading ? (
                 <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Analyzing Impact...</>
               ) : (
                 <><BarChart3 className="w-4 h-4 mr-2" /> Analyze PDGM Impact</>

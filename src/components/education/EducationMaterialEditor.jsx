@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -24,7 +24,7 @@ export default function EducationMaterialEditor({ material, onClose, onSave }) {
     is_published: true
   });
   const [newKeyword, setNewKeyword] = useState('');
-  const [isEnhancing, setIsEnhancing] = useState(false);
+  const ai = useAICall();
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -75,9 +75,8 @@ export default function EducationMaterialEditor({ material, onClose, onSave }) {
       return;
     }
 
-    setIsEnhancing(true);
     try {
-      const response = await invokeLLM({
+      const response = await ai.run({
         prompt: `You are a patient education specialist. Enhance the following patient education content to be clear, empathetic, and easy to understand at a ${formData.reading_level} reading level. Keep variable placeholders like {{patient_name}} intact. Make it warm and supportive while maintaining medical accuracy.
 
 Content to enhance:
@@ -90,8 +89,6 @@ Return only the enhanced content, keeping all {{variable}} placeholders exactly 
       toast.success('Content enhanced with AI');
     } catch {
       toast.error('Failed to enhance content');
-    } finally {
-      setIsEnhancing(false);
     }
   };
 
@@ -207,10 +204,10 @@ Return only the enhanced content, keeping all {{variable}} placeholders exactly 
                   size="sm"
                   variant="outline"
                   onClick={handleEnhanceWithAI}
-                  disabled={isEnhancing}
+                  disabled={ai.loading}
                 >
                   <Sparkles className="w-3 h-3 mr-1" />
-                  {isEnhancing ? 'Enhancing...' : 'Enhance with AI'}
+                  {ai.loading ? 'Enhancing...' : 'Enhance with AI'}
                 </Button>
               </div>
             </div>

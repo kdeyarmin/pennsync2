@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -25,10 +26,9 @@ export default function PredictiveInsightsPanel({
   _selectedPatientId = ''
 }) {
   const [insights, setInsights] = useState(null);
-  const [isGenerating, setIsGenerating] = useState(false);
+  const ai = useAICall();
 
   const generateInsights = async () => {
-    setIsGenerating(true);
 
     // Build population summary
     const populationSummary = {
@@ -55,7 +55,7 @@ export default function PredictiveInsightsPanel({
     });
 
     try {
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `Analyze this home health agency's patient population and provide strategic predictive insights.
 
 POPULATION SUMMARY:
@@ -147,9 +147,9 @@ Provide comprehensive predictive insights including:
       setInsights(result);
     } catch (error) {
       console.error("Insights generation error:", error);
+      toast.error("The AI request didn't complete. Please try again.");
     }
 
-    setIsGenerating(false);
   };
 
   const getDirectionIcon = (direction) => {
@@ -175,10 +175,10 @@ Provide comprehensive predictive insights including:
             </div>
             <Button
               onClick={generateInsights}
-              disabled={isGenerating}
+              disabled={ai.loading}
               className="bg-navy-600 hover:bg-navy-700"
             >
-              {isGenerating ? (
+              {ai.loading ? (
                 <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Generating Insights...</>
               ) : insights ? (
                 <><RefreshCw className="w-4 h-4 mr-2" /> Regenerate Insights</>
@@ -352,7 +352,7 @@ Provide comprehensive predictive insights including:
         </>
       )}
 
-      {!insights && !isGenerating && (
+      {!insights && !ai.loading && (
         <div className="text-center py-12 text-slate-500">
           <Brain className="w-16 h-16 mx-auto mb-4 opacity-20" />
           <p>Click "Generate Insights" to run AI analysis on your patient population</p>

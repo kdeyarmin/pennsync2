@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import { base44 } from "@/api/base44Client";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -29,7 +29,7 @@ export default function AICarePlanSuggestionEngine({
   onAcceptSuggestion,
   autoGenerate = false
 }) {
-  const [isGenerating, setIsGenerating] = useState(false);
+  const ai = useAICall();
   const [suggestions, setSuggestions] = useState(null);
   const [acceptedSuggestions, setAcceptedSuggestions] = useState(new Set());
 
@@ -48,12 +48,11 @@ export default function AICarePlanSuggestionEngine({
   const generateSuggestions = useCallback(async () => {
     if (!diagnosis) return;
 
-    setIsGenerating(true);
     try {
       const _existingProblems = existingCarePlans.map(cp => cp.problem);
       const _existingGoals = existingCarePlans.map(cp => cp.goal);
 
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `Generate Medicare-compliant care plan suggestions for Pennsylvania home health patient.
 
 PATIENT CONTEXT:
@@ -121,8 +120,6 @@ Return JSON with suggestions array.`,
     } catch (error) {
       console.error('Error generating care plan suggestions:', error);
       toast.error("Failed to generate care plan suggestions. Please try again.");
-    } finally {
-      setIsGenerating(false);
     }
   }, [diagnosis, existingCarePlans, patientData, medicareRules, educationMaterials]);
 
@@ -173,7 +170,7 @@ Return JSON with suggestions array.`,
     );
   }
 
-  if (isGenerating) {
+  if (ai.loading) {
     return (
       <Card className="border-2 border-navy-200">
         <CardContent className="p-6 text-center">

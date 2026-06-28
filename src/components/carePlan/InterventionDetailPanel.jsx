@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { CheckCircle2, Link, BookOpen, Shield, ChevronDown, ChevronUp, Sparkles, AlertCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getCategoryForItem } from "./InterventionLibrary";
@@ -32,7 +32,7 @@ const MEDICARE_GUIDELINES = {
 export default function InterventionDetailPanel({ item, onLinkPathway, linkedPathway, _onClose }) {
   const [selectedPathway, setSelectedPathway] = useState(linkedPathway || "");
   const [aiInsight, setAiInsight] = useState(null);
-  const [loadingAI, setLoadingAI] = useState(false);
+  const ai = useAICall();
   const [expanded, setExpanded] = useState({ pathway: true, guideline: true, ai: false });
 
   const category = item ? getCategoryForItem(item.id) : null;
@@ -49,10 +49,9 @@ export default function InterventionDetailPanel({ item, onLinkPathway, linkedPat
 
   const fetchAIInsight = async () => {
     if (!item) return;
-    setLoadingAI(true);
     setExpanded(prev => ({ ...prev, ai: true }));
     try {
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `You are a Medicare home health compliance expert. For the clinical intervention "${item.name}" (${item.description}), provide:
 1. A 2-sentence clinical rationale for why this intervention is Medicare-reimbursable
 2. One key documentation tip to ensure compliance
@@ -72,7 +71,6 @@ Format as JSON: { "rationale": "...", "tip": "...", "avoid": "..." }`,
     } catch {
       setAiInsight({ error: true });
     }
-    setLoadingAI(false);
   };
 
   const toggle = (key) => setExpanded(prev => ({ ...prev, [key]: !prev[key] }));
@@ -191,7 +189,7 @@ Format as JSON: { "rationale": "...", "tip": "...", "avoid": "..." }`,
         {/* AI Compliance Insight */}
         <div className="border-b border-slate-100">
           <button
-            onClick={() => { toggle("ai"); if (!aiInsight && !loadingAI) fetchAIInsight(); }}
+            onClick={() => { toggle("ai"); if (!aiInsight && !ai.loading) fetchAIInsight(); }}
             className="w-full flex items-center justify-between px-4 py-3 hover:bg-slate-50 transition-colors"
           >
             <div className="flex items-center gap-2">
@@ -204,7 +202,7 @@ Format as JSON: { "rationale": "...", "tip": "...", "avoid": "..." }`,
 
           {expanded.ai && (
             <div className="px-4 pb-4">
-              {loadingAI ? (
+              {ai.loading ? (
                 <div className="flex items-center gap-2 text-xs text-navy-600 bg-navy-50 rounded-lg p-3">
                   <Loader2 className="w-4 h-4 animate-spin" />
                   Generating compliance insights...

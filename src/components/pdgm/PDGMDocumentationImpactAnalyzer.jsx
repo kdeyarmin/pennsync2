@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
+import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -28,7 +29,7 @@ export default function PDGMDocumentationImpactAnalyzer({
   _onWarningsDetected
 }) {
   const [analysis, setAnalysis] = useState(null);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const ai = useAICall();
   const [showOptimizations, setShowOptimizations] = useState(true);
 
   const { data: currentUser } = useQuery({
@@ -39,9 +40,8 @@ export default function PDGMDocumentationImpactAnalyzer({
   const isAdmin = currentUser?.role === 'admin';
 
   const analyzeImpact = useMemo(() => debounce(async () => {
-    setIsAnalyzing(true);
     try {
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `You are a Medicare home health PDGM reimbursement optimization expert. Analyze this clinical documentation for PDGM case-mix impact.
 
 CURRENT DOCUMENTATION:
@@ -180,8 +180,8 @@ Return JSON with detailed analysis and actionable recommendations.
       setAnalysis(result);
     } catch (error) {
       console.error("Error analyzing PDGM impact:", error);
+      toast.error("The AI request didn't complete. Please try again.");
     }
-    setIsAnalyzing(false);
   }, 2000), [noteContent, diagnosis, patientData, vitalSigns, carePlans]);
 
   useEffect(() => {
@@ -219,7 +219,7 @@ Return JSON with detailed analysis and actionable recommendations.
           <div className="flex items-center gap-2">
             <DollarSign className="w-4 h-4 text-green-600" />
             <span>PDGM Payment Optimization</span>
-            {isAnalyzing && <Loader2 className="w-3 h-3 animate-spin" />}
+            {ai.loading && <Loader2 className="w-3 h-3 animate-spin" />}
           </div>
           {analysis && (
             <Button
@@ -236,7 +236,7 @@ Return JSON with detailed analysis and actionable recommendations.
 
       {showOptimizations && (
         <CardContent className="p-3 space-y-3 max-h-[600px] overflow-y-auto">
-          {isAnalyzing && !analysis ? (
+          {ai.loading && !analysis ? (
             <div className="text-center py-6">
               <Loader2 className="w-6 h-6 animate-spin mx-auto text-green-600 mb-2" />
               <p className="text-xs text-slate-500">Analyzing PDGM impact...</p>

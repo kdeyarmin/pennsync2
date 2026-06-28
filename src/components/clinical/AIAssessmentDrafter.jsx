@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -8,15 +9,14 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Sparkles, Loader2, FileText, CheckCircle2, Copy } from "lucide-react";
 
 export default function AIAssessmentDrafter({ visitNotes, patientData, onDraftComplete }) {
-  const [isGenerating, setIsGenerating] = useState(false);
+  const ai = useAICall();
   const [draftedAssessment, setDraftedAssessment] = useState(null);
   const [customNotes, setCustomNotes] = useState(visitNotes || "");
 
   const generateAssessment = async () => {
-    setIsGenerating(true);
     
     try {
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `Generate a comprehensive OASIS assessment draft based on the following patient visit notes and data:
 
 VISIT NOTES:
@@ -97,8 +97,8 @@ Format the response professionally for OASIS documentation. Be specific and use 
       onDraftComplete?.(result);
     } catch (error) {
       console.error("Error generating assessment:", error);
+      toast.error("The AI request didn't complete. Please try again.");
     }
-    setIsGenerating(false);
   };
 
   const copyToClipboard = (text) => {
@@ -130,10 +130,10 @@ Format the response professionally for OASIS documentation. Be specific and use 
 
           <Button
             onClick={generateAssessment}
-            disabled={isGenerating || !customNotes.trim()}
+            disabled={ai.loading || !customNotes.trim()}
             className="w-full bg-navy-600 hover:bg-navy-700"
           >
-            {isGenerating ? (
+            {ai.loading ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 Generating OASIS Assessment...

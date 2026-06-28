@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -27,14 +28,13 @@ export default function ComprehensiveOASISReviewer({
   patientData,
   autoReview = true
 }) {
-  const [isReviewing, setIsReviewing] = useState(false);
+  const ai = useAICall();
   const [reviewResults, setReviewResults] = useState(null);
   const [expandedSections, setExpandedSections] = useState(['compliance', 'quality', 'inconsistencies']);
 
   const performComprehensiveReview = useCallback(async () => {
     if (!oasisData || !analysisResults) return;
 
-    setIsReviewing(true);
     try {
       const prompt = `You are a Medicare OASIS compliance expert. Perform a COMPREHENSIVE review of this OASIS assessment.
 
@@ -115,7 +115,7 @@ For EACH inconsistency, provide:
 
 Return detailed JSON with all findings.`;
 
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt,
         response_json_schema: {
           type: "object",
@@ -203,8 +203,8 @@ Return detailed JSON with all findings.`;
       setReviewResults(result);
     } catch (error) {
       console.error('Comprehensive review error:', error);
+      toast.error("The AI request didn't complete. Please try again.");
     }
-    setIsReviewing(false);
   }, [analysisResults, oasisData, patientData]);
 
   useEffect(() => {
@@ -251,7 +251,7 @@ Return detailed JSON with all findings.`;
           <CardTitle className="flex items-center gap-2">
             <FileSearch className="w-6 h-6 text-indigo-600" />
             Comprehensive OASIS Review
-            {isReviewing && <Loader2 className="w-5 h-5 animate-spin text-indigo-500" />}
+            {ai.loading && <Loader2 className="w-5 h-5 animate-spin text-indigo-500" />}
           </CardTitle>
           {reviewResults && (
             <Badge className={getRiskLevelColor(reviewResults.overall_risk_level)} size="lg">
@@ -262,7 +262,7 @@ Return detailed JSON with all findings.`;
       </CardHeader>
 
       <CardContent>
-        {isReviewing && (
+        {ai.loading && (
           <div className="text-center py-12">
             <Loader2 className="w-16 h-16 animate-spin text-indigo-600 mx-auto mb-4" />
             <p className="text-indigo-700 font-medium mb-2">AI performing comprehensive OASIS review...</p>
@@ -270,7 +270,7 @@ Return detailed JSON with all findings.`;
           </div>
         )}
 
-        {!isReviewing && !reviewResults && (
+        {!ai.loading && !reviewResults && (
           <div className="text-center py-8">
             <FileSearch className="w-16 h-16 text-indigo-300 mx-auto mb-4" />
             <p className="text-slate-600 mb-4">Click below to perform a comprehensive AI review</p>
@@ -713,10 +713,10 @@ Return detailed JSON with all findings.`;
               <Button
                 onClick={performComprehensiveReview}
                 variant="outline"
-                disabled={isReviewing}
+                disabled={ai.loading}
                 className="flex-1"
               >
-                {isReviewing ? (
+                {ai.loading ? (
                   <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Re-reviewing...</>
                 ) : (
                   'Re-run Comprehensive Review'

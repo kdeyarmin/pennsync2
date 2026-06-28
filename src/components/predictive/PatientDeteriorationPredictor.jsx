@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -16,14 +16,13 @@ import {
 } from "lucide-react";
 
 export default function PatientDeteriorationPredictor({ patientId, recentVisits, autoAnalyze = false }) {
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const ai = useAICall();
   const [analysis, setAnalysis] = useState(null);
   const [showDetails, setShowDetails] = useState(false);
 
   const analyzeDeteriorationRisk = useCallback(async () => {
     if (!recentVisits || recentVisits.length < 2) return;
 
-    setIsAnalyzing(true);
     try {
       // Extract vital signs trends
       const vitalTrends = recentVisits
@@ -43,7 +42,7 @@ export default function PatientDeteriorationPredictor({ patientId, recentVisits,
         .map(v => v.nurse_notes.substring(0, 500))
         .join('\n---\n');
 
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `You are a clinical deterioration risk analyst. Analyze this patient's vital signs trends and visit notes to predict deterioration risk.
 
 VITAL SIGNS TRENDS (most recent last):
@@ -106,7 +105,6 @@ Return a deterioration risk assessment with:
       console.error('Deterioration analysis error:', error);
       setAnalysis({ error: error.message });
     }
-    setIsAnalyzing(false);
   }, [recentVisits]);
 
   useEffect(() => {
@@ -144,7 +142,7 @@ Return a deterioration risk assessment with:
         </CardTitle>
       </CardHeader>
       <CardContent className="p-4 space-y-4">
-        {!analysis && !isAnalyzing && (
+        {!analysis && !ai.loading && (
           <Button
             onClick={analyzeDeteriorationRisk}
             className="w-full bg-orange-600 hover:bg-orange-700"
@@ -154,7 +152,7 @@ Return a deterioration risk assessment with:
           </Button>
         )}
 
-        {isAnalyzing && (
+        {ai.loading && (
           <div className="text-center py-6">
             <Loader2 className="w-8 h-8 text-orange-600 animate-spin mx-auto mb-2" />
             <p className="text-sm text-slate-600">Analyzing vital trends and clinical notes...</p>

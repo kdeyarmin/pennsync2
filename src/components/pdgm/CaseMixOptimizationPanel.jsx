@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
+import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,7 +22,7 @@ export default function CaseMixOptimizationPanel({
   onApplyRecommendation
 }) {
   const [optimization, setOptimization] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const ai = useAICall();
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -31,9 +32,8 @@ export default function CaseMixOptimizationPanel({
   const isAdmin = currentUser?.role === 'admin';
 
   const analyzeOptimization = async () => {
-    setIsLoading(true);
     try {
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `Review this home health patient's documentation for accuracy and completeness, and identify clinically-supported documentation that may also affect PDGM case-mix.
 
 CURRENT DOCUMENTATION:
@@ -100,8 +100,8 @@ Return JSON:
       setOptimization(result);
     } catch (error) {
       console.error("Error analyzing optimization:", error);
+      toast.error("The AI request didn't complete. Please try again.");
     }
-    setIsLoading(false);
   };
 
   const handleApply = (text) => {
@@ -130,10 +130,10 @@ Return JSON:
             <Button
               size="sm"
               onClick={analyzeOptimization}
-              disabled={isLoading || !currentNote || currentNote.length < 100}
+              disabled={ai.loading || !currentNote || currentNote.length < 100}
               className="h-7 bg-green-600 hover:bg-green-700"
             >
-              {isLoading ? (
+              {ai.loading ? (
                 <Loader2 className="w-3 h-3 animate-spin" />
               ) : (
                 <>Analyze</>
@@ -144,7 +144,7 @@ Return JSON:
       </CardHeader>
 
       <CardContent className="p-3 space-y-3">
-        {isLoading ? (
+        {ai.loading ? (
           <div className="text-center py-6">
             <Loader2 className="w-8 h-8 animate-spin text-green-600 mx-auto mb-2" />
             <p className="text-xs text-slate-600">Calculating optimization opportunities...</p>

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -25,13 +26,12 @@ export default function AutomatedQualityAssurance({
   autoRun = false,
   onQAComplete
 }) {
-  const [isRunning, setIsRunning] = useState(false);
+  const ai = useAICall();
   const [qaResults, setQaResults] = useState(null);
 
   const runQualityAssurance = useCallback(async () => {
     if (!oasisData) return;
 
-    setIsRunning(true);
     try {
       const prompt = `You are a Medicare Quality Assurance expert. Perform comprehensive QA checks on OASIS documentation.
 
@@ -94,7 +94,7 @@ For each failure, provide:
 - Example compliant documentation
 - Recommended fix`;
 
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt,
         response_json_schema: {
           type: "object",
@@ -198,8 +198,8 @@ For each failure, provide:
       }
     } catch (error) {
       console.error('QA check error:', error);
+      toast.error("The AI request didn't complete. Please try again.");
     }
-    setIsRunning(false);
   }, [oasisData, patientData, clinicalNotes, onQAComplete]);
 
   useEffect(() => {
@@ -225,9 +225,9 @@ For each failure, provide:
           <CardTitle className="flex items-center gap-2">
             <Shield className="w-5 h-5 text-indigo-600" />
             Automated Quality Assurance
-            {isRunning && <Loader2 className="w-4 h-4 animate-spin text-indigo-500" />}
+            {ai.loading && <Loader2 className="w-4 h-4 animate-spin text-indigo-500" />}
           </CardTitle>
-          {!qaResults && !isRunning && (
+          {!qaResults && !ai.loading && (
             <Button onClick={runQualityAssurance} className="bg-indigo-600 hover:bg-indigo-700">
               <Shield className="w-4 h-4 mr-2" />
               Run QA Checks
@@ -237,14 +237,14 @@ For each failure, provide:
       </CardHeader>
 
       <CardContent>
-        {isRunning && (
+        {ai.loading && (
           <div className="text-center py-12">
             <Loader2 className="w-12 h-12 animate-spin text-indigo-600 mx-auto mb-4" />
             <p className="text-indigo-700">Running comprehensive quality assurance checks...</p>
           </div>
         )}
 
-        {!isRunning && !qaResults && (
+        {!ai.loading && !qaResults && (
           <div className="text-center py-8">
             <Shield className="w-12 h-12 text-indigo-400 mx-auto mb-3" />
             <p className="text-slate-600">Click "Run QA Checks" to validate documentation quality</p>

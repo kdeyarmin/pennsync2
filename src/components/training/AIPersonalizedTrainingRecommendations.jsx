@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,7 +22,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { toast } from 'sonner';
 
 export default function AIPersonalizedTrainingRecommendations({ nurseEmail }) {
-  const [analyzing, setAnalyzing] = useState(false);
+  const ai = useAICall();
   const [recommendations, setRecommendations] = useState(null);
 
   // Fetch nurse's documentation history
@@ -57,7 +57,6 @@ export default function AIPersonalizedTrainingRecommendations({ nurseEmail }) {
   });
 
   const analyzeAndRecommend = useCallback(async () => {
-    setAnalyzing(true);
 
     try {
       // Aggregate documentation patterns
@@ -79,7 +78,7 @@ export default function AIPersonalizedTrainingRecommendations({ nurseEmail }) {
         issuesByContext[context].push(rec);
       });
 
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `You are an expert nursing educator and clinical development specialist.
 
 Analyze this nurse's documentation patterns and performance data to provide personalized training recommendations:
@@ -257,8 +256,6 @@ Be specific, actionable, and encouraging. Focus on growth and development, not c
       setRecommendations(result);
     } catch (error) {
       console.error('Error generating recommendations:', error);
-    } finally {
-      setAnalyzing(false);
     }
   }, [existingRecommendations, nurseEmail, visits, completedTraining, allModules]);
 
@@ -287,7 +284,7 @@ Be specific, actionable, and encouraging. Focus on growth and development, not c
     }
   };
 
-  if (analyzing) {
+  if (ai.loading) {
     return (
       <Card>
         <CardContent className="p-8 text-center">

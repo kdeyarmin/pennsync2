@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 
 export default function AIPredictivePatientAnalyzer({ patientId, autoAnalyze = false }) {
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const ai = useAICall();
   const [analysis, setAnalysis] = useState(null);
   const [error, setError] = useState(null);
 
@@ -59,7 +59,6 @@ export default function AIPredictivePatientAnalyzer({ patientId, autoAnalyze = f
   const performAnalysis = useCallback(async () => {
     if (!patient) return;
 
-    setIsAnalyzing(true);
     setError(null);
 
     try {
@@ -146,7 +145,7 @@ Analyze and provide structured insights in the following areas:
 
 Be specific, evidence-based, and actionable. Focus on Medicare home health best practices.`;
 
-      const response = await invokeLLM({
+      const response = await ai.run({
         prompt,
         response_json_schema: {
           type: "object",
@@ -271,16 +270,14 @@ Be specific, evidence-based, and actionable. Focus on Medicare home health best 
     } catch (err) {
       console.error('Analysis error:', err);
       setError(err.message || 'Failed to analyze patient data');
-    } finally {
-      setIsAnalyzing(false);
     }
   }, [carePlans, incidents, patient, visits]);
 
   useEffect(() => {
-    if (autoAnalyze && patient && !analysis && !isAnalyzing) {
+    if (autoAnalyze && patient && !analysis && !ai.loading) {
       performAnalysis();
     }
-  }, [autoAnalyze, patient, analysis, isAnalyzing, performAnalysis]);
+  }, [autoAnalyze, patient, analysis, ai.loading, performAnalysis]);
 
   const getSeverityColor = (severity) => {
     const severityLower = (severity || '').toLowerCase();
@@ -323,10 +320,10 @@ Be specific, evidence-based, and actionable. Focus on Medicare home health best 
             </div>
             <Button
               onClick={performAnalysis}
-              disabled={isAnalyzing}
+              disabled={ai.loading}
               className="bg-white text-navy-600 hover:bg-navy-50"
             >
-              {isAnalyzing ? (
+              {ai.loading ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   Analyzing...
@@ -787,7 +784,7 @@ Be specific, evidence-based, and actionable. Focus on Medicare home health best 
         </>
       )}
 
-      {!analysis && !isAnalyzing && (
+      {!analysis && !ai.loading && (
         <Card>
           <CardContent className="p-12 text-center">
             <Brain className="w-16 h-16 mx-auto mb-4 text-navy-600" />

@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -29,7 +30,7 @@ export default function RehospitalizationPredictor({
   riskFilter = 'all'
 }) {
   const [predictions, setPredictions] = useState({});
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const ai = useAICall();
   const [analyzingPatientId, setAnalyzingPatientId] = useState(null);
 
   // Calculate base risk for all patients
@@ -111,7 +112,6 @@ export default function RehospitalizationPredictor({
 
   // Get AI prediction for specific patient
   const analyzePatient = async (patientId) => {
-    setIsAnalyzing(true);
     setAnalyzingPatientId(patientId);
 
     const patient = patients.find(p => p.id === patientId);
@@ -119,7 +119,7 @@ export default function RehospitalizationPredictor({
     const patientVisits = visits.filter(v => v.patient_id === patientId);
 
     try {
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `Analyze this home health patient's rehospitalization risk and provide predictions with preventive recommendations.
 
 PATIENT: ${patient?.first_name} ${patient?.last_name}
@@ -183,9 +183,9 @@ Provide a comprehensive rehospitalization risk assessment with:
       setPredictions(prev => ({ ...prev, [patientId]: result }));
     } catch (error) {
       console.error("Analysis error:", error);
+      toast.error("The AI request didn't complete. Please try again.");
     }
 
-    setIsAnalyzing(false);
     setAnalyzingPatientId(null);
   };
 
@@ -282,9 +282,9 @@ Provide a comprehensive rehospitalization risk assessment with:
                   variant="outline"
                   className="w-full text-xs"
                   onClick={() => analyzePatient(patient.id)}
-                  disabled={isAnalyzing && analyzingPatientId === patient.id}
+                  disabled={ai.loading && analyzingPatientId === patient.id}
                 >
-                  {isAnalyzing && analyzingPatientId === patient.id ? (
+                  {ai.loading && analyzingPatientId === patient.id ? (
                     <><Loader2 className="w-3 h-3 mr-1 animate-spin" /> Analyzing...</>
                   ) : patient.prediction ? (
                     <><RefreshCw className="w-3 h-3 mr-1" /> Refresh AI Analysis</>

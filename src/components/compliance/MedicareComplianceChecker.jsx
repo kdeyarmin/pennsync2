@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
+import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -34,7 +35,7 @@ export default function MedicareComplianceChecker({
   onApplyFix,
   autoCheck = true
 }) {
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const ai = useAICall();
   const [complianceResults, setComplianceResults] = useState(null);
   const [appliedFixes, setAppliedFixes] = useState(new Set());
 
@@ -47,7 +48,6 @@ export default function MedicareComplianceChecker({
   const analyzeCompliance = useCallback(async () => {
     if (!noteContent || noteContent.length < 100) return;
 
-    setIsAnalyzing(true);
     try {
       // Filter rules applicable to this visit type
       const applicableRules = complianceRules.filter(rule => 
@@ -64,7 +64,7 @@ Examples (Compliant): ${rule.examples_compliant?.[0] || 'N/A'}
 Examples (Non-compliant): ${rule.examples_non_compliant?.[0] || 'N/A'}
 `).join('\n');
 
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `You are a Medicare home health compliance expert with access to live internet data from CMS.gov. Analyze this clinical note against the LATEST 2025 42 CFR 484 Conditions of Participation for home health agencies.
 
 CLINICAL NOTE:
@@ -136,8 +136,8 @@ Return JSON with overall_compliance_score (0-100), rule_violations array with ru
       setComplianceResults(result);
     } catch (error) {
       console.error('Compliance check error:', error);
+      toast.error("The AI request didn't complete. Please try again.");
     }
-    setIsAnalyzing(false);
   }, [noteContent, complianceRules, visitType, diagnosis, nurseType, patientData]);
 
   useEffect(() => {
@@ -169,7 +169,7 @@ Return JSON with overall_compliance_score (0-100), rule_violations array with ru
     }
   };
 
-  if (isAnalyzing) {
+  if (ai.loading) {
     return (
       <Card className="border-2 border-blue-200">
         <CardContent className="p-6 text-center">

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -26,7 +26,7 @@ export default function AICarePlanAnalyzer({
   assessmentData = null,
   onInterventionsGenerated
 }) {
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const ai = useAICall();
   const [analysis, setAnalysis] = useState(null);
   const [selectedInterventions, setSelectedInterventions] = useState({});
   const [isSaving, setIsSaving] = useState(false);
@@ -37,11 +37,10 @@ export default function AICarePlanAnalyzer({
       return;
     }
 
-    setIsAnalyzing(true);
     try {
       const protocolType = careType === "hospice" ? "Hospice" : "Home Health";
       
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `You are an expert ${protocolType} care planner specializing in personalized interventions and visit schedules.
 
 PATIENT: ${patientName}
@@ -154,7 +153,6 @@ Return JSON:
       console.error("Error analyzing care plan:", error);
       toast.error("Failed to generate analysis");
     }
-    setIsAnalyzing(false);
   };
 
   const handleSaveAnalysis = async () => {
@@ -224,11 +222,11 @@ Return JSON:
           <div className="space-y-4">
             <Button
               onClick={generateAnalysis}
-              disabled={isAnalyzing || !diagnosis || !assessmentData}
+              disabled={ai.loading || !diagnosis || !assessmentData}
               className="w-full bg-navy-600 hover:bg-navy-700"
               size="lg"
             >
-              {isAnalyzing ? (
+              {ai.loading ? (
                 <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Analyzing Patient Data...</>
               ) : (
                 <><Sparkles className="w-4 h-4 mr-2" /> Generate Personalized Care Plan</>

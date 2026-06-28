@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
+import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -28,7 +29,7 @@ import {
 import { format, subDays, startOfMonth, endOfMonth } from "date-fns";
 
 export default function AutomatedComplianceReporting({ _nurseEmail, isAdmin = false }) {
-  const [isGenerating, setIsGenerating] = useState(false);
+  const ai = useAICall();
   const [report, setReport] = useState(null);
   const [expanded, setExpanded] = useState(true);
   const [reportPeriod, setReportPeriod] = useState("last_7_days");
@@ -55,7 +56,6 @@ export default function AutomatedComplianceReporting({ _nurseEmail, isAdmin = fa
   });
 
   const generateReport = async () => {
-    setIsGenerating(true);
 
     try {
       // Calculate date range
@@ -107,7 +107,7 @@ export default function AutomatedComplianceReporting({ _nurseEmail, isAdmin = fa
         dataSummary.incident_types[i.incident_type] = (dataSummary.incident_types[i.incident_type] || 0) + 1;
       });
 
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `You are a healthcare compliance reporting AI. Generate a comprehensive compliance report based on this data.
 
 DATA SUMMARY:
@@ -187,9 +187,9 @@ Return JSON:
 
     } catch (error) {
       console.error("Error generating report:", error);
+      toast.error("The AI request didn't complete. Please try again.");
     }
 
-    setIsGenerating(false);
   };
 
   const downloadReport = () => {
@@ -287,10 +287,10 @@ ${report.next_steps?.map((s, i) => `${i + 1}. ${s}`).join('\n')}
             </Select>
             <Button
               onClick={generateReport}
-              disabled={isGenerating}
+              disabled={ai.loading}
               className="bg-emerald-600 hover:bg-emerald-700"
             >
-              {isGenerating ? (
+              {ai.loading ? (
                 <>
                   <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
                   Generating...

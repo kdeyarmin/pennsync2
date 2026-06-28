@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -14,15 +15,14 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 
 export default function EnhancedPDGMCaseMixAnalyzer({ pdgmData, navigationData }) {
   const [caseMixAnalysis, setCaseMixAnalysis] = useState(null);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const ai = useAICall();
 
   const performCaseMixAnalysis = useCallback(async () => {
     if (!pdgmData || !navigationData?.case_mix_calculation) return;
 
-    setIsAnalyzing(true);
 
     try {
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `Perform detailed PDGM case-mix component analysis showing the dollar contribution of each factor.
 
 PDGM DATA:
@@ -164,9 +164,9 @@ Return detailed JSON with exact dollar amounts:`,
       setCaseMixAnalysis(result);
     } catch (error) {
       console.error("Case-mix analysis error:", error);
+      toast.error("The AI request didn't complete. Please try again.");
     }
 
-    setIsAnalyzing(false);
   }, [pdgmData, navigationData]);
 
   useEffect(() => {
@@ -198,7 +198,7 @@ Return detailed JSON with exact dollar amounts:`,
           </CardTitle>
         </CardHeader>
         <CardContent className="py-4">
-          {isAnalyzing ? (
+          {ai.loading ? (
             <div className="text-center">
               <Loader2 className="w-6 h-6 animate-spin text-indigo-600 mx-auto mb-2" />
               <p className="text-xs text-slate-600">Analyzing case-mix components...</p>

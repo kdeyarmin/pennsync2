@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -84,18 +84,17 @@ const SCORING_CRITERIA = {
 };
 
 export default function OASISDocumentationQualityScorer({ analysisResults, pdgmData, onQualityScoreComplete }) {
-  const [isScoring, setIsScoring] = useState(false);
+  const ai = useAICall();
   const [qualityScore, setQualityScore] = useState(null);
   const [error, setError] = useState(null);
 
   const runQualityScoring = async () => {
     if (!analysisResults) return;
 
-    setIsScoring(true);
     setError(null);
 
     try {
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `You are an expert OASIS-E documentation quality auditor. Analyze this OASIS assessment and score its documentation quality across 4 criteria.
 
 OASIS ANALYSIS DATA:
@@ -210,7 +209,6 @@ Return JSON:
       setError("Failed to analyze documentation quality. Please try again.");
     }
 
-    setIsScoring(false);
   };
 
   const getGradeColor = (grade) => {
@@ -316,10 +314,10 @@ Return JSON:
 
             <Button
               onClick={runQualityScoring}
-              disabled={isScoring}
+              disabled={ai.loading}
               className="w-full bg-indigo-600 hover:bg-indigo-700"
             >
-              {isScoring ? (
+              {ai.loading ? (
                 <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Analyzing Documentation Quality...</>
               ) : (
                 <><Award className="w-4 h-4 mr-2" /> Score Documentation Quality</>

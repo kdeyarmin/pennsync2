@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -19,13 +20,12 @@ export default function ClinicalNoteToOASISMapper({
   extractedNarrative 
 }) {
   const [clinicalNotes, setClinicalNotes] = useState("");
-  const [isMapping, setIsMapping] = useState(false);
+  const ai = useAICall();
   const [mappedFields, setMappedFields] = useState(null);
 
   const performMapping = useCallback(async () => {
     if (!clinicalNotes || clinicalNotes.length < 50) return;
 
-    setIsMapping(true);
     try {
       const prompt = `You are an expert OASIS clinician. Map clinical notes to specific OASIS M-items.
 
@@ -49,7 +49,7 @@ Focus on:
 - Diagnoses and comorbidities
 - Episode timing indicators`;
 
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt,
         response_json_schema: {
           type: "object",
@@ -108,8 +108,8 @@ Focus on:
       }
     } catch (error) {
       console.error('Mapping error:', error);
+      toast.error("The AI request didn't complete. Please try again.");
     }
-    setIsMapping(false);
   }, [clinicalNotes, existingOASISData, onMappingComplete]);
 
   // Auto-populate with extracted narrative from OASIS
@@ -163,10 +163,10 @@ Focus on:
 
         <Button
           onClick={performMapping}
-          disabled={isMapping || clinicalNotes.length < 50}
+          disabled={ai.loading || clinicalNotes.length < 50}
           className="w-full bg-blue-600 hover:bg-blue-700"
         >
-          {isMapping ? (
+          {ai.loading ? (
             <>
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
               Mapping to OASIS...

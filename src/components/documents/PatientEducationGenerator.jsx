@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -13,13 +14,12 @@ export default function PatientEducationGenerator({ patientId, patient }) {
   const [readingLevel, setReadingLevel] = useState("6th-grade");
   const [includeImages, setIncludeImages] = useState(false);
   const [generatedMaterial, setGeneratedMaterial] = useState("");
-  const [isGenerating, setIsGenerating] = useState(false);
+  const ai = useAICall();
   const [additionalContext, setAdditionalContext] = useState("");
 
   const generateEducationMaterial = async () => {
-    setIsGenerating(true);
     try {
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `Generate patient education material tailored for home health patients.
 
 PATIENT CONTEXT:
@@ -101,8 +101,8 @@ Keep language at ${readingLevel} reading level. Be encouraging and supportive in
       setGeneratedMaterial(result.material);
     } catch (error) {
       console.error("Error generating education material:", error);
+      toast.error("The AI request didn't complete. Please try again.");
     }
-    setIsGenerating(false);
   };
 
   return (
@@ -193,10 +193,10 @@ Keep language at ${readingLevel} reading level. Be encouraging and supportive in
 
             <Button 
               onClick={generateEducationMaterial} 
-              disabled={isGenerating}
+              disabled={ai.loading}
               className="w-full bg-navy-600 hover:bg-navy-700"
             >
-              {isGenerating ? (
+              {ai.loading ? (
                 <><div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2" /> Generating...</>
               ) : (
                 <><Sparkles className="w-5 h-5 mr-2" /> Generate Education Material</>

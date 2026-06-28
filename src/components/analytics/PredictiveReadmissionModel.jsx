@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -19,7 +19,7 @@ import { computeAge } from "@/components/oasis/oasisAnalytics";
 import { toast } from 'sonner';
 
 export default function PredictiveReadmissionModel({ patients, visits, incidents }) {
-  const [analyzing, setAnalyzing] = useState(false);
+  const ai = useAICall();
   const [predictions, setPredictions] = useState(null);
 
   // Calculate risk factors for each patient
@@ -105,7 +105,6 @@ export default function PredictiveReadmissionModel({ patients, visits, incidents
 
   // Generate AI-powered predictions
   const generateAIPredictions = async () => {
-    setAnalyzing(true);
     
     try {
       const highRiskPatients = riskAnalysis.filter(r => r.riskLevel === "high").slice(0, 5);
@@ -127,7 +126,7 @@ For each patient, provide:
 3. Specific clinical intervention
 4. Recommended follow-up schedule`;
 
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt,
         response_json_schema: {
           type: "object",
@@ -155,7 +154,6 @@ For each patient, provide:
       toast.error("Failed to generate AI predictions");
     }
     
-    setAnalyzing(false);
   };
 
   const getRiskColor = (level) => {
@@ -221,10 +219,10 @@ For each patient, provide:
             </CardTitle>
             <Button 
               onClick={generateAIPredictions}
-              disabled={analyzing || highRiskCount === 0}
+              disabled={ai.loading || highRiskCount === 0}
               className="bg-navy-600 hover:bg-navy-700"
             >
-              {analyzing ? (
+              {ai.loading ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   Analyzing...

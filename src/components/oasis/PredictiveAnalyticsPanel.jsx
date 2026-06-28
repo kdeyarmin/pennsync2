@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -27,12 +27,11 @@ export default function PredictiveAnalyticsPanel({
   carePlans = [],
   incidents = []
 }) {
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const ai = useAICall();
   const [predictions, setPredictions] = useState(null);
   const [error, setError] = useState(null);
 
   const analyzePredictiveRisks = async () => {
-    setIsAnalyzing(true);
     setError(null);
 
     try {
@@ -111,7 +110,7 @@ Based on this comprehensive patient profile, provide a detailed predictive analy
 
 Provide specific, actionable insights with confidence levels.`;
 
-      const response = await invokeLLM({
+      const response = await ai.run({
         prompt,
         response_json_schema: {
           type: "object",
@@ -195,8 +194,6 @@ Provide specific, actionable insights with confidence levels.`;
     } catch (err) {
       setError(err.message);
       console.error("Predictive analysis error:", err);
-    } finally {
-      setIsAnalyzing(false);
     }
   };
 
@@ -235,7 +232,7 @@ Provide specific, actionable insights with confidence levels.`;
         </CardTitle>
       </CardHeader>
       <CardContent className="p-6 space-y-4">
-        {!predictions && !isAnalyzing && (
+        {!predictions && !ai.loading && (
           <div className="text-center py-8">
             <Brain className="w-16 h-16 text-navy-400 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-slate-900 mb-2">
@@ -254,7 +251,7 @@ Provide specific, actionable insights with confidence levels.`;
           </div>
         )}
 
-        {isAnalyzing && (
+        {ai.loading && (
           <div className="text-center py-12">
             <Loader2 className="w-12 h-12 animate-spin text-navy-600 mx-auto mb-4" />
             <p className="text-slate-600">Analyzing patient data and generating predictions...</p>

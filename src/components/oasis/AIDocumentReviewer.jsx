@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -16,12 +16,11 @@ import {
 } from "lucide-react";
 
 export default function AIDocumentReviewer({ oasisData, autoReview = true }) {
-  const [isReviewing, setIsReviewing] = useState(false);
+  const ai = useAICall();
   const [reviewResults, setReviewResults] = useState(null);
   const [error, setError] = useState(null);
 
   const performAIReview = useCallback(async () => {
-    setIsReviewing(true);
     setError(null);
 
     try {
@@ -57,7 +56,7 @@ Perform a comprehensive review and identify:
 
 Provide actionable, specific feedback for each issue found.`;
 
-      const response = await invokeLLM({
+      const response = await ai.run({
         prompt,
         response_json_schema: {
           type: "object",
@@ -141,8 +140,6 @@ Provide actionable, specific feedback for each issue found.`;
     } catch (err) {
       setError(err.message);
       console.error("AI review error:", err);
-    } finally {
-      setIsReviewing(false);
     }
   }, [oasisData]);
 
@@ -185,7 +182,7 @@ Provide actionable, specific feedback for each issue found.`;
         </CardTitle>
       </CardHeader>
       <CardContent className="p-6 space-y-4">
-        {isReviewing && (
+        {ai.loading && (
           <div className="text-center py-8">
             <Loader2 className="w-12 h-12 animate-spin text-navy-600 mx-auto mb-4" />
             <p className="text-slate-600">AI is reviewing the OASIS document...</p>
@@ -201,7 +198,7 @@ Provide actionable, specific feedback for each issue found.`;
           </Alert>
         )}
 
-        {!isReviewing && !reviewResults && (
+        {!ai.loading && !reviewResults && (
           <div className="text-center py-8">
             <FileSearch className="w-16 h-16 text-slate-300 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-slate-900 mb-2">

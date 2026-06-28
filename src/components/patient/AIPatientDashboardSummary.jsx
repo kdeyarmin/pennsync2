@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -26,10 +27,9 @@ export default function AIPatientDashboardSummary({
   incidents = []
 }) {
   const [summary, setSummary] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const ai = useAICall();
 
   const generateSummary = useCallback(async () => {
-    setIsLoading(true);
     try {
       // Get recent visits (last 30 days)
       const thirtyDaysAgo = new Date();
@@ -103,7 +103,7 @@ Provide a comprehensive yet concise dashboard summary in JSON:
   "red_flags": ["any concerning patterns or issues requiring immediate attention"]
 }`;
 
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt,
         response_json_schema: {
           type: "object",
@@ -126,8 +126,8 @@ Provide a comprehensive yet concise dashboard summary in JSON:
       setSummary(result);
     } catch (error) {
       console.error("Error generating summary:", error);
+      toast.error("The AI request didn't complete. Please try again.");
     }
-    setIsLoading(false);
   }, [patient, visits, carePlans, tasks, incidents]);
 
   useEffect(() => {
@@ -153,7 +153,7 @@ Provide a comprehensive yet concise dashboard summary in JSON:
     return <CheckCircle2 className="w-5 h-5" />;
   };
 
-  if (isLoading) {
+  if (ai.loading) {
     return (
       <Card className="border-2 border-navy-300 bg-gradient-to-br from-navy-50 to-gold-50">
         <CardContent className="p-6 text-center">

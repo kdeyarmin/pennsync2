@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -56,7 +56,7 @@ function SectionBlock({ section, content, copiedKey, onCopy }) {
 export default function VisitSummaryGenerator({ patientId }) {
   const [selectedVisitId, setSelectedVisitId] = useState("");
   const [summary, setSummary] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const ai = useAICall();
   const [copiedKey, setCopiedKey] = useState(null);
   const [copiedAll, setCopiedAll] = useState(false);
   const [selectedSections, setSelectedSections] = useState(new Set(SECTIONS.map(s => s.key)));
@@ -82,13 +82,12 @@ export default function VisitSummaryGenerator({ patientId }) {
     if (!selectedVisit) return;
     const transcript = selectedVisit.nurse_notes || selectedVisit.raw_transcription;
     if (!transcript) return;
-    setLoading(true);
     setSummary(null);
     try {
       const ctx = patient
         ? `Patient: ${patient.first_name} ${patient.last_name}, DOB: ${patient.date_of_birth || "?"}, Dx: ${patient.primary_diagnosis || "?"}`
         : "";
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `You are a clinical documentation specialist. Generate a structured patient visit summary from this nursing note/transcript.
 
 VISIT TRANSCRIPT:
@@ -126,8 +125,6 @@ Return JSON with these keys:
       setSummary(result);
     } catch {
       toast.error("Failed to generate summary. Please try again.");
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -206,7 +203,7 @@ Return JSON with these keys:
         </p>
       )}
 
-      {selectedVisit && hasTranscript && !summary && !loading && (
+      {selectedVisit && hasTranscript && !summary && !ai.loading && (
         <div className="bg-indigo-50 border border-indigo-200 rounded-lg px-3 py-2.5">
           <div className="flex items-center gap-2 text-xs text-indigo-700 mb-1">
             <User className="w-3.5 h-3.5" />
@@ -220,10 +217,10 @@ Return JSON with these keys:
 
       <Button
         onClick={generate}
-        disabled={!hasTranscript || loading}
+        disabled={!hasTranscript || ai.loading}
         className="w-full bg-navy-600 hover:bg-navy-700 h-9 gap-2 text-sm font-semibold"
       >
-        {loading
+        {ai.loading
           ? <><Loader2 className="w-4 h-4 animate-spin" /> Generating Summary…</>
           : <><Sparkles className="w-4 h-4" /> Generate Visit Summary</>}
       </Button>

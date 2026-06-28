@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -28,7 +29,7 @@ export default function AIPersonalizedTrainingPlan({
   recommendations = [],
   onStartModule 
 }) {
-  const [isGenerating, setIsGenerating] = useState(false);
+  const ai = useAICall();
   const [trainingPlan, setTrainingPlan] = useState(null);
   const [expandedModule, setExpandedModule] = useState(null);
 
@@ -56,11 +57,10 @@ export default function AIPersonalizedTrainingPlan({
   };
 
   const generateTrainingPlan = async () => {
-    setIsGenerating(true);
     const weakAreas = analyzeWeakAreas();
 
     try {
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `Generate a personalized training plan for a home health nurse based on their compliance audit performance.
 
 NURSE'S WEAK AREAS (from audit analysis):
@@ -113,8 +113,8 @@ Make the content specific to Medicare home health compliance requirements.`,
       setTrainingPlan(result);
     } catch (error) {
       console.error("Error generating training plan:", error);
+      toast.error("The AI request didn't complete. Please try again.");
     }
-    setIsGenerating(false);
   };
 
   const getPriorityColor = (priority) => {
@@ -139,10 +139,10 @@ Make the content specific to Medicare home health compliance requirements.`,
           {!trainingPlan && (
             <Button
               onClick={generateTrainingPlan}
-              disabled={isGenerating || weakAreas.length === 0}
+              disabled={ai.loading || weakAreas.length === 0}
               className="bg-indigo-600 hover:bg-indigo-700"
             >
-              {isGenerating ? (
+              {ai.loading ? (
                 <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Analyzing...</>
               ) : (
                 <><Sparkles className="w-4 h-4 mr-2" /> Generate Plan</>
@@ -177,7 +177,7 @@ Make the content specific to Medicare home health compliance requirements.`,
           </div>
         )}
 
-        {isGenerating && (
+        {ai.loading && (
           <div className="text-center py-8">
             <Loader2 className="w-10 h-10 animate-spin text-indigo-600 mx-auto mb-3" />
             <p className="text-sm text-slate-600">Analyzing your performance and creating a personalized plan...</p>

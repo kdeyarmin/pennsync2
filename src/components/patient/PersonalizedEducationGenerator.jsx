@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { isSafeExternalUrl } from "@/components/utils/security";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,16 +19,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from 'sonner';
 
 export default function PersonalizedEducationGenerator({ patient, complianceData, visits }) {
-  const [isGenerating, setIsGenerating] = useState(false);
+  const ai = useAICall();
   const [educationMaterials, setEducationMaterials] = useState(null);
 
   const generateMaterials = async () => {
-    setIsGenerating(true);
     try {
       const recentCompliance = complianceData || {};
       const recentVisit = visits?.[0];
 
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `Generate personalized patient education materials for this patient:
 
 PATIENT INFORMATION:
@@ -106,7 +105,6 @@ Format each section clearly with headers.`,
     } catch (error) {
       console.error('Education generation error:', error);
     }
-    setIsGenerating(false);
   };
 
   const handlePrint = () => {
@@ -199,7 +197,7 @@ ${educationMaterials.key_takeaways?.map(k => `• ${k}`).join('\n')}
     }
   };
 
-  if (isGenerating) {
+  if (ai.loading) {
     return (
       <Card className="border-2 border-green-300">
         <CardContent className="p-6 text-center">

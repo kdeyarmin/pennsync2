@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -20,12 +21,11 @@ export default function OASISDraftGenerator({
   visitType = "admission",
   onDraftGenerated
 }) {
-  const [isGenerating, setIsGenerating] = useState(false);
+  const ai = useAICall();
   const [draftDocumentation, setDraftDocumentation] = useState(null);
   const [activeTab, setActiveTab] = useState("narrative");
 
   const generateDraft = async () => {
-    setIsGenerating(true);
     try {
       const prompt = `Generate comprehensive OASIS documentation based on patient context.
 
@@ -54,7 +54,7 @@ Make documentation:
 - Supportive of skilled need
 - Defensible in audit`;
 
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt,
         response_json_schema: {
           type: "object",
@@ -119,8 +119,8 @@ Make documentation:
       }
     } catch (error) {
       console.error('Draft generation error:', error);
+      toast.error("The AI request didn't complete. Please try again.");
     }
-    setIsGenerating(false);
   };
 
   const copyToClipboard = (text) => {
@@ -196,10 +196,10 @@ ${draftDocumentation.caregiver_support}`;
           {!draftDocumentation && (
             <Button
               onClick={generateDraft}
-              disabled={isGenerating}
+              disabled={ai.loading}
               className="bg-navy-600 hover:bg-navy-700"
             >
-              {isGenerating ? (
+              {ai.loading ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   Generating...
@@ -216,14 +216,14 @@ ${draftDocumentation.caregiver_support}`;
       </CardHeader>
 
       <CardContent>
-        {!draftDocumentation && !isGenerating && (
+        {!draftDocumentation && !ai.loading && (
           <div className="text-center py-8 text-slate-600">
             <FileText className="w-12 h-12 text-navy-400 mx-auto mb-3" />
             <p>Click "Generate Draft" to create comprehensive OASIS documentation</p>
           </div>
         )}
 
-        {isGenerating && (
+        {ai.loading && (
           <div className="text-center py-12">
             <Loader2 className="w-12 h-12 animate-spin text-navy-600 mx-auto mb-4" />
             <p className="text-navy-700">Generating Medicare-compliant documentation...</p>
@@ -248,7 +248,7 @@ ${draftDocumentation.caregiver_support}`;
               <Button
                 size="sm"
                 onClick={generateDraft}
-                disabled={isGenerating}
+                disabled={ai.loading}
               >
                 Regenerate
               </Button>

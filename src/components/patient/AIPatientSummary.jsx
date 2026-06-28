@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,7 +22,7 @@ import { toast } from 'sonner';
 
 export default function AIPatientSummary({ patient }) {
   const [summary, setSummary] = useState(null);
-  const [isGenerating, setIsGenerating] = useState(false);
+  const ai = useAICall();
   const [copied, setCopied] = useState(false);
 
   const { data: visits } = useQuery({
@@ -52,7 +52,6 @@ export default function AIPatientSummary({ patient }) {
       return;
     }
     
-    setIsGenerating(true);
     try {
       const recentVisits = visits.slice(0, 5);
       const activeCarePlans = carePlans.filter(cp => cp.status === 'active');
@@ -95,7 +94,7 @@ Generate a clinical summary in JSON format:
   "priority_level": "low|medium|high|critical"
 }`;
 
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt,
         response_json_schema: {
           type: "object",
@@ -123,7 +122,6 @@ Generate a clinical summary in JSON format:
       console.error('Error generating summary:', error);
       toast.error('Failed to generate summary. Please try again.');
     }
-    setIsGenerating(false);
   };
 
   const handleCopy = () => {
@@ -180,11 +178,11 @@ ${summary.recommendations?.map(r => `• ${r}`).join('\n')}
           </CardTitle>
           <Button
             onClick={generateSummary}
-            disabled={isGenerating}
+            disabled={ai.loading}
             size="sm"
             className="bg-navy-600 hover:bg-navy-700"
           >
-            {isGenerating ? (
+            {ai.loading ? (
               <>
                 <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
                 Generating...
@@ -199,7 +197,7 @@ ${summary.recommendations?.map(r => `• ${r}`).join('\n')}
         </div>
       </CardHeader>
       <CardContent className="pt-4">
-        {!summary && !isGenerating && (
+        {!summary && !ai.loading && (
           <div className="text-center py-8 text-slate-500">
             <Sparkles className="w-12 h-12 text-slate-300 mx-auto mb-3" />
             <p>Click "Generate Summary" to create an AI-powered clinical overview</p>

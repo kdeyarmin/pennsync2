@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,7 @@ import { Loader2, TrendingUp, Activity, AlertTriangle, Target, Brain, Calendar, 
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 export default function PredictiveOutcomesAnalyzer({ analysisResults, pdgmData, patientId, onPredictionsComplete }) {
-  const [isPredicting, setIsPredicting] = useState(false);
+  const ai = useAICall();
   const [predictions, setPredictions] = useState(null);
   const [autoPredict, setAutoPredict] = useState(false);
 
@@ -109,7 +109,6 @@ export default function PredictiveOutcomesAnalyzer({ analysisResults, pdgmData, 
   const generatePredictions = useCallback(async () => {
     if (!analysisResults || !pdgmData) return;
 
-    setIsPredicting(true);
     try {
       // Calculate historical trends
       const historicalTrends = calculateHistoricalTrends(patientHistory, patient);
@@ -118,7 +117,7 @@ export default function PredictiveOutcomesAnalyzer({ analysisResults, pdgmData, 
       const benchmarks = calculatePopulationBenchmarks(populationData, pdgmData);
 
       // Comprehensive AI prediction
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `You are a predictive analytics expert for home health outcomes. Analyze OASIS data and predict patient outcomes with clinical reasoning.
 
 CURRENT OASIS ASSESSMENT:
@@ -372,16 +371,15 @@ Provide SPECIFIC, ACTIONABLE predictions with clinical reasoning.`,
       console.error("Predictive analysis error:", error);
       setPredictions({ error: "Failed to generate predictions. Please try again." });
     }
-    setIsPredicting(false);
   }, [analysisResults, calculateHistoricalTrends, calculatePopulationBenchmarks, onPredictionsComplete, patient, patientHistory, pdgmData, populationData]);
 
   // Auto-predict when data is available
   useEffect(() => {
-    if (analysisResults && pdgmData && !predictions && !isPredicting && !autoPredict) {
+    if (analysisResults && pdgmData && !predictions && !ai.loading && !autoPredict) {
       setAutoPredict(true);
       generatePredictions();
     }
-  }, [analysisResults, pdgmData, patientHistory, autoPredict, generatePredictions, isPredicting, predictions]);
+  }, [analysisResults, pdgmData, patientHistory, autoPredict, generatePredictions, ai.loading, predictions]);
 
   const getRiskColor = (level) => {
     switch (level) {
@@ -405,10 +403,10 @@ Provide SPECIFIC, ACTIONABLE predictions with clinical reasoning.`,
           </CardTitle>
           <Button
             onClick={generatePredictions}
-            disabled={isPredicting}
+            disabled={ai.loading}
             className="bg-indigo-600 hover:bg-indigo-700"
           >
-            {isPredicting ? (
+            {ai.loading ? (
               <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Predicting...</>
             ) : (
               <><Brain className="w-4 h-4 mr-2" /> {predictions ? 'Refresh Predictions' : 'Generate Predictions'}</>
@@ -417,7 +415,7 @@ Provide SPECIFIC, ACTIONABLE predictions with clinical reasoning.`,
         </div>
       </CardHeader>
 
-      {isPredicting && (
+      {ai.loading && (
         <CardContent className="py-6">
           <Progress value={50} className="h-2" />
           <p className="text-sm text-slate-600 mt-3 text-center">
@@ -1123,7 +1121,7 @@ Provide SPECIFIC, ACTIONABLE predictions with clinical reasoning.`,
         </CardContent>
       )}
 
-      {!predictions && !isPredicting && (
+      {!predictions && !ai.loading && (
         <CardContent className="py-8 text-center">
           <Brain className="w-16 h-16 text-slate-300 mx-auto mb-4" />
           <p className="text-slate-600 mb-4">Click "Generate Predictions" for AI-powered outcome analysis</p>

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -42,7 +43,7 @@ export default function PatientRiskStratification({
   autoCalculate = true
 }) {
   const [riskData, setRiskData] = useState(null);
-  const [isCalculating, setIsCalculating] = useState(false);
+  const ai = useAICall();
   const [isExpanded, setIsExpanded] = useState(!compact);
   const [lastCalculated, setLastCalculated] = useState(null);
 
@@ -59,7 +60,6 @@ export default function PatientRiskStratification({
   const calculateRisk = useCallback(async () => {
     if (!patient) return;
 
-    setIsCalculating(true);
     try {
       // Gather comprehensive patient data
       const recentVisits = visits.slice(0, 10);
@@ -159,7 +159,7 @@ Return JSON:
   ]
 }`;
 
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt,
         response_json_schema: {
           type: "object",
@@ -181,8 +181,8 @@ Return JSON:
       }
     } catch (error) {
       console.error("Error calculating risk:", error);
+      toast.error("The AI request didn't complete. Please try again.");
     }
-    setIsCalculating(false);
   }, [patient, visits, carePlans, incidents, onRiskCalculated, calculateAge]);
 
   useEffect(() => {
@@ -313,17 +313,17 @@ Return JSON:
                 {riskData.overall_risk?.score}/100 - {riskData.overall_risk?.level}
               </Badge>
             )}
-            {isCalculating && <Loader2 className="w-4 h-4 animate-spin" />}
+            {ai.loading && <Loader2 className="w-4 h-4 animate-spin" />}
           </div>
           <div className="flex items-center gap-2">
             <Button
               size="sm"
               variant="ghost"
               onClick={(e) => { e.stopPropagation(); calculateRisk(); }}
-              disabled={isCalculating}
+              disabled={ai.loading}
               className="h-7 px-2"
             >
-              <RefreshCw className={`w-3 h-3 ${isCalculating ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`w-3 h-3 ${ai.loading ? 'animate-spin' : ''}`} />
             </Button>
             {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
           </div>
@@ -332,7 +332,7 @@ Return JSON:
 
       {isExpanded && (
         <CardContent className="p-4">
-          {!riskData && !isCalculating && (
+          {!riskData && !ai.loading && (
             <div className="text-center py-6">
               <Brain className="w-10 h-10 text-slate-300 mx-auto mb-3" />
               <p className="text-sm text-slate-500 mb-3">Analyze patient history to calculate risk scores</p>
@@ -343,7 +343,7 @@ Return JSON:
             </div>
           )}
 
-          {isCalculating && !riskData && (
+          {ai.loading && !riskData && (
             <div className="flex flex-col items-center justify-center py-8">
               <Loader2 className="w-8 h-8 animate-spin text-indigo-600 mb-3" />
               <p className="text-sm text-slate-600">Analyzing patient history...</p>

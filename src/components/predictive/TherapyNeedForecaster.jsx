@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -29,7 +30,7 @@ export default function TherapyNeedForecaster({
   selectedPatientId = ''
 }) {
   const [forecasts, setForecasts] = useState({});
-  const [isForecasting, setIsForecasting] = useState(false);
+  const ai = useAICall();
   const [forecastingPatientId, setForecastingPatientId] = useState(null);
 
   // Calculate therapy need indicators
@@ -103,7 +104,6 @@ export default function TherapyNeedForecaster({
 
   // Get AI forecast for patient
   const getForecast = async (patientId) => {
-    setIsForecasting(true);
     setForecastingPatientId(patientId);
 
     const patient = patients.find(p => p.id === patientId);
@@ -111,7 +111,7 @@ export default function TherapyNeedForecaster({
     const patientVisits = visits.filter(v => v.patient_id === patientId);
 
     try {
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `Analyze this patient's therapy needs and forecast required therapy services.
 
 PATIENT: ${patient?.first_name} ${patient?.last_name}
@@ -185,9 +185,9 @@ Provide therapy need forecast including:
       setForecasts(prev => ({ ...prev, [patientId]: result }));
     } catch (error) {
       console.error("Forecast error:", error);
+      toast.error("The AI request didn't complete. Please try again.");
     }
 
-    setIsForecasting(false);
     setForecastingPatientId(null);
   };
 
@@ -298,9 +298,9 @@ Provide therapy need forecast including:
                   variant="outline"
                   className="w-full text-xs"
                   onClick={() => getForecast(patient.id)}
-                  disabled={isForecasting && forecastingPatientId === patient.id}
+                  disabled={ai.loading && forecastingPatientId === patient.id}
                 >
-                  {isForecasting && forecastingPatientId === patient.id ? (
+                  {ai.loading && forecastingPatientId === patient.id ? (
                     <><Loader2 className="w-3 h-3 mr-1 animate-spin" /> Forecasting...</>
                   ) : (
                     <><TrendingUp className="w-3 h-3 mr-1" /> Get AI Forecast</>

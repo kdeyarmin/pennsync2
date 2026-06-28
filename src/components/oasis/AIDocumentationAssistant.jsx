@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -25,14 +25,13 @@ import {
 
 export default function AIDocumentationAssistant({ analysisResults, pdgmData, onInsertText }) {
   const [activeTab, setActiveTab] = useState("suggestions");
-  const [isGenerating, setIsGenerating] = useState(false);
+  const ai = useAICall();
   const [suggestions, setSuggestions] = useState(null);
   const [cmsExplanations, setCmsExplanations] = useState(null);
   const [copiedIndex, setCopiedIndex] = useState(null);
 
   const generateSuggestions = async () => {
     if (!analysisResults) return;
-    setIsGenerating(true);
 
     try {
       const issues = [
@@ -41,7 +40,7 @@ export default function AIDocumentationAssistant({ analysisResults, pdgmData, on
         ...(analysisResults.documentation_improvements || [])
       ].slice(0, 8);
 
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `You are an expert OASIS clinical documentation specialist. Based on these identified issues, generate SPECIFIC documentation text that clinicians can use to improve their OASIS assessments.
 
 IDENTIFIED ISSUES:
@@ -104,12 +103,10 @@ Return JSON:
     } catch (error) {
       console.error("Error generating suggestions:", error);
     }
-    setIsGenerating(false);
   };
 
   const generateCMSExplanations = async () => {
     if (!analysisResults) return;
-    setIsGenerating(true);
 
     try {
       const flaggedItems = [
@@ -117,7 +114,7 @@ Return JSON:
         ...(analysisResults.audit_risk_areas || [])
       ].slice(0, 6);
 
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `You are a CMS regulations expert specializing in home health OASIS documentation. Explain the regulatory requirements for these flagged compliance items in plain language that clinicians can understand.
 
 FLAGGED ITEMS:
@@ -176,7 +173,6 @@ Return JSON:
     } catch (error) {
       console.error("Error generating CMS explanations:", error);
     }
-    setIsGenerating(false);
   };
 
   const handleCopy = (text, index) => {
@@ -215,8 +211,8 @@ Return JSON:
                 <p className="text-sm text-slate-600 mb-4">
                   Generate AI-powered documentation text to address identified issues
                 </p>
-                <Button onClick={generateSuggestions} disabled={isGenerating}>
-                  {isGenerating ? (
+                <Button onClick={generateSuggestions} disabled={ai.loading}>
+                  {ai.loading ? (
                     <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Generating...</>
                   ) : (
                     <><Sparkles className="w-4 h-4 mr-2" /> Generate Suggestions</>
@@ -348,8 +344,8 @@ Return JSON:
                 <p className="text-sm text-slate-600 mb-4">
                   Get AI-powered explanations of CMS regulations for flagged items
                 </p>
-                <Button onClick={generateCMSExplanations} disabled={isGenerating}>
-                  {isGenerating ? (
+                <Button onClick={generateCMSExplanations} disabled={ai.loading}>
+                  {ai.loading ? (
                     <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Analyzing...</>
                   ) : (
                     <><Scale className="w-4 h-4 mr-2" /> Explain Regulations</>

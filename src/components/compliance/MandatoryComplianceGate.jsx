@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,7 +28,7 @@ export default function MandatoryComplianceGate({
   onCompliancePassed,
   onInsertFix
 }) {
-  const [isChecking, setIsChecking] = useState(false);
+  const ai = useAICall();
   const [complianceResult, setComplianceResult] = useState(null);
   const [acknowledgedIssues, setAcknowledgedIssues] = useState([]);
   const [overrideReason, setOverrideReason] = useState("");
@@ -50,10 +50,9 @@ export default function MandatoryComplianceGate({
       return;
     }
 
-    setIsChecking(true);
 
     try {
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `You are a STRICT Medicare compliance auditor for ${careType === 'hospice' ? 'Hospice' : 'Home Health'} nursing documentation. Your job is to BLOCK non-compliant notes from being finalized.
 
 VISIT TYPE: ${visitType}
@@ -173,7 +172,6 @@ Return JSON:
       toast.error('Compliance check failed to run. The note remains blocked.');
     }
 
-    setIsChecking(false);
   };
 
   const handleInsertFix = (fix) => {
@@ -269,10 +267,10 @@ Return JSON:
             </p>
             <Button
               onClick={checkCompliance}
-              disabled={isChecking || !noteText}
+              disabled={ai.loading || !noteText}
               className="bg-red-600 hover:bg-red-700"
             >
-              {isChecking ? (
+              {ai.loading ? (
                 <>
                   <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
                   Checking Compliance...
@@ -411,10 +409,10 @@ Return JSON:
               variant="outline"
               size="sm"
               onClick={checkCompliance}
-              disabled={isChecking}
+              disabled={ai.loading}
               className="w-full"
             >
-              <RefreshCw className={`w-4 h-4 mr-2 ${isChecking ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`w-4 h-4 mr-2 ${ai.loading ? 'animate-spin' : ''}`} />
               Re-check Compliance
             </Button>
           </>

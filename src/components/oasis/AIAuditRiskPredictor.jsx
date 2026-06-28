@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
+import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -23,7 +24,7 @@ import {
 
 export default function AIAuditRiskPredictor({ analysisResults, patientId }) {
   const [prediction, setPrediction] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const ai = useAICall();
   const [expanded, setExpanded] = useState(false);
 
   // Fetch historical audits for pattern analysis
@@ -41,7 +42,6 @@ export default function AIAuditRiskPredictor({ analysisResults, patientId }) {
 
   const runPrediction = useCallback(async () => {
     if (!analysisResults) return;
-    setIsLoading(true);
 
     try {
       // Build historical context
@@ -58,7 +58,7 @@ export default function AIAuditRiskPredictor({ analysisResults, patientId }) {
         date: o.assessment_date
       }));
 
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `You are an expert in home health audit risk prediction. Based on the current OASIS analysis and historical patterns, predict future audit risks and provide actionable recommendations.
 
 CURRENT ANALYSIS:
@@ -138,8 +138,8 @@ Return JSON:
       setPrediction(result);
     } catch (error) {
       console.error("Error predicting audit risk:", error);
+      toast.error("The AI request didn't complete. Please try again.");
     }
-    setIsLoading(false);
   }, [analysisResults, historicalAudits, patientOASIS]);
 
   useEffect(() => {
@@ -186,7 +186,7 @@ Return JSON:
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-4">
-        {isLoading ? (
+        {ai.loading ? (
           <div className="text-center py-6">
             <Loader2 className="w-8 h-8 animate-spin mx-auto text-amber-500" />
             <p className="text-sm text-slate-500 mt-2">Analyzing audit risk patterns...</p>

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -30,7 +30,7 @@ export default function IntelligentTaskPrioritization({
   onTaskCompleted 
 }) {
   const queryClient = useQueryClient();
-  const [isPrioritizing, setIsPrioritizing] = useState(false);
+  const ai = useAICall();
   const [prioritizedTasks, setPrioritizedTasks] = useState(null);
   const [expanded, setExpanded] = useState(true);
 
@@ -69,7 +69,6 @@ export default function IntelligentTaskPrioritization({
   const prioritizeTasks = async () => {
     if (tasks.length === 0) return;
 
-    setIsPrioritizing(true);
 
     try {
       // Enrich tasks with patient context
@@ -94,7 +93,7 @@ export default function IntelligentTaskPrioritization({
         };
       });
 
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `You are an intelligent task prioritization AI for home health nurses. Analyze these tasks and prioritize them for maximum patient safety and compliance.
 
 TASKS TO PRIORITIZE:
@@ -179,7 +178,6 @@ Return JSON:
       console.error("Error prioritizing tasks:", error);
     }
 
-    setIsPrioritizing(false);
   };
 
   const completeTask = (taskId) => {
@@ -247,10 +245,10 @@ Return JSON:
               </p>
               <Button
                 onClick={prioritizeTasks}
-                disabled={isPrioritizing}
+                disabled={ai.loading}
                 className="bg-navy-600 hover:bg-navy-700"
               >
-                {isPrioritizing ? (
+                {ai.loading ? (
                   <>
                     <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
                     Analyzing Tasks...
@@ -365,10 +363,10 @@ Return JSON:
                 variant="outline"
                 size="sm"
                 onClick={prioritizeTasks}
-                disabled={isPrioritizing}
+                disabled={ai.loading}
                 className="w-full"
               >
-                <RefreshCw className={`w-4 h-4 mr-2 ${isPrioritizing ? 'animate-spin' : ''}`} />
+                <RefreshCw className={`w-4 h-4 mr-2 ${ai.loading ? 'animate-spin' : ''}`} />
                 Re-prioritize Tasks
               </Button>
             </>

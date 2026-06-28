@@ -6,6 +6,9 @@ import { formatDistanceToNowStrict } from "date-fns";
  * stays consistent in one place.
  */
 export function shortAgo(date) {
+  // Guard a missing timestamp: `new Date(null)` is the Unix epoch, which would
+  // render a nonsensical "55y" instead of an empty cell.
+  if (!date) return "";
   try {
     return formatDistanceToNowStrict(new Date(date))
       .replace(/ seconds?/, "s")

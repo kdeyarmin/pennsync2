@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -30,7 +30,7 @@ export default function TemplateEditor({
   const [content, setContent] = useState(templateData?.content?.template_content || '');
   const [expandedSections, setExpandedSections] = useState({});
   const [clinicalResponses, setClinicalResponses] = useState({});
-  const [isEnhancing, setIsEnhancing] = useState(false);
+  const ai = useAICall();
   const [copied, setCopied] = useState(false);
 
   const clinicalPrompts = templateData?.content?.clinical_prompts || [];
@@ -51,7 +51,6 @@ export default function TemplateEditor({
   };
 
   const handleEnhanceWithAI = async () => {
-    setIsEnhancing(true);
     try {
       const prompt = `You are a clinical documentation specialist. Enhance this clinical note by:
 1. Filling in placeholders with clinically appropriate language based on the responses provided
@@ -74,7 +73,7 @@ ${content}
 
 Return the enhanced, complete clinical note ready for documentation. Keep all factual information accurate. Fill in bracketed placeholders appropriately.`;
 
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt
       });
 
@@ -86,7 +85,6 @@ Return the enhanced, complete clinical note ready for documentation. Keep all fa
       console.error('Error enhancing template:', error);
       toast.error('Failed to enhance template. Please try again.');
     }
-    setIsEnhancing(false);
   };
 
   const handleCopyToClipboard = () => {
@@ -214,10 +212,10 @@ Return the enhanced, complete clinical note ready for documentation. Keep all fa
 
             <Button
               onClick={handleEnhanceWithAI}
-              disabled={isEnhancing}
+              disabled={ai.loading}
               className="w-full bg-gradient-to-r from-navy-600 to-gold-600 hover:from-navy-700 hover:to-gold-700"
             >
-              {isEnhancing ? (
+              {ai.loading ? (
                 <>
                   <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
                   Enhancing with AI...

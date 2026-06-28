@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -20,7 +21,7 @@ import {
 import { format } from "date-fns";
 
 export default function PolicyGuidelineMonitor({ _nurseEmail, onTrainingRecommended }) {
-  const [isLoading, setIsLoading] = useState(false);
+  const ai = useAICall();
   const [updates, setUpdates] = useState(null);
   const [expanded, setExpanded] = useState(true);
   const [lastChecked, setLastChecked] = useState(null);
@@ -38,10 +39,9 @@ export default function PolicyGuidelineMonitor({ _nurseEmail, onTrainingRecommen
   }, []);
 
   const checkForUpdates = async () => {
-    setIsLoading(true);
 
     try {
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `You are a healthcare regulatory compliance AI that monitors and summarizes recent changes to Medicare/Medicaid regulations, CMS guidelines, and home health/hospice compliance requirements.
 
 Generate a realistic summary of current regulatory landscape and any recent updates a home health nurse should be aware of.
@@ -166,9 +166,9 @@ Return JSON:
 
     } catch (error) {
       console.error("Error checking for updates:", error);
+      toast.error("The AI request didn't complete. Please try again.");
     }
 
-    setIsLoading(false);
   };
 
   const getPriorityColor = (priority) => {
@@ -231,10 +231,10 @@ Return JSON:
               </p>
               <Button
                 onClick={checkForUpdates}
-                disabled={isLoading}
+                disabled={ai.loading}
                 className="bg-indigo-600 hover:bg-indigo-700"
               >
-                {isLoading ? (
+                {ai.loading ? (
                   <>
                     <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
                     Checking Updates...
@@ -343,10 +343,10 @@ Return JSON:
                 variant="outline"
                 size="sm"
                 onClick={checkForUpdates}
-                disabled={isLoading}
+                disabled={ai.loading}
                 className="w-full"
               >
-                <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+                <RefreshCw className={`w-4 h-4 mr-2 ${ai.loading ? 'animate-spin' : ''}`} />
                 Refresh Updates
               </Button>
             </>

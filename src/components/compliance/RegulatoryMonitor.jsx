@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -42,7 +42,7 @@ import { format } from "date-fns";
 
 export default function RegulatoryMonitor({ isAdmin = false }) {
   const queryClient = useQueryClient();
-  const [isScanning, setIsScanning] = useState(false);
+  const ai = useAICall();
   const [selectedUpdate, setSelectedUpdate] = useState(null);
   const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
   const [implementationNotes, setImplementationNotes] = useState("");
@@ -83,10 +83,9 @@ export default function RegulatoryMonitor({ isAdmin = false }) {
   });
 
   const scanForUpdates = async () => {
-    setIsScanning(true);
 
     try {
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `You are a healthcare regulatory monitoring assistant for a home health/hospice agency.
 
 Current date: ${format(new Date(), 'yyyy-MM-dd')}
@@ -189,7 +188,6 @@ Return JSON:
       console.error("Error scanning for updates:", error);
     }
 
-    setIsScanning(false);
   };
 
   const handleReview = (update) => {
@@ -400,10 +398,10 @@ Return JSON:
               {isAdmin && (
                 <Button
                   onClick={scanForUpdates}
-                  disabled={isScanning}
+                  disabled={ai.loading}
                   className="bg-indigo-600 hover:bg-indigo-700"
                 >
-                  {isScanning ? (
+                  {ai.loading ? (
                     <>
                       <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
                       Scanning...

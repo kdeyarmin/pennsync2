@@ -1,7 +1,7 @@
 import { lazy, Suspense, useEffect, useState, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import StatCard from "@/components/ui/stat-card";
@@ -44,7 +44,7 @@ const tabLoader = (
 export default function ComplianceCenter() {
   const [timeRange, setTimeRange] = useState(30);
   const [selectedNurse, setSelectedNurse] = useState("all");
-  const [isGeneratingInsights, setIsGeneratingInsights] = useState(false);
+  const ai = useAICall();
   const [aiInsights, setAIInsights] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
@@ -448,9 +448,8 @@ export default function ComplianceCenter() {
               )}
             </div>
             <Button className="w-full sm:w-auto" onClick={async () => {
-              setIsGeneratingInsights(true);
               try {
-                const result = await invokeLLM({
+                const result = await ai.run({
                   prompt: `Analyze Medicare compliance data and provide executive insights.
 METRICS: ${filteredAudits.length} audits, ${avgComplianceScore.toFixed(1)}% avg score, ${criticalIssuesCount} critical issues
 TOP ISSUES: ${topIssues.slice(0, 5).map(i => `${i.name}: ${i.count}`).join(', ')}
@@ -470,9 +469,8 @@ Provide: overall_assessment, critical_priorities (array), systemic_issues, actio
               } catch {
                 toast.error('Failed to generate insights');
               }
-              setIsGeneratingInsights(false);
-            }} disabled={isGeneratingInsights}>
-              {isGeneratingInsights ? (
+            }} disabled={ai.loading}>
+              {ai.loading ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
                   Analyzing...

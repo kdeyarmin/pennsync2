@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -22,7 +23,7 @@ import {
 } from "lucide-react";
 
 export default function AIDocumentationGenerator({ analysisResults, pdgmData, navigationData }) {
-  const [isGenerating, setIsGenerating] = useState(false);
+  const ai = useAICall();
   const [suggestions, setSuggestions] = useState(null);
   const [editingIndex, setEditingIndex] = useState(null);
   const [editedTexts, setEditedTexts] = useState({});
@@ -31,9 +32,8 @@ export default function AIDocumentationGenerator({ analysisResults, pdgmData, na
   const generateDocumentation = async () => {
     if (!analysisResults && !navigationData) return;
 
-    setIsGenerating(true);
     try {
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `You are an expert clinical documentation specialist for home health OASIS assessments. Generate concise, clinically appropriate documentation text snippets to address identified issues.
 
 ANALYSIS RESULTS:
@@ -120,8 +120,8 @@ Return JSON:
       setCopiedIndices(new Set());
     } catch (err) {
       console.error("Documentation generation error:", err);
+      toast.error("The AI request didn't complete. Please try again.");
     }
-    setIsGenerating(false);
   };
 
   const handleCopy = (index, text) => {
@@ -181,10 +181,10 @@ Return JSON:
             </p>
             <Button
               onClick={generateDocumentation}
-              disabled={isGenerating}
+              disabled={ai.loading}
               className="w-full bg-indigo-600 hover:bg-indigo-700"
             >
-              {isGenerating ? (
+              {ai.loading ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   Generating Documentation...
@@ -205,7 +205,7 @@ Return JSON:
               </Badge>
               <Button
                 onClick={generateDocumentation}
-                disabled={isGenerating}
+                disabled={ai.loading}
                 size="sm"
                 variant="outline"
               >

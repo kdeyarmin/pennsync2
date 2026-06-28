@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -15,16 +16,15 @@ import {
 } from "lucide-react";
 
 export default function AIAuditReportAssistant({ audit, onUpdateFindings, onAddRecommendations }) {
-  const [isGenerating, setIsGenerating] = useState(false);
+  const ai = useAICall();
   const [aiFindings, setAiFindings] = useState(null);
   const [copied, setCopied] = useState(false);
 
   const generateAuditFindings = async () => {
     if (!audit) return;
-    setIsGenerating(true);
 
     try {
-      const result = await invokeLLM({
+      const result = await ai.run({
         prompt: `You are an expert home health OASIS auditor. Generate comprehensive audit findings and recommendations for this flagged OASIS document.
 
 AUDIT DATA:
@@ -95,8 +95,8 @@ Return JSON:
       setAiFindings(result);
     } catch (error) {
       console.error("Error generating audit findings:", error);
+      toast.error("The AI request didn't complete. Please try again.");
     }
-    setIsGenerating(false);
   };
 
   const handleCopy = (text) => {
@@ -129,8 +129,8 @@ Return JSON:
             <p className="text-sm text-slate-600 mb-3">
               Generate AI-powered audit findings and recommendations
             </p>
-            <Button onClick={generateAuditFindings} disabled={isGenerating}>
-              {isGenerating ? (
+            <Button onClick={generateAuditFindings} disabled={ai.loading}>
+              {ai.loading ? (
                 <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Generating...</>
               ) : (
                 <><Sparkles className="w-4 h-4 mr-2" /> Generate Findings</>

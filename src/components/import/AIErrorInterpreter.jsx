@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useAICall } from "@/hooks/useAICall";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -8,11 +8,10 @@ import { Brain, Loader2, Lightbulb, RefreshCw } from "lucide-react";
 import { toast } from 'sonner';
 
 export default function AIErrorInterpreter({ errors, _onApplySuggestions }) {
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const ai = useAICall();
   const [analysis, setAnalysis] = useState(null);
 
   const analyzeErrors = async () => {
-    setIsAnalyzing(true);
     
     try {
       // Group errors by type for more efficient analysis
@@ -40,7 +39,7 @@ For each error pattern, provide:
 
 Focus on the most common errors first.`;
 
-      const response = await invokeLLM({
+      const response = await ai.run({
         prompt,
         response_json_schema: {
           type: "object",
@@ -70,7 +69,6 @@ Focus on the most common errors first.`;
       toast.error('Failed to analyze errors: ' + error.message);
     }
     
-    setIsAnalyzing(false);
   };
 
   return (
@@ -90,10 +88,10 @@ Focus on the most common errors first.`;
             </p>
             <Button
               onClick={analyzeErrors}
-              disabled={isAnalyzing || errors.length === 0}
+              disabled={ai.loading || errors.length === 0}
               className="bg-navy-600 hover:bg-navy-700"
             >
-              {isAnalyzing ? (
+              {ai.loading ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   Analyzing {errors.length} errors...
