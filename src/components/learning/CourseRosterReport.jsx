@@ -76,6 +76,43 @@ export default function CourseRosterReport() {
     toast.success('CSV exported successfully');
   };
 
+  const handleExportPDF = async () => {
+    if (filteredRoster.length === 0) {
+      toast.error('No data to export');
+      return;
+    }
+    const data = filteredRoster.map(a => ({
+      employee: a.assigned_to_user_id || '',
+      assigned: a.assigned_date ? formatDate(a.assigned_date) : (a.created_date ? formatDate(a.created_date) : ''),
+      due: a.due_date ? formatDate(a.due_date) : '',
+      status: a.status || '',
+      completion: a.completion_date ? formatDate(a.completion_date) : '',
+      score: a.score_percentage != null ? `${a.score_percentage}%` : (a.score != null ? String(a.score) : ''),
+      attempts: a.latest_attempt_number || '0',
+    }));
+    const columns = [
+      { key: 'employee', header: 'Employee' },
+      { key: 'assigned', header: 'Assigned Date' },
+      { key: 'due', header: 'Due Date' },
+      { key: 'status', header: 'Status' },
+      { key: 'completion', header: 'Completion Date' },
+      { key: 'score', header: 'Score' },
+      { key: 'attempts', header: 'Attempts' },
+    ];
+    try {
+      const { exportDataTableToPDF } = await import('@/components/utils/pdfExporter');
+      await exportDataTableToPDF(data, columns, {
+        filename: `${selectedCourseTitle.replace(/\s+/g, '_')}_roster.pdf`,
+        title: `${selectedCourseTitle} — Course Roster`,
+        subtitle: `${filteredRoster.length} enrolled`,
+      });
+      toast.success('PDF exported successfully');
+    } catch (err) {
+      console.error('Roster PDF export error:', err);
+      toast.error('Failed to export PDF');
+    }
+  };
+
   return (
     <div className="space-y-6">
       <ReportFilters
@@ -117,7 +154,7 @@ export default function CourseRosterReport() {
               Course Roster ({filteredRoster.length} enrolled)
             </CardTitle>
             <div className="flex gap-2">
-              <Button variant="outline" size="sm" className="gap-2">
+              <Button variant="outline" size="sm" className="gap-2" onClick={handleExportPDF}>
                 <FileText className="w-4 h-4" />
                 Export PDF
               </Button>
