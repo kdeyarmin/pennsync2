@@ -18,6 +18,22 @@ Deno.serve(async (req) => {
 
     const userRole = role || 'user';
 
+    // Privilege-propagation guard: the gate above admits a plain facility `admin`,
+    // but the requested role is applied verbatim to the new account (with
+    // is_approved: true) by onUserSignup / autoApproveInvitedUser. Without this, any
+    // admin could mint another admin. Only a super_admin (or the platform owner) may
+    // invite a user into a privileged role — mirrors the guard in fixUserAccount.
+    const SUPER_ADMIN_EMAIL = (Deno.env.get('SUPER_ADMIN_EMAIL') || 'kdeyarmin@comcast.net').trim().toLowerCase();
+    const callerIsSuperAdmin = user.account_type === 'super_admin'
+      || String(user.email || '').trim().toLowerCase() === SUPER_ADMIN_EMAIL;
+    const PRIVILEGED_ROLES = ['admin', 'super_admin'];
+    if (PRIVILEGED_ROLES.includes(String(userRole)) && !callerIsSuperAdmin) {
+      return Response.json(
+        { error: 'Only a super admin can invite a user with an admin role.' },
+        { status: 403 }
+      );
+    }
+
     // Use the platform's built-in invite (handles email delivery natively)
     await base44.users.inviteUser(email, userRole);
     console.log('✓ Platform invite sent to:', email);

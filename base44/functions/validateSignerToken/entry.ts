@@ -129,6 +129,10 @@ Deno.serve(async (req) => {
         return {
           id: sig.id,
           name: sig.document_title,
+          // Scoped to this token's package documents, so the public signer portal
+          // can render the PDF from here instead of an unauthenticated entity read
+          // by arbitrary documentId.
+          pdf_url: sig.pdf_url,
           status: sig.status,
           signedAt: lastSignedAt,
           signers: signers.map((s) => ({

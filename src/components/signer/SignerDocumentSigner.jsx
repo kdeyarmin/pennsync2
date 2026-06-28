@@ -23,15 +23,14 @@ export default function SignerDocumentSigner({
 
   const document = packageData.documents.find((d) => d.id === documentId);
 
-  const handleFetchDocument = async () => {
-    try {
-      setIsLoading(true);
-      const signature = await base44.entities.DocumentSignature.get(documentId);
-      setDocumentUrl(signature.pdf_url);
-    } catch {
-      toast.error('Failed to load document');
-    } finally {
-      setIsLoading(false);
+  // The PDF URL comes from the token-validated package payload (validateSignerToken),
+  // which is scoped to this signer's token — never from a direct, unauthenticated
+  // entity read by arbitrary documentId on the public portal.
+  const handleFetchDocument = () => {
+    if (document?.pdf_url) {
+      setDocumentUrl(document.pdf_url);
+    } else {
+      toast.error('Document is not available to view');
     }
   };
 

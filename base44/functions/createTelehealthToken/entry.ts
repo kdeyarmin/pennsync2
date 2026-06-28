@@ -117,11 +117,15 @@ Deno.serve(async (req) => {
     } else {
       const user = await base44.auth.me();
       if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+      // Authorize on stable identity only (email / role), never on the mutable,
+      // non-unique full_name: participant_list contains the patient's display name,
+      // so a full_name match would let any authenticated user rename themselves to a
+      // patient's name and join that patient's session. The host is covered by
+      // host_email; supervisors by the admin role.
       const participants = Array.isArray(session.participant_list) ? session.participant_list : [];
       const authorized = user.role === 'admin'
         || session.host_email === user.email
-        || participants.includes(user.email)
-        || (user.full_name && participants.includes(user.full_name));
+        || participants.includes(user.email);
       if (!authorized) return Response.json({ error: 'Forbidden' }, { status: 403 });
       participantIdentity = user.full_name || user.email;
     }

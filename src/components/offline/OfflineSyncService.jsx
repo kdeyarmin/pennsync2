@@ -136,6 +136,21 @@ class OfflineStorageManager {
   }
 }
 
+// Idempotent Visit create keyed on the queue item's id. If a prior sync run (or a
+// concurrent one) already created the Visit server-side but died before
+// removeFromQueue, reuse that record instead of creating a duplicate clinical
+// visit. Mirrors the client_request_id idempotency in OfflineManager.
+async function createVisitIdempotent(visitData, requestKey) {
+  if (requestKey) {
+    const existing = await base44.entities.Visit
+      .filter({ client_request_id: requestKey })
+      .catch(() => []);
+    if (Array.isArray(existing) && existing.length > 0) return existing[0];
+    return base44.entities.Visit.create({ ...visitData, client_request_id: requestKey });
+  }
+  return base44.entities.Visit.create(visitData);
+}
+
 // Sync worker
 class OfflineSyncWorker {
   static async syncItem(item) {
@@ -149,7 +164,7 @@ class OfflineSyncWorker {
             // notes/vitals referencing this visit can be attached on this or a
             // later sync run (previously they were orphaned and lost forever).
             const { id, ...visitData } = item.data;
-            result = await base44.entities.Visit.create(visitData);
+            result = await createVisitIdempotent(visitData, item.id);
             OfflineStorageManager.setIdMapping(id, result?.id);
           } else if (item.data.id) {
             // Update existing visit
@@ -157,7 +172,7 @@ class OfflineSyncWorker {
             result = await base44.entities.Visit.update(id, visitData);
           } else {
             // Create new visit
-            result = await base44.entities.Visit.create(item.data);
+            result = await createVisitIdempotent(item.data, item.id);
           }
           break;
 
