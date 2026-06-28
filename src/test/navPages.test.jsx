@@ -12,7 +12,7 @@
  * the live manifest so new sidebar entries are covered automatically.
  */
 import { describe, it, expect, vi, beforeAll } from "vitest";
-import { render } from "@testing-library/react";
+import { act, render } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ConfirmDialogProvider } from "@/components/ui/confirm-dialog";
@@ -111,7 +111,10 @@ describe("navigation-bar pages mount without crashing", () => {
   it.each(navPages)("%s", async (page) => {
     const importer = importerFor(page);
     expect(importer, `no module ../pages/${page}.jsx — nav links to an unrouted page`).toBeTruthy();
-    const mod = await importer();
+    let mod;
+    await act(async () => {
+      mod = await importer();
+    });
     const Page = mod.default;
     expect(Page, `${page}.jsx has no default export`).toBeTruthy();
 
