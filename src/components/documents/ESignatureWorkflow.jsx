@@ -399,7 +399,17 @@ export default function ESignatureWorkflow({ document, documentType, patient, on
                           </p>
                         </div>
                         <div className="flex gap-2">
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            aria-label="Download document"
+                            onClick={() => {
+                              const url = doc.signed_pdf_url || doc.document_url;
+                              if (url) window.open(url, '_blank', 'noopener');
+                              else toast.error('No document file is available to download yet');
+                            }}
+                          >
                             <Download className="w-3.5 h-3.5" />
                           </Button>
                         </div>

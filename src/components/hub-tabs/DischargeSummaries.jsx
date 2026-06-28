@@ -206,7 +206,13 @@ export default function DischargeSummaries() {
                         View
                       </Button>
                       {summary.status === 'pending_review' && (
-                        <Button size="sm">
+                        <Button
+                          size="sm"
+                          onClick={() => {
+                            setSelectedSummaryId(summary.id);
+                            setShowWorkflow(true);
+                          }}
+                        >
                           <CheckCircle className="w-3 h-3 mr-1" />
                           Review & Sign
                         </Button>
