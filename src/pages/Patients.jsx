@@ -184,6 +184,19 @@ export default function Patients() {
     return map;
   }, [allCarePlans]);
 
+  // Roster summary stats — memoized so the four StatCards don't re-scan the full
+  // patient list on every unrelated re-render (search typing, dialog open, etc.).
+  const rosterStats = useMemo(() => {
+    const list = patients || [];
+    const cutoff = Date.now() - 30 * 86400000;
+    return {
+      total: list.length,
+      active: list.filter(p => p.status === 'active').length,
+      withCarePlans: list.filter(p => (carePlanCountByPatientId[p.id] || 0) > 0).length,
+      recent: list.filter(p => p.created_date && new Date(p.created_date).getTime() >= cutoff).length,
+    };
+  }, [patients, carePlanCountByPatientId]);
+
   const filteredPatients = useMemo(() => (patients || []).filter(patient => {
     if (!patient) return false;
 
@@ -285,12 +298,12 @@ export default function Patients() {
 
       {/* Roster summary — shared StatCard treatment, matching the Dashboard. */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <StatCard label="Total Patients" value={patients.length} icon={Users} tone="navy" />
-        <StatCard label="Active" value={patients.filter(p => p.status === 'active').length} icon={UserCheck} tone="emerald" />
-        <StatCard label="With Care Plans" value={patients.filter(p => (carePlanCountByPatientId[p.id] || 0) > 0).length} icon={Target} tone="gold" />
+        <StatCard label="Total Patients" value={rosterStats.total} icon={Users} tone="navy" />
+        <StatCard label="Active" value={rosterStats.active} icon={UserCheck} tone="emerald" />
+        <StatCard label="With Care Plans" value={rosterStats.withCarePlans} icon={Target} tone="gold" />
         <StatCard
           label="New (30 days)"
-          value={patients.filter(p => p.created_date && (Date.now() - new Date(p.created_date).getTime()) <= 30 * 86400000).length}
+          value={rosterStats.recent}
           icon={CalendarPlus}
           tone="slate"
         />

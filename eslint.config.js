@@ -3,6 +3,7 @@ import pluginJs from "@eslint/js";
 import pluginReact from "eslint-plugin-react";
 import pluginReactHooks from "eslint-plugin-react-hooks";
 import pluginUnusedImports from "eslint-plugin-unused-imports";
+import pluginJsxA11y from "eslint-plugin-jsx-a11y";
 
 export default [
   {
@@ -37,6 +38,7 @@ export default [
       react: pluginReact,
       "react-hooks": pluginReactHooks,
       "unused-imports": pluginUnusedImports,
+      "jsx-a11y": pluginJsxA11y,
     },
     rules: {
       "no-unused-vars": "off",
@@ -68,6 +70,17 @@ export default [
       // intentional diagnostics; everything else should route through
       // `@/lib/logger` (which is exempt via a file-level eslint-disable).
       "no-console": ["error", { allow: ["warn", "error"] }],
+      // Accessibility: surfaced as warnings (not errors) so the 0-error CI gate
+      // stays green while the a11y backlog is worked down. A follow-up can promote
+      // these to "error" once clean. Curated set covering the highest-value checks.
+      "jsx-a11y/alt-text": "warn",
+      "jsx-a11y/anchor-has-content": "warn",
+      "jsx-a11y/aria-props": "warn",
+      "jsx-a11y/aria-proptypes": "warn",
+      "jsx-a11y/aria-role": "warn",
+      "jsx-a11y/role-has-required-aria-props": "warn",
+      "jsx-a11y/label-has-associated-control": "warn",
+      "jsx-a11y/no-redundant-roles": "warn",
     },
   },
 ];

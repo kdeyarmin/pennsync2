@@ -2,6 +2,7 @@ import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useConfirm } from "@/components/ui/confirm-dialog";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutationWithToast } from "@/hooks/useMutationWithToast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -66,26 +67,24 @@ export default function UserManagement({ users }) {
   });
 
   // Update user mutation
-  const updateUserMutation = useMutation({
+  // Adopts the shared useMutationWithToast helper: success toast + ['allUsers']
+  // invalidation + error toast/telemetry are standardized; the page-specific
+  // follow-up (activity log + closing the dialog) runs in onSuccess.
+  const updateUserMutation = useMutationWithToast({
     mutationFn: ({ userId, data }) => base44.entities.User.update(userId, data),
+    invalidateKeys: [['allUsers']],
+    successMessage: 'User updated successfully',
+    errorMessage: (error) => 'Failed to update user: ' + error.message,
     onSuccess: async (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['allUsers'] });
-      
-      // Log activity
       await logActivity('user_updated', {
         entity_type: 'User',
         entity_id: variables.userId,
         updated_fields: Object.keys(variables.data),
         page: 'UserManagement'
       });
-      
       setShowEditDialog(false);
       setEditingUser(null);
-      toast.success('User updated successfully');
     },
-    onError: (error) => {
-      toast.error('Failed to update user: ' + error.message);
-    }
   });
 
   // Create user invitation mutation
