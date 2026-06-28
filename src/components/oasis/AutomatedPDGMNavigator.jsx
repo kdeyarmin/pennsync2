@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { buildPdgmNavigatorCsv } from "./pdgmNavigatorExport";
 import { getConfidenceBadge, getSeverityBadge, getPriorityColor, getLevelColor, formatCurrency } from "./pdgmNavigatorHelpers";
+import { resolveAgencyCosts } from "./pdgmFinancialEngine";
 import { buildNavigationRequest, buildFinancialPredictionRequest, buildResolutionWorkflowRequest } from "./pdgmNavigatorPrompts";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -44,24 +45,6 @@ import PDGMScenarioModeler from "./PDGMScenarioModeler";
 import AIGroupAssignmentValidator from "./AIGroupAssignmentValidator";
 
 
-
-// CMS PDGM Clinical Groups
-const _CLINICAL_GROUPS = {
-  'MMTA_Surgical_Aftercare': { name: 'Surgical Aftercare', category: 'MMTA' },
-  'MMTA_Cardiac_Circulatory': { name: 'Cardiac/Circulatory', category: 'MMTA' },
-  'MMTA_Endocrine': { name: 'Endocrine', category: 'MMTA' },
-  'MMTA_GI_GU': { name: 'GI/GU', category: 'MMTA' },
-  'MMTA_Infectious_Disease': { name: 'Infectious Disease', category: 'MMTA' },
-  'MMTA_Other': { name: 'Other', category: 'MMTA' },
-  'MMTA_Respiratory': { name: 'Respiratory', category: 'MMTA' },
-  'MMTA_Neuro_Rehab': { name: 'Neuro/Rehab', category: 'MMTA' },
-  'MMTA_Wounds': { name: 'Wounds', category: 'MMTA' },
-  'MMTA_Complex_Nursing': { name: 'Complex Nursing', category: 'MMTA' },
-  'MMTA_Behavioral_Health': { name: 'Behavioral Health', category: 'MMTA' },
-  'MMTA_Medication_Management': { name: 'Medication Management', category: 'MMTA' },
-  'MMTA_Musculoskeletal': { name: 'Musculoskeletal', category: 'MMTA' }
-};
-
 export default function AutomatedPDGMNavigator({ analysisResults, pdgmData, revenueData, onNavigationComplete }) {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [navigation, setNavigation] = useState(null);
@@ -84,14 +67,7 @@ export default function AutomatedPDGMNavigator({ analysisResults, pdgmData, reve
     }
   });
 
-  const agencyCosts = agencySettings || {
-    avg_staff_hourly_rate: 45,
-    training_cost_per_hour: 35,
-    documentation_time_per_episode: 0.5,
-    audit_staff_hourly_rate: 50,
-    avg_episodes_per_year: 50,
-    wage_index: 1.0
-  };
+  const agencyCosts = resolveAgencyCosts(agencySettings);
 
   const runPDGMNavigation = useCallback(async () => {
     if (!pdgmData) return;
