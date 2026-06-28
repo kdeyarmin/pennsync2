@@ -50,6 +50,9 @@ Deno.serve(async (req) => {
         return Response.json({ error: 'Invalid or disallowed PDF URL' }, { status: 400 });
       }
       const response = await fetch(url);
+      if (!response.ok) {
+        return Response.json({ error: `Could not fetch a source PDF (HTTP ${response.status})` }, { status: 400 });
+      }
       const pdfBytes = await response.arrayBuffer();
       const pdf = await PDFDocument.load(pdfBytes);
       

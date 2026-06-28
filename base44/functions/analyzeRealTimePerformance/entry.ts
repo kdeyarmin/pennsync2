@@ -66,10 +66,13 @@ Deno.serve(async (req) => {
     };
 
     metrics.forEach(m => {
-      if (m.question_difficulty && m.is_correct !== undefined) {
-        difficultyPerformance[m.question_difficulty].total++;
+      // Guard on bucket membership, not just truthiness: an out-of-enum
+      // difficulty (e.g. "expert") would index to undefined and throw on .total++.
+      const bucket = difficultyPerformance[m.question_difficulty];
+      if (bucket && m.is_correct !== undefined) {
+        bucket.total++;
         if (m.is_correct) {
-          difficultyPerformance[m.question_difficulty].correct++;
+          bucket.correct++;
         }
       }
     });

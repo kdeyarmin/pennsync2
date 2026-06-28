@@ -11,6 +11,12 @@ Deno.serve(async (req) => {
 
         const { extractedData, existingPatients } = await req.json();
 
+        // Validate input shape so malformed payloads return 400, not a 500 from
+        // dereferencing extractedData.demographics / existingPatients.length below.
+        if (!extractedData || !Array.isArray(existingPatients)) {
+            return Response.json({ error: 'extractedData (object) and existingPatients (array) are required' }, { status: 400 });
+        }
+
         // Use AI to analyze and match patients with nuanced data points
         const matchAnalysis = await base44.integrations.Core.InvokeLLM({
             model: "claude_opus_4_8",

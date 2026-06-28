@@ -9,7 +9,10 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }
 
-    const credentials = await base44.asServiceRole.entities.PersonnelCredential.list('-expiration_date', 5000);
+    // Sort ASCENDING by expiration so the soonest-expiring credentials (the ones
+    // this reminder job exists to catch) stay within the row cap. A descending
+    // sort put furthest-future first and dropped imminent ones off the tail.
+    const credentials = await base44.asServiceRole.entities.PersonnelCredential.list('expiration_date', 5000);
     const today = new Date();
 
     const notificationsSent = [];

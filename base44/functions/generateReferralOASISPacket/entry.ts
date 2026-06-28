@@ -148,6 +148,12 @@ Also provide:
     // section blocks (e.g. the insurance block reads `demo`, the OASIS block reads
     // `dx`), so block-scoping them to their own section threw ReferenceError on
     // the default (all-sections) request.
+    const demo = referralData.demographics || {};
+    const admission = referralData.admission_details || {};
+    const dx = referralData.diagnoses || {};
+    const func = referralData.functional_status || {};
+    const clinical = referralData.clinical_info || {};
+    const safety = referralData.safety_concerns || {};
 
     // PATIENT DEMOGRAPHICS
     if (shouldInclude('demographics')) {

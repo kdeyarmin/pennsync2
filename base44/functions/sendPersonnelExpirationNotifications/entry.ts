@@ -22,7 +22,10 @@ Deno.serve(async (req) => {
     }
 
     const today = new Date();
-    const items = await base44.asServiceRole.entities.PersonnelCredential.list('-expiration_date', 1000);
+    // Sort ASCENDING by expiration so the soonest-expiring credentials (the ones
+    // this notification job exists to catch) stay within the row cap. A
+    // descending sort dropped the imminent ones off the tail.
+    const items = await base44.asServiceRole.entities.PersonnelCredential.list('expiration_date', 1000);
     const users = await base44.asServiceRole.entities.User.list('-created_date', 400);
     let notificationsSent = 0;
     const notificationsToCreate = [];
