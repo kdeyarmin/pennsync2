@@ -28,9 +28,11 @@ export default function CareCoordinationAnalyzer({
   const queryClient = useQueryClient();
   const ai = useAICall();
   const [alerts, setAlerts] = useState([]);
-  // Latches once an auto-analysis has run, so an empty-result run (alerts stays
-  // []) can't re-fire the effect each time ai.loading toggles → infinite re-analysis.
-  const hasAutoAnalyzedRef = useRef(false);
+  // Records the patient this component last auto-analyzed, so an empty-result run
+  // (alerts stays []) can't re-fire each time ai.loading toggles, and a single ref
+  // (re-armed only when patientId actually changes) avoids the ordering hazard of a
+  // separate reset effect clearing the latch in the same flush.
+  const autoAnalyzedForRef = useRef(null);
   const [_expandedAlert, _setExpandedAlert] = useState(null);
   const [customNotes, setCustomNotes] = useState({});
 
@@ -190,16 +192,11 @@ Return comprehensive analysis with actionable coordination alerts.`,
   }, [patient, incidents, visits, carePlans]);
 
   useEffect(() => {
-    if (autoAnalyze && patientId && patient && !ai.loading && !hasAutoAnalyzedRef.current) {
-      hasAutoAnalyzedRef.current = true;
+    if (autoAnalyze && patientId && patient && !ai.loading && autoAnalyzedForRef.current !== patientId) {
+      autoAnalyzedForRef.current = patientId;
       analyzeCoordination();
     }
   }, [autoAnalyze, patientId, patient, ai.loading, analyzeCoordination]);
-
-  // Re-arm the one-shot auto-analysis when the target patient changes.
-  useEffect(() => {
-    hasAutoAnalyzedRef.current = false;
-  }, [patientId]);
 
   const saveAlert = async (alertData) => {
     try {

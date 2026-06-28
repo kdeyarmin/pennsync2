@@ -59,6 +59,9 @@ export default function SignaturePadCanvas({ onSignatureCapture, disabled = fals
   const handleMouseDown = (e) => {
     if (disabled) return;
     setIsDrawing(true);
+    // Reset per gesture: a click/tap with no movement should not re-emit the
+    // canvas on mouseup just because an earlier gesture drew something.
+    hasDrawnRef.current = false;
     const ctx = getCtx();
     const { x, y } = getCanvasCoords(e);
     ctx.beginPath();

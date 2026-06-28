@@ -143,7 +143,7 @@ class OfflineStorageManager {
 async function createVisitIdempotent(visitData, requestKey) {
   if (requestKey) {
     const existing = await base44.entities.Visit
-      .filter({ client_request_id: requestKey })
+      .filter({ client_request_id: requestKey }, '-created_date', 1)
       .catch(() => []);
     if (Array.isArray(existing) && existing.length > 0) return existing[0];
     return base44.entities.Visit.create({ ...visitData, client_request_id: requestKey });

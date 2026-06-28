@@ -30,6 +30,11 @@ export default function AICarePlanRecommendations({
   const analyzeAndRecommend = async () => {
     if (!patient) return;
 
+    // accepted/dismissed are keyed by array index, so a fresh result must start with
+    // a clean slate or the new item at a reused index inherits the prior state.
+    setAcceptedIds(new Set());
+    setDismissedIds(new Set());
+
     try {
       // Get recent visits for context
       const recentVisits = visits.slice(0, 5);
@@ -324,6 +329,7 @@ Return JSON:`,
                 onClick={() => {
                   setRecommendations(null);
                   setAcceptedIds(new Set());
+                  setDismissedIds(new Set());
                 }}
                 className="flex-1"
               >
