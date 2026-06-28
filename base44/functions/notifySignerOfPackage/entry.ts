@@ -38,8 +38,11 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Failed to generate signer token' }, { status: 500 });
     }
 
-    // Get patient name
-    const patient = await base44.asServiceRole.entities.Patient.get(pkg.patient_id);
+    // Get patient name — tolerate a missing/stale patient_id (mirror sibling fetches)
+    // so a deleted patient doesn't 500 a notification that can still be sent.
+    const patient = pkg.patient_id
+      ? await base44.asServiceRole.entities.Patient.get(pkg.patient_id).catch(() => null)
+      : null;
     const patientName = patient ? `${patient.first_name} ${patient.last_name}` : 'a patient';
 
     // Send email notification

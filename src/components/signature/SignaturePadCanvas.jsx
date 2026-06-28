@@ -20,8 +20,24 @@ export default function SignaturePadCanvas({ onSignatureCapture, disabled = fals
   const [isDrawing, setIsDrawing] = useState(false);
   const [isEmpty, setIsEmpty] = useState(true);
   const [typedName, setTypedName] = useState('');
+  // Tracks whether a stroke was actually drawn this gesture. Read in mouseUp
+  // instead of the `isEmpty` state, which may not have re-rendered yet after the
+  // first stroke's setIsEmpty(false) (stale-closure → dropped first signature).
+  const hasDrawnRef = useRef(false);
 
   const getCtx = () => canvasRef.current?.getContext('2d');
+
+  // The canvas intrinsic resolution (500x150) differs from its CSS display size
+  // (w-full h-40), so raw client coordinates must be scaled to canvas space or
+  // every stroke lands in the wrong place / wrong scale.
+  const getCanvasCoords = (e) => {
+    const canvas = canvasRef.current;
+    const rect = canvas.getBoundingClientRect();
+    return {
+      x: (e.clientX - rect.left) * (canvas.width / rect.width),
+      y: (e.clientY - rect.top) * (canvas.height / rect.height),
+    };
+  };
 
   useEffect(() => {
     const ctx = getCtx();
@@ -43,20 +59,19 @@ export default function SignaturePadCanvas({ onSignatureCapture, disabled = fals
   const handleMouseDown = (e) => {
     if (disabled) return;
     setIsDrawing(true);
-    const canvas = canvasRef.current;
-    const rect = canvas.getBoundingClientRect();
     const ctx = getCtx();
+    const { x, y } = getCanvasCoords(e);
     ctx.beginPath();
-    ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+    ctx.moveTo(x, y);
   };
 
   const handleMouseMove = (e) => {
     if (!isDrawing || disabled) return;
-    const canvas = canvasRef.current;
-    const rect = canvas.getBoundingClientRect();
     const ctx = getCtx();
-    ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+    const { x, y } = getCanvasCoords(e);
+    ctx.lineTo(x, y);
     ctx.stroke();
+    hasDrawnRef.current = true;
     setIsEmpty(false);
   };
 
@@ -65,7 +80,7 @@ export default function SignaturePadCanvas({ onSignatureCapture, disabled = fals
     setIsDrawing(false);
     const ctx = getCtx();
     ctx?.closePath();
-    if (!isEmpty) {
+    if (hasDrawnRef.current) {
       onSignatureCapture?.(canvasRef.current.toDataURL('image/png'));
     }
   };
@@ -125,6 +140,7 @@ export default function SignaturePadCanvas({ onSignatureCapture, disabled = fals
     setTypedName('');
     setIsDrawing(false);
     clearCanvas();
+    hasDrawnRef.current = false;
     setIsEmpty(true);
     onSignatureCapture?.(null);
   };
@@ -132,6 +148,7 @@ export default function SignaturePadCanvas({ onSignatureCapture, disabled = fals
   const handleClear = () => {
     clearCanvas();
     setTypedName('');
+    hasDrawnRef.current = false;
     setIsEmpty(true);
     onSignatureCapture?.(null);
   };

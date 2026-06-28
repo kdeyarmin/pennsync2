@@ -95,10 +95,10 @@ Deno.serve(async (req) => {
           } else if (newStatus === 'failed' && fax.sent_by && !fax.final_failure_notified) {
             update.final_failure_notified = true;
             notifyType = 'fax_failed';
-          } else if (newStatus === 'sent' && fax.sent_by) {
-            // Non-terminal progress update; no webhook counterpart, no flag.
-            notifyType = 'fax_delivered';
           }
+          // 'sent' is a non-terminal progress state, not delivery — don't notify the
+          // sender it was 'fax_delivered'. The delivered/failed branches above own the
+          // sender notification when a terminal state is reached.
 
           await base44.asServiceRole.entities.FaxLog.update(fax.id, update);
 

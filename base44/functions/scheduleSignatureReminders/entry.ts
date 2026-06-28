@@ -14,6 +14,11 @@ Deno.serve(async (req) => {
     if (!document_id || !reminder_days) {
       return Response.json({ error: 'Missing required fields' }, { status: 400 });
     }
+    // deadline_date drives the reminder-time math below; reject a missing/unparseable
+    // value with a 400 rather than letting new Date(NaN).toISOString() throw a 500.
+    if (!deadline_date || Number.isNaN(new Date(deadline_date).getTime())) {
+      return Response.json({ error: 'A valid deadline_date is required' }, { status: 400 });
+    }
 
     // Load the signature request and authorize the caller against IT. Previously
     // this trusted a caller-supplied document_id + signer_emails, so any logged-in

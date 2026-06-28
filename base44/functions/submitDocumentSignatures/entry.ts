@@ -83,9 +83,11 @@ Deno.serve(async (req) => {
       };
     });
 
-    const requiredComplete = updatedSigners
-      .filter((s) => s.required !== false)
-      .every((s) => s.signature);
+    // Guard the empty-array case: [].every() is true, so a document whose signers
+    // are all optional would otherwise finalize as 'completed' with zero signatures.
+    const requiredSigners = updatedSigners.filter((s) => s.required !== false);
+    const requiredComplete = requiredSigners.length > 0
+      && requiredSigners.every((s) => s.signature);
     if (!requiredComplete) {
       return Response.json({ error: 'All required signers must sign.' }, { status: 400 });
     }

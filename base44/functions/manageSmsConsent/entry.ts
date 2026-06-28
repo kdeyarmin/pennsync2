@@ -93,6 +93,23 @@ Deno.serve(async (req) => {
         return Response.json({ error: 'A valid E.164 phone number is required.' }, { status: 400 });
       }
 
+      // A consumer-initiated STOP (keyword_stop) is a hard legal revocation only the
+      // consumer can lift by texting START. The send-gate resolves consent from the
+      // single newest row, so an admin_manual opt-in would become "latest" and
+      // silently re-enable texting to a number that legally opted out (TCPA). Refuse
+      // it — mirror the guard in recordSmsConsent.
+      if (status === 'opted_in') {
+        const latest = await base44.asServiceRole.entities.SmsConsent
+          .filter({ phone_e164: phone }, '-captured_at', 1)
+          .catch(() => []);
+        if (latest[0]?.consent_status === 'opted_out' && latest[0]?.consent_source === 'keyword_stop') {
+          return Response.json({
+            error: 'This number sent STOP and must text START to re-subscribe; a manual opt-in cannot override a consumer opt-out.',
+            consent_status: 'opted_out',
+          }, { status: 409 });
+        }
+      }
+
       const now = new Date().toISOString();
       await base44.asServiceRole.entities.SmsConsent.create({
         phone_e164: phone,

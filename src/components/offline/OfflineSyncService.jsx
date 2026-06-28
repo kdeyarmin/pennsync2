@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -303,6 +303,10 @@ export function useOfflineSync() {
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncProgress, setSyncProgress] = useState(null);
   const [pendingCount, setPendingCount] = useState(0);
+  // In-flight guard: the 5s pendingCount poll can re-fire the auto-sync effect
+  // mid-sync, and syncAll reads the queue with no per-item lock — two concurrent
+  // runs would both POST the same item, creating duplicate clinical records.
+  const isSyncingRef = useRef(false);
 
   useEffect(() => {
     const updateOnlineStatus = () => setIsOnline(navigator.onLine);
@@ -338,6 +342,8 @@ export function useOfflineSync() {
       toast.error('Cannot sync while offline');
       return;
     }
+    if (isSyncingRef.current) return; // a sync is already running — don't double-POST
+    isSyncingRef.current = true;
 
     setIsSyncing(true);
     setSyncProgress({ current: 0, total: pendingCount });
@@ -363,6 +369,7 @@ export function useOfflineSync() {
     } catch (error) {
       toast.error('Sync failed: ' + error.message);
     } finally {
+      isSyncingRef.current = false;
       setIsSyncing(false);
       setSyncProgress(null);
     }

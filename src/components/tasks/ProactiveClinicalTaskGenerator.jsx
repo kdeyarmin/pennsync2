@@ -45,7 +45,10 @@ export default function ProactiveClinicalTaskGenerator({
         patientId
       });
 
-      const tasks = response.data?.tasks || [];
+      // Tag each task with a stable id so list rendering can key by identity
+      // (not array index) — visibleTasks is a filtered subset that shrinks on
+      // dismiss/approve, and index keys would attach card UI to the wrong task.
+      const tasks = (response.data?.tasks || []).map((t, i) => ({ ...t, __id: `task-${i}` }));
       setSuggestedTasks(tasks);
       setDismissedTasks(new Set());
 
@@ -216,9 +219,9 @@ export default function ProactiveClinicalTaskGenerator({
             </Alert>
 
             <div className="space-y-3">
-              {visibleTasks.map((task, index) => (
-                <Card 
-                  key={index} 
+              {visibleTasks.map((task) => (
+                <Card
+                  key={task.__id}
                   className={`border-2 transition-all ${
                     task.risk_level === 'critical' ? 'border-red-400 bg-red-50' :
                     task.priority === 'high' ? 'border-orange-300 bg-orange-50' :
