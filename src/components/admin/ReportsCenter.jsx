@@ -573,7 +573,7 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
     Object.entries(diagnoses)
       .sort((a, b) => b[1] - a[1])
       .forEach(([diagnosis, count]) => {
-        content += `${diagnosis},${count}\n`;
+        content += `${escapeCsvField(diagnosis)},${count}\n`;
       });
 
     content += `\nVITAL SIGNS AVERAGES\n`;
