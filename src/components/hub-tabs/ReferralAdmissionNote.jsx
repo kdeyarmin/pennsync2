@@ -115,6 +115,15 @@ ${data.orders_treatments?.physician_orders?.join('\n') || 'To be clarified with 
       };
       
       setPrepopulatedData(prepopulated);
+      // Stash the prepopulation payload in sessionStorage (same-origin, cleared
+      // on tab close) instead of serializing PHI into the iframe URL query
+      // string, where it would leak into browser history, proxy/access logs,
+      // and Referer headers.
+      try {
+        if (referral.id) {
+          sessionStorage.setItem(`referral_prepopulate:${referral.id}`, JSON.stringify(prepopulated));
+        }
+      } catch { /* ignore storage quota */ }
     }
   }, [referral]);
 
@@ -192,7 +201,7 @@ ${data.orders_treatments?.physician_orders?.join('\n') || 'To be clarified with 
       {prepopulatedData && (
         <div className="bg-white rounded-lg shadow-lg p-6">
           <iframe
-            src={createPageUrl(`SmartNoteAssistant?patient_id=${referral.patient_id}&visit_type=admission&referral_mode=true&referral_data=${encodeURIComponent(JSON.stringify(prepopulatedData))}`)}
+            src={createPageUrl(`SmartNoteAssistant?patient_id=${referral.patient_id}&visit_type=admission&referral_mode=true&referral_id=${encodeURIComponent(referral.id)}`)}
             className="w-full h-[800px] border-0"
             title="Smart Note Assistant"
           />
