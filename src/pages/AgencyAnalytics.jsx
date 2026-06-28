@@ -19,6 +19,8 @@ import {
   BarChart3
 } from "lucide-react";
 import { calculateStats, calculateNurseStats, formatCurrency } from "../components/utils/statsCalculator";
+import { toCsvRows } from "@/components/admin/csvExport";
+import { toast } from "sonner";
 import PageContainer from "@/components/ui/PageContainer";
 import PageHeader from "@/components/ui/PageHeader";
 import StatCard from "@/components/ui/stat-card";
@@ -111,6 +113,50 @@ export default function AgencyAnalytics() {
     };
   }, [trainingCompletions]);
 
+  const handleExport = () => {
+    try {
+      const summaryRows = [
+        ['Agency Analytics Report'],
+        ['Generated', new Date().toISOString()],
+        [],
+        ['Metric', 'Value'],
+        ['Total Visits', overallStats.visits.total],
+        ['Completed Visits', overallStats.visits.completed],
+        ['Visit Completion Rate (%)', overallStats.visits.completionRate],
+        ['Total Patients', overallStats.patients.total],
+        ['Active Patients', overallStats.patients.active],
+        ['Total Incidents', overallStats.incidents.total],
+        ['Avg Compliance Score', overallStats.compliance.avgScore],
+        ['Estimated Revenue', overallStats.financial.estimatedRevenue],
+        ['Cost Savings', overallStats.financial.costSavings],
+        ['Training Completion Rate (%)', trainingStats.rate],
+        [],
+        ['Top Performers'],
+        ['Name', 'Email', 'Total Visits', 'Completion Rate (%)'],
+        ...topPerformers.map((n) => [
+          n.full_name || '',
+          n.email || '',
+          n.stats.totalVisits,
+          n.stats.completionRate,
+        ]),
+      ];
+
+      const csv = toCsvRows(summaryRows);
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `agency_analytics_${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      a.remove();
+    } catch (error) {
+      console.error('Agency analytics export error:', error);
+      toast.error('Failed to export report: ' + error.message);
+    }
+  };
+
   return (
     <PageContainer>
       <PageHeader
@@ -120,7 +166,7 @@ export default function AgencyAnalytics() {
         description="Comprehensive overview of agency operations and metrics"
         favoritePage="AgencyAnalytics"
         actions={
-          <Button variant="outline" className="gap-2">
+          <Button variant="outline" className="gap-2" onClick={handleExport}>
             <Download className="w-4 h-4" />
             Export Report
           </Button>

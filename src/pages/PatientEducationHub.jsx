@@ -284,6 +284,8 @@ export default function PatientEducationHub() {
         action: 'download',
         selectedSections: Object.keys(selectedSections).length > 0 ? selectedSections : null,
         customNotes: customNotes || null,
+        readingLevel,
+        format,
         styleOptions: styleOptions
       };
 
@@ -372,7 +374,10 @@ export default function PatientEducationHub() {
         patientEmail,
         action: 'email',
         selectedSections: Object.keys(selectedSections).length > 0 ? selectedSections : null,
-        customNotes: customNotes || null
+        customNotes: customNotes || null,
+        readingLevel,
+        format,
+        styleOptions: styleOptions
       });
 
 
