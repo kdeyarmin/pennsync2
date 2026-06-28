@@ -296,16 +296,16 @@ export default function SecurityAnomalyDetector() {
                             </p>
                           </div>
                         </div>
-                        <Link
-                          to={anomaly.user
-                            ? `${createPageUrl('UserActivityReport')}?user=${encodeURIComponent(anomaly.user)}`
-                            : createPageUrl('UserActivityReport')}
-                        >
-                          <Button size="sm" variant="outline" className="min-h-[44px]">
+                        <Button asChild size="sm" variant="outline" className="min-h-[44px]">
+                          <Link
+                            to={anomaly.user
+                              ? `${createPageUrl('UserActivityReport')}?user=${encodeURIComponent(anomaly.user)}`
+                              : createPageUrl('UserActivityReport')}
+                          >
                             <Eye className="w-4 h-4 mr-1" />
                             Investigate
-                          </Button>
-                        </Link>
+                          </Link>
+                        </Button>
                       </div>
                     </CardContent>
                   </Card>

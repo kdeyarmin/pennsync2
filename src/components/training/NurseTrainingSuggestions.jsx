@@ -243,11 +243,11 @@ export default function NurseTrainingSuggestions({ nurseEmail, compact = false }
                       </div>
                       <p className="text-xs text-slate-500">{module.recommendationCount} recs</p>
                     </div>
-                    <Link to={createPageUrl('NurseTrainingHub')}>
-                      <Button size="sm" variant="outline">
+                    <Button asChild size="sm" variant="outline">
+                      <Link to={createPageUrl('NurseTrainingHub')}>
                         Start <ChevronRight className="w-4 h-4 ml-1" />
-                      </Button>
-                    </Link>
+                      </Link>
+                    </Button>
                   </div>
                 </div>
               ))}

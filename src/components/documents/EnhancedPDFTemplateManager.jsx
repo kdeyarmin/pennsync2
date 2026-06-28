@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { FileText, Plus, Edit, Copy, Trash2, History, Search, Filter, Grid3x3, List } from "lucide-react";
+import { FileText, Plus, Copy, Trash2, History, Search, Filter, Grid3x3, List } from "lucide-react";
 import { toast } from "sonner";
 import PDFTemplateBuilder from "@/components/documents/PDFTemplateBuilder";
 
@@ -45,7 +45,7 @@ export default function EnhancedPDFTemplateManager() {
       signature_fields: template.signature_fields || [],
       visual_elements: template.visual_elements || [],
       is_active: template.is_active ?? true,
-      version: 1,
+      version: "1.0",
       usage_count: 0,
     }),
     onSuccess: () => {
@@ -184,7 +184,6 @@ export default function EnhancedPDFTemplateManager() {
                   <TemplateGridCard
                     key={template.id}
                     template={template}
-                    onEdit={() => setShowBuilder(true)}
                     onCopy={() => copyMutation.mutate(template)}
                     onDelete={() => deleteMutation.mutate(template.id)}
                     onViewVersions={() => setShowVersions(template.id)}
@@ -205,7 +204,6 @@ export default function EnhancedPDFTemplateManager() {
                 <TemplateListRow
                   key={template.id}
                   template={template}
-                  onEdit={() => setShowBuilder(true)}
                   onDelete={() => deleteMutation.mutate(template.id)}
                   onViewVersions={() => setShowVersions(template.id)}
                 />
@@ -229,7 +227,7 @@ export default function EnhancedPDFTemplateManager() {
   );
 }
 
-function TemplateGridCard({ template, onEdit, onCopy, onDelete, onViewVersions }) {
+function TemplateGridCard({ template, onCopy, onDelete, onViewVersions }) {
   return (
     <Card className="p-4 flex flex-col hover:shadow-md transition-shadow h-full">
       <div className="flex-1">
@@ -260,9 +258,6 @@ function TemplateGridCard({ template, onEdit, onCopy, onDelete, onViewVersions }
         )}
 
         <div className="flex gap-1 pt-2">
-          <Button variant="ghost" size="icon" className="h-8 w-8 flex-1" onClick={onEdit} aria-label="Edit template">
-            <Edit className="w-3 h-3" />
-          </Button>
           <Button variant="ghost" size="icon" className="h-8 w-8 flex-1" onClick={onCopy} aria-label="Duplicate template">
             <Copy className="w-3 h-3" />
           </Button>
@@ -288,7 +283,7 @@ function TemplateGridCard({ template, onEdit, onCopy, onDelete, onViewVersions }
   );
 }
 
-function TemplateListRow({ template, onEdit, onDelete, onViewVersions }) {
+function TemplateListRow({ template, onDelete, onViewVersions }) {
   return (
     <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors gap-2">
       <div className="flex-1 min-w-0">
@@ -311,9 +306,6 @@ function TemplateListRow({ template, onEdit, onDelete, onViewVersions }) {
       </div>
 
       <div className="flex gap-1 shrink-0">
-        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onEdit} aria-label="Edit template">
-          <Edit className="w-3 h-3" />
-        </Button>
         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onViewVersions}>
           <History className="w-3 h-3" />
         </Button>

@@ -342,12 +342,12 @@ export default function NurseTrainingHub() {
                       </span>
                     </div>
                   ) : (
-                    <Link to={`${createPageUrl('TrainingCoursePlayer')}?courseId=${module.course_id}&preview=true`} className="block">
-                      <Button className="w-full bg-blue-600 hover:bg-blue-700">
+                    <Button asChild className="w-full bg-blue-600 hover:bg-blue-700">
+                      <Link to={`${createPageUrl('TrainingCoursePlayer')}?courseId=${module.course_id}&preview=true`}>
                         <PlayCircle className="w-4 h-4 mr-2" />
                         Start Training
-                      </Button>
-                    </Link>
+                      </Link>
+                    </Button>
                   )}
                 </CardContent>
               </Card>
@@ -381,12 +381,12 @@ export default function NurseTrainingHub() {
                       </span>
                     </div>
                   ) : (
-                    <Link to={`${createPageUrl('TrainingCoursePlayer')}?courseId=${module.course_id}&preview=true`} className="block">
-                      <Button className="w-full" variant="outline">
+                    <Button asChild className="w-full" variant="outline">
+                      <Link to={`${createPageUrl('TrainingCoursePlayer')}?courseId=${module.course_id}&preview=true`}>
                         <PlayCircle className="w-4 h-4 mr-2" />
                         Start Training
-                      </Button>
-                    </Link>
+                      </Link>
+                    </Button>
                   )}
                 </CardContent>
               </Card>

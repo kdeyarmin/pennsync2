@@ -744,12 +744,12 @@ export default function NursePerformanceDashboard() {
                             <Badge variant={rec.urgency === 'high' ? 'destructive' : rec.urgency === 'medium' ? 'default' : 'secondary'}>
                               {rec.urgency} urgency
                             </Badge>
-                            <Link to={createPageUrl('NurseTrainingHub')} className="ml-auto">
-                              <Button size="sm" variant="outline">
+                            <Button asChild size="sm" variant="outline" className="ml-auto">
+                              <Link to={createPageUrl('NurseTrainingHub')}>
                                 Start Training
                                 <ChevronRight className="w-3 h-3 ml-1" />
-                              </Button>
-                            </Link>
+                              </Link>
+                            </Button>
                           </div>
                         </div>
                       </div>
@@ -1026,11 +1026,11 @@ export default function NursePerformanceDashboard() {
                                 <Badge variant="outline">{(gap.current_level || 'unknown').replace(/_/g, ' ')}</Badge>
                               </div>
                             </div>
-                            <Link to={createPageUrl('NurseTrainingHub')}>
-                              <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+                            <Button asChild size="sm" className="bg-blue-600 hover:bg-blue-700">
+                              <Link to={createPageUrl('NurseTrainingHub')}>
                                 Take Training
-                              </Button>
-                            </Link>
+                              </Link>
+                            </Button>
                           </div>
                         </div>
                       ))}

@@ -243,11 +243,11 @@ export default function NurseFeedbackAggregator({ nurseEmail, onTrainingRecommen
                       </Badge>
                       <span className="text-xs font-medium text-slate-700">{gap.category}</span>
                     </div>
-                    <Link to={createPageUrl('NurseTrainingHub')}>
-                      <Button size="sm" variant="ghost" className="h-6 text-xs text-indigo-600">
+                    <Button asChild size="sm" variant="ghost" className="h-6 text-xs text-indigo-600">
+                      <Link to={createPageUrl('NurseTrainingHub')}>
                         <BookOpen className="w-3 h-3 mr-1" /> Train
-                      </Button>
-                    </Link>
+                      </Link>
+                    </Button>
                   </div>
                 ))}
               </div>

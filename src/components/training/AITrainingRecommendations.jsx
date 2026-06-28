@@ -159,9 +159,9 @@ Format recommendations to be actionable and motivating. Focus on improvement, no
 
       for (const rec of highPriorityRecs) {
         // Find matching module
-        const matchingModule = availableModules.find(m => 
-          m.title.toLowerCase().includes((rec.module_title || '').toLowerCase()) ||
-          (rec.module_title || '').toLowerCase().includes(m.title.toLowerCase())
+        const matchingModule = availableModules.find(m =>
+          (m.title || '').toLowerCase().includes((rec.module_title || '').toLowerCase()) ||
+          (rec.module_title || '').toLowerCase().includes((m.title || '').toLowerCase())
         );
 
         if (matchingModule) {
