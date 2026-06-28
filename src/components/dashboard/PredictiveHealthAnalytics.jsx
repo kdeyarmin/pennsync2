@@ -34,7 +34,7 @@ export default function PredictiveHealthAnalytics({ patientId, patient, visits, 
       if (values.length >= 2) {
         const recent = values.slice(0, 3).reduce((a, b) => a + b, 0) / Math.min(3, values.length);
         const older = values.slice(-3).reduce((a, b) => a + b, 0) / Math.min(3, values.length);
-        const change = ((recent - older) / older * 100).toFixed(1);
+        const change = older !== 0 ? ((recent - older) / older * 100).toFixed(1) : '0.0';
         trends.push(`${metric}: ${recent.toFixed(1)} (${change > 0 ? '+' : ''}${change}% vs baseline)`);
       }
     });

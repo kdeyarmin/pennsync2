@@ -681,7 +681,7 @@ Please review this incident in the Incident Reporting Dashboard.`
                     <div className="flex items-center gap-4 mt-2 text-xs text-slate-500">
                       <span className="flex items-center gap-1">
                         <CalendarIcon className="w-3 h-3" />
-                        {format(parseISO(incident.incident_date), 'MMM d, yyyy')} at {incident.incident_time}
+                        {incident.incident_date ? format(parseISO(incident.incident_date), 'MMM d, yyyy') : '—'} at {incident.incident_time || '—'}
                       </span>
                       <span>Reported by: {incident.created_by}</span>
                     </div>

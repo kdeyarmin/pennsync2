@@ -178,9 +178,9 @@ export default function FaxContactsPage() {
   };
 
   const filteredContacts = contacts.filter(contact =>
-    contact.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    contact.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     contact.organization?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    contact.fax_number.includes(searchTerm)
+    contact.fax_number?.includes(searchTerm)
   );
 
   return (

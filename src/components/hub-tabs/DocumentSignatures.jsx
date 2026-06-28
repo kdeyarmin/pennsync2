@@ -74,7 +74,7 @@ export default function DocumentSignatures() {
     const query = searchQuery.toLowerCase();
     const patient = patients.find(p => p.id === sig.patient_id);
     const patientName = patient ? `${patient.first_name} ${patient.last_name}`.toLowerCase() : '';
-    return sig.document_name.toLowerCase().includes(query) || patientName.includes(query);
+    return (sig.document_name || '').toLowerCase().includes(query) || patientName.includes(query);
   });
 
   const pendingSignatures = filteredSignatures.filter(s => s.status === 'pending');

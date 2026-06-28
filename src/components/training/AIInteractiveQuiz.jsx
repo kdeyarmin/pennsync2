@@ -91,6 +91,10 @@ Focus on real-world application, not just memorization.`,
         }
       });
 
+      if (!Array.isArray(result?.questions) || result.questions.length === 0) {
+        toast.error("The quiz couldn't be generated. Please try again.");
+        return;
+      }
       setQuiz(result);
     } catch (error) {
       console.error("Error generating quiz:", error);

@@ -190,7 +190,7 @@ Return JSON with these keys:
         <SelectContent>
           {visits.map(v => (
             <SelectItem key={v.id} value={v.id}>
-              {v.visit_date} — {v.visit_type.replace(/_/g, " ")}
+              {v.visit_date} — {(v.visit_type || "").replace(/_/g, " ")}
               {(v.nurse_notes || v.raw_transcription) ? " ✓" : " (no transcript)"}
             </SelectItem>
           ))}
@@ -207,7 +207,7 @@ Return JSON with these keys:
         <div className="bg-indigo-50 border border-indigo-200 rounded-lg px-3 py-2.5">
           <div className="flex items-center gap-2 text-xs text-indigo-700 mb-1">
             <User className="w-3.5 h-3.5" />
-            <strong>{selectedVisit.visit_date}</strong> · {selectedVisit.visit_type.replace(/_/g, " ")}
+            <strong>{selectedVisit.visit_date}</strong> · {selectedVisit.visit_type?.replace(/_/g, " ")}
           </div>
           <p className="text-xs text-indigo-600 line-clamp-2 font-mono">
             {(selectedVisit.nurse_notes || selectedVisit.raw_transcription)?.substring(0, 150)}…

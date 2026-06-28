@@ -313,7 +313,7 @@ Return JSON:
             </div>
             <div className="flex items-center gap-2">
               <Badge className={`${levelColors.bg} ${levelColors.text} text-lg px-4 py-2`}>
-                {assessment.overall_skill_level.toUpperCase()}
+                {assessment.overall_skill_level?.toUpperCase()}
               </Badge>
               <Button
                 onClick={downloadAssessmentPDF}
@@ -333,7 +333,7 @@ Return JSON:
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-            {Object.entries(assessment.skill_scores).map(([skill, score]) => (
+            {Object.entries(assessment.skill_scores || {}).map(([skill, score]) => (
               <Card key={skill} className="bg-white border border-slate-200">
                 <CardContent className="p-4">
                   <p className="text-xs text-slate-600 mb-2 capitalize">

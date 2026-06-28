@@ -117,7 +117,20 @@ Make it practical, specific to home health, and immediately applicable.`,
         }
       });
 
-      setLessonContent(result);
+      // Normalize the AI result up front: none of these fields are schema-
+      // required, and the render/quiz/practice paths deref them unconditionally.
+      setLessonContent({
+        ...result,
+        sections: Array.isArray(result?.sections) ? result.sections : [],
+        quiz: Array.isArray(result?.quiz) ? result.quiz : [],
+        quick_reference: Array.isArray(result?.quick_reference) ? result.quick_reference : [],
+        practice_scenario: {
+          ...(result?.practice_scenario || {}),
+          ideal_elements: Array.isArray(result?.practice_scenario?.ideal_elements)
+            ? result.practice_scenario.ideal_elements
+            : [],
+        },
+      });
     } catch (error) {
       console.error("Error generating lesson:", error);
     }

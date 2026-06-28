@@ -201,9 +201,9 @@ export default function ComplianceMonitoringDashboard() {
 
   // Filter issues
   const filteredIssues = complianceIssues.filter(issue => {
-    const matchesSearch = !searchTerm || 
-      issue.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      issue.title.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = !searchTerm ||
+      (issue.userName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (issue.title || '').toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesCategory = categoryFilter === 'all' || issue.type === categoryFilter;
     const matchesSeverity = severityFilter === 'all' || issue.severity === severityFilter;
