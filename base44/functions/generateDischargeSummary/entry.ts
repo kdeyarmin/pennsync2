@@ -90,7 +90,7 @@ Format as a professional medical summary. Be detailed, objective, and Medicare-c
 
     const aiResponseRaw = await base44.integrations.Core.InvokeLLM({
       prompt: aiPrompt,
-      model: 'gpt_5_5'
+      model: 'claude_opus_4_8'
     });
     // InvokeLLM may return a structured object rather than a raw string; coerce so
     // the .split() parsing below can't throw "split is not a function".

@@ -10,7 +10,12 @@ import { secureAICall } from "@/components/utils/security";
 import { splitSentences } from "./factExtraction";
 import { GenerationResponse, GroundingResponse, safeParseLLM } from "./schemas";
 
-const DEFAULT_MODEL = "claude_sonnet_4_6";
+// Generation is a constrained, latency-sensitive re-voicing of the nurse's own
+// words, so it runs on the fast Sonnet tier. The grounding pass is the
+// safety-critical check — it must catch any fabricated clinical fact before the
+// note reaches the patient record — so it runs on the most capable model.
+const GENERATION_MODEL = "claude_sonnet_4_6";
+const GROUNDING_MODEL = "claude_opus_4_8";
 
 // Framing only — the regulatory frame + note type. This selects terminology and
 // emphasis (e.g. comfort-focused hospice voicing vs. skilled-need home-health
@@ -49,7 +54,7 @@ function buildSourceBlock({ draftSentences = [], answers = [], confirmedNegative
  * @returns {Promise<{ note: string }>}
  * @throws if the LLM response fails schema validation
  */
-export async function generateConstrainedNote(inputs, { userKey, model = DEFAULT_MODEL, serviceLine = "home_health", visitType = "routine_visit" } = {}) {
+export async function generateConstrainedNote(inputs, { userKey, model = GENERATION_MODEL, serviceLine = "home_health", visitType = "routine_visit" } = {}) {
   const { draft, ans, neg } = buildSourceBlock(inputs);
   const prompt = `You are a clinical scribe producing ${framingPhrase(serviceLine, visitType)}.
 
@@ -99,7 +104,7 @@ Return JSON: { "note": "<the final note text>" }`;
  * source. Reorganization, tense, and grammar do NOT make a sentence unsupported.
  * @returns {Promise<{ ok: boolean, unsupported: Array, sentences: Array, error?: string }>}
  */
-export async function groundNote(outputText, sourceText, { userKey, model = DEFAULT_MODEL } = {}) {
+export async function groundNote(outputText, sourceText, { userKey, model = GROUNDING_MODEL } = {}) {
   const numbered = splitSentences(outputText)
     .map((s, i) => `${i + 1}. ${s}`)
     .join("\n");

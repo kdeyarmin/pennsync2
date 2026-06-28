@@ -43,7 +43,7 @@ Return ONLY valid JSON array, no other text.`;
     // Call LLM integration
     const analysisResult = await base44.integrations.Core.InvokeLLM({
       prompt: extractionPrompt,
-      model: 'gpt_5_5',
+      model: 'claude_opus_4_8',
       response_json_schema: {
         type: 'object',
         properties: {
