@@ -163,13 +163,18 @@ function generateContinuityInsights(visits, carePlans, incidents) {
   // Care plan alignment
   if (visits?.length > 0 && carePlans?.length > 0) {
     const latestNote = visits[0]?.nurse_notes?.toLowerCase() || '';
-    const carePlanProblems = carePlans.map(cp => cp.problem.toLowerCase());
-    
-    const mentionedProblems = carePlanProblems.filter(problem => 
+    const carePlanProblems = carePlans
+      .map(cp => (cp.problem || '').toLowerCase())
+      .filter(Boolean);
+
+    const mentionedProblems = carePlanProblems.filter(problem =>
       latestNote.includes(problem.split(' ')[0])
     );
-    
-    const alignmentRate = mentionedProblems.length / carePlanProblems.length;
+
+    // Guard against divide-by-zero when no care plan has a usable problem string.
+    const alignmentRate = carePlanProblems.length
+      ? mentionedProblems.length / carePlanProblems.length
+      : 0;
     insights.care_plan_alignment = alignmentRate >= 0.7 ? 'aligned' : 'partial_alignment';
   }
 

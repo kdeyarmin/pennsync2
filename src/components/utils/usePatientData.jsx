@@ -34,7 +34,11 @@ export const usePatientData = (selectedPatientId) => {
   const oasisContext = useMemo(() => {
     if (!patientOASIS?.length) return null;
     const latest = patientOASIS[0];
-    const { pdgm_data: pdgm = {}, extracted_data: extracted = {} } = latest;
+    // Use `|| {}` rather than destructuring defaults: Base44 records often return
+    // pdgm_data/extracted_data as null (not undefined) before processing completes,
+    // and a default value only applies to undefined. Matches useSmartNoteData.jsx.
+    const pdgm = latest.pdgm_data || {};
+    const extracted = latest.extracted_data || {};
 
     return {
       assessmentDate: latest.created_date,
