@@ -458,16 +458,32 @@ Actions available:
         // Helper: normalize string for comparison
         const normalize = (str) => str?.toLowerCase().trim().replace(/[^a-z0-9]/g, '') || '';
         
-        // Helper: calculate string similarity (Levenshtein-like)
+        // Helper: true Levenshtein edit distance. A positional char-by-char compare
+        // (the prior approach) collapses on a single insertion/deletion — "jon" vs
+        // "john" scored 0.5 instead of 0.75 — which distorts the auto-match threshold.
+        const levenshtein = (a, b) => {
+          const m = a.length, n = b.length;
+          if (!m) return n;
+          if (!n) return m;
+          let prev = Array.from({ length: n + 1 }, (_, i) => i);
+          for (let i = 1; i <= m; i++) {
+            const cur = [i];
+            for (let j = 1; j <= n; j++) {
+              cur[j] = a[i - 1] === b[j - 1]
+                ? prev[j - 1]
+                : 1 + Math.min(prev[j - 1], prev[j], cur[j - 1]);
+            }
+            prev = cur;
+          }
+          return prev[n];
+        };
+
+        // Helper: calculate string similarity from edit distance (0..1)
         const similarity = (s1, s2) => {
           if (!s1 || !s2) return 0;
-          const longer = s1.length > s2.length ? s1 : s2;
-          const shorter = s1.length > s2.length ? s2 : s1;
-          if (longer.length === 0) return 1.0;
-          const editDistance = [...longer].reduce((prev, curr, i) => {
-            return shorter[i] === curr ? prev : prev + 1;
-          }, 0);
-          return (longer.length - editDistance) / longer.length;
+          const longerLen = Math.max(s1.length, s2.length);
+          if (longerLen === 0) return 1.0;
+          return (longerLen - levenshtein(s1, s2)) / longerLen;
         };
         
         // Score each patient for match likelihood

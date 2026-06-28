@@ -46,11 +46,17 @@ export default function DocumentReplacementDialog({
         document_signature_id: documentSignature.id,
       });
 
-      const nextVersionNumber = existingVersions.length + 1;
+      // filter() returns no guaranteed order, so don't assume [0] is current and
+      // don't derive the next number from length (which collides after a deletion).
+      const currentVersion = existingVersions.find((v) => v.is_current) || null;
+      const maxVersionNumber = existingVersions.reduce(
+        (max, v) => Math.max(max, v.version_number || 0),
+        0
+      );
+      const nextVersionNumber = maxVersionNumber + 1;
 
       // Mark current version as not current
-      if (existingVersions.length > 0) {
-        const currentVersion = existingVersions[0];
+      if (currentVersion) {
         await base44.entities.DocumentVersion.update(currentVersion.id, {
           is_current: false,
         });
@@ -71,7 +77,7 @@ export default function DocumentReplacementDialog({
         signature_status_at_version: documentSignature.status,
         invalidated_previous_signatures: !carryForwardSignatures,
         signatures_carried_forward: carryForwardSignatures,
-        previous_version_id: existingVersions.length > 0 ? existingVersions[0].id : null,
+        previous_version_id: currentVersion ? currentVersion.id : null,
       });
 
       // Update document signature to point to new PDF

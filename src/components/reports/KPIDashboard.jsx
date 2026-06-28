@@ -55,6 +55,12 @@ export default function KPIDashboard({ dateRange }) {
     initialData: [],
   });
 
+  const { data: patientAlerts = [] } = useQuery({
+    queryKey: ['allPatientAlerts'],
+    queryFn: () => base44.entities.PatientAlert.list('-created_date', 5000),
+    initialData: [],
+  });
+
   // Filter by date range
   const filterByDate = (items, dateField) => {
     return items.filter(item => {
@@ -78,15 +84,40 @@ export default function KPIDashboard({ dateRange }) {
   const oasisCompletionRate = filteredOASIS.length > 0
     ? ((filteredOASIS.filter(o => o.status === 'completed').length / filteredOASIS.length) * 100).toFixed(1)
     : 0;
+  // Real (not hardcoded) Critical Alerts count: open alerts at critical severity.
+  const isAlertOpen = (a) => a.status === 'active' || a.status === 'acknowledged';
+  const criticalAlerts = patientAlerts.filter(a => a.severity === 'critical' && isAlertOpen(a)).length;
 
-  // Calculate trends (compare with previous period)
-  const periodLength = (new Date(dateRange.end + 'T23:59:59.999') - new Date(dateRange.start)) / (1000 * 60 * 60 * 24);
-  const previousStart = new Date(new Date(dateRange.start).getTime() - periodLength * 24 * 60 * 60 * 1000);
-  const previousReferrals = referrals.filter(r => {
-    const date = new Date(r.referral_date);
+  // Calculate trends by comparing each metric against the immediately-preceding
+  // period of equal length. Returns null when there's no baseline to compare to, so
+  // the card can omit the trend badge rather than show a fabricated number.
+  const periodMs = new Date(dateRange.end + 'T23:59:59.999') - new Date(dateRange.start);
+  const previousStart = new Date(new Date(dateRange.start).getTime() - periodMs);
+  const inPreviousPeriod = (items, dateField) => items.filter(item => {
+    const date = new Date(item[dateField]);
     return date >= previousStart && date < new Date(dateRange.start);
-  }).length;
-  const referralTrend = previousReferrals > 0 ? (((totalReferrals - previousReferrals) / previousReferrals) * 100).toFixed(1) : 0;
+  });
+  const pctTrend = (current, previous) => {
+    if (!(previous > 0)) return null;
+    return (((current - previous) / previous) * 100).toFixed(1);
+  };
+
+  const prevReferrals = inPreviousPeriod(referrals, 'referral_date');
+  const prevVisits = inPreviousPeriod(noteConversions, 'created_date');
+  const prevAudits = inPreviousPeriod(complianceAudits, 'audit_date');
+  const prevOASIS = inPreviousPeriod(oasisAssessments, 'assessment_date');
+
+  const prevAvgCompliance = prevAudits.length > 0
+    ? prevAudits.reduce((sum, a) => sum + (a.compliance_score || 0), 0) / prevAudits.length
+    : 0;
+  const prevOasisRate = prevOASIS.length > 0
+    ? (prevOASIS.filter(o => o.status === 'completed').length / prevOASIS.length) * 100
+    : 0;
+
+  const referralTrend = pctTrend(totalReferrals, prevReferrals.length);
+  const visitsTrend = pctTrend(completedVisits, prevVisits.length);
+  const complianceTrend = pctTrend(parseFloat(avgComplianceScore), prevAvgCompliance);
+  const oasisTrend = pctTrend(parseFloat(oasisCompletionRate), prevOasisRate);
 
   const kpis = [
     {
@@ -95,47 +126,47 @@ export default function KPIDashboard({ dateRange }) {
       trend: referralTrend,
       icon: FileText,
       color: "purple",
-      trendUp: referralTrend > 0
+      trendUp: parseFloat(referralTrend) >= 0
     },
     {
+      // Active Patients is a current snapshot, not a period metric — no trend.
       title: "Active Patients",
       value: activePatients,
-      trend: "+5.2",
+      trend: null,
       icon: Users,
-      color: "blue",
-      trendUp: true
+      color: "blue"
     },
     {
       title: "Completed Visits",
       value: completedVisits,
-      trend: "+8.7",
+      trend: visitsTrend,
       icon: CheckCircle2,
       color: "green",
-      trendUp: true
+      trendUp: parseFloat(visitsTrend) >= 0
     },
     {
       title: "Avg Compliance Score",
       value: `${avgComplianceScore}%`,
-      trend: "+2.3",
+      trend: complianceTrend,
       icon: ClipboardCheck,
       color: "indigo",
-      trendUp: true
+      trendUp: parseFloat(complianceTrend) >= 0
     },
     {
       title: "OASIS Completion",
       value: `${oasisCompletionRate}%`,
-      trend: "+4.1",
+      trend: oasisTrend,
       icon: ClipboardCheck,
       color: "emerald",
-      trendUp: true
+      trendUp: parseFloat(oasisTrend) >= 0
     },
     {
+      // For alerts, fewer is better, so a decrease is the positive direction.
       title: "Critical Alerts",
-      value: "12",
-      trend: "-15.8",
+      value: criticalAlerts,
+      trend: null,
       icon: AlertTriangle,
-      color: "red",
-      trendUp: false
+      color: "red"
     }
   ];
 
@@ -175,10 +206,12 @@ export default function KPIDashboard({ dateRange }) {
                   <div className={`w-12 h-12 ${colorClasses.bg} rounded-lg flex items-center justify-center`}>
                     <kpi.icon className={`w-6 h-6 ${colorClasses.text}`} />
                   </div>
-                  <Badge className={kpi.trendUp ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
-                    {kpi.trendUp ? <TrendingUp className="w-3 h-3 mr-1" /> : <TrendingDown className="w-3 h-3 mr-1" />}
-                    {kpi.trend}%
-                  </Badge>
+                  {kpi.trend != null && (
+                    <Badge className={kpi.trendUp ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
+                      {kpi.trendUp ? <TrendingUp className="w-3 h-3 mr-1" /> : <TrendingDown className="w-3 h-3 mr-1" />}
+                      {kpi.trend}%
+                    </Badge>
+                  )}
                 </div>
                 <p className="text-3xl font-bold text-slate-900 mb-1">{kpi.value}</p>
                 <p className="text-sm text-slate-600">{kpi.title}</p>

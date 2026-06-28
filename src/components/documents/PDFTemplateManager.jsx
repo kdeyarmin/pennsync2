@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useConfirm } from "@/components/ui/confirm-dialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -65,9 +65,9 @@ export default function PDFTemplateManager() {
     initialData: []
   });
 
-  React.useEffect(() => {
-    setFilteredTemplates(templates);
-  }, [templates]);
+  // TemplateSearchFilter owns filteredTemplates: its effect re-emits the filtered
+  // list whenever `templates` (or any filter) changes. A second writer here would
+  // race it and momentarily replace an active filter with the unfiltered list.
 
   const createMutation = useMutation({
     mutationFn: (data) => base44.entities.PDFTemplate.create(data),
