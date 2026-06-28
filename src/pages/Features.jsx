@@ -631,6 +631,11 @@ export default function FeaturesPage() {
 </html>`;
 
       const printWindow = window.open('', '_blank');
+      if (!printWindow) {
+        toast.error('Please allow pop-ups to generate the guide.');
+        setIsGeneratingPDF(false);
+        return;
+      }
       printWindow.document.write(htmlContent);
       printWindow.document.close();
       printWindow.onload = () => {
@@ -1260,6 +1265,11 @@ export default function FeaturesPage() {
 </html>`;
 
       const printWindow = window.open('', '_blank');
+      if (!printWindow) {
+        toast.error('Please allow pop-ups to generate the manual.');
+        setIsGeneratingManual(false);
+        return;
+      }
       printWindow.document.write(htmlContent);
       printWindow.document.close();
       printWindow.onload = () => {

@@ -64,7 +64,9 @@ export default function IncidentReportingModule() {
   });
 
   const { data: myPatients = [] } = useQuery({
-    queryKey: ['myPatients'],
+    // Key must include the email the queryFn filters by, otherwise a session
+    // user change keeps serving the previous nurse's cached patient list.
+    queryKey: ['myPatients', currentUser?.email],
     queryFn: async () => {
       const allPatients = await base44.entities.Patient.list('-updated_date', 2000);
       return allPatients.filter(p => p.assigned_nurses?.includes(currentUser?.email));
@@ -604,7 +606,7 @@ Please review this incident in the Incident Reporting Dashboard.`
                         <div className="flex items-center gap-2 mb-1 flex-wrap">
                           <h4 className="font-semibold text-slate-900">{incident.patient_name}</h4>
                           <Badge className={getSeverityColor(incident.severity)}>{incident.severity}</Badge>
-                          <Badge className={getStatusColor(incident.status)}>{incident.status.replace(/_/g, ' ')}</Badge>
+                          <Badge className={getStatusColor(incident.status)}>{(incident.status || 'reported').replace(/_/g, ' ')}</Badge>
                         </div>
                         <p className="text-sm text-slate-700">
                           {incident.details?.event_type || incident.incident_name}
@@ -672,11 +674,11 @@ Please review this incident in the Incident Reporting Dashboard.`
                         {incident.severity}
                       </Badge>
                       <Badge className={getStatusColor(incident.status)}>
-                        {incident.status.replace(/_/g, ' ')}
+                        {(incident.status || 'reported').replace(/_/g, ' ')}
                       </Badge>
                     </div>
                     <p className="text-sm text-slate-600 mb-1">
-                      {incident.incident_type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                      {(incident.incident_type || '').replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
                     </p>
                     <p className="text-sm text-slate-700">{incident.report}</p>
                     <div className="flex items-center gap-4 mt-2 text-xs text-slate-500">
