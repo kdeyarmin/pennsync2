@@ -204,7 +204,9 @@ export default function ComplianceCenter() {
       count: data.count,
       severity: data.severity,
       cop_reference: data.cop_reference,
-      percentage: ((data.count / filteredAudits.length) * 100).toFixed(1)
+      // Clamp: an issue can recur across/within audits, so raw occurrences/audits
+      // can exceed 100%. Cap at 100 so the share is never nonsensical.
+      percentage: Math.min((filteredAudits.length > 0 ? (data.count / filteredAudits.length) * 100 : 0), 100).toFixed(1)
     }));
 
   // Nurse performance

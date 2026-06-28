@@ -176,8 +176,8 @@ export default function ReferralVolumeReport({ dateRange }) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {sourceChartData.sort((a, b) => b.count - a.count).slice(0, 10).map((item, index) => (
-                <TableRow key={index}>
+              {[...sourceChartData].sort((a, b) => b.count - a.count).slice(0, 10).map((item) => (
+                <TableRow key={item.source}>
                   <TableCell className="text-slate-900">{item.source}</TableCell>
                   <TableCell className="text-slate-900">{item.count}</TableCell>
                   <TableCell className="text-slate-900">

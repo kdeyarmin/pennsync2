@@ -1,4 +1,4 @@
-import { formatEastern, formatEasternTime, getEasternDate, formatRelativeTime } from "@/components/utils/timezone";
+import { formatEastern, formatRelativeEastern, todayEastern } from "@/components/utils/timezone";
 
 /**
  * Centralized date formatting utility
@@ -17,16 +17,16 @@ export const formatDateTime = (date) => {
 
 export const formatTime = (date) => {
   if (!date) return '';
-  return formatEasternTime(date);
+  return formatEastern(date, 'p');
 };
 
 export const formatRelative = (date) => {
   if (!date) return '';
-  return formatRelativeTime(date);
+  return formatRelativeEastern(date);
 };
 
 export const getCurrentDate = () => {
-  return getEasternDate();
+  return todayEastern();
 };
 
 export const formatShortDate = (date) => {

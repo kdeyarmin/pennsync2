@@ -299,7 +299,7 @@ export default function NoteEnhancementReport() {
               ))}
               {nurseStats.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={3} className="text-center text-slate-500">
+                  <TableCell colSpan={4} className="text-center text-slate-500">
                     No data available
                   </TableCell>
                 </TableRow>

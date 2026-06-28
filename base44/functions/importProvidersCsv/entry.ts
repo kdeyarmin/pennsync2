@@ -80,7 +80,12 @@ function formatProviderName(rawName) {
   const name = cleanValue(rawName);
   if (!name) return '';
   if (name.includes(',')) {
-    const [last, first] = name.split(',');
+    // "Last, First [Middle/credentials]" — keep every segment after the first comma
+    // as the given-name portion instead of dropping it (split destructure would lose
+    // a 3rd part, e.g. "Smith, John, MD" -> "John Smith").
+    const parts = name.split(',');
+    const last = parts[0];
+    const first = parts.slice(1).join(' ');
     return `${titleCase(first)} ${titleCase(last)}`.replace(/\s+/g, ' ').trim();
   }
   return titleCase(name);

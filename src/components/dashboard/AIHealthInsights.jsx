@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useAICall } from "@/hooks/useAICall";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -153,8 +153,13 @@ Provide comprehensive health trend analysis:
     }
   }, [visits, patient, carePlans, alerts, oasisData]);
 
+  // Auto-run once per patient. generateInsights' identity changes whenever a query
+  // dependency array (visits/carePlans/alerts/…) is refetched, so without this gate
+  // the effect would re-fire an expensive LLM call on every such churn.
+  const autoRunForRef = useRef(null);
   useEffect(() => {
-    if (patientId && visits.length > 0) {
+    if (patientId && visits.length > 0 && autoRunForRef.current !== patientId) {
+      autoRunForRef.current = patientId;
       generateInsights();
     }
   }, [patientId, visits.length, generateInsights]);

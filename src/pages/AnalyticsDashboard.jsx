@@ -147,9 +147,9 @@ export default function AnalyticsDashboard() {
       ? conversionsWithCompliance.reduce((sum, nc) => sum + (nc.enhanced_note_compliance || 0), 0) / conversionsWithCompliance.length
       : 0;
 
-    // Previous period comparison
-    const midDate = new Date(startDate);
-    midDate.setDate(midDate.getDate() + (new Date(endDate) - new Date(startDate)) / (2 * 24 * 60 * 60 * 1000));
+    // Previous period comparison — split at the exact midpoint instant. Adding a
+    // fractional day count via setDate lands the boundary imprecisely at day edges.
+    const midDate = new Date((new Date(startDate).getTime() + new Date(endDate).getTime()) / 2);
     
     const recentConversions = noteConversions.filter(nc => new Date(nc.created_date) >= midDate);
     const olderConversions = noteConversions.filter(nc => new Date(nc.created_date) < midDate);

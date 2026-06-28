@@ -231,11 +231,16 @@ export default function AdvancedComplianceAnalytics({
     );
     const totalIssues = filteredAudits.reduce((sum, a) => sum + (a.issues?.length || 0), 0);
     
-    // Calculate trend
+    // Calculate trend — only meaningful with at least two audits to split into two
+    // halves. With a single audit, midpoint is 0 and recentAvg becomes 0/0 -> 0,
+    // producing a bogus large "declining" trend against the real olderAvg.
     const midpoint = Math.floor(filteredAudits.length / 2);
-    const recentAvg = filteredAudits.slice(0, midpoint).reduce((s, a) => s + (a.compliance_score || 0), 0) / midpoint || 0;
-    const olderAvg = filteredAudits.slice(midpoint).reduce((s, a) => s + (a.compliance_score || 0), 0) / (filteredAudits.length - midpoint) || 0;
-    const trend = recentAvg - olderAvg;
+    let trend = 0;
+    if (filteredAudits.length >= 2 && midpoint > 0) {
+      const recentAvg = filteredAudits.slice(0, midpoint).reduce((s, a) => s + (a.compliance_score || 0), 0) / midpoint;
+      const olderAvg = filteredAudits.slice(midpoint).reduce((s, a) => s + (a.compliance_score || 0), 0) / (filteredAudits.length - midpoint);
+      trend = recentAvg - olderAvg;
+    }
 
     return { avgScore, passRate, totalAudits: filteredAudits.length, totalIssues, trend };
   }, [filteredAudits]);

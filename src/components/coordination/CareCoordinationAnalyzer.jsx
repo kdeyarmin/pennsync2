@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { useAICall } from "@/hooks/useAICall";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -28,6 +28,11 @@ export default function CareCoordinationAnalyzer({
   const queryClient = useQueryClient();
   const ai = useAICall();
   const [alerts, setAlerts] = useState([]);
+  // Records the patient this component last auto-analyzed, so an empty-result run
+  // (alerts stays []) can't re-fire each time ai.loading toggles, and a single ref
+  // (re-armed only when patientId actually changes) avoids the ordering hazard of a
+  // separate reset effect clearing the latch in the same flush.
+  const autoAnalyzedForRef = useRef(null);
   const [_expandedAlert, _setExpandedAlert] = useState(null);
   const [customNotes, setCustomNotes] = useState({});
 
@@ -187,10 +192,11 @@ Return comprehensive analysis with actionable coordination alerts.`,
   }, [patient, incidents, visits, carePlans]);
 
   useEffect(() => {
-    if (autoAnalyze && patientId && patient && !ai.loading && alerts.length === 0) {
+    if (autoAnalyze && patientId && patient && !ai.loading && autoAnalyzedForRef.current !== patientId) {
+      autoAnalyzedForRef.current = patientId;
       analyzeCoordination();
     }
-  }, [autoAnalyze, patientId, patient, ai.loading, alerts.length, analyzeCoordination]);
+  }, [autoAnalyze, patientId, patient, ai.loading, analyzeCoordination]);
 
   const saveAlert = async (alertData) => {
     try {

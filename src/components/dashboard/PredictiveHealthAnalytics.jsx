@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useAICall } from "@/hooks/useAICall";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -192,8 +192,12 @@ Return detailed clinical analysis with specific evidence from the data.`,
     }
   }, [visits, patient, carePlans, alerts, incidents, analyzeVitalTrends]);
 
+  // Auto-run once per patient — analyzePredictiveRisks' identity changes on every
+  // query refetch, which would otherwise re-fire an expensive LLM call repeatedly.
+  const autoRunForRef = useRef(null);
   useEffect(() => {
-    if (patientId && patient && visits.length > 0) {
+    if (patientId && patient && visits.length > 0 && autoRunForRef.current !== patientId) {
+      autoRunForRef.current = patientId;
       analyzePredictiveRisks();
     }
   }, [patientId, patient, visits.length, analyzePredictiveRisks]);

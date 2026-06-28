@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -136,6 +136,21 @@ class OfflineStorageManager {
   }
 }
 
+// Idempotent Visit create keyed on the queue item's id. If a prior sync run (or a
+// concurrent one) already created the Visit server-side but died before
+// removeFromQueue, reuse that record instead of creating a duplicate clinical
+// visit. Mirrors the client_request_id idempotency in OfflineManager.
+async function createVisitIdempotent(visitData, requestKey) {
+  if (requestKey) {
+    const existing = await base44.entities.Visit
+      .filter({ client_request_id: requestKey }, '-created_date', 1)
+      .catch(() => []);
+    if (Array.isArray(existing) && existing.length > 0) return existing[0];
+    return base44.entities.Visit.create({ ...visitData, client_request_id: requestKey });
+  }
+  return base44.entities.Visit.create(visitData);
+}
+
 // Sync worker
 class OfflineSyncWorker {
   static async syncItem(item) {
@@ -149,7 +164,7 @@ class OfflineSyncWorker {
             // notes/vitals referencing this visit can be attached on this or a
             // later sync run (previously they were orphaned and lost forever).
             const { id, ...visitData } = item.data;
-            result = await base44.entities.Visit.create(visitData);
+            result = await createVisitIdempotent(visitData, item.id);
             OfflineStorageManager.setIdMapping(id, result?.id);
           } else if (item.data.id) {
             // Update existing visit
@@ -157,7 +172,7 @@ class OfflineSyncWorker {
             result = await base44.entities.Visit.update(id, visitData);
           } else {
             // Create new visit
-            result = await base44.entities.Visit.create(item.data);
+            result = await createVisitIdempotent(item.data, item.id);
           }
           break;
 
@@ -303,6 +318,10 @@ export function useOfflineSync() {
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncProgress, setSyncProgress] = useState(null);
   const [pendingCount, setPendingCount] = useState(0);
+  // In-flight guard: the 5s pendingCount poll can re-fire the auto-sync effect
+  // mid-sync, and syncAll reads the queue with no per-item lock — two concurrent
+  // runs would both POST the same item, creating duplicate clinical records.
+  const isSyncingRef = useRef(false);
 
   useEffect(() => {
     const updateOnlineStatus = () => setIsOnline(navigator.onLine);
@@ -338,6 +357,8 @@ export function useOfflineSync() {
       toast.error('Cannot sync while offline');
       return;
     }
+    if (isSyncingRef.current) return; // a sync is already running — don't double-POST
+    isSyncingRef.current = true;
 
     setIsSyncing(true);
     setSyncProgress({ current: 0, total: pendingCount });
@@ -363,6 +384,7 @@ export function useOfflineSync() {
     } catch (error) {
       toast.error('Sync failed: ' + error.message);
     } finally {
+      isSyncingRef.current = false;
       setIsSyncing(false);
       setSyncProgress(null);
     }

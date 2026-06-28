@@ -62,7 +62,11 @@ Deno.serve(async (req) => {
     const visitIssues = visits.map(visit => {
       const missing = criticalFields.visit.filter(field => {
         if (field === 'nurse_notes') return !visit.nurse_notes || visit.nurse_notes.length < 100;
-        return !visit[field];
+        const v = visit[field];
+        // An empty object/array (e.g. vital_signs: {} or []) is truthy, so a bare
+        // !v would count it as complete and inflate the score — treat it as missing.
+        if (v && typeof v === 'object') return Object.keys(v).length === 0;
+        return !v;
       });
       const score = ((criticalFields.visit.length - missing.length) / criticalFields.visit.length * 100).toFixed(0);
       return {

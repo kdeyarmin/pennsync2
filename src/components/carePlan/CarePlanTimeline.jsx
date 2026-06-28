@@ -205,7 +205,11 @@ export default function CarePlanTimeline({ carePlans = [], _patient }) {
                               const target = parseISO(plan.target_date);
                               const totalPlanDays = differenceInDays(target, created);
                               const daysElapsed = differenceInDays(today, created);
-                              const progress = Math.min(Math.max((daysElapsed / totalPlanDays) * 100, 0), 100);
+                              // Guard a zero/invalid span (same-day target, or an
+                              // unparseable date -> NaN) so progress doesn't render "NaN%".
+                              const progress = Number.isFinite(totalPlanDays) && totalPlanDays > 0 && Number.isFinite(daysElapsed)
+                                ? Math.min(Math.max((daysElapsed / totalPlanDays) * 100, 0), 100)
+                                : 0;
                               
                               return (
                                 <>

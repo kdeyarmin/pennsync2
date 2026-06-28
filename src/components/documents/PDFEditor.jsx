@@ -33,8 +33,10 @@ export default function PDFEditor({ pdfUrl, onSave }) {
   const [tool, setTool] = useState('text');
   const [color, setColor] = useState('#FF0000');
   const [annotations, setAnnotations] = useState([]);
-  const [history, setHistory] = useState([]);
-  const [historyIndex, setHistoryIndex] = useState(-1);
+  // Seed history with the initial empty state at index 0 so the first annotation
+  // can be undone back to a blank document (handleUndo guards historyIndex > 0).
+  const [history, setHistory] = useState([[]]);
+  const [historyIndex, setHistoryIndex] = useState(0);
   const [isDrawing, setIsDrawing] = useState(false);
   const [currentPath, setCurrentPath] = useState([]);
 

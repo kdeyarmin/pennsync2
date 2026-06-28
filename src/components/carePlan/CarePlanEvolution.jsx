@@ -222,7 +222,7 @@ Return JSON:
       queryClient.invalidateQueries({ queryKey: ['patientCarePlans'] });
       onCarePlanUpdated && onCarePlanUpdated();
       
-      toast.error(`Successfully updated ${selectedUpdates.length} care plan(s)`);
+      toast.success(`Successfully updated ${selectedUpdates.length} care plan(s)`);
       setRecommendations(null);
       setSelectedUpdates([]);
       

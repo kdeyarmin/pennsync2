@@ -112,6 +112,13 @@ export default function AIDocumentGenerator() {
       toast.error("Please select a patient and document type");
       return;
     }
+    // patient comes from an async query independent of selectedPatientId; the button
+    // doesn't wait for it, so guard against a not-yet-loaded / missing record before
+    // dereferencing patient.* below.
+    if (!patient) {
+      toast.error("Patient details are still loading — please try again in a moment");
+      return;
+    }
 
     try {
       // Build comprehensive patient context

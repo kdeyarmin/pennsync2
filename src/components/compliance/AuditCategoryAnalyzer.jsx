@@ -52,7 +52,10 @@ export default function AuditCategoryAnalyzer({ audits = [] }) {
           };
         }
         categories[category].count++;
-        categories[category][issue.severity || 'medium']++;
+        // Only the four known severities are seeded; an unexpected value would make
+        // categories[category][severity]++ do undefined++ === NaN. Clamp to 'medium'.
+        const severity = ['critical', 'high', 'medium', 'low'].includes(issue.severity) ? issue.severity : 'medium';
+        categories[category][severity]++;
         categories[category].issues.push({
           ...issue,
           auditDate: audit.audit_date,

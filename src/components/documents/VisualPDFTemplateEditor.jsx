@@ -38,9 +38,14 @@ export default function VisualPDFTemplateEditor({
   onElementsChange,
   pdfUrl
 }) {
-  const [selectedElement, setSelectedElement] = useState(null);
+  // Track selection by id and derive the live element from templateElements, so the
+  // properties panel always edits current state. Storing a full element snapshot let
+  // sequential edits spread from a stale copy and clobber the previous edit.
+  const [selectedElementId, setSelectedElementId] = useState(null);
   const [draggedElement, setDraggedElement] = useState(null);
   const canvasRef = useRef(null);
+
+  const selectedElement = templateElements.find(el => el.id === selectedElementId) || null;
 
   const elementTypes = [
     { type: 'text', icon: Type, label: 'Text Field', color: 'blue' },
@@ -81,7 +86,7 @@ export default function VisualPDFTemplateEditor({
 
   const handleDeleteElement = (id) => {
     onElementsChange(templateElements.filter(el => el.id !== id));
-    setSelectedElement(null);
+    setSelectedElementId(null);
     toast.success('Element deleted');
   };
 
@@ -199,7 +204,7 @@ export default function VisualPDFTemplateEditor({
                     key={element.id}
                     draggable
                     onDragStart={(e) => handleDragStart(e, element)}
-                    onClick={() => setSelectedElement(element)}
+                    onClick={() => setSelectedElementId(element.id)}
                     className={`absolute p-2 bg-white border-2 rounded cursor-move transition-all ${
                       selectedElement?.id === element.id
                         ? 'border-blue-500 shadow-lg'
@@ -303,7 +308,7 @@ export default function VisualPDFTemplateEditor({
                     ? 'bg-blue-50 border border-blue-200'
                     : 'hover:bg-slate-50'
                 }`}
-                onClick={() => setSelectedElement(element)}
+                onClick={() => setSelectedElementId(element.id)}
               >
                 {renderElementIcon(element.type)}
                 <span className="flex-1 text-sm">{element.label}</span>

@@ -25,6 +25,9 @@ export default function PDFMerger({ onMergeComplete }) {
       try {
         const result = await base44.integrations.Core.UploadFile({ file });
         return {
+          // Stable id so the reorderable/removable list keys by identity, not array
+          // index (index keys tie row state to position and desync after move/remove).
+          id: `${file.name}-${file.size}-${result.file_url}`,
           name: file.name,
           url: result.file_url,
           size: file.size
@@ -115,7 +118,7 @@ export default function PDFMerger({ onMergeComplete }) {
             </p>
             {files.map((file, index) => (
               <div
-                key={index}
+                key={file.id ?? index}
                 className="flex items-center gap-2 p-3 bg-slate-50 rounded-lg"
               >
                 <FileText className="w-4 h-4 text-blue-600 shrink-0" />

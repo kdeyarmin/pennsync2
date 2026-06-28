@@ -243,3 +243,12 @@ test("a draft plus the whitelisted vitals sentence value-guards a note that quot
   // But a value NOT in the source is still caught.
   assert.equal(valueGuard("BP 200/110 noted.", allowed).ok, false);
 });
+
+test("extractMedications does not report symptoms/diagnoses as medications", () => {
+  // common_mishears maps some terms to diagnoses/symptoms; those must not surface
+  // as medications (which would falsely flag faithful notes in valueGuard).
+  assert.deepEqual(
+    extractMedications("Patient reports nausea, fever, and chest pain with dyspnea."),
+    []
+  );
+});

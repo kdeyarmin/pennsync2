@@ -162,7 +162,7 @@ export default function SignerPortal() {
               {/* Total Documents */}
               <div className="text-center p-4 bg-slate-50 rounded-lg">
                 <p className="text-2xl font-bold text-slate-900">
-                  {packageData.documents.length}
+                  {(packageData.documents || []).length}
                 </p>
                 <p className="text-xs text-slate-600 mt-1">Total Documents</p>
               </div>
@@ -170,7 +170,7 @@ export default function SignerPortal() {
               {/* Signed Documents */}
               <div className="text-center p-4 bg-green-50 rounded-lg">
                 <p className="text-2xl font-bold text-green-600">
-                  {packageData.documents.filter((d) => ['signed', 'completed'].includes(d.status)).length}
+                  {(packageData.documents || []).filter((d) => ['signed', 'completed'].includes(d.status)).length}
                 </p>
                 <p className="text-xs text-slate-600 mt-1">Signed</p>
               </div>
@@ -178,7 +178,7 @@ export default function SignerPortal() {
               {/* Pending Documents */}
               <div className="text-center p-4 bg-amber-50 rounded-lg">
                 <p className="text-2xl font-bold text-amber-600">
-                  {packageData.documents.filter((d) => !['signed', 'completed'].includes(d.status)).length}
+                  {(packageData.documents || []).filter((d) => !['signed', 'completed'].includes(d.status)).length}
                 </p>
                 <p className="text-xs text-slate-600 mt-1">Pending</p>
               </div>

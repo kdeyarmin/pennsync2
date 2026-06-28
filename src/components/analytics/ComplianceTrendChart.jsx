@@ -8,40 +8,47 @@ export default function ComplianceTrendChart({
   noteConversions = [],
   compact = false 
 }) {
-  // Group audits by week and calculate average score
+  // Group audits by day. Key on the full ISO date (yyyy-MM-dd) — keying on MM/dd
+  // discards the year, so entries from different years merge into one bucket and a
+  // Dec/Jan boundary sorts wrong; the MM/dd label is kept only for display.
   const auditsByWeek = complianceAudits.reduce((acc, audit) => {
-    const week = format(new Date(audit.audit_date), 'MM/dd');
-    if (!acc[week]) {
-      acc[week] = { total: 0, count: 0 };
+    const date = new Date(audit.audit_date);
+    if (isNaN(date)) return acc;
+    const key = format(date, 'yyyy-MM-dd');
+    if (!acc[key]) {
+      acc[key] = { total: 0, count: 0, label: format(date, 'MM/dd') };
     }
-    acc[week].total += audit.compliance_score || 0;
-    acc[week].count++;
+    acc[key].total += audit.compliance_score || 0;
+    acc[key].count++;
     return acc;
   }, {});
 
   const auditTrendData = Object.entries(auditsByWeek)
-    .map(([week, data]) => ({
-      week,
+    .sort(([a], [b]) => a.localeCompare(b)) // ISO date keys sort chronologically
+    .map(([, data]) => ({
+      week: data.label,
       avgScore: Math.round(data.total / data.count)
     }))
-    .sort((a, b) => new Date('2024/' + a.week) - new Date('2024/' + b.week))
-    .slice(-12); // Last 12 weeks
+    .slice(-12); // Last 12 days
 
   // Note quality scores over time
   const noteQualityByWeek = noteConversions.reduce((acc, note) => {
-    const week = format(new Date(note.created_date), 'MM/dd');
-    if (!acc[week]) {
-      acc[week] = { quality: [], compliance: [] };
+    const date = new Date(note.created_date);
+    if (isNaN(date)) return acc;
+    const key = format(date, 'yyyy-MM-dd');
+    if (!acc[key]) {
+      acc[key] = { quality: [], compliance: [], label: format(date, 'MM/dd') };
     }
-    if (note.quality_score) acc[week].quality.push(note.quality_score);
-    if (note.compliance_score) acc[week].compliance.push(note.compliance_score);
+    if (note.quality_score) acc[key].quality.push(note.quality_score);
+    if (note.compliance_score) acc[key].compliance.push(note.compliance_score);
     return acc;
   }, {});
 
   const noteQualityData = Object.entries(noteQualityByWeek)
-    .map(([week, data]) => ({
-      week,
-      quality: data.quality.length > 0 
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([, data]) => ({
+      week: data.label,
+      quality: data.quality.length > 0
         ? Math.round(data.quality.reduce((a, b) => a + b, 0) / data.quality.length)
         : 0,
       compliance: data.compliance.length > 0
@@ -49,7 +56,6 @@ export default function ComplianceTrendChart({
         : 0
     }))
     .filter(d => d.quality > 0 || d.compliance > 0)
-    .sort((a, b) => new Date('2024/' + a.week) - new Date('2024/' + b.week))
     .slice(-12);
 
   // Calculate current vs previous period
@@ -57,8 +63,9 @@ export default function ComplianceTrendChart({
     ? Math.round(auditTrendData.slice(-4).reduce((sum, d) => sum + d.avgScore, 0) / Math.min(4, auditTrendData.length))
     : 0;
   
-  const previousAvg = auditTrendData.length > 4
-    ? Math.round(auditTrendData.slice(-8, -4).reduce((sum, d) => sum + d.avgScore, 0) / 4)
+  const previousWindow = auditTrendData.length > 4 ? auditTrendData.slice(-8, -4) : [];
+  const previousAvg = previousWindow.length > 0
+    ? Math.round(previousWindow.reduce((sum, d) => sum + d.avgScore, 0) / previousWindow.length)
     : 0;
 
   const trend = currentAvg - previousAvg;

@@ -253,9 +253,14 @@ export function extractNumbersAndMeasurements(text) {
 
 // ── Medication extraction (uses the shared medical dictionary) ──────────────
 
+// `common_mishears` is a mishear→correction map whose values include diagnoses and
+// symptoms (Hypertension, Pneumonia, Nausea, Fever, …), not just drugs. Fold in only
+// the entries that correct to an actual medication, so symptom words aren't reported
+// as medications by extractMedications (which would corrupt valueGuard / chartCrossCheck).
+const MED_SET = new Set(MEDICAL_TERMS.medications.map((m) => m.toLowerCase()));
 const MED_NAMES = [
   ...MEDICAL_TERMS.medications,
-  ...Object.values(MEDICAL_TERMS.common_mishears),
+  ...Object.values(MEDICAL_TERMS.common_mishears).filter((v) => MED_SET.has(v.toLowerCase())),
 ];
 // De-dupe canonical names case-insensitively (so "Atorvastatin" and the
 // "statin"→"atorvastatin" mishear entry don't both survive), longest first so
