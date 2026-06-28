@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { useAICall } from "@/hooks/useAICall";
+import { DEFAULT_PASSING_SCORE } from "@/constants/training";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -206,7 +207,7 @@ ${category.id === 'hipaa' ? '- Protected health information, patient rights, bre
   // Quiz Completed
   if (quizCompleted) {
     const percentage = questions.length > 0 ? Math.round((score / questions.length) * 100) : 0;
-    const passed = percentage >= 80;
+    const passed = percentage >= DEFAULT_PASSING_SCORE;
 
     return (
       <Card className={`border-2 ${passed ? 'border-green-300 bg-green-50' : 'border-orange-300 bg-orange-50'}`}>

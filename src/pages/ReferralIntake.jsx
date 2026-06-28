@@ -224,7 +224,13 @@ export default function ReferralIntake() {
           status: 'new',
           page_range: `${referral.estimated_start_page}-${referral.estimated_end_page}`,
           detection_confidence: referral.confidence,
-          notes: `Extracted from multi-document PDF: ${multiReferralDetection.fileName}. Pages ${referral.estimated_start_page}-${referral.estimated_end_page}`
+          // `notes` is not a Referral field (silently dropped by the backend); record
+          // the split provenance in the schema's structured follow_up_notes array.
+          follow_up_notes: [{
+            date: new Date().toISOString(),
+            note: `Extracted from multi-document PDF: ${multiReferralDetection.fileName}. Pages ${referral.estimated_start_page}-${referral.estimated_end_page}`,
+            created_by: currentUser?.email || 'system',
+          }]
         })
       ));
 
