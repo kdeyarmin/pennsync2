@@ -55,6 +55,7 @@ export default function AICarePlanRecommendations({
       }));
 
       const result = await ai.run({
+        model: "claude_opus_4_8",
         prompt: `You are an expert clinical care coordinator analyzing patient data to recommend new care plan goals.
 
 PATIENT PROFILE:

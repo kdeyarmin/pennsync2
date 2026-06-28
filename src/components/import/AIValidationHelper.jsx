@@ -20,6 +20,7 @@ export default function AIValidationHelper({ validationErrors, _onApplySuggestio
   const generateSuggestions = async () => {
     try {
       const response = await ai.run({
+        model: "claude_sonnet_4_6",
         prompt: `Analyze these patient data validation errors and provide specific correction suggestions:
 
 ${JSON.stringify(validationErrors, null, 2)}

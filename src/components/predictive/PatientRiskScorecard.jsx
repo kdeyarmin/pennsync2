@@ -68,6 +68,7 @@ export default function PatientRiskScorecard({ patient, oasisData = [], visits =
   const runAIAnalysis = async () => {
     try {
       const result = await ai.run({
+        model: "claude_opus_4_8",
         prompt: `Provide a comprehensive risk analysis for this home health patient.
 
 PATIENT: ${patient.first_name} ${patient.last_name}

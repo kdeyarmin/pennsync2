@@ -118,6 +118,7 @@ export default function PredictiveOutcomesAnalyzer({ analysisResults, pdgmData, 
 
       // Comprehensive AI prediction
       const result = await ai.run({
+        model: "claude_opus_4_8",
         prompt: `You are a predictive analytics expert for home health outcomes. Analyze OASIS data and predict patient outcomes with clinical reasoning.
 
 CURRENT OASIS ASSESSMENT:

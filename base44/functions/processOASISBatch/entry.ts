@@ -69,6 +69,7 @@ Deno.serve(async (req) => {
 
         // Analyze with AI
         const analysisResult = await base44.integrations.Core.InvokeLLM({
+          model: "claude_opus_4_8",
           prompt: `You are an expert OASIS analyst. Analyze this OASIS assessment document:
 
 OASIS Document Content:

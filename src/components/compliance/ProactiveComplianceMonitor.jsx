@@ -74,6 +74,7 @@ export default function ProactiveComplianceMonitor({
 
       // Use AI to identify critical patterns
       const patternAnalysis = await ai.run({
+        model: "claude_opus_4_8",
         prompt: `Analyze Medicare compliance patterns for Pennsylvania home health agency. Identify critical trends requiring immediate attention.
 
 RECENT DATA:

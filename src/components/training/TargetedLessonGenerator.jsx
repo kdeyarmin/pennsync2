@@ -43,6 +43,7 @@ export default function TargetedLessonGenerator({
     
     try {
       const result = await generatingAi.run({
+        model: "claude_opus_4_8",
         prompt: `Generate a comprehensive training lesson for home health nurses on: "${module.title}"
 
 Category: ${module.category}
@@ -141,6 +142,7 @@ Make it practical, specific to home health, and immediately applicable.`,
 
     try {
       const result = await evaluatingAi.run({
+        model: "claude_opus_4_8",
         prompt: `Evaluate this nurse's documentation practice response.
 
 SCENARIO:

@@ -215,6 +215,7 @@ function calculateMetrics(data) {
 
 async function generateAIInsights(base44, metricsData, reportType) {
   const result = await base44.integrations.Core.InvokeLLM({
+    model: "claude_opus_4_8",
     prompt: `Analyze these healthcare metrics and provide actionable AI insights.
 
 REPORT TYPE: ${reportType}

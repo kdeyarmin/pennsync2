@@ -42,6 +42,7 @@ export default function AIPatientInsights({ patient, visits, carePlans, incident
       }));
 
       const result = await ai.run({
+        model: "claude_opus_4_8",
         prompt: `You are a predictive healthcare AI analyzing patient data to identify future health risks and care needs.
 
 PATIENT PROFILE:

@@ -53,6 +53,7 @@ export default function MandatoryComplianceGate({
 
     try {
       const result = await ai.run({
+        model: "claude_opus_4_8",
         prompt: `You are a STRICT Medicare compliance auditor for ${careType === 'hospice' ? 'Hospice' : 'Home Health'} nursing documentation. Your job is to BLOCK non-compliant notes from being finalized.
 
 VISIT TYPE: ${visitType}

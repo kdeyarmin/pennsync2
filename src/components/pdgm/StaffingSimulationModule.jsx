@@ -72,6 +72,7 @@ export default function StaffingSimulationModule({ currentData, formatCurrency }
     setIsSimulating(true);
     try {
       const result = await invokeLLM({
+        model: "claude_opus_4_8",
         prompt: `Simulate financial impact of staffing changes for a home health agency.
 
 CURRENT STATE:
@@ -148,6 +149,7 @@ Return JSON:
     
     try {
       const result = await invokeLLM({
+        model: "claude_opus_4_8",
         prompt: `Simulate financial impact of adding a new service line to a home health agency.
 
 CURRENT STATE:

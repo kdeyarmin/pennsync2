@@ -71,7 +71,7 @@ ${JSON.stringify(questionsForGrading)}`;
   try {
     parsed = await base44.asServiceRole.integrations.Core.InvokeLLM({
       prompt,
-      model: 'gpt_5_5',
+      model: 'claude_opus_4_8',
       response_json_schema: {
         type: 'object',
         properties: {

@@ -77,6 +77,7 @@ Return JSON: {"text": "extracted text", "confidence": 0-100}`;
     let ocrResult;
     try {
       ocrResult = await base44.asServiceRole.integrations.Core.InvokeLLM({
+        model: "claude_opus_4_8",
         prompt: ocrPrompt,
         file_urls: [document_url],
         response_json_schema: {

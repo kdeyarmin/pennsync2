@@ -26,6 +26,7 @@ export default function AIHealthInsights({ patientId, patient, visits, carePlans
       const completedVisits = visits.filter(v => v.status === 'completed').slice(0, 10);
       
       const result = await ai.run({
+        model: "claude_opus_4_8",
         prompt: `You are a clinical AI analyst specializing in home health patient care. Analyze this patient's health trends and provide actionable insights.
 
 PATIENT INFORMATION:

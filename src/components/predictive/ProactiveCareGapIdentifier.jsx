@@ -81,6 +81,7 @@ export default function ProactiveCareGapIdentifier({
 
       // Use AI to identify care gaps
       const gapAnalysis = await ai.run({
+        model: "claude_opus_4_8",
         prompt: `You are an expert home health clinical analyst. Analyze these patient profiles to proactively identify potential care gaps, missed opportunities, and risks before they become problems.
 
 PATIENT PROFILES:

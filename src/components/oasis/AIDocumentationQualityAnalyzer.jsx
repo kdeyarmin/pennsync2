@@ -99,6 +99,7 @@ export default function AIDocumentationQualityAnalyzer({ analysisResults, pdgmDa
       };
 
       const response = await ai.run({
+        model: "claude_opus_4_8",
         prompt: `You are an expert OASIS documentation reviewer and home health compliance specialist. Analyze the following OASIS assessment data for documentation quality, focusing on narrative clarity, completeness, and consistency with coded data.
 
 OASIS DATA CONTEXT:

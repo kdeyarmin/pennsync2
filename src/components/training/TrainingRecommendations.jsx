@@ -59,6 +59,7 @@ export default function TrainingRecommendations({ nurseEmail, onEnroll }) {
       const taskTypes = tasks.slice(0, 20).map(t => `${t.type}: ${t.title}`).join('\n');
 
       const result = await ai.run({
+        model: "claude_opus_4_8",
         prompt: `You are an AI training coordinator for home health nurses. Analyze this nurse's profile and recommend personalized training.
 
 NURSE'S CURRENT SKILLS:

@@ -51,6 +51,7 @@ export default function AIAdmissionNoteGenerator({ referralData, onNoteGenerated
 
     try {
       const result = await ai.run({
+        model: "claude_opus_4_8",
         prompt: `You are an expert home health nurse with 20+ years of experience writing comprehensive, Medicare-compliant admission notes.
 
 Using the extracted referral data below, generate a complete, professional admission nursing assessment note that is ready for clinical documentation.

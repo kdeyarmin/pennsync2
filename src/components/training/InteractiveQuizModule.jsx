@@ -47,6 +47,7 @@ export default function InteractiveQuizModule({ _nurseEmail, onQuizCompleted }) 
     
     try {
       const result = await ai.run({
+        model: "claude_opus_4_8",
         prompt: `Generate a professional quiz for home health nurses on: "${category.label}"
 
 Create ${category.questions} multiple-choice questions that test practical knowledge.

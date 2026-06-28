@@ -65,6 +65,7 @@ export default function UnifiedComplianceEngine({
       const [medicareResult, guidelineResult, visitTypeResult, regulatoryResult] = await Promise.all([
         // Medicare CoP Check
         invokeLLM({
+          model: "claude_opus_4_8",
           prompt: `Analyze this clinical note against 42 CFR 484 Medicare Conditions of Participation for ${visitType} visits.
 
 CLINICAL NOTE:
@@ -114,6 +115,7 @@ Return violations with: rule_name, reference, severity, status, missing_elements
 
         // Clinical Guideline Check
         invokeLLM({
+          model: "claude_opus_4_8",
           prompt: `Check this clinical note against evidence-based guidelines for ${diagnosis}.
 
 CLINICAL NOTE:
@@ -155,6 +157,7 @@ Return violations with: rule_name, reference, severity, status, missing_elements
 
         // Visit Type Check
         invokeLLM({
+          model: "claude_opus_4_8",
           prompt: `Verify this ${visitType} visit note has all required elements.
 
 CLINICAL NOTE:
@@ -193,6 +196,7 @@ Return violations with: rule_name, reference, severity, status, missing_elements
 
         // Recent Regulatory Updates Check
         invokeLLM({
+          model: "claude_opus_4_8",
           prompt: `Check compliance with these recent CMS regulatory updates:
 
 ${regulatoryUpdates.slice(0, 5).map(reg => `
@@ -273,6 +277,7 @@ Identify any violations of these recent regulations.`,
 
       // Generate AI summary using all results
       const summaryResult = await invokeLLM({
+        model: "claude_sonnet_4_6",
         prompt: `Create a brief executive summary of these compliance check results:
 
 MEDICARE CoP: ${fmtScore(medicareResult)}

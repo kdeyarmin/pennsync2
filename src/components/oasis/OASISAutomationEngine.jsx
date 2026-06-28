@@ -76,6 +76,7 @@ ${JSON.stringify(automationRules.slice(0, 5), null, 2)}
 Generate actionable tasks. Each task must have: title, description, priority (high/medium/low), type, due_in_days (number), reason, impact_category.`;
 
       const aiSuggestions = await ai.run({
+        model: "claude_opus_4_8",
         prompt,
         response_json_schema: {
           type: "object",

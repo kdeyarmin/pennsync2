@@ -44,6 +44,7 @@ export default function AutomatedTaskAssigner({
   const generateTaskAssignments = async () => {
     try {
       const result = await ai.run({
+        model: "claude_sonnet_4_6",
         prompt: `You are a care coordination AI. Based on detected gaps and patient changes, generate task assignments for the appropriate care team members.
 
 PATIENT: ${patientName}

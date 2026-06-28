@@ -81,6 +81,7 @@ export default function CarePlanEvolution({
       });
 
       const result = await ai.run({
+        model: "claude_opus_4_8",
         prompt: `You are a clinical care plan optimization AI. Analyze these active care plans and patient progress to recommend updates.
 
 PATIENT: ${patientName}

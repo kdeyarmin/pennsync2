@@ -118,6 +118,7 @@ Low keywords: notice, information, update, newsletter
 Respond with JSON: {"priority": "urgent|high|normal|low", "reason": "brief explanation", "confidence": 0-100}`;
 
     const aiResponse = await base44.asServiceRole.integrations.Core.InvokeLLM({
+      model: "claude_sonnet_4_6",
       prompt: aiPrompt,
       response_json_schema: {
         type: "object",

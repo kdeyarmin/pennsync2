@@ -47,6 +47,7 @@ export default function DischargeSummaryGenerator({ patientId, patient }) {
       const completedVisits = visits.filter(v => v.status === 'completed').slice(0, 10);
       
       const result = await ai.run({
+        model: "claude_opus_4_8",
         prompt: `Generate a comprehensive Medicare-compliant discharge summary for home health services.
 
 PATIENT INFORMATION:

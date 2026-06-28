@@ -111,6 +111,7 @@ Based on this comprehensive patient profile, provide a detailed predictive analy
 Provide specific, actionable insights with confidence levels.`;
 
       const response = await ai.run({
+        model: "claude_opus_4_8",
         prompt,
         response_json_schema: {
           type: "object",

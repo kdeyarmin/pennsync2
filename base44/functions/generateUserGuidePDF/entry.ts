@@ -483,6 +483,7 @@ Comprehensive guide covering all features of the Penn Sync Healthcare platform:
 
     // Generate guide content using AI
     const guideContent = await base44.integrations.Core.InvokeLLM({
+      model: "claude_sonnet_4_6",
       prompt: `Generate a comprehensive, step-by-step user guide for healthcare staff.
 
 ${promptText}

@@ -21,6 +21,7 @@ export default function ClinicalLibraryAIAssistant({
     setIsProcessing(true);
     try {
       const response = await invokeLLM({
+        model: "claude_sonnet_4_6",
         prompt: `You are an expert clinical documentation assistant helping create a quick phrase template for home health/hospice nurses.
 
 Ask the user 3-4 focused questions to understand what they want to create:
@@ -59,6 +60,7 @@ Keep your response conversational and ask ONE question at a time. Start with the
 
       if (shouldGenerate) {
         const response = await invokeLLM({
+          model: "claude_sonnet_4_6",
           prompt: `Based on this conversation about creating a clinical template:
 
 ${conversationHistory}
@@ -94,6 +96,7 @@ Respond with ONLY the JSON object, no additional text.`,
         }]);
       } else {
         const response = await invokeLLM({
+          model: "claude_sonnet_4_6",
           prompt: `Continue this conversation about creating a clinical template:
 
 ${conversationHistory}
@@ -124,6 +127,7 @@ Ask the next relevant question to gather information. Keep it conversational and
         : currentTemplate.ai_prompt_instructions;
 
       const response = await invokeLLM({
+        model: "claude_sonnet_4_6",
         prompt: `Analyze this clinical documentation template and suggest improvements based on Medicare compliance best practices:
 
 **Current Template:**
@@ -159,6 +163,7 @@ Format as a bulleted list of improvements.`
     setIsProcessing(true);
     try {
       const response = await invokeLLM({
+        model: "claude_sonnet_4_6",
         prompt: `You are an expert in clinical documentation best practices for Medicare home health and hospice. Analyze and improve these AI instructions for generating patient-specific clinical documentation.
 
 **Current Instructions:**
@@ -205,6 +210,7 @@ Provide your analysis in this structure:
 
       // Also provide a button to directly apply the refined instructions
       const refinedResponse = await invokeLLM({
+        model: "claude_sonnet_4_6",
         prompt: `Extract ONLY the "REFINED INSTRUCTIONS (READY TO USE)" section from this response and return it as clean, formatted text without any markdown headers or labels:
 
 ${response}`,

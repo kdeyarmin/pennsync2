@@ -54,6 +54,7 @@ export default function SimplifiedExplanationGenerator({ patient, diagnosis }) {
 
     try {
       const result = await ai.run({
+        model: "claude_sonnet_4_6",
         prompt: `You are an expert health communicator specializing in translating complex medical information into patient-friendly language.
 
 NURSE'S INPUT (Medical Information):

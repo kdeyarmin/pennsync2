@@ -94,6 +94,7 @@ export default function IntelligentTaskPrioritization({
       });
 
       const result = await ai.run({
+        model: "claude_opus_4_8",
         prompt: `You are an intelligent task prioritization AI for home health nurses. Analyze these tasks and prioritize them for maximum patient safety and compliance.
 
 TASKS TO PRIORITIZE:

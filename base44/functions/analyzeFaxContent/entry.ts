@@ -77,6 +77,7 @@ Return JSON: {
 }`;
 
       const summaryResult = await base44.asServiceRole.integrations.Core.InvokeLLM({
+        model: "claude_sonnet_4_6",
         prompt: summaryPrompt,
         response_json_schema: {
           type: "object",
@@ -121,6 +122,7 @@ Return JSON: {
 }`;
 
       const replyResult = await base44.asServiceRole.integrations.Core.InvokeLLM({
+        model: "claude_sonnet_4_6",
         prompt: replyPrompt,
         response_json_schema: {
           type: "object",
@@ -157,6 +159,7 @@ Return JSON: {
 }`;
 
       const contactResult = await base44.asServiceRole.integrations.Core.InvokeLLM({
+        model: "claude_sonnet_4_6",
         prompt: contactPrompt,
         response_json_schema: {
           type: "object",

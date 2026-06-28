@@ -44,25 +44,56 @@ Deno.serve(async (req) => {
 
         const transcript = transcriptionResponse;
 
-        // 2. Generate SOAP note using gpt-5.5
-        const soapResponse = await openai.chat.completions.create({
-            model: "gpt-5.5",
-            messages: [
-                {
-                    role: "system",
-                    content: "You are an expert clinical documentation assistant. Extract information from the provided transcript and generate a structured SOAP note (Subjective, Objective, Assessment, Plan). Return a JSON object with keys: subjective, objective, assessment, plan."
-                },
-                {
-                    role: "user",
-                    content: `Please generate a SOAP note from the following transcript:\n\n${transcript}`
-                }
-            ],
-            response_format: { type: "json_object" }
+        // 2. Generate the SOAP note using Claude (claude-opus-4-8) — the most
+        // capable model, the best fit for clinical reasoning over the transcript.
+        // Transcription stays on OpenAI's gpt-4o-transcribe above; only this
+        // reasoning step uses Anthropic (same direct-API pattern as
+        // generateFaxCoverPage). claude-opus-4-8 rejects temperature/top_p and
+        // does not take an OpenAI-style response_format, so the JSON contract is
+        // expressed in the prompt and extracted from the response text.
+        const anthropicKey = Deno.env.get("ANTHROPIC_API_KEY");
+        if (!anthropicKey) {
+            return Response.json({ error: 'Anthropic API key not configured' }, { status: 500 });
+        }
+
+        const soapApiResponse = await fetch('https://api.anthropic.com/v1/messages', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-api-key': anthropicKey,
+                'anthropic-version': '2023-06-01'
+            },
+            body: JSON.stringify({
+                model: 'claude-opus-4-8',
+                max_tokens: 2048,
+                system: "You are an expert clinical documentation assistant. Extract information from the provided transcript and generate a structured SOAP note (Subjective, Objective, Assessment, Plan). Return ONLY a JSON object with keys: subjective, objective, assessment, plan.",
+                messages: [
+                    {
+                        role: "user",
+                        content: `Please generate a SOAP note from the following transcript:\n\n${transcript}`
+                    }
+                ]
+            })
         });
+
+        if (!soapApiResponse.ok) {
+            const err = await soapApiResponse.text();
+            console.error("Claude API error:", err);
+            return Response.json({ error: 'AI generation failed' }, { status: 500 });
+        }
+
+        const claudeData = await soapApiResponse.json();
+        // Anthropic returns an array of content blocks; concatenate every text
+        // block (not just the first) so JSON extraction can't drop later output.
+        const soapText = (Array.isArray(claudeData.content) ? claudeData.content : [])
+            .filter((block) => block?.type === 'text')
+            .map((block) => block.text)
+            .join('') || '{}';
 
         let soapNote;
         try {
-           soapNote = JSON.parse(soapResponse.choices[0].message.content);
+           const jsonMatch = soapText.match(/\{[\s\S]*\}/);
+           soapNote = JSON.parse(jsonMatch ? jsonMatch[0] : soapText);
         } catch (e) {
            soapNote = { subjective: "Error parsing response.", objective: "", assessment: "", plan: "" };
         }

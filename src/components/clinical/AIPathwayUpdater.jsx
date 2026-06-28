@@ -53,6 +53,7 @@ Also indicate:
 Return ONLY valid JSON.`;
 
       const response = await ai.run({
+        model: "claude_opus_4_8",
         prompt,
         add_context_from_internet: true,
         response_json_schema: {

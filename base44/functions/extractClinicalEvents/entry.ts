@@ -25,6 +25,7 @@ Deno.serve(async (req) => {
 
     // Use AI to extract clinical events from the note
     const result = await base44.integrations.Core.InvokeLLM({
+      model: "claude_opus_4_8",
       prompt: `Extract ALL significant clinical events from this nursing note. Be thorough and capture everything that should be tracked.
 
 Visit Note:

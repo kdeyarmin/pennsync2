@@ -23,6 +23,7 @@ export default function OneClickComplianceFixer({
 
     try {
       const response = await ai.run({
+        model: "claude_opus_4_8",
         prompt: `Perform a comprehensive Medicare compliance check on this ${documentType}:
 
 Document Content:

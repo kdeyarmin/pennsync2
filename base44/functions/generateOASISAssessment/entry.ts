@@ -32,6 +32,7 @@ Deno.serve(async (req) => {
 
     // Generate OASIS assessment using AI
     const result = await base44.integrations.Core.InvokeLLM({
+      model: "claude_opus_4_8",
       prompt: `Generate a comprehensive OASIS assessment guide for this home health patient.
 
 VISIT TYPE: ${visit_type || 'Start of Care'}

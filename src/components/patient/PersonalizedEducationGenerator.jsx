@@ -28,6 +28,7 @@ export default function PersonalizedEducationGenerator({ patient, complianceData
       const recentVisit = visits?.[0];
 
       const result = await ai.run({
+        model: "claude_sonnet_4_6",
         prompt: `Generate personalized patient education materials for this patient:
 
 PATIENT INFORMATION:

@@ -146,6 +146,7 @@ Analyze and provide structured insights in the following areas:
 Be specific, evidence-based, and actionable. Focus on Medicare home health best practices.`;
 
       const response = await ai.run({
+        model: "claude_opus_4_8",
         prompt,
         response_json_schema: {
           type: "object",

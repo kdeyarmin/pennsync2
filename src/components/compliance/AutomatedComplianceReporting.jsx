@@ -108,6 +108,7 @@ export default function AutomatedComplianceReporting({ _nurseEmail, isAdmin = fa
       });
 
       const result = await ai.run({
+        model: "claude_opus_4_8",
         prompt: `You are a healthcare compliance reporting AI. Generate a comprehensive compliance report based on this data.
 
 DATA SUMMARY:

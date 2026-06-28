@@ -57,6 +57,7 @@ export default function SmartRouteOptimizer({
       });
 
       const result = await ai.run({
+        model: "claude_opus_4_8",
         prompt: `You are a healthcare route optimization AI. Optimize this nurse's daily visit schedule for maximum efficiency while respecting clinical priorities.
 
 VISITS TO SCHEDULE:

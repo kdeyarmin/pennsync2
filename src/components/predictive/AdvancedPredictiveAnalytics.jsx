@@ -122,6 +122,7 @@ export default function AdvancedPredictiveAnalytics({ patientId, autoAnalyze = f
       };
 
       const result = await ai.run({
+        model: "claude_opus_4_8",
         prompt: `You are an advanced predictive analytics AI specialized in home health patient outcomes forecasting using evidence-based clinical algorithms.
 
 **CRITICAL TASK:** Analyze this patient's comprehensive data and generate accurate predictions for clinical deterioration and hospital readmission risks, along with proactive care recommendations.

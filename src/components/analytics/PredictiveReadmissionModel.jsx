@@ -127,6 +127,7 @@ For each patient, provide:
 4. Recommended follow-up schedule`;
 
       const result = await ai.run({
+        model: "claude_opus_4_8",
         prompt,
         response_json_schema: {
           type: "object",

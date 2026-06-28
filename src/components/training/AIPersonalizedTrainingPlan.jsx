@@ -61,6 +61,7 @@ export default function AIPersonalizedTrainingPlan({
 
     try {
       const result = await ai.run({
+        model: "claude_opus_4_8",
         prompt: `Generate a personalized training plan for a home health nurse based on their compliance audit performance.
 
 NURSE'S WEAK AREAS (from audit analysis):

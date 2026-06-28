@@ -42,6 +42,7 @@ export default function PolicyGuidelineMonitor({ _nurseEmail, onTrainingRecommen
 
     try {
       const result = await ai.run({
+        model: "claude_opus_4_8",
         prompt: `You are a healthcare regulatory compliance AI that monitors and summarizes recent changes to Medicare/Medicaid regulations, CMS guidelines, and home health/hospice compliance requirements.
 
 Generate a realistic summary of current regulatory landscape and any recent updates a home health nurse should be aware of.

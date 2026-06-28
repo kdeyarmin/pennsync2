@@ -21,6 +21,7 @@ export default function AIQuizGenerator({ trainingContent, moduleTitle, onComple
   const generateQuiz = async () => {
     try {
       const result = await ai.run({
+        model: "claude_opus_4_8",
         prompt: `Generate a comprehensive nursing quiz based on the following training content.
 
 TRAINING CONTENT:

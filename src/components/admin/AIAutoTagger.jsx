@@ -75,6 +75,7 @@ Return as JSON array of lowercase strings with underscores: ["tag1", "tag2", ...
 
           try {
             const tags = await invokeLLM({
+              model: "claude_sonnet_4_6",
               prompt,
               response_json_schema: {
                 type: "array",
@@ -118,6 +119,7 @@ Return as JSON array of lowercase strings with underscores: ["tag1", "tag2", ...
 
         try {
           const tags = await invokeLLM({
+            model: "claude_sonnet_4_6",
             prompt,
             response_json_schema: {
               type: "array",

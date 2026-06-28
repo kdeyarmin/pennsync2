@@ -129,6 +129,7 @@ Design principles:
     let outline;
     try {
       const raw = await base44.asServiceRole.integrations.Core.InvokeLLM({
+        model: "claude_opus_4_8",
         prompt: `You are a senior healthcare instructional designer with expertise in ADDIE methodology, Bloom's Taxonomy, and CMS regulatory compliance for home health and hospice. Return ONLY valid JSON, no prose or code fences.\n\n${outlinePrompt}`
       });
       outline = parseLLMJson(raw);
@@ -338,6 +339,7 @@ CONTENT CREATION RULES:
     let generated;
     try {
       const raw = await base44.asServiceRole.integrations.Core.InvokeLLM({
+        model: "claude_opus_4_8",
         prompt: `You are an award-winning healthcare education designer known for creating courses that are simultaneously rigorous, engaging, and immediately practical. You combine clinical accuracy with compelling storytelling. You have deep expertise in CMS Conditions of Participation, OSHA standards, and state healthcare regulations. Return ONLY valid JSON, no prose or code fences.\n\n${contentPrompt}`
       });
       generated = parseLLMJson(raw);

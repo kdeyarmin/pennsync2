@@ -79,6 +79,7 @@ export default function AIPersonalizedTrainingRecommendations({ nurseEmail }) {
       });
 
       const result = await ai.run({
+        model: "claude_opus_4_8",
         prompt: `You are an expert nursing educator and clinical development specialist.
 
 Analyze this nurse's documentation patterns and performance data to provide personalized training recommendations:
