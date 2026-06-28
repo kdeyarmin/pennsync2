@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
+import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -742,10 +744,12 @@ export default function NursePerformanceDashboard() {
                             <Badge variant={rec.urgency === 'high' ? 'destructive' : rec.urgency === 'medium' ? 'default' : 'secondary'}>
                               {rec.urgency} urgency
                             </Badge>
-                            <Button size="sm" variant="outline" className="ml-auto">
-                              Start Training
-                              <ChevronRight className="w-3 h-3 ml-1" />
-                            </Button>
+                            <Link to={createPageUrl('NurseTrainingHub')} className="ml-auto">
+                              <Button size="sm" variant="outline">
+                                Start Training
+                                <ChevronRight className="w-3 h-3 ml-1" />
+                              </Button>
+                            </Link>
                           </div>
                         </div>
                       </div>
@@ -975,14 +979,13 @@ export default function NursePerformanceDashboard() {
                                   {rec.severity}
                                 </Badge>
                                 <Badge variant="outline">{rec.recommendation_type}</Badge>
-                                <span className="text-xs text-slate-500">{rec.source.replace(/_/g, ' ')}</span>
+                                <span className="text-xs text-slate-500">{(rec.source || '').replace(/_/g, ' ')}</span>
                               </div>
                               <p className="text-sm text-slate-900">{rec.recommendation_text}</p>
                               {rec.context_data?.element && (
                                 <p className="text-xs text-slate-500 mt-1">Context: {rec.context_data.element}</p>
                               )}
                             </div>
-                            <Button size="sm" variant="outline">Review</Button>
                           </div>
                         </div>
                       ))}
@@ -1023,9 +1026,11 @@ export default function NursePerformanceDashboard() {
                                 <Badge variant="outline">{(gap.current_level || 'unknown').replace(/_/g, ' ')}</Badge>
                               </div>
                             </div>
-                            <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
-                              Take Training
-                            </Button>
+                            <Link to={createPageUrl('NurseTrainingHub')}>
+                              <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+                                Take Training
+                              </Button>
+                            </Link>
                           </div>
                         </div>
                       ))}

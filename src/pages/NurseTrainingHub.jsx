@@ -1,5 +1,6 @@
 import { lazy, Suspense, useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, Link } from "react-router-dom";
+import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -341,10 +342,12 @@ export default function NurseTrainingHub() {
                       </span>
                     </div>
                   ) : (
-                    <Button className="w-full bg-blue-600 hover:bg-blue-700">
-                      <PlayCircle className="w-4 h-4 mr-2" />
-                      Start Training
-                    </Button>
+                    <Link to={`${createPageUrl('TrainingCoursePlayer')}?courseId=${module.course_id}&preview=true`} className="block">
+                      <Button className="w-full bg-blue-600 hover:bg-blue-700">
+                        <PlayCircle className="w-4 h-4 mr-2" />
+                        Start Training
+                      </Button>
+                    </Link>
                   )}
                 </CardContent>
               </Card>
@@ -378,10 +381,12 @@ export default function NurseTrainingHub() {
                       </span>
                     </div>
                   ) : (
-                    <Button className="w-full" variant="outline">
-                      <PlayCircle className="w-4 h-4 mr-2" />
-                      Start Training
-                    </Button>
+                    <Link to={`${createPageUrl('TrainingCoursePlayer')}?courseId=${module.course_id}&preview=true`} className="block">
+                      <Button className="w-full" variant="outline">
+                        <PlayCircle className="w-4 h-4 mr-2" />
+                        Start Training
+                      </Button>
+                    </Link>
                   )}
                 </CardContent>
               </Card>
