@@ -13,7 +13,7 @@ const CTX = {
   activeAlerts: [],
 };
 
-const { invoke } = vi.hoisted(() => ({ invoke: vi.fn() }));
+const { invoke, state } = vi.hoisted(() => ({ invoke: vi.fn(), state: { ctx: null } }));
 
 vi.mock('@/api/base44Client', () => {
   // Self-contained broad stub (factory is hoisted, so no outer imports): every
@@ -44,7 +44,8 @@ vi.mock('@/api/base44Client', () => {
 
 beforeEach(() => {
   invoke.mockReset();
-  invoke.mockImplementation(async (name) => (name === 'getPatientContext' ? { data: CTX } : { data: {} }));
+  state.ctx = CTX;
+  invoke.mockImplementation(async (name) => (name === 'getPatientContext' ? { data: state.ctx } : { data: {} }));
   window.history.pushState({}, '', '/PatientDetails?id=p1');
 });
 
@@ -68,5 +69,34 @@ describe('PatientDetails — getPatientContext seeding', () => {
     // getPatientContext was the only patient-data round-trip the page issued.
     const contextCalls = invoke.mock.calls.filter((c) => c[0] === 'getPatientContext');
     expect(contextCalls).toHaveLength(1);
+  });
+
+  // Deterministic stand-in for the live staging smoke test (no Base44 backend is
+  // reachable here): exercises the exact post-mutation cycle the page relies on —
+  // invalidate(['patientContext', id]) → refetch → queryFn re-seeds the per-entity
+  // mirrors with the fresh payload. This is the "invalidation drift" risk flagged
+  // for getPatientContext.
+  it('re-seeds child caches after a context invalidation (post-mutation cycle)', async () => {
+    const qc = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
+    const { default: PatientDetails } = await import('@/pages/PatientDetails');
+    renderWithProviders(<PatientDetails />, { queryClient: qc });
+
+    await waitFor(() => expect(qc.getQueryData(['patientVisits', 'p1'])).toEqual(CTX.visits));
+    const callsAfterLoad = invoke.mock.calls.filter((c) => c[0] === 'getPatientContext').length;
+
+    // Simulate the server now returning a newly-created visit, then do exactly what
+    // the page's create-visit/care-plan/alert mutations do on success.
+    const updated = {
+      ...CTX,
+      visits: [...CTX.visits, { id: 'v2', patient_id: 'p1', status: 'scheduled', visit_date: '2026-07-01' }],
+    };
+    state.ctx = updated;
+    qc.invalidateQueries({ queryKey: ['patientContext', 'p1'] });
+
+    // The mirror the children render from is refreshed with the new visit...
+    await waitFor(() => expect(qc.getQueryData(['patientVisits', 'p1'])).toEqual(updated.visits));
+    // ...via exactly one refetch (no loop).
+    const callsAfterInvalidate = invoke.mock.calls.filter((c) => c[0] === 'getPatientContext').length;
+    expect(callsAfterInvalidate).toBe(callsAfterLoad + 1);
   });
 });
