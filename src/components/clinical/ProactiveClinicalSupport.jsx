@@ -57,7 +57,7 @@ export default function ProactiveClinicalSupport({ patientId, compact = false })
       medium: 'bg-yellow-600 text-white',
       low: 'bg-blue-600 text-white'
     };
-    return <Badge className={colors[severity] || colors.low}>{severity.toUpperCase()}</Badge>;
+    return <Badge className={colors[severity] || colors.low}>{(severity || 'low').toUpperCase()}</Badge>;
   };
 
   const getRiskIcon = (riskLevel) => {

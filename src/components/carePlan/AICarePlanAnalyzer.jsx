@@ -164,7 +164,7 @@ Return JSON:
     setIsSaving(true);
     try {
       // Save analysis as a care plan note/summary
-      const selectedInterventionsList = analysis.personalized_interventions
+      const selectedInterventionsList = (analysis.personalized_interventions || [])
         .filter((_, idx) => selectedInterventions[idx])
         .map(i => ({
           name: i.name,
@@ -177,7 +177,7 @@ Return JSON:
         problem: diagnosis,
         goal: `Implement personalized ${careType} care plan with ${selectedInterventionsList.length} key interventions`,
         interventions: selectedInterventionsList.map(i => `${i.name}: ${i.description}`),
-        frequency: analysis.visit_schedule.routine_frequency,
+        frequency: analysis.visit_schedule?.routine_frequency,
         status: "active",
         ai_generated: true,
         visit_schedule: JSON.stringify(analysis.visit_schedule),
@@ -255,15 +255,15 @@ Return JSON:
               <div className="space-y-3">
                 <div>
                   <p className="text-xs font-medium text-slate-500 mb-2">RISK ASSESSMENT</p>
-                  <Badge className={getRiskColor(analysis.risk_assessment.overall_risk_level)}>
-                    {analysis.risk_assessment.overall_risk_level.toUpperCase()}
+                  <Badge className={getRiskColor(analysis.risk_assessment?.overall_risk_level)}>
+                    {analysis.risk_assessment?.overall_risk_level?.toUpperCase()}
                   </Badge>
                 </div>
 
                 <div>
                   <p className="text-xs font-medium text-slate-500 mb-2">KEY RISK FACTORS</p>
                   <div className="flex flex-wrap gap-2">
-                    {analysis.risk_assessment.key_risk_factors.map((factor, idx) => (
+                    {analysis.risk_assessment?.key_risk_factors?.map((factor, idx) => (
                       <Badge key={idx} variant="outline" className="text-xs">
                         {factor}
                       </Badge>
@@ -286,7 +286,7 @@ Return JSON:
 
             {/* Interventions Tab */}
             <TabsContent value="interventions" className="space-y-3 mt-4">
-              {analysis.personalized_interventions.map((intervention, idx) => (
+              {analysis.personalized_interventions?.map((intervention, idx) => (
                 <Card key={idx} className="border-slate-200">
                   <CardContent className="p-3 space-y-2">
                     <div className="flex items-start justify-between gap-2">
@@ -362,7 +362,7 @@ Return JSON:
 
             {/* Documentation Templates Tab */}
             <TabsContent value="templates" className="space-y-3 mt-4">
-              {analysis.documentation_templates.map((template, idx) => (
+              {analysis.documentation_templates?.map((template, idx) => (
                 <Card key={idx} className="border-slate-200">
                   <CardContent className="p-3 space-y-2">
                     <div className="flex items-start justify-between gap-2">
@@ -381,7 +381,7 @@ Return JSON:
                       <div>
                         <p className="font-medium text-slate-700">Key Sections:</p>
                         <ul className="list-disc list-inside text-slate-600 ml-2 mt-1">
-                          {template.key_sections.map((section, sIdx) => (
+                          {template.key_sections?.map((section, sIdx) => (
                             <li key={sIdx}>{section}</li>
                           ))}
                         </ul>

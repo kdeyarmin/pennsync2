@@ -144,7 +144,7 @@ export default function ComplianceAlertAggregator() {
         id: `incident-${incident.id}`,
         type: 'incident',
         severity: incident.severity === 'high' ? 'critical' : 'warning',
-        title: `Unresolved ${incident.incident_type.replace(/_/g, ' ')} Incident`,
+        title: `Unresolved ${(incident.incident_type || 'incident').replace(/_/g, ' ')} Incident`,
         message: `${patient?.first_name || 'Patient'} ${patient?.last_name || ''} - reported ${daysSince} days ago`,
         daysAgo: daysSince,
         link: `${createPageUrl("PatientDetails")}?patientId=${incident.patient_id}`,

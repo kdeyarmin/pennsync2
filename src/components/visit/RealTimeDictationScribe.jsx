@@ -216,9 +216,16 @@ Return only the structured clinical note, no preamble.`;
   };
 
   const copyNote = async () => {
-    await navigator.clipboard.writeText(structuredNote);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    // clipboard.writeText rejects in non-secure contexts, when the tab is
+    // unfocused, or when permission is denied — surface it instead of leaving
+    // an unhandled rejection with no user feedback.
+    try {
+      await navigator.clipboard.writeText(structuredNote);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setError("Couldn't copy to clipboard. Please copy the note manually.");
+    }
   };
 
   const selectedVisitType = VISIT_TYPES.find(v => v.value === visitType);

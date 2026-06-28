@@ -201,7 +201,7 @@ export default function DocumentList({ patientId, showPatientInfo = true, onDocu
   };
 
   const filteredDocuments = documents.filter(doc => {
-    const matchesSearch = doc.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    const matchesSearch = doc.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       doc.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       doc.tags?.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
 

@@ -270,7 +270,7 @@ Return detailed JSON analysis.`,
       console.error('Error reviewing document:', error);
       toast.error('Failed to review document. Please try again.');
     }
-  }, [currentUser?.email, diagnosis, medicareRules, noteContent, nurseEmail, onReviewComplete, patientData.date_of_birth, queryClient, visitId, visitType, vitalSigns]);
+  }, [currentUser?.email, diagnosis, medicareRules, noteContent, nurseEmail, onReviewComplete, patientData?.date_of_birth, queryClient, visitId, visitType, vitalSigns]);
 
   useEffect(() => {
     if (autoReview && noteContent && noteContent.length > 100 && !reviewResults) {

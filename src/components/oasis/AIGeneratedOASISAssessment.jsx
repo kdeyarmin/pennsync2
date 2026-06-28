@@ -75,7 +75,7 @@ export default function AIGeneratedOASISAssessment({ patientId, visitId, visitTy
     setIsSaving(true);
     try {
       // Apply edited values to assessment
-      const updatedItems = assessment.oasis_items.map(item => ({
+      const updatedItems = (assessment.oasis_items || []).map(item => ({
         ...item,
         response: editingItems[item.item_number] !== undefined ? editingItems[item.item_number] : item.suggested_response,
         manually_edited: editingItems[item.item_number] !== undefined,
@@ -83,7 +83,9 @@ export default function AIGeneratedOASISAssessment({ patientId, visitId, visitTy
       }));
 
       const completedCount = updatedItems.filter(item => item.response).length;
-      const completionPercentage = Math.round((completedCount / updatedItems.length) * 100);
+      const completionPercentage = updatedItems.length
+        ? Math.round((completedCount / updatedItems.length) * 100)
+        : 0;
 
       const oasisData = {
         patient_id: patientId,

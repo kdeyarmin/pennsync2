@@ -30,10 +30,11 @@ export default function OCRTrainingMonitor() {
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ['ocr-training-sessions'] });
       queryClient.invalidateQueries({ queryKey: ['unapplied-feedback'] });
-      if (result.data.success) {
-        toast.success(`Training completed! Improvement: ${result.data.improvement}%`);
+      const data = result?.data;
+      if (data?.success) {
+        toast.success(`Training completed! Improvement: ${data.improvement}%`);
       } else {
-        toast.info(result.data.message);
+        toast.info(data?.message || 'Training did not run.');
       }
     },
     onError: (error) => {

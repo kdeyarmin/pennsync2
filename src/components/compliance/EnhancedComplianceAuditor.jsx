@@ -309,7 +309,7 @@ Return JSON:
         passed: auditResults.passed,
         flagged: auditResults.flagged,
         critical: auditResults.critical,
-        pass_rate: Math.round((auditResults.passed / auditResults.audited) * 100) + '%'
+        pass_rate: auditResults.audited > 0 ? Math.round((auditResults.passed / auditResults.audited) * 100) + '%' : 'N/A'
       },
       rule_compliance: Object.values(auditResults.byRule).map(r => ({
         rule: r.rule_name,

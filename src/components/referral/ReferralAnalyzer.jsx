@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useAICall } from "@/hooks/useAICall";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -19,6 +19,14 @@ export default function ReferralAnalyzer({ referralData, onAnalysisComplete }) {
   const [analysis, setAnalysis] = useState(null);
   const ai = useAICall();
   const [analysisError, setAnalysisError] = useState(false);
+
+  // Hold the completion callback in a ref so an inline (per-render) parent
+  // callback doesn't change analyzeReferral's identity and re-fire the effect —
+  // which otherwise produced an infinite loop of (billed) LLM calls.
+  const onAnalysisCompleteRef = useRef(onAnalysisComplete);
+  useEffect(() => {
+    onAnalysisCompleteRef.current = onAnalysisComplete;
+  }, [onAnalysisComplete]);
 
   const analyzeReferral = useCallback(async () => {
     if (!referralData) return;
@@ -144,15 +152,15 @@ Referral Data: ${JSON.stringify(referralData)}`,
       });
 
       setAnalysis(result);
-      if (onAnalysisComplete) {
-        onAnalysisComplete(result);
+      if (onAnalysisCompleteRef.current) {
+        onAnalysisCompleteRef.current(result);
       }
     } catch (error) {
       console.error('Error analyzing referral:', error);
       setAnalysisError(true);
       toast.error('Failed to analyze referral. Please try again.');
     }
-  }, [referralData, onAnalysisComplete]);
+  }, [referralData]);
 
   useEffect(() => {
     if (referralData) {

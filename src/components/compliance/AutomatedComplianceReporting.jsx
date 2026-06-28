@@ -221,11 +221,11 @@ ${report.strengths?.map(s => `• ${s}`).join('\n')}
 
 AREAS OF CONCERN
 ----------------
-${report.areas_of_concern?.map(c => `• [${c.severity.toUpperCase()}] ${c.concern}\n  Recommendation: ${c.recommendation}`).join('\n\n')}
+${report.areas_of_concern?.map(c => `• [${(c.severity || 'unknown').toUpperCase()}] ${c.concern}\n  Recommendation: ${c.recommendation}`).join('\n\n')}
 
 RECOMMENDATIONS
 ---------------
-${report.recommendations?.map(r => `• [${r.priority.toUpperCase()}] ${r.recommendation}\n  Expected Impact: ${r.expected_impact}`).join('\n\n')}
+${report.recommendations?.map(r => `• [${(r.priority || 'unknown').toUpperCase()}] ${r.recommendation}\n  Expected Impact: ${r.expected_impact}`).join('\n\n')}
 
 NEXT STEPS
 ----------

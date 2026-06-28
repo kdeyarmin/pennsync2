@@ -228,7 +228,7 @@ export default function AIReferralCarePlanGenerator({
                       <Label className="text-xs font-semibold text-slate-600">Interventions</Label>
                       {editingIndex === index ? (
                         <div className="space-y-2 mt-1">
-                          {editedPlan.interventions.map((intervention, i) => (
+                          {editedPlan.interventions?.map((intervention, i) => (
                             <Input
                               key={i}
                               value={intervention}
@@ -242,7 +242,7 @@ export default function AIReferralCarePlanGenerator({
                         </div>
                       ) : (
                         <ul className="list-disc list-inside space-y-1 mt-1">
-                          {plan.interventions.map((intervention, i) => (
+                          {plan.interventions?.map((intervention, i) => (
                             <li key={i} className="text-sm text-slate-700">{intervention}</li>
                           ))}
                         </ul>

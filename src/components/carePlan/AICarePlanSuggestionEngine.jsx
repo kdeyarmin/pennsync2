@@ -262,7 +262,7 @@ Return JSON with suggestions array.`,
                   <div className="bg-blue-50 p-3 rounded border border-blue-200">
                     <p className="text-xs font-semibold text-blue-900 mb-2">Nursing Interventions:</p>
                     <ul className="space-y-1">
-                      {suggestion.interventions.map((intervention, i) => (
+                      {suggestion.interventions?.map((intervention, i) => (
                         <li key={i} className="text-xs text-blue-800 flex items-start gap-2">
                           <span className="text-blue-600">•</span>
                           <span>{intervention}</span>

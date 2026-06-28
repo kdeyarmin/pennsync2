@@ -429,7 +429,20 @@ Return JSON format:
         }
       });
 
-      setInterventionPlan(result);
+      // The response schema marks none of these arrays as required, so the model
+      // may legally omit any of them. Normalize to arrays up front so the dialog's
+      // unconditional .map()/.length renders can't crash.
+      const asArray = (v) => (Array.isArray(v) ? v : []);
+      setInterventionPlan({
+        ...result,
+        immediate_actions: asArray(result?.immediate_actions),
+        short_term: asArray(result?.short_term),
+        ongoing: asArray(result?.ongoing),
+        monitoring: asArray(result?.monitoring),
+        education: asArray(result?.education),
+        red_flags: asArray(result?.red_flags),
+        referrals: asArray(result?.referrals),
+      });
       setShowInterventions(true);
       
     } catch (error) {
@@ -572,7 +585,7 @@ Return JSON format:
           )}
 
           {/* Quick Actions */}
-          {riskAssessment.riskLevel === 'Critical' || riskAssessment.riskLevel === 'High' && (
+          {(riskAssessment.riskLevel === 'Critical' || riskAssessment.riskLevel === 'High') && (
             <Alert className="bg-orange-50 border-orange-300">
               <AlertTriangle className="w-5 h-5 text-orange-600" />
               <AlertDescription className="text-orange-900">
