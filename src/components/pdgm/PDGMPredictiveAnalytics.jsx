@@ -84,6 +84,7 @@ export default function PDGMPredictiveAnalytics({ compact = false }) {
       }));
 
       const result = await ai.run({
+        model: "claude_opus_4_8",
         prompt: `You are a PDGM financial analyst. Based on this home health agency data, generate predictive analytics with detailed cohort analysis.
 
 PATIENT DATA (${activePatients.length} active):

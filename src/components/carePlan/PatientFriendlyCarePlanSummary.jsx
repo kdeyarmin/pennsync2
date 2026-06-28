@@ -78,6 +78,7 @@ Return JSON:
 }`;
 
       const result = await ai.run({
+        model: "claude_sonnet_4_6",
         prompt,
         response_json_schema: {
           type: "object",

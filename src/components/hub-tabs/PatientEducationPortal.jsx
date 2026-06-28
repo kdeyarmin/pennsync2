@@ -65,6 +65,7 @@ export default function PatientEducationPortal() {
   const generateEducationMutation = useMutation({
     mutationFn: (patientId) =>
       invokeLLM({
+        model: "claude_sonnet_4_6",
         prompt: `Generate personalized education for patient ${patientId}`,
       }),
     onSuccess: () => {

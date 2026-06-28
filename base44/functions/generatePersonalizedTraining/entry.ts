@@ -78,6 +78,7 @@ Generate a complete training module with the following components:
 Make content specific, practical, and immediately applicable to home health nursing.`;
 
     const trainingContent = await base44.asServiceRole.integrations.Core.InvokeLLM({
+      model: "claude_opus_4_8",
       prompt: trainingPrompt,
       response_json_schema: {
         type: 'object',

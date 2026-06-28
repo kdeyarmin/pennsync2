@@ -32,6 +32,7 @@ export default function AIAuditSuggestions({ audit, _onApplySuggestion }) {
 
     try {
       const result = await ai.run({
+        model: "claude_sonnet_4_6",
         prompt: `Analyze these compliance audit findings and provide specific, actionable improvement suggestions for each issue.
 
 AUDIT DETAILS:

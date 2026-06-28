@@ -54,6 +54,7 @@ export default function AICarePlanSuggestionEngine({
 
     try {
       const result = await ai.run({
+        model: "claude_opus_4_8",
         prompt: `You are an expert home health clinical care planning specialist with expertise in Medicare compliance and evidence-based practice.
 
 Analyze the following patient data and generate comprehensive, individualized care plans:

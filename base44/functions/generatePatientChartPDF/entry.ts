@@ -103,6 +103,7 @@ Create professional medical chart content with:
 5. Professional medical terminology`;
 
     const result = await base44.integrations.Core.InvokeLLM({
+      model: "claude_opus_4_8",
       prompt,
       response_json_schema: {
         type: "object",

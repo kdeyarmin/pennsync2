@@ -148,6 +148,7 @@ Create a personalized 4-week learning path with:
 5. Expected compliance improvement`;
 
       const result = await ai.run({
+        model: "claude_opus_4_8",
         prompt,
         response_json_schema: {
           type: "object",

@@ -36,6 +36,7 @@ export default function CarePlanGapAnalyzer({
       })) || [];
 
       const result = await ai.run({
+        model: "claude_opus_4_8",
         prompt: `You are a clinical care planning expert. Analyze this patient's care plan for gaps, deviations from best practices, and evidence-based recommendations.
 
 PRIMARY DIAGNOSIS: ${diagnosis}

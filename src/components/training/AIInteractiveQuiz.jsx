@@ -44,6 +44,7 @@ export default function AIInteractiveQuiz({
 
     try {
       const result = await ai.run({
+        model: "claude_opus_4_8",
         prompt: `Generate an interactive quiz for home health nurses on the topic: "${topic}"
 
 Difficulty Level: ${difficulty}

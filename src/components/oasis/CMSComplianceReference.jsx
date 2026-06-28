@@ -348,6 +348,7 @@ export default function CMSComplianceReference({ oasisItem, onInsertGuidance, co
   const fetchLiveUpdates = async () => {
     try {
       const result = await ai.run({
+        model: "claude_opus_4_8",
         prompt: `Check for any recent CMS OASIS-E updates or guidance changes effective 2024-2025. Focus on:
 1. Any changes to functional scoring (GG items, M1800-M1860)
 2. PDGM calculation updates

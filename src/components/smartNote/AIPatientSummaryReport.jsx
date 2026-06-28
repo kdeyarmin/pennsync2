@@ -52,6 +52,7 @@ export default function AIPatientSummaryReport({
       }));
 
       const result = await ai.run({
+        model: "claude_opus_4_8",
         prompt: `Generate a concise clinical summary report for this patient. This will be used by nurses for quick context before/during visits.
 
 PATIENT INFORMATION:

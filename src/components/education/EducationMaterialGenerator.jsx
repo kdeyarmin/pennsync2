@@ -137,6 +137,7 @@ CULTURAL CONSIDERATIONS (${culturalBackground.replace(/_/g, ' ')}):
       }
 
       const result = await ai.run({
+        model: "claude_sonnet_4_6",
         prompt: `You are a patient education specialist creating PERSONALIZED, easy-to-understand health education materials for home health and hospice patients.
 
 TOPIC: ${topic}

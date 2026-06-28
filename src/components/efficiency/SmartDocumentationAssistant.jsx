@@ -160,6 +160,7 @@ Format as JSON with clear sections`;
       }
 
       const response = await ai.run({
+        model: "claude_opus_4_8",
         prompt,
         response_json_schema: {
           type: "object",

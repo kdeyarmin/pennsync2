@@ -76,6 +76,7 @@ export default function AutomatedComplianceAuditor({ onAuditComplete }) {
 
       try {
         const auditResult = await invokeLLM({
+          model: "claude_opus_4_8",
           prompt: `Perform a Medicare compliance audit on this clinical documentation.
 
 VISIT TYPE: ${visit.visit_type || 'routine_visit'}

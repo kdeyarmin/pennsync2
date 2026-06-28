@@ -49,6 +49,7 @@ export default function PredictiveHealthAnalytics({ patientId, patient, visits, 
       const vitalTrends = analyzeVitalTrends(recentVisits);
       
       const result = await ai.run({
+        model: "claude_opus_4_8",
         prompt: `You are a clinical analytics AI specializing in home health predictive modeling. Analyze this patient's data and predict health risks.
 
 PATIENT PROFILE:

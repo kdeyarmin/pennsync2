@@ -115,6 +115,7 @@ export default function PredictiveRiskScoring({ patients = [], visits = [], care
       });
 
       const result = await ai.run({
+        model: "claude_opus_4_8",
         prompt: `You are a clinical risk assessment AI for home health and hospice care. Analyze each patient's data and calculate predictive risk scores.
 
 PATIENT DATA:

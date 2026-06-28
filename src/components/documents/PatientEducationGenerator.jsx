@@ -20,6 +20,7 @@ export default function PatientEducationGenerator({ patientId, patient }) {
   const generateEducationMaterial = async () => {
     try {
       const result = await ai.run({
+        model: "claude_sonnet_4_6",
         prompt: `Generate patient education material tailored for home health patients.
 
 PATIENT CONTEXT:

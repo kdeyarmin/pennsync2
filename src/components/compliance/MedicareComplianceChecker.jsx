@@ -65,6 +65,7 @@ Examples (Non-compliant): ${rule.examples_non_compliant?.[0] || 'N/A'}
 `).join('\n');
 
       const result = await ai.run({
+        model: "claude_opus_4_8",
         prompt: `You are a Medicare home health compliance expert with access to live internet data from CMS.gov. Analyze this clinical note against the LATEST 2025 42 CFR 484 Conditions of Participation for home health agencies.
 
 CLINICAL NOTE:

@@ -69,6 +69,7 @@ export default function AITrainingContentGenerator({ onContentGenerated, _nurseE
     
     try {
       const result = await ai.run({
+        model: "claude_opus_4_8",
         prompt: `Generate comprehensive training content for home health nurses on: "${topic}"
 
 Category: ${trainingTopics[selectedCategory].label}

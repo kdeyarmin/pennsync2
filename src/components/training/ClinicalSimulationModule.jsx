@@ -82,6 +82,7 @@ export default function ClinicalSimulationModule({ _nurseEmail, onSimulationComp
     
     try {
       const result = await generatingAi.run({
+        model: "claude_opus_4_8",
         prompt: `Create an interactive clinical simulation for home health nurses.
 
 SCENARIO: ${scenario.title}
@@ -173,6 +174,7 @@ Make it realistic, educational, and clinically accurate.`,
     
     try {
       const result = await evaluatingAi.run({
+        model: "claude_opus_4_8",
         prompt: `Evaluate this nurse's response in a clinical simulation.
 
 SCENARIO CONTEXT:

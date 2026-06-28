@@ -75,6 +75,7 @@ export default function AdvancedComplianceRiskScoring({
       const trainingGapsCount = trainingRecommendations.filter(t => !t.addressed).length;
 
       const result = await ai.run({
+        model: "claude_opus_4_8",
         prompt: `You are an AI Medicare compliance risk analyst for Pennsylvania home health agencies. Perform advanced risk scoring and predictive analysis.
 
 CURRENT COMPLIANCE DATA (Last ${timeRange} days):

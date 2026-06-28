@@ -184,6 +184,7 @@ export default function AIStaffPerformanceAnalytics({ timeRange: initialTimeRang
       });
 
       const result = await ai.run({
+        model: "claude_opus_4_8",
         prompt: `You are an AI workforce analytics specialist for home health nursing. Analyze comprehensive staff performance data to provide actionable insights.
 
 TIME RANGE: Last ${timeRange} days

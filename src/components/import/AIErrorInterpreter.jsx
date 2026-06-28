@@ -40,6 +40,7 @@ For each error pattern, provide:
 Focus on the most common errors first.`;
 
       const response = await ai.run({
+        model: "claude_sonnet_4_6",
         prompt,
         response_json_schema: {
           type: "object",

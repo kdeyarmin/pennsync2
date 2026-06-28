@@ -74,6 +74,7 @@ export default function CareCoordinationAnalyzer({
       const recentHospitalization = hospitalizations.length > 0 ? hospitalizations[0] : null;
 
       const result = await ai.run({
+        model: "claude_opus_4_8",
         prompt: `You are an AI care coordination specialist for home health. Analyze this patient's data to identify care gaps and provider coordination needs.
 
 PATIENT: ${patient.first_name} ${patient.last_name}

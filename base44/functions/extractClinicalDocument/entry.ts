@@ -44,6 +44,7 @@ Deno.serve(async (req) => {
     }
 
     const extractedData = await base44.integrations.Core.InvokeLLM({
+      model: "claude_opus_4_8",
       prompt: `Extract clinical information from this medical document. Return structured JSON with the following fields (use empty string if not found):
 
 {

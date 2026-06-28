@@ -242,6 +242,7 @@ export default function PDGMTrendDashboard() {
       const avg = Math.round(last3.reduce((s, d) => s + d.avgPayment, 0) / 3);
       
       const result = await invokeLLM({
+        model: "claude_opus_4_8",
         prompt: `Last 3 months avg payment: $${avg}. Predict next 3 months.`,
         response_json_schema: {
           type: "object",
@@ -280,6 +281,7 @@ export default function PDGMTrendDashboard() {
       const topFunc = chartData.funcDist[0]?.name || 'N/A';
       
       const result = await invokeLLM({
+        model: "claude_opus_4_8",
         prompt: `Top PDGM drivers for $${stats.avgPayment} avg. Top group: ${topGroup}. Top func: ${topFunc}. List 3 key drivers.`,
         response_json_schema: {
           type: "object",
@@ -325,6 +327,7 @@ export default function PDGMTrendDashboard() {
       const topGroups = chartData.groupDist.slice(0, 3);
 
       const result = await invokeLLM({
+        model: "claude_opus_4_8",
         prompt: `Analyze PDGM trends and forecast next 6 months.
 
 HISTORICAL DATA (Last 6 months):
@@ -423,6 +426,7 @@ Provide:
       }));
 
       const result = await invokeLLM({
+        model: "claude_opus_4_8",
         prompt: `Analyze patient assessments to identify at-risk cases requiring proactive intervention.
 
 RECENT ASSESSMENTS:
@@ -495,6 +499,7 @@ For each at-risk patient, provide:
       };
 
       const result = await invokeLLM({
+        model: "claude_opus_4_8",
         prompt: `Simulate the impact of implementing a new care pathway on PDGM outcomes.
 
 CURRENT BASELINE:

@@ -51,6 +51,7 @@ export default function InteractiveSimulation({ scenario, onComplete }) {
       // Evaluate the nurse's response against Medicare home health documentation
       // standards using the LLM integration (replaces the prior random placeholder).
       const evaluation = await ai.run({
+        model: "claude_opus_4_8",
         prompt: `You are a Medicare home health documentation expert evaluating a nurse's response in a clinical documentation training simulation.
 
 SCENARIO: ${scenario.title || "Clinical documentation simulation"}

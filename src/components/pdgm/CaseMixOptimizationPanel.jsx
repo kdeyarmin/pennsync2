@@ -34,6 +34,7 @@ export default function CaseMixOptimizationPanel({
   const analyzeOptimization = async () => {
     try {
       const result = await ai.run({
+        model: "claude_opus_4_8",
         prompt: `Review this home health patient's documentation for accuracy and completeness, and identify clinically-supported documentation that may also affect PDGM case-mix.
 
 CURRENT DOCUMENTATION:

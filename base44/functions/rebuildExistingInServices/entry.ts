@@ -116,6 +116,7 @@ Deno.serve(async (req) => {
       let generated;
       try {
         const raw = await base44.asServiceRole.integrations.Core.InvokeLLM({
+          model: "claude_opus_4_8",
           prompt: `You create practical healthcare in-service training. Return ONLY valid JSON, no prose or code fences.\n\n${buildPrompt(course)}`
         });
         generated = parseLLMJson(raw);

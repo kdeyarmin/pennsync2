@@ -97,6 +97,7 @@ Return JSON:
 }`;
 
       const result = await genAi.run({
+        model: "claude_opus_4_8",
         prompt,
         response_json_schema: {
           type: "object",
@@ -194,6 +195,7 @@ Evaluate the response and provide feedback:
 }`;
 
       const evalResult = await evalAi.run({
+        model: "claude_opus_4_8",
         prompt: evalPrompt,
         response_json_schema: {
           type: "object",

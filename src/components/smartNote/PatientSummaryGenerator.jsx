@@ -18,6 +18,7 @@ export default function PatientSummaryGenerator({ patient, visitTranscript, visi
     try {
       const meds = patient.current_medications?.map(m => `${m.name} ${m.dosage}`).join(", ") || "none";
       const result = await ai.run({
+        model: "claude_opus_4_8",
         prompt: `You are a home health clinical documentation expert. Generate a concise, structured patient summary from this visit transcript/note.
 
 PATIENT: ${patient.first_name} ${patient.last_name}

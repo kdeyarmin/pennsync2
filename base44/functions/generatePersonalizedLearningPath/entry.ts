@@ -72,6 +72,7 @@ Return JSON format.
 `;
 
     const aiResponse = await base44.asServiceRole.integrations.Core.InvokeLLM({
+      model: "claude_opus_4_8",
       prompt,
       response_json_schema: {
         type: 'object',

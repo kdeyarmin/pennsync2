@@ -65,6 +65,7 @@ Base recommendations on current Medicare guidelines, evidence-based practice, an
 Return ONLY valid JSON without any markdown formatting or explanations.`;
 
       const response = await ai.run({
+        model: "claude_opus_4_8",
         prompt,
         response_json_schema: {
           type: "object",

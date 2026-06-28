@@ -78,6 +78,7 @@ For each issue found, provide:
 - Specific do's and don'ts examples`;
 
       const result = await ai.run({
+        model: "claude_opus_4_8",
         prompt,
         response_json_schema: {
           type: "object",

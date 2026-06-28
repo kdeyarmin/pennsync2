@@ -56,6 +56,7 @@ export default function ProgressReportGenerator({ patientId, patient }) {
       const latestVisit = periodVisits[0];
       
       const result = await ai.run({
+        model: "claude_opus_4_8",
         prompt: `Generate a comprehensive progress report for home health services.
 
 REPORT INFORMATION:

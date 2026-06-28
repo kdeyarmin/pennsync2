@@ -17,6 +17,7 @@ Deno.serve(async (req) => {
 
     // Use AI to rank diagnoses by PDGM reimbursement potential
     const result = await base44.integrations.Core.InvokeLLM({
+      model: "claude_opus_4_8",
       prompt: `You are a Medicare PDGM reimbursement expert. Analyze and rank these diagnoses by their PDGM reimbursement potential.
 
 DIAGNOSES TO RANK:

@@ -42,6 +42,7 @@ export default function PDGMDocumentationImpactAnalyzer({
   const analyzeImpact = useMemo(() => debounce(async () => {
     try {
       const result = await ai.run({
+        model: "claude_opus_4_8",
         prompt: `You are a Medicare home health PDGM reimbursement optimization expert. Analyze this clinical documentation for PDGM case-mix impact.
 
 CURRENT DOCUMENTATION:

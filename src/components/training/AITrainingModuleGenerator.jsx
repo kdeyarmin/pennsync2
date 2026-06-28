@@ -74,6 +74,7 @@ export default function AITrainingModuleGenerator() {
       const selectedExs = exemplaryDocs.filter(e => selectedExemplars.has(e.id));
 
       const result = await ai.run({
+        model: "claude_opus_4_8",
         prompt: `You are an expert clinical education specialist for home health nursing. Create a comprehensive training module for Pennsylvania home health staff focusing on Medicare compliance (42 CFR 484).
 
 INPUT DATA FOR MODULE GENERATION:

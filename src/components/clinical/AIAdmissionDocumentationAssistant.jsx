@@ -36,6 +36,7 @@ export default function AIAdmissionDocumentationAssistant({
     setIsGenerating(true);
     try {
       const response = await invokeLLM({
+        model: "claude_opus_4_8",
         prompt: `You are an expert home health nurse creating comprehensive admission documentation. Using the provided referral data, OASIS analysis, and patient information, draft detailed clinical documentation sections.
 
 **REFERRAL DATA:**
@@ -211,6 +212,7 @@ For each section, provide:
 
           // Use AI to incorporate the subjective inputs into the section
           const enhancedContent = await invokeLLM({
+            model: "claude_opus_4_8",
             prompt: `Enhance this clinical documentation section by incorporating the nurse's subjective observations and assessments.
 
 **ORIGINAL SECTION (${section.title}):**

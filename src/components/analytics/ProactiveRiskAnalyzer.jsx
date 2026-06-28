@@ -135,6 +135,7 @@ export default function ProactiveRiskAnalyzer({ _users = [] }) {
         const batch = patientData.slice(i, i + batchSize);
         
         const result = await ai.run({
+          model: "claude_opus_4_8",
           prompt: `You are a clinical risk analysis AI for home health/hospice. Analyze these patients for potential adverse events, non-compliance risks, and urgent care needs.
 
 PATIENT DATA:

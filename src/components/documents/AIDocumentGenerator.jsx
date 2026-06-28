@@ -162,6 +162,7 @@ IMPORTANT INSTRUCTIONS:
 Generate the complete document now with all available fields pre-filled:`;
 
       const result = await ai.run({
+        model: "claude_opus_4_8",
         prompt: prompt,
         add_context_from_internet: false
       });

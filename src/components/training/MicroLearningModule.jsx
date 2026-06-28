@@ -53,6 +53,7 @@ export default function MicroLearningModule({
   const generateLearningContent = useCallback(async () => {
     try {
       const result = await generatingAi.run({
+        model: "claude_opus_4_8",
         prompt: `You are an expert clinical educator creating personalized micro-learning content for a home health nurse.
 
 SKILL GAP IDENTIFIED:
@@ -196,6 +197,7 @@ Return JSON:
     
     try {
       const result = await evaluatingAi.run({
+        model: "claude_opus_4_8",
         prompt: `You are a clinical documentation expert evaluating a nurse's response to a simulated scenario.
 
 SCENARIO:

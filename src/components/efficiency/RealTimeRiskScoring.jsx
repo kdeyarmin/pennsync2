@@ -51,6 +51,7 @@ export default function RealTimeRiskScoring({ patientId, compact = false }) {
     try {
       // Real-time AI risk calculation
       const response = await ai.run({
+        model: "claude_opus_4_8",
         prompt: `Analyze this patient's risk across multiple dimensions and provide a comprehensive risk assessment:
 
 Patient Data:

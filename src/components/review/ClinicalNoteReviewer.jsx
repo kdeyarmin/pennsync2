@@ -39,6 +39,7 @@ export default function ClinicalNoteReviewer({
 
     try {
       const result = await ai.run({
+        model: "claude_opus_4_8",
         prompt: `You are an expert clinical documentation auditor specializing in home health Medicare compliance and billing optimization.
 
 REVIEW THIS CLINICAL NOTE:

@@ -50,6 +50,7 @@ export default function PersonalizedSkillBuilder({ userEmail }) {
       } catch {}
 
       const result = await ai.run({
+        model: "claude_opus_4_8",
         prompt: `You are a clinical documentation educator. Analyze this nurse's documentation patterns and suggest personalized skill-building modules.
 
 DOCUMENTATION HISTORY:

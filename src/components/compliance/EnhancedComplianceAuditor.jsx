@@ -145,6 +145,7 @@ Keywords to look for: ${rule.keywords?.join(', ') || 'N/A'}`
         ).join('\n\n');
 
         const auditResult = await invokeLLM({
+          model: "claude_opus_4_8",
           prompt: `Perform a detailed compliance audit on this clinical documentation against specific rules.
 
 VISIT TYPE: ${visit.visit_type || 'routine_visit'}

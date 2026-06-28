@@ -16,6 +16,7 @@ export default function AICarePlanGenerator({ patientDiagnosis, patientNeeds, on
     
     try {
       const result = await ai.run({
+        model: "claude_opus_4_8",
         prompt: `Generate a comprehensive home health care plan based on the following patient information:
 
 PRIMARY DIAGNOSIS:
