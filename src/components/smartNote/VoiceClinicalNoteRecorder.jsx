@@ -84,7 +84,7 @@ export default function VoiceClinicalNoteRecorder({ onTranscriptionComplete, ini
       const transcribeRes = await invokeLLMWithFile({
         prompt: `Transcribe the following medical/clinical audio recording. Preserve all clinical details and terminology. Return only the transcribed text.`,
         file_urls: [audioUrl],
-        model: "gemini_3_flash"
+        model: "gemini_3_5_flash"
       });
 
       const rawTranscription = transcribeRes;
