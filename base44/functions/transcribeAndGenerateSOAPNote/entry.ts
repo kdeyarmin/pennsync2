@@ -83,7 +83,12 @@ Deno.serve(async (req) => {
         }
 
         const claudeData = await soapApiResponse.json();
-        const soapText = claudeData.content?.[0]?.text || '{}';
+        // Anthropic returns an array of content blocks; concatenate every text
+        // block (not just the first) so JSON extraction can't drop later output.
+        const soapText = (Array.isArray(claudeData.content) ? claudeData.content : [])
+            .filter((block) => block?.type === 'text')
+            .map((block) => block.text)
+            .join('') || '{}';
 
         let soapNote;
         try {
