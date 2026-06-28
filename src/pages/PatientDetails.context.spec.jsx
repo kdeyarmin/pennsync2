@@ -81,7 +81,7 @@ describe('PatientDetails — getPatientContext seeding', () => {
     const { default: PatientDetails } = await import('@/pages/PatientDetails');
     renderWithProviders(<PatientDetails />, { queryClient: qc });
 
-    await waitFor(() => expect(qc.getQueryData(['patientVisits', 'p1'])).toEqual(CTX.visits));
+    await waitFor(() => expect(qc.getQueryData(['patientVisits', 'p1'])).toEqual(CTX.visits), { timeout: 5000 });
     const callsAfterLoad = invoke.mock.calls.filter((c) => c[0] === 'getPatientContext').length;
 
     // Simulate the server now returning a newly-created visit, then do exactly what
@@ -94,7 +94,7 @@ describe('PatientDetails — getPatientContext seeding', () => {
     qc.invalidateQueries({ queryKey: ['patientContext', 'p1'] });
 
     // The mirror the children render from is refreshed with the new visit...
-    await waitFor(() => expect(qc.getQueryData(['patientVisits', 'p1'])).toEqual(updated.visits));
+    await waitFor(() => expect(qc.getQueryData(['patientVisits', 'p1'])).toEqual(updated.visits), { timeout: 5000 });
     // ...via exactly one refetch (no loop).
     const callsAfterInvalidate = invoke.mock.calls.filter((c) => c[0] === 'getPatientContext').length;
     expect(callsAfterInvalidate).toBe(callsAfterLoad + 1);

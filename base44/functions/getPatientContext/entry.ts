@@ -4,17 +4,23 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
  * getPatientContext — returns the core datasets the PatientDetails page needs for
  * a single patient (the patient record, visits, care plans, incidents, tasks, and
  * active alerts) in ONE round-trip instead of the page firing six independent
- * entity queries. Scoped to the caller so a non-admin can only load a patient
- * they're assigned to.
- *   - admins (role admin / agency_admin / super_admin / platform owner): any patient
- *   - everyone else: only when the patient's `assigned_nurses` includes their email
+ * entity queries from the browser.
  *
- * Defense-in-depth; Base44 row-level security remains the primary control. The
- * client seeds the per-entity React Query caches (['patient',id], ['patientVisits',id],
- * …) from this payload so the page's child components get cache hits. OASIS uploads
- * are intentionally NOT included: that cache key is shape-inconsistent across
- * components (financial-stripped function result vs. raw entity), so it's left to
- * each component's own query.
+ * IMPORTANT — access control: every read runs AS THE CALLER (`base44.entities`,
+ * NOT `asServiceRole`), so Base44 row-level security applies exactly as it did
+ * when PatientDetails issued these queries directly. This deliberately preserves
+ * the prior visibility model — Visit/CarePlan/Incident are `created_by`-scoped,
+ * Task is `assigned_to`-scoped, Patient is assigned_nurses OR created_by OR admin
+ * — so batching them here neither widens PHI/task visibility for a shared patient
+ * nor locks out a creator who isn't yet in `assigned_nurses`. RLS is the gate: if
+ * the caller can't read the patient, the filter returns empty and we return an
+ * empty payload (the page renders its not-found state, same as before).
+ *
+ * The client seeds the per-entity React Query caches (['patient',id],
+ * ['patientVisits',id], …) from this payload so the page's child components get
+ * cache hits. OASIS uploads are intentionally NOT included — that cache key is
+ * shape-inconsistent across components (financial-stripped function result vs.
+ * raw entity), so it's left to each component's own query.
  *
  * Shapes mirror the client queryFns exactly so seeding is a drop-in:
  *   visits   — Visit.filter({patient_id}, '-visit_date')
@@ -32,35 +38,23 @@ Deno.serve(async (req) => {
     const patientId = body?.patientId;
     if (!patientId) return Response.json({ error: 'patientId is required' }, { status: 400 });
 
-    const sr = base44.asServiceRole.entities;
+    // Caller-scoped: RLS decides what this user may read.
+    const e = base44.entities;
 
-    // Administrator tiers (mirrors getDashboardData / lib roles — kept inline since
-    // Deno functions can't import frontend modules).
-    const SUPER_ADMIN_EMAIL = ((typeof Deno !== 'undefined' && Deno.env.get('SUPER_ADMIN_EMAIL')) || 'kdeyarmin@comcast.net').trim().toLowerCase();
-    const callerEmail = String(user.email || '').trim().toLowerCase();
-    const isAdmin =
-      user.role === 'admin' ||
-      user.account_type === 'agency_admin' ||
-      user.account_type === 'super_admin' ||
-      callerEmail === SUPER_ADMIN_EMAIL;
-
-    const patientArr = await sr.Patient.filter({ id: patientId }, '-updated_date', 1);
+    const patientArr = await e.Patient.filter({ id: patientId });
     const patient = patientArr?.[0] || null;
-    if (!patient) return Response.json({ error: 'Patient not found' }, { status: 404 });
-
-    // Non-admins may only read a patient they're assigned to.
-    if (!isAdmin) {
-      const assigned = Array.isArray(patient.assigned_nurses) ? patient.assigned_nurses : [];
-      const allowed = assigned.map((e) => String(e).trim().toLowerCase()).includes(callerEmail);
-      if (!allowed) return Response.json({ error: 'Forbidden' }, { status: 403 });
+    // Not readable by this caller (or absent) → empty payload, mirroring the old
+    // caller-scoped Patient.filter returning [] (page shows its not-found state).
+    if (!patient) {
+      return Response.json({ patient: null, visits: [], carePlans: [], incidents: [], tasks: [], activeAlerts: [] });
     }
 
     const [visits, carePlans, incidents, tasks, activeAlerts] = await Promise.all([
-      sr.Visit.filter({ patient_id: patientId }, '-visit_date'),
-      sr.CarePlan.filter({ patient_id: patientId }),
-      sr.Incident.filter({ patient_id: patientId }, '-incident_date'),
-      sr.Task.filter({ patient_id: patientId }),
-      sr.PatientAlert.filter({ patient_id: patientId, status: 'active' }),
+      e.Visit.filter({ patient_id: patientId }, '-visit_date'),
+      e.CarePlan.filter({ patient_id: patientId }),
+      e.Incident.filter({ patient_id: patientId }, '-incident_date'),
+      e.Task.filter({ patient_id: patientId }),
+      e.PatientAlert.filter({ patient_id: patientId, status: 'active' }),
     ]);
 
     return Response.json({ patient, visits, carePlans, incidents, tasks, activeAlerts });
