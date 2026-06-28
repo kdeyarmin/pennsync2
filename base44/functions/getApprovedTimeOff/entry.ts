@@ -25,7 +25,9 @@ Deno.serve(async (req) => {
     const sanitized = approved.map((r) => ({
       id: r.id,
       employee_name: r.employee_name,
-      employee_email: r.employee_email,
+      // Intentionally NOT exposing employee_email: this feed is visible to every
+      // authenticated user, and the calendar renders on employee_name. Including
+      // it leaked a full name->email directory of everyone who's had time off.
       request_type: r.request_type,
       start_date: r.start_date,
       end_date: r.end_date,
