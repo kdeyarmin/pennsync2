@@ -51,7 +51,8 @@ export default function CarePlanProposalReviewer({ patientId = null, compact = f
   const approveProposalMutation = useMutation({
     mutationFn: async ({ proposalId, notes, implementNow }) => {
       const proposal = proposals.find(p => p.id === proposalId);
-      
+      if (!proposal) throw new Error('Proposal no longer available');
+
       // Update proposal status
       await base44.entities.CarePlanProposal.update(proposalId, {
         status: implementNow ? 'implemented' : 'approved',
@@ -70,21 +71,23 @@ export default function CarePlanProposalReviewer({ patientId = null, compact = f
           ...(proposal.proposed_interventions || [])
         ];
 
-        const updatedGoals = [
-          ...(carePlan.goals || []),
-          ...(proposal.proposed_goals || [])
-        ];
+        // CarePlan.goal is a single string, not an array — append the proposed goals
+        // to the existing goal text instead of overwriting it with an array (which
+        // rendered as "[object Object]"/junk downstream).
+        const updatedGoal = [carePlan.goal, ...(proposal.proposed_goals || [])]
+          .filter(Boolean)
+          .join('; ');
 
         await base44.entities.CarePlan.update(proposal.care_plan_id, {
           interventions: updatedInterventions,
-          goal: updatedGoals
+          goal: updatedGoal
         });
       } else if (implementNow && !proposal.care_plan_id) {
         // Create new care plan
         await base44.entities.CarePlan.create({
           patient_id: proposal.patient_id,
           interventions: proposal.proposed_interventions,
-          goal: proposal.proposed_goals,
+          goal: (proposal.proposed_goals || []).join('; '),
           status: 'active',
           created_by: currentUser.email
         });

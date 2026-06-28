@@ -25,6 +25,7 @@ export default function AICarePlanRecommendations({
   const ai = useAICall();
   const [recommendations, setRecommendations] = useState(null);
   const [acceptedIds, setAcceptedIds] = useState(new Set());
+  const [dismissedIds, setDismissedIds] = useState(new Set());
 
   const analyzeAndRecommend = async () => {
     if (!patient) return;
@@ -187,11 +188,12 @@ Return JSON:`,
               <div className="space-y-3">
                 {recommendations.recommendations?.map((rec, idx) => {
                   const isAccepted = acceptedIds.has(idx);
-                  
+                  const isDismissed = dismissedIds.has(idx);
+
                   return (
-                    <Card 
-                      key={idx} 
-                      className={`border-2 ${isAccepted ? 'border-green-300 bg-green-50' : 'border-navy-200'}`}
+                    <Card
+                      key={idx}
+                      className={`border-2 ${isAccepted ? 'border-green-300 bg-green-50' : isDismissed ? 'border-slate-200 bg-slate-50 opacity-60' : 'border-navy-200'}`}
                     >
                       <CardContent className="p-4 space-y-3">
                         {/* Header */}
@@ -204,6 +206,11 @@ Return JSON:`,
                               {isAccepted && (
                                 <Badge className="bg-green-600 text-white">
                                   <CheckCircle2 className="w-3 h-3 mr-1" /> Accepted
+                                </Badge>
+                              )}
+                              {isDismissed && (
+                                <Badge className="bg-slate-400 text-white">
+                                  Dismissed
                                 </Badge>
                               )}
                             </div>
@@ -286,7 +293,7 @@ Return JSON:`,
                         )}
 
                         {/* Actions */}
-                        {!isAccepted && (
+                        {!isAccepted && !isDismissed && (
                           <div className="flex gap-2 pt-3 border-t">
                             <Button
                               size="sm"
@@ -298,7 +305,7 @@ Return JSON:`,
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => setAcceptedIds(prev => new Set([...prev, idx]))}
+                              onClick={() => setDismissedIds(prev => new Set([...prev, idx]))}
                             >
                               Dismiss
                             </Button>

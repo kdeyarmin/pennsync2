@@ -57,8 +57,9 @@ export default function ComplianceTrendChart({
     ? Math.round(auditTrendData.slice(-4).reduce((sum, d) => sum + d.avgScore, 0) / Math.min(4, auditTrendData.length))
     : 0;
   
-  const previousAvg = auditTrendData.length > 4
-    ? Math.round(auditTrendData.slice(-8, -4).reduce((sum, d) => sum + d.avgScore, 0) / 4)
+  const previousWindow = auditTrendData.length > 4 ? auditTrendData.slice(-8, -4) : [];
+  const previousAvg = previousWindow.length > 0
+    ? Math.round(previousWindow.reduce((sum, d) => sum + d.avgScore, 0) / previousWindow.length)
     : 0;
 
   const trend = currentAvg - previousAvg;

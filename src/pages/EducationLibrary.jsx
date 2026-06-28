@@ -102,7 +102,9 @@ export default function EducationLibrary() {
       weekAgo.setDate(weekAgo.getDate() - 7);
       return sentDate >= weekAgo;
     }).length;
-    const mostUsed = materials.sort((a, b) => (b.usage_count || 0) - (a.usage_count || 0))[0];
+    // Copy before sort: materials is the React Query array; sorting in place mutates
+    // the cache and reorders the grid that renders from the same array.
+    const mostUsed = [...materials].sort((a, b) => (b.usage_count || 0) - (a.usage_count || 0))[0];
 
     return { totalMaterials, totalSent, recentSent, mostUsed };
   }, [materials, sentMaterials]);

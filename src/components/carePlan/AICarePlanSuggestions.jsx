@@ -129,13 +129,16 @@ Return JSON:
   const handleAddSuggestion = (suggestion, index) => {
     const targetDate = new Date();
     targetDate.setDate(targetDate.getDate() + (suggestion.estimated_days_to_achieve || 60));
+    // Format from local date parts, not toISOString (which is UTC and rolls the date
+    // back a day for evening US-timezone creation).
+    const target_date = `${targetDate.getFullYear()}-${String(targetDate.getMonth() + 1).padStart(2, '0')}-${String(targetDate.getDate()).padStart(2, '0')}`;
 
     onAddCarePlan({
       problem: suggestion.problem,
       goal: suggestion.goal,
       interventions: suggestion.interventions,
       frequency: 'Each visit',
-      target_date: targetDate.toISOString().split('T')[0],
+      target_date,
       status: 'active'
     });
 

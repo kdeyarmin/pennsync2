@@ -231,10 +231,11 @@ Please review this incident in the Incident Reporting Dashboard.`
   };
 
   // Calculate statistics
+  const oneMonthAgo = subMonths(new Date(), 1);
   const last30Days = incidents.filter(i => {
+    if (!i.incident_date) return false; // nullable field — don't parseISO(undefined)
     const incidentDate = parseISO(i.incident_date);
-    const thirtyDaysAgo = subMonths(new Date(), 1);
-    return incidentDate >= thirtyDaysAgo;
+    return !isNaN(incidentDate) && incidentDate >= oneMonthAgo;
   });
 
   const byType = incidents.reduce((acc, inc) => {

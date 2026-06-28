@@ -64,7 +64,7 @@ export default function RecentActivityFeed({ visits, alerts, patients }) {
       <div className="space-y-3">
         {activities.map((activity, idx) => (
           <div
-            key={idx}
+            key={`${activity.type}-${activity.data?.id ?? idx}`}
             className={`p-3 rounded-lg border ${getActivityColor(activity.type, activity.data)}`}
           >
             <div className="flex items-start gap-3">

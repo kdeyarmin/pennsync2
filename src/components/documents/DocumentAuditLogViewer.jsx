@@ -72,7 +72,9 @@ export default function DocumentAuditLogViewer() {
             packageId: token.package_id,
             signer: token.signer_name,
             signerEmail: token.signer_email,
-            details: `Accessed ${token.access_count} time(s), last at ${new Date(token.last_accessed_at).toLocaleString()}`,
+            details: token.last_accessed_at
+              ? `Accessed ${token.access_count} time(s), last at ${new Date(token.last_accessed_at).toLocaleString()}`
+              : `Accessed ${token.access_count} time(s)`,
             icon: User,
             color: 'purple',
           });

@@ -145,7 +145,7 @@ export default function ClinicalLibraryAnalytics() {
                 <div className="flex-1 bg-slate-200 rounded-full h-6 relative">
                   <div
                     className="bg-indigo-600 h-6 rounded-full flex items-center justify-end pr-2"
-                    style={{ width: `${(count / analytics.totalUsage) * 100}%` }}
+                    style={{ width: `${analytics.totalUsage > 0 ? (count / analytics.totalUsage) * 100 : 0}%` }}
                   >
                     <span className="text-xs text-white font-medium">{count}</span>
                   </div>

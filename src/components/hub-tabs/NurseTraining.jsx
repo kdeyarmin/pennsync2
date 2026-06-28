@@ -70,8 +70,11 @@ export default function NurseTraining() {
 
   const completedCount = (trainingProgress?.filter(p => p?.status === 'completed')?.length || 0) + 
                          (allCompletions?.filter(c => c?.status === 'completed')?.length || 0);
-  const avgScore = trainingProgress?.length > 0
-    ? trainingProgress.reduce((sum, p) => sum + (p?.score || 0), 0) / trainingProgress.length
+  // Average only completed/scored modules — dividing by all rows (incl. in-progress
+  // ones whose score is masked to 0) dilutes the average downward.
+  const scoredProgress = trainingProgress?.filter(p => p?.status === 'completed' && typeof p?.score === 'number') || [];
+  const avgScore = scoredProgress.length > 0
+    ? scoredProgress.reduce((sum, p) => sum + p.score, 0) / scoredProgress.length
     : 0;
 
   const handleStartModule = (module) => {

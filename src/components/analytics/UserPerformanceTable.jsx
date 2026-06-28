@@ -65,8 +65,8 @@ export default function UserPerformanceTable({ users }) {
         </TableRow>
       </TableHeader>
       <TableBody>
-        {sortedUsers.map((user, idx) => (
-          <TableRow key={idx}>
+        {sortedUsers.map((user) => (
+          <TableRow key={user.email}>
             <TableCell>
               <p className="font-medium text-slate-900">{user.name}</p>
               <p className="text-xs text-slate-500">{user.email}</p>

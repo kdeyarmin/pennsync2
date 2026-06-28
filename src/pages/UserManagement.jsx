@@ -114,8 +114,8 @@ export default function UserManagement() {
     queryFn: async () => {
       const allInvitations = await base44.entities.UserInvitation.list('-created_date');
       // Filter out invitations where user has already signed up
-      const userEmails = new Set(allUsers.map(u => u.email.toLowerCase()));
-      return allInvitations.filter(inv => !userEmails.has(inv.email.toLowerCase()));
+      const userEmails = new Set(allUsers.map(u => (u.email || '').toLowerCase()).filter(Boolean));
+      return allInvitations.filter(inv => !userEmails.has((inv.email || '').toLowerCase()));
     },
     enabled: currentUser?.role === 'admin' && allUsers.length > 0,
   });

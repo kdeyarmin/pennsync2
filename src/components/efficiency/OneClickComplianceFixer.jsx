@@ -73,14 +73,15 @@ For each issue found, provide:
         }
       });
 
-      setComplianceIssues(response.issues || []);
-      
+      const issues = response.issues || [];
+      setComplianceIssues(issues);
+
       if (response.overall_compliance_score >= 95) {
         toast.success("Document is fully compliant!");
-      } else if (response.issues.length === 0) {
+      } else if (issues.length === 0) {
         toast.success("No compliance issues found!");
       } else {
-        toast.info(`Found ${response.issues.length} compliance issues`);
+        toast.info(`Found ${issues.length} compliance issues`);
       }
     } catch (error) {
       console.error("Compliance check failed:", error);

@@ -170,7 +170,7 @@ export default function ComplianceImpactReport({ noteConversions }) {
                       </div>
                     </div>
                     <div className="mt-2 flex items-center gap-2">
-                      <Progress value={parseFloat(stat.improvement) * 2} className="flex-1" />
+                      <Progress value={Math.min(Math.max(parseFloat(stat.improvement) * 2, 0), 100)} className="flex-1" />
                       <span className="text-sm font-semibold text-navy-600">+{stat.improvement}%</span>
                     </div>
                   </div>

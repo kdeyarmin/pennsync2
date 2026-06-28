@@ -111,7 +111,9 @@ export default function OASISAnalyticsDashboard() {
     
     const firstHalfAvg = firstHalf.reduce((sum, d) => sum + (d.scores?.overall || 0), 0) / (firstHalf.length || 1);
     const secondHalfAvg = secondHalf.reduce((sum, d) => sum + (d.scores?.overall || 0), 0) / (secondHalf.length || 1);
-    const trend = secondHalfAvg - firstHalfAvg;
+    // Need both halves populated; with a single data point secondHalf is empty and
+    // the trend would render as a misleading large negative (0 - firstHalfAvg).
+    const trend = (firstHalf.length > 0 && secondHalf.length > 0) ? secondHalfAvg - firstHalfAvg : 0;
 
     return {
       totalAnalyses,

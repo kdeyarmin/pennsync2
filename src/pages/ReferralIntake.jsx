@@ -125,6 +125,10 @@ export default function ReferralIntake() {
   const [multiReferralDetection, setMultiReferralDetection] = useState(null);
   const [_processingMultipleReferrals, setProcessingMultipleReferrals] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  // Reset to the first page whenever the filters change, otherwise a high currentPage
+  // can slice past the now-shorter filtered list and show an empty table with the
+  // pager hidden (no way to recover).
+  useEffect(() => { setCurrentPage(1); }, [statusFilter, priorityFilter]);
   const REFERRALS_PER_PAGE = 15;
   const [referralToDelete, setReferralToDelete] = useState(null);
   const [referralToReject, setReferralToReject] = useState(null);
@@ -934,9 +938,10 @@ Actions available:
   });
 
   const totalPages = Math.ceil(filteredReferrals.length / REFERRALS_PER_PAGE);
+  const safePage = Math.min(currentPage, Math.max(1, totalPages));
   const paginatedReferrals = filteredReferrals.slice(
-    (currentPage - 1) * REFERRALS_PER_PAGE,
-    currentPage * REFERRALS_PER_PAGE
+    (safePage - 1) * REFERRALS_PER_PAGE,
+    safePage * REFERRALS_PER_PAGE
   );
 
   const getStatusColor = (status) => {
