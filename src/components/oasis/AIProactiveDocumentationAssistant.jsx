@@ -148,6 +148,7 @@ Return JSON:
       setError("Failed to generate documentation suggestions. Please try again.");
     }
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- AI hook object is intentionally omitted; its run() is stable, and including it would re-fire the call every render
   }, [analysisResults, pdgmData, navigationData, qualityScore]);
 
   // Auto-generate when data is available

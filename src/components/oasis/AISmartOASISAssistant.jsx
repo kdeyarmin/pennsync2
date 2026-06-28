@@ -455,6 +455,7 @@ Patient Data: ${JSON.stringify(contextData)}`,
       console.error('Error analyzing patient data:', error);
       toast.error('Failed to generate OASIS suggestions. Please try again.');
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- AI hook object is intentionally omitted; its run() is stable, and including it would re-fire the call every render
   }, [patientData, referralData, visitData]);
 
   React.useEffect(() => {

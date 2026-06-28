@@ -152,6 +152,7 @@ Return structured JSON with prioritized gaps.`,
     } catch (error) {
       console.error('Error analyzing care gaps:', error);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- AI hook object is intentionally omitted; its run() is stable, and including it would re-fire the call every render
   }, [patients, visits, carePlans, alerts, maxGaps]);
 
   useEffect(() => {

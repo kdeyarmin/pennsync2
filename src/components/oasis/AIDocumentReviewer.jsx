@@ -142,6 +142,7 @@ Provide actionable, specific feedback for each issue found.`;
       setError(err.message);
       console.error("AI review error:", err);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- AI hook object is intentionally omitted; its run() is stable, and including it would re-fire the call every render
   }, [oasisData]);
 
   useEffect(() => {

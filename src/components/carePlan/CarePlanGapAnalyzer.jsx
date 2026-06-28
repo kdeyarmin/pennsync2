@@ -144,6 +144,7 @@ Return comprehensive analysis including:
       console.error('Care plan analysis error:', error);
       setAnalysis({ error: error.message });
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- AI hook object is intentionally omitted; its run() is stable, and including it would re-fire the call every render
   }, [carePlans, diagnosis, patientData, recentVisits]);
 
   useEffect(() => {

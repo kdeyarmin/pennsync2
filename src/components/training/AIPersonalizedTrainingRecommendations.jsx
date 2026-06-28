@@ -258,6 +258,7 @@ Be specific, actionable, and encouraging. Focus on growth and development, not c
     } catch (error) {
       console.error('Error generating recommendations:', error);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- AI hook object is intentionally omitted; its run() is stable, and including it would re-fire the call every render
   }, [existingRecommendations, nurseEmail, visits, completedTraining, allModules]);
 
   useEffect(() => {

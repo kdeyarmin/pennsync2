@@ -291,6 +291,7 @@ Use clinical judgment based on established risk prediction models (LACE, HOSPITA
       console.error('Error performing predictive analysis:', error);
       toast.error('Failed to perform predictive analysis. Please try again.');
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- AI hook object is intentionally omitted; its run() is stable, and including it would re-fire the call every render
   }, [patient, visits, incidents, carePlans]);
 
   React.useEffect(() => {

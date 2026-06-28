@@ -123,6 +123,7 @@ For each opportunity, calculate:
       console.error('Rescoring analysis error:', error);
       toast.error("The AI request didn't complete. Please try again.");
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- AI hook object is intentionally omitted; its run() is stable, and including it would re-fire the call every render
   }, [oasisData, patientData, clinicalContext, onOpportunitiesFound]);
 
   useEffect(() => {

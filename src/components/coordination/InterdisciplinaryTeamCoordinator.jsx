@@ -124,6 +124,7 @@ Return recommendation with:
       console.error('IDT analysis error:', error);
       setRecommendation({ error: error.message });
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- AI hook object is intentionally omitted; its run() is stable, and including it would re-fire the call every render
   }, [patientData, carePlans, incidents, alerts, recentVisits]);
 
   useEffect(() => {

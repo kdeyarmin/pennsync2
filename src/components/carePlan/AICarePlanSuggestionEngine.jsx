@@ -130,6 +130,7 @@ Return JSON with suggestions array.`,
         toast.error("Failed to generate care plan suggestions. Please try again.");
       }
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- AI hook object is intentionally omitted; its run() is stable, and including it would re-fire the call every render
   }, [diagnosis, existingCarePlans, patientData, medicareRules, educationMaterials]);
 
   useEffect(() => {

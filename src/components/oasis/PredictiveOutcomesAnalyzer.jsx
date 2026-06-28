@@ -372,6 +372,7 @@ Provide SPECIFIC, ACTIONABLE predictions with clinical reasoning.`,
       console.error("Predictive analysis error:", error);
       setPredictions({ error: "Failed to generate predictions. Please try again." });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- AI hook object is intentionally omitted; its run() is stable, and including it would re-fire the call every render
   }, [analysisResults, calculateHistoricalTrends, calculatePopulationBenchmarks, onPredictionsComplete, patient, patientHistory, pdgmData, populationData]);
 
   // Auto-predict when data is available

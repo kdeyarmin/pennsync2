@@ -196,6 +196,7 @@ Return JSON:
       console.error("Error generating patient history summary:", error);
       toast.error("The AI request didn't complete. Please try again.");
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- AI hook object is intentionally omitted; its run() is stable, and including it would re-fire the call every render
   }, [patient, visits, carePlans, incidents, calculateAge]);
 
   // Auto-generate on patient selection

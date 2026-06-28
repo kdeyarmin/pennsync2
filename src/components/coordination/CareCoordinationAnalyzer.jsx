@@ -190,6 +190,7 @@ Return comprehensive analysis with actionable coordination alerts.`,
       console.error('Error analyzing care coordination:', error);
       toast.error('Failed to analyze care coordination. Please try again.');
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- AI hook object is intentionally omitted; its run() is stable, and including it would re-fire the call every render
   }, [patient, incidents, visits, carePlans]);
 
   useEffect(() => {

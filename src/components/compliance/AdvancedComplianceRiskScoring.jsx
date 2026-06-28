@@ -232,6 +232,7 @@ Return detailed JSON analysis suitable for executive dashboard.`,
       console.error('Error analyzing risk:', error);
       toast.error('Failed to analyze compliance risk. Please try again.');
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- AI hook object is intentionally omitted; its run() is stable, and including it would re-fire the call every render
   }, [alerts, audits, medicareRules, timeRange, trainingRecommendations]);
 
   useEffect(() => {

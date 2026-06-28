@@ -163,6 +163,7 @@ Return JSON:
     } catch (error) {
       console.error("Error generating content:", error);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- AI hook object is intentionally omitted; its run() is stable, and including it would re-fire the call every render
   }, [nurseEmail, skillGap]);
 
   useEffect(() => {

@@ -190,6 +190,7 @@ Format as JSON with clear sections`;
       console.error("Smart documentation generation failed:", error);
       toast.error("The AI request didn't complete. Please try again.");
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- AI hook object is intentionally omitted; its run() is stable, and including it would re-fire the call every render
   }, [carePlans, clinicalEvents, documentType, identifiedProblems, onDataGenerated, patient, recentVisits, visitType]);
 
   const applySection = (sectionId) => {

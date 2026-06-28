@@ -252,6 +252,7 @@ Generate a complete, detailed admission note that a skilled nurse would write af
     } finally {
       if (myReqId === generateReqIdRef.current) setGenerationStage(0);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- AI hook object is intentionally omitted; its run() is stable, and including it would re-fire the call every render
   }, [generationStages, onNoteGenerated, referralData]);
 
   useEffect(() => {

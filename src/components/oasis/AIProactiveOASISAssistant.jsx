@@ -248,6 +248,7 @@ Provide detailed, actionable recommendations that a home health nurse can immedi
       console.error('Error performing OASIS analysis:', error);
       toast.error('Failed to perform OASIS analysis. Please try again.');
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- AI hook object is intentionally omitted; its run() is stable, and including it would re-fire the call every render
   }, [patient, visits, incidents, carePlans, existingOASIS, patientId, queryClient, calculateAge]);
 
   React.useEffect(() => {
