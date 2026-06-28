@@ -9,11 +9,22 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }
 
-    // Sort ASCENDING by expiration so the soonest-expiring credentials (the ones
-    // this reminder job exists to catch) stay within the row cap. A descending
-    // sort put furthest-future first and dropped imminent ones off the tail.
-    const credentials = await base44.asServiceRole.entities.PersonnelCredential.list('expiration_date', 5000);
     const today = new Date();
+    // Constrain to the relevant expiration window BEFORE the row cap, then sort
+    // ascending. A plain ascending list would let a historical backlog of
+    // already-expired credentials (which accumulates without bound over time)
+    // fill the 5000-row cap and starve the upcoming renewals this job exists to
+    // notify about. The window spans recently-expired (for the digest) through
+    // the furthest reminder horizon (90 days out).
+    const windowStart = new Date(today); windowStart.setDate(today.getDate() - 90);
+    const windowEnd = new Date(today); windowEnd.setDate(today.getDate() + 90);
+    const startStr = windowStart.toISOString().split('T')[0];
+    const endStr = windowEnd.toISOString().split('T')[0];
+    const credentials = await base44.asServiceRole.entities.PersonnelCredential.filter(
+      { expiration_date: { $gte: startStr, $lte: endStr } },
+      'expiration_date',
+      5000
+    );
 
     const notificationsSent = [];
 

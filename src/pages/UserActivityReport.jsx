@@ -96,7 +96,9 @@ export default function UserActivityReport() {
     const stats = {};
     
     filteredActivities.forEach(activity => {
-      const email = activity.user_email;
+      // Coerce to a safe string key: imported/legacy rows may lack user_email,
+      // and an undefined email later crashes the search filter (stat.email.toLowerCase()).
+      const email = activity.user_email || '';
       if (!stats[email]) {
         stats[email] = {
           email,

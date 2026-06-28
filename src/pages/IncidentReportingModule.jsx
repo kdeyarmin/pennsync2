@@ -606,7 +606,7 @@ Please review this incident in the Incident Reporting Dashboard.`
                         <div className="flex items-center gap-2 mb-1 flex-wrap">
                           <h4 className="font-semibold text-slate-900">{incident.patient_name}</h4>
                           <Badge className={getSeverityColor(incident.severity)}>{incident.severity}</Badge>
-                          <Badge className={getStatusColor(incident.status)}>{(incident.status || 'reported').replace(/_/g, ' ')}</Badge>
+                          <Badge className={getStatusColor(incident.status || 'reported')}>{(incident.status || 'reported').replace(/_/g, ' ')}</Badge>
                         </div>
                         <p className="text-sm text-slate-700">
                           {incident.details?.event_type || incident.incident_name}
@@ -673,7 +673,7 @@ Please review this incident in the Incident Reporting Dashboard.`
                       <Badge className={getSeverityColor(incident.severity)}>
                         {incident.severity}
                       </Badge>
-                      <Badge className={getStatusColor(incident.status)}>
+                      <Badge className={getStatusColor(incident.status || 'reported')}>
                         {(incident.status || 'reported').replace(/_/g, ' ')}
                       </Badge>
                     </div>

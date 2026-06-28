@@ -22,10 +22,21 @@ Deno.serve(async (req) => {
     }
 
     const today = new Date();
-    // Sort ASCENDING by expiration so the soonest-expiring credentials (the ones
-    // this notification job exists to catch) stay within the row cap. A
-    // descending sort dropped the imminent ones off the tail.
-    const items = await base44.asServiceRole.entities.PersonnelCredential.list('expiration_date', 1000);
+    // Constrain to the relevant expiration window BEFORE the row cap, then sort
+    // ascending. A plain ascending list would let a historical backlog of
+    // already-expired credentials (which accumulates without bound over time)
+    // fill the 1000-row cap and starve the upcoming expirations this job exists
+    // to notify about. The window spans recently-expired (so the status->expired
+    // flip below still fires) through the furthest reminder horizon (90 days).
+    const windowStart = new Date(today); windowStart.setDate(today.getDate() - 90);
+    const windowEnd = new Date(today); windowEnd.setDate(today.getDate() + 90);
+    const startStr = windowStart.toISOString().split('T')[0];
+    const endStr = windowEnd.toISOString().split('T')[0];
+    const items = await base44.asServiceRole.entities.PersonnelCredential.filter(
+      { expiration_date: { $gte: startStr, $lte: endStr } },
+      'expiration_date',
+      1000
+    );
     const users = await base44.asServiceRole.entities.User.list('-created_date', 400);
     let notificationsSent = 0;
     const notificationsToCreate = [];
