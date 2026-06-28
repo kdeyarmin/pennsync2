@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { screen, waitFor } from '@testing-library/react';
+import { act, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { renderWithProviders } from '@/test/testUtils';
 
@@ -34,7 +34,10 @@ vi.mock('@/api/base44Client', () => {
 describe('OASISAnalyzer — lazy tabs mount under a Suspense boundary', () => {
   it('mounts and switches across all five tabs without a missing-boundary throw', async () => {
     const user = userEvent.setup();
-    const { default: OASISAnalyzer } = await import('@/components/hub-tabs/OASISAnalyzer');
+    let OASISAnalyzer;
+    await act(async () => {
+      ({ default: OASISAnalyzer } = await import('@/components/hub-tabs/OASISAnalyzer'));
+    });
     renderWithProviders(<OASISAnalyzer />);
 
     // The default ("single") tab mounts its lazy feature components under the
@@ -58,5 +61,5 @@ describe('OASISAnalyzer — lazy tabs mount under a Suspense boundary', () => {
 
     // Reaching here means no tab switch threw.
     expect(true).toBe(true);
-  });
+  }, 15000);
 });

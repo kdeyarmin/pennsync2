@@ -1,26 +1,25 @@
 /**
- * Navigation-bar render smoke test.
+ * Routed-page render smoke test.
  *
- * Mounts every page reachable from the navigation bar (the sidebar/mobile-drawer
- * sections plus the mobile bottom bar) with the base44 backend, auth context and
+ * Mounts every authenticated route page plus the public capability-token pages
+ * with the base44 backend, auth context and
  * the browser APIs jsdom lacks all mocked, and asserts each renders real DOM
  * without throwing. This catches runtime render crashes (null derefs, bad
  * imports, bad initial-state assumptions) that a successful build cannot — the
  * build proves a module *compiles*, this proves the component *mounts*.
  *
  * It deliberately asserts nothing about behavior; the page list is derived from
- * the live manifest so new sidebar entries are covered automatically.
+ * ROUTES so every reachable app page is covered automatically. Redirect targets
+ * are also checked so retired links cannot point at PageNotFound.
  */
 import { describe, it, expect, vi, beforeAll } from "vitest";
-import { render } from "@testing-library/react";
+import { act, render } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ConfirmDialogProvider } from "@/components/ui/confirm-dialog";
-// nav.manifest.js and routes.jsx import each other; in the app, routes.jsx is
-// the cycle's entry point. Evaluate it first here so NAV_MANIFEST is fully
-// defined before routes.jsx reads it (otherwise we hit a TDZ-style undefined).
-import "@/routes";
-import { NAV_MANIFEST } from "@/lib/nav.manifest";
+// routes.jsx derives ROUTES from nav.manifest.js; import it as the app does so
+// this smoke coverage follows the production route table exactly.
+import { REDIRECTS, ROUTES } from "@/routes";
 
 // ── Browser APIs jsdom doesn't implement but charts / Radix / mobile helpers use ──
 beforeAll(() => {
@@ -89,10 +88,11 @@ vi.mock("@/lib/AuthContext", () => ({
 const pageModules = import.meta.glob("../pages/*.jsx");
 const importerFor = (name) => pageModules[`../pages/${name}.jsx`];
 
-// Nav-bar pages = sidebar/drawer sections (category != null) + mobile bottom bar.
-const sidebarPages = NAV_MANIFEST.filter((e) => e.category).map((e) => e.page);
-const bottomNavPages = ["Dashboard", "Patients", "SmartNoteAssistant", "SendFax", "Messages"];
-const navPages = [...new Set([...sidebarPages, ...bottomNavPages])];
+const publicPages = ["JoinTelehealth", "SignerPortal"];
+const routePages = [...new Set([...ROUTES.map((route) => route.name), ...publicPages])];
+const routePathNames = new Set(ROUTES.map((route) => `/${route.name}`.toLowerCase()));
+const publicPathNames = new Set(["/join", "/signer"]);
+const redirectTargetPath = (to) => `/${to.replace(/^\//, "").split("?")[0]}`.toLowerCase();
 
 function Providers({ children }) {
   const queryClient = new QueryClient({
@@ -107,11 +107,14 @@ function Providers({ children }) {
   );
 }
 
-describe("navigation-bar pages mount without crashing", () => {
-  it.each(navPages)("%s", async (page) => {
+describe("routed pages mount without crashing", () => {
+  it.each(routePages)("%s", async (page) => {
     const importer = importerFor(page);
     expect(importer, `no module ../pages/${page}.jsx — nav links to an unrouted page`).toBeTruthy();
-    const mod = await importer();
+    let mod;
+    await act(async () => {
+      mod = await importer();
+    });
     const Page = mod.default;
     expect(Page, `${page}.jsx has no default export`).toBeTruthy();
 
@@ -127,5 +130,15 @@ describe("navigation-bar pages mount without crashing", () => {
       </Providers>,
     );
     unmount();
+  });
+
+  it("keeps every redirect target routed or public", () => {
+    for (const { from, to } of REDIRECTS) {
+      const targetPath = redirectTargetPath(to);
+      expect(
+        routePathNames.has(targetPath) || publicPathNames.has(targetPath),
+        `${from} redirects to unrouted target ${to}`,
+      ).toBe(true);
+    }
   });
 });
