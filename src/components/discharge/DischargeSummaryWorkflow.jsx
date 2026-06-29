@@ -17,8 +17,11 @@ import {
 import DigitalSignaturePad from './DigitalSignaturePad';
 import { toast } from 'sonner';
 
-export default function DischargeSummaryWorkflow({ patientId, onClose, onComplete }) {
-  const [currentStep, setCurrentStep] = useState('generate'); // generate, review, sign, complete
+export default function DischargeSummaryWorkflow({ patientId, summaryId = null, initialStep = 'generate', onClose, onComplete }) {
+  // initialStep lets a caller (e.g. the Discharge Summaries list "Review & Sign"
+  // action) open an already-generated summary directly at the review/sign step
+  // instead of the generate screen, so it can't accidentally create a duplicate.
+  const [currentStep, setCurrentStep] = useState(initialStep); // generate, review, sign, complete
   const [dischargeDate, setDischargeDate] = useState(new Date().toISOString().split('T')[0]);
   const [reviewNotes, setReviewNotes] = useState('');
   const [editedSummary, setEditedSummary] = useState(null);
@@ -39,15 +42,22 @@ export default function DischargeSummaryWorkflow({ patientId, onClose, onComplet
   });
 
   const { data: existingSummary, refetch: refetchSummary } = useQuery({
-    queryKey: ['discharge-summary', patientId],
+    queryKey: ['discharge-summary', patientId, summaryId],
     queryFn: async () => {
+      // When a specific summary was selected (e.g. from the list), load exactly
+      // that record so review/sign acts on it; otherwise fall back to the
+      // patient's most recent summary (the generate-then-review flow).
+      if (summaryId) {
+        const [s] = await base44.entities.DischargeSummary.filter({ id: summaryId });
+        return s;
+      }
       const summaries = await base44.entities.DischargeSummary.filter(
         { patient_id: patientId },
         '-generated_date'
       );
       return summaries[0];
     },
-    enabled: !!patientId
+    enabled: !!(patientId || summaryId)
   });
 
   // Generate summary mutation
@@ -174,6 +184,13 @@ export default function DischargeSummaryWorkflow({ patientId, onClose, onComplet
             </div>
           ))}
         </div>
+
+        {/* When opened directly at review/sign for a selected summary, wait for it to load. */}
+        {(currentStep === 'review' || currentStep === 'sign') && !summary && (
+          <div className="flex items-center justify-center py-12 text-slate-500">
+            <Loader2 className="w-6 h-6 animate-spin mr-2" /> Loading summary…
+          </div>
+        )}
 
         {/* Step 1: Generate */}
         {currentStep === 'generate' && (

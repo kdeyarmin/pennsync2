@@ -55,6 +55,16 @@ export default function DischargeSummaries() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedSummaryId, setSelectedSummaryId] = useState(null);
   const [showWorkflow, setShowWorkflow] = useState(false);
+  const [workflowStep, setWorkflowStep] = useState('generate');
+
+  // Open the workflow for an existing summary. Already-generated summaries open
+  // at the review step (so signing acts on that record); a contentless draft
+  // falls back to the generate step.
+  const openSummary = (summary, step) => {
+    setSelectedSummaryId(summary.id);
+    setWorkflowStep(step || (summary.summary_of_care ? 'review' : 'generate'));
+    setShowWorkflow(true);
+  };
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -232,10 +242,7 @@ export default function DischargeSummaries() {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => {
-                          setSelectedSummaryId(summary.id);
-                          setShowWorkflow(true);
-                        }}
+                        onClick={() => openSummary(summary)}
                       >
                         <Eye className="w-3 h-3 mr-1" />
                         View
@@ -243,10 +250,7 @@ export default function DischargeSummaries() {
                       {summary.status === 'pending_review' && (
                         <Button
                           size="sm"
-                          onClick={() => {
-                            setSelectedSummaryId(summary.id);
-                            setShowWorkflow(true);
-                          }}
+                          onClick={() => openSummary(summary, 'review')}
                         >
                           <CheckCircle className="w-3 h-3 mr-1" />
                           Review & Sign
@@ -270,6 +274,8 @@ export default function DischargeSummaries() {
       {showWorkflow && selectedSummaryId && (
         <DischargeSummaryWorkflow
           patientId={summaries.find(s => s.id === selectedSummaryId)?.patient_id}
+          summaryId={selectedSummaryId}
+          initialStep={workflowStep}
           onClose={() => {
             setShowWorkflow(false);
             setSelectedSummaryId(null);
