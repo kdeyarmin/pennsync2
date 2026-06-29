@@ -49,7 +49,6 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import CareScopeSelector from "../components/profile/CareScopeSelector";
-import StaffRoleSelector from "../components/profile/StaffRoleSelector";
 import CareScopeBadge from "../components/profile/CareScopeBadge";
 import DutyStatusCard from "../components/voice/DutyStatusCard";
 import { getStaffRole, staffRoleLabel } from "@/lib/roles";
@@ -287,8 +286,9 @@ export default function UserSettings() {
         <TabsContent value="profile" className="space-y-6">
           <DutyStatusCard />
 
-          {/* Staff role / discipline — everyone can review and update it. Drives
-              which navigation and tools are available (see lib/roles.js). */}
+          {/* Staff role / discipline — read-only. It's assigned by an administrator
+              (at registration / in User Management) and drives which navigation and
+              tools are available (see lib/roles.js). */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -296,17 +296,17 @@ export default function UserSettings() {
                 Your Role
               </CardTitle>
               <CardDescription>
-                Your role tailors your navigation and dashboard. Current role: <strong>{staffRoleLabel(getStaffRole(currentUser))}</strong>.
+                Your role tailors your navigation and dashboard.
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <StaffRoleSelector
-                currentUser={currentUser}
-                onSaved={() => {
-                  queryClient.invalidateQueries({ queryKey: ['currentUser'] });
-                  toast.success('Role updated successfully');
-                }}
-              />
+              <div className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
+                <div>
+                  <p className="text-sm font-semibold text-slate-900">{staffRoleLabel(getStaffRole(currentUser))}</p>
+                  <p className="text-xs text-slate-500">Assigned by your administrator</p>
+                </div>
+                <Badge variant="outline" className="flex-shrink-0">Contact your administrator to change</Badge>
+              </div>
             </CardContent>
           </Card>
 

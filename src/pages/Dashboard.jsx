@@ -9,7 +9,6 @@ import StatCard from "@/components/ui/stat-card";
 import { toast } from "sonner";
 import { formatEastern } from "@/components/utils/timezone";
 import CareScopeSelector from "@/components/profile/CareScopeSelector";
-import StaffRoleSelector from "@/components/profile/StaffRoleSelector";
 import { isClinicalUser, canViewPatients, getStaffRole, staffRoleLabel } from "@/lib/roles";
 import PullToRefresh from "@/components/mobile/PullToRefresh";
 import { GraduationCap, CalendarDays, Mail, BookOpen, Users as UsersIcon } from "lucide-react";
@@ -162,39 +161,10 @@ export default function Dashboard() {
     return <DashboardSkeleton />;
   }
 
-  // Onboarding step 1 — pick your role (discipline). Shown to brand-new users
-  // (no role and no care scope yet); it decides whether the clinical care-scope
-  // question below even applies. Existing users (who already have a care scope)
-  // keep their default nurse view and can change role in Settings, so they're not
-  // re-onboarded. Admin-invited users already arrive with a staff_role set.
-  if (currentUser && !currentUser.staff_role && !careScope) {
-    return (
-      <div className="max-w-lg mx-auto pt-8 px-4">
-        <div className="text-center mb-6">
-          <div className="mb-4 inline-flex items-center gap-2">
-            <img
-              src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ee80d98929370f9e8f2932/02eed9872_pennsynclogoupdated.png"
-              alt="PennSync"
-              className="h-10 w-10 rounded-lg"
-            />
-            <span className="text-2xl font-bold tracking-tight text-navy-900">
-              Penn<span className="text-gold-600">Sync</span>
-            </span>
-          </div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gold-600">Welcome aboard</p>
-          <h1 className="mt-1 text-2xl font-bold text-slate-900">Let’s set up your profile</h1>
-          <p className="text-slate-500 mt-1">Tell us your role and we’ll tailor your experience.</p>
-        </div>
-        <StaffRoleSelector currentUser={currentUser} requireExplicitChoice onSaved={() => {
-          queryClient.invalidateQueries({ queryKey: ['currentUser'] });
-          toast.success('Role saved! Setting up your dashboard...');
-        }} />
-      </div>
-    );
-  }
-
-  // Onboarding step 2 — care scope ("what type of nurse"). Only nurses/admins
-  // have a care scope; non-nurse staff skip straight to their dashboard.
+  // Onboarding — care scope ("what type of nurse"). Only nurses/admins have a
+  // care scope; non-nurse staff skip straight to their dashboard. The staff
+  // discipline itself is admin-assigned (set at registration / in User
+  // Management), not self-selected here.
   if (currentUser && clinical && !careScope) {
     return (
       <div className="max-w-lg mx-auto pt-8 px-4">
