@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useAICall } from "@/hooks/useAICall";
+import { useMyTrainingCompletions } from "@/hooks/useMyTrainingCompletions";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -28,11 +29,7 @@ export default function TrainingRecommendations({ nurseEmail, onEnroll }) {
     enabled: !!nurseEmail
   });
 
-  const { data: completions = [] } = useQuery({
-    queryKey: ['trainingCompletions', nurseEmail],
-    queryFn: () => base44.entities.TrainingCompletion.filter({ nurse_email: nurseEmail }).catch(() => []),
-    enabled: !!nurseEmail
-  });
+  const { completedCourseIds } = useMyTrainingCompletions(nurseEmail);
 
   const { data: modules = [] } = useQuery({
     queryKey: ['trainingModules'],
@@ -52,8 +49,7 @@ export default function TrainingRecommendations({ nurseEmail, onEnroll }) {
   const analyzeAndRecommend = async () => {
     try {
       const skillsList = skills.map(s => `${s.skill_name} (${s.proficiency_level})`).join(', ');
-      const completedModules = completions.filter(c => c.status === 'completed').map(c => c.training_module_id);
-      const availableModules = modules.filter(m => !completedModules.includes(m.id));
+      const availableModules = modules.filter(m => !(m.course_id && completedCourseIds.has(m.course_id)));
       
       const diagnoses = [...new Set(patients.map(p => p.primary_diagnosis).filter(Boolean))];
       const taskTypes = tasks.slice(0, 20).map(t => `${t.type}: ${t.title}`).join('\n');

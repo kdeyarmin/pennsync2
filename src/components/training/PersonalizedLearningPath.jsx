@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
+import { useMyTrainingCompletions } from "@/hooks/useMyTrainingCompletions";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -33,11 +34,7 @@ export default function PersonalizedLearningPath({ nurseEmail, onStartModule }) 
     staleTime: 1000 * 60 * 30 // 30 minutes
   });
 
-  const { data: completions = [] } = useQuery({
-    queryKey: ['trainingCompletions', nurseEmail],
-    queryFn: () => base44.entities.TrainingCompletion.filter({ nurse_email: nurseEmail }),
-    enabled: !!nurseEmail
-  });
+  const { completedCourseIds } = useMyTrainingCompletions(nurseEmail);
 
   const handleRegeneratePath = async () => {
     setIsGenerating(true);
@@ -45,9 +42,9 @@ export default function PersonalizedLearningPath({ nurseEmail, onStartModule }) 
     setIsGenerating(false);
   };
 
-  const isModuleCompleted = (moduleId) => {
-    return completions.some(c => c.training_module_id === moduleId && c.status === 'completed');
-  };
+  // A path step's module is complete when its course has a passing
+  // assignment/certificate for this nurse.
+  const isModuleCompleted = (module) => !!module?.course_id && completedCourseIds.has(module.course_id);
 
   const getPriorityColor = (priority) => {
     switch (priority?.toLowerCase()) {
@@ -81,8 +78,8 @@ export default function PersonalizedLearningPath({ nurseEmail, onStartModule }) 
     );
   }
 
-  const completedCount = learningPath.learning_path?.filter(item => 
-    item.module && isModuleCompleted(item.module.id)
+  const completedCount = learningPath.learning_path?.filter(item =>
+    item.module && isModuleCompleted(item.module)
   ).length || 0;
   const totalCount = learningPath.learning_path?.length || 0;
   const progressPercent = totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
@@ -148,9 +145,9 @@ export default function PersonalizedLearningPath({ nurseEmail, onStartModule }) 
         {learningPath.learning_path?.length > 0 ? learningPath.learning_path.map((item, idx) => {
           if (!item?.module) return null;
           
-          const completed = isModuleCompleted(item.module.id);
-          const isNext = !completed && idx > 0 && learningPath.learning_path.slice(0, idx).every(prev => 
-            prev.module && isModuleCompleted(prev.module.id)
+          const completed = isModuleCompleted(item.module);
+          const isNext = !completed && idx > 0 && learningPath.learning_path.slice(0, idx).every(prev =>
+            prev.module && isModuleCompleted(prev.module)
           );
 
           return (

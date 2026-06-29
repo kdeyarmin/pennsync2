@@ -1,5 +1,6 @@
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
+import { useMyTrainingCompletions } from "@/hooks/useMyTrainingCompletions";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -21,31 +22,20 @@ export default function OnboardingTracker({ nurseEmail, onStartModule }) {
     initialData: [],
   });
 
-  const { data: completions = [] } = useQuery({
-    queryKey: ['onboardingCompletions', nurseEmail],
-    queryFn: () => base44.entities.TrainingCompletion.filter({ 
-      nurse_email: nurseEmail 
-    }),
-    enabled: !!nurseEmail,
-    initialData: [],
-  });
+  // Completion/score come from the live course-assignment system; a module is
+  // complete when its course has a passing assignment/certificate.
+  const { completedCourseIds, scoreByCourse } = useMyTrainingCompletions(nurseEmail);
 
   // Sort modules by order (TrainingModule schema field is order_index)
   const sortedModules = [...modules].sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
+  const courseIdByModuleId = Object.fromEntries(modules.map(m => [m.id, m.course_id]));
+  const isCourseDone = (courseId) => !!courseId && completedCourseIds.has(courseId);
 
-  const getModuleStatus = (module) => {
-    const completion = completions.find(c => c.training_module_id === module.id);
-    if (!completion) return 'not_started';
-    return completion.status;
-  };
+  const getModuleStatus = (module) => (isCourseDone(module.course_id) ? 'completed' : 'not_started');
 
   const isModuleLocked = (module) => {
     if (!module.prerequisites || module.prerequisites.length === 0) return false;
-    
-    return module.prerequisites.some(prereqId => {
-      const prereqCompletion = completions.find(c => c.training_module_id === prereqId);
-      return !prereqCompletion || prereqCompletion.status !== 'completed';
-    });
+    return module.prerequisites.some(prereqId => !isCourseDone(courseIdByModuleId[prereqId]));
   };
 
   const completedCount = sortedModules.filter(m => getModuleStatus(m) === 'completed').length;
@@ -114,7 +104,7 @@ export default function OnboardingTracker({ nurseEmail, onStartModule }) {
         {sortedModules.map((module, index) => {
           const status = getModuleStatus(module);
           const locked = isModuleLocked(module);
-          const completion = completions.find(c => c.training_module_id === module.id);
+          const moduleScore = module.course_id ? scoreByCourse[module.course_id] : undefined;
 
           return (
             <Card 
@@ -160,19 +150,19 @@ export default function OnboardingTracker({ nurseEmail, onStartModule }) {
                       )}
                     </div>
 
-                    {completion?.score !== undefined && (
+                    {moduleScore !== undefined && (
                       <div className="mb-3">
                         <div className="flex items-center justify-between text-sm mb-1">
                           <span className="text-slate-600">Score:</span>
                           <span className={`font-semibold ${
-                            completion.score >= (module.passing_score || 80) 
-                              ? 'text-green-600' 
+                            moduleScore >= (module.passing_score || 80)
+                              ? 'text-green-600'
                               : 'text-red-600'
                           }`}>
-                            {completion.score}%
+                            {moduleScore}%
                           </span>
                         </div>
-                        <Progress value={completion.score} className="h-2" />
+                        <Progress value={moduleScore} className="h-2" />
                       </div>
                     )}
 

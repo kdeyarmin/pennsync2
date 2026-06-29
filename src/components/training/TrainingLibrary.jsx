@@ -6,10 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { 
-  Search, 
-  Clock, 
-  PlayCircle, 
+import { useMyTrainingCompletions } from "@/hooks/useMyTrainingCompletions";
+import {
+  Search,
+  Clock,
+  PlayCircle,
   CheckCircle2,
   Video,
   FileText,
@@ -27,14 +28,9 @@ export default function TrainingLibrary({ nurseEmail, moduleType, onStartModule 
     initialData: [],
   });
 
-  const { data: completions = [] } = useQuery({
-    queryKey: ['trainingCompletions', nurseEmail],
-    queryFn: () => base44.entities.TrainingCompletion.filter({ 
-      nurse_email: nurseEmail 
-    }),
-    enabled: !!nurseEmail,
-    initialData: [],
-  });
+  // Completion is course-based in the live system: a module is "completed" when
+  // its course has a passing assignment/certificate for this nurse.
+  const { completedCourseIds, scoreByCourse } = useMyTrainingCompletions(nurseEmail);
 
   const filteredModules = modules.filter(module => {
     const search = searchTerm.toLowerCase();
@@ -56,10 +52,9 @@ export default function TrainingLibrary({ nurseEmail, moduleType, onStartModule 
 
   const categories = [...new Set(modules.map(m => m.category))];
 
-  const getModuleStatus = (moduleId) => {
-    const completion = completions.find(c => c.training_module_id === moduleId);
-    return completion?.status || 'not_started';
-  };
+  const getModuleStatus = (module) => (
+    module?.course_id && completedCourseIds.has(module.course_id) ? 'completed' : 'not_started'
+  );
 
   const getContentTypeIcon = (contentType) => {
     switch (contentType) {
@@ -115,8 +110,8 @@ export default function TrainingLibrary({ nurseEmail, moduleType, onStartModule 
       {/* Module Grid */}
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredModules.map(module => {
-          const status = getModuleStatus(module.id);
-          const completion = completions.find(c => c.training_module_id === module.id);
+          const status = getModuleStatus(module);
+          const moduleScore = module.course_id ? scoreByCourse[module.course_id] : undefined;
 
           return (
             <Card key={module.id} className="hover:shadow-lg transition-shadow">
@@ -151,16 +146,16 @@ export default function TrainingLibrary({ nurseEmail, moduleType, onStartModule 
                   )}
                 </div>
 
-                {completion?.score !== undefined && (
+                {moduleScore !== undefined && (
                   <div className="mb-4">
                     <div className="flex items-center justify-between text-xs mb-1">
                       <span className="text-slate-600">Your Score:</span>
                       <span className={`font-semibold ${
-                        completion.score >= (module.passing_score || 80) 
-                          ? 'text-green-600' 
+                        moduleScore >= (module.passing_score || 80)
+                          ? 'text-green-600'
                           : 'text-orange-600'
                       }`}>
-                        {completion.score}%
+                        {moduleScore}%
                       </span>
                     </div>
                   </div>

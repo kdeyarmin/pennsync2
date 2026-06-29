@@ -15,18 +15,12 @@ import {
   AlertCircle
 } from "lucide-react";
 import { formatEastern } from "../utils/timezone";
+import { useMyTrainingCompletions } from "@/hooks/useMyTrainingCompletions";
 
 export default function TrainingProgressDashboard({ nurseEmail }) {
-  const { data: completions = [] } = useQuery({
-    queryKey: ['nurseCompletions', nurseEmail],
-    queryFn: () => base44.entities.TrainingCompletion.filter({ nurse_email: nurseEmail }, '-created_date', 100),
-    enabled: !!nurseEmail
-  });
-
-  const { data: modules = [] } = useQuery({
-    queryKey: ['trainingModules'],
-    queryFn: () => base44.entities.TrainingModule.filter({}),
-  });
+  // Progress is derived from the live course-assignment system rather than the
+  // retired per-module TrainingCompletion entity.
+  const { assignments, certificates, isCompleted } = useMyTrainingCompletions(nurseEmail);
 
   const { data: recommendations = [] } = useQuery({
     queryKey: ['activeRecommendations', nurseEmail],
@@ -34,46 +28,51 @@ export default function TrainingProgressDashboard({ nurseEmail }) {
     enabled: !!nurseEmail
   });
 
+  const certCourseIds = React.useMemo(
+    () => new Set(certificates.filter(c => !c.revoked && c.course_id).map(c => c.course_id)),
+    [certificates]
+  );
+
   const stats = React.useMemo(() => {
-    const completed = completions.filter(c => c.status === 'completed').length;
-    const inProgress = completions.filter(c => c.status === 'in_progress').length;
-    const assigned = completions.filter(c => c.status === 'assigned').length;
-    const avgScore = completions.filter(c => c.score != null).reduce((sum, c) => sum + c.score, 0) / (completions.filter(c => c.score != null).length || 1);
-    const totalTime = completions.reduce((sum, c) => {
-      const module = modules.find(m => m.id === c.training_module_id);
-      return sum + (module?.duration_minutes || 0);
-    }, 0);
+    const completed = assignments.filter(isCompleted).length;
+    const inProgress = assignments.filter(a => a.status === 'in_progress').length;
+    const assigned = assignments.filter(a => a.status === 'assigned').length;
+    const scored = assignments.filter(a => typeof a.score_percentage === 'number');
+    const avgScore = scored.reduce((sum, a) => sum + a.score_percentage, 0) / (scored.length || 1);
+    // CEU hours earned (from issued certificates) as the "total hours" proxy.
+    const totalHours = certificates.reduce((sum, c) => sum + (Number(c.hours) || 0), 0);
 
     return {
       completed,
       inProgress,
       assigned,
       avgScore: Math.round(avgScore),
-      totalTime,
+      totalHours: Math.round(totalHours),
       completionRate: ((completed / (completed + inProgress + assigned || 1)) * 100).toFixed(0)
     };
-  }, [completions, modules]);
+  }, [assignments, certificates, isCompleted]);
 
   const recentCompletions = React.useMemo(() => {
-    return completions
-      .filter(c => c.status === 'completed')
+    return assignments
+      .filter(isCompleted)
+      .sort((a, b) => new Date(b.completion_date || 0) - new Date(a.completion_date || 0))
       .slice(0, 5)
-      .map(c => ({
-        ...c,
-        module: modules.find(m => m.id === c.training_module_id)
+      .map(a => ({
+        id: a.id,
+        title: a.course_title,
+        score: a.score_percentage,
+        completion_date: a.completion_date,
+        hasCert: a.course_id ? certCourseIds.has(a.course_id) : false,
       }));
-  }, [completions, modules]);
+  }, [assignments, certCourseIds, isCompleted]);
 
   const upcomingDeadlines = React.useMemo(() => {
-    return completions
-      .filter(c => c.status !== 'completed' && c.due_date)
+    return assignments
+      .filter(a => !isCompleted(a) && a.due_date)
       .sort((a, b) => new Date(a.due_date) - new Date(b.due_date))
       .slice(0, 5)
-      .map(c => ({
-        ...c,
-        module: modules.find(m => m.id === c.training_module_id)
-      }));
-  }, [completions, modules]);
+      .map(a => ({ id: a.id, title: a.course_title, due_date: a.due_date, status: a.status }));
+  }, [assignments, isCompleted]);
 
   return (
     <div className="space-y-6">
@@ -120,7 +119,7 @@ export default function TrainingProgressDashboard({ nurseEmail }) {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-600">Total Hours</p>
-                <p className="text-3xl font-bold text-navy-600">{Math.round(stats.totalTime / 60)}</p>
+                <p className="text-3xl font-bold text-navy-600">{stats.totalHours}</p>
               </div>
               <Clock className="w-10 h-10 text-navy-600" />
             </div>
@@ -176,17 +175,17 @@ export default function TrainingProgressDashboard({ nurseEmail }) {
                   recentCompletions.map((completion) => (
                     <div key={completion.id} className="border rounded-lg p-3 bg-green-50">
                       <div className="flex items-start justify-between mb-2">
-                        <h4 className="font-semibold text-sm">{completion.module?.title || 'Unknown Module'}</h4>
-                        {completion.score && (
+                        <h4 className="font-semibold text-sm">{completion.title || 'Untitled Course'}</h4>
+                        {completion.score != null && (
                           <Badge className={completion.score >= 80 ? 'bg-green-600' : 'bg-yellow-600'}>
                             {completion.score}%
                           </Badge>
                         )}
                       </div>
                       <p className="text-xs text-slate-600">
-                        Completed {formatEastern(completion.completion_date, 'MMM d, yyyy')}
+                        Completed {completion.completion_date ? formatEastern(completion.completion_date, 'MMM d, yyyy') : '—'}
                       </p>
-                      {completion.certificate_url && (
+                      {completion.hasCert && (
                         <Badge variant="outline" className="mt-2">
                           <Award className="w-3 h-3 mr-1" />
                           Certificate
@@ -222,7 +221,7 @@ export default function TrainingProgressDashboard({ nurseEmail }) {
                     return (
                       <div key={completion.id} className={`border rounded-lg p-3 ${isOverdue ? 'bg-red-50 border-red-200' : isUrgent ? 'bg-orange-50 border-orange-200' : 'bg-blue-50'}`}>
                         <div className="flex items-start justify-between mb-2">
-                          <h4 className="font-semibold text-sm">{completion.module?.title || 'Unknown Module'}</h4>
+                          <h4 className="font-semibold text-sm">{completion.title || 'Untitled Course'}</h4>
                           <Badge className={isOverdue ? 'bg-red-600' : isUrgent ? 'bg-orange-600' : 'bg-blue-600'}>
                             {isOverdue ? 'Overdue' : isUrgent ? 'Urgent' : `${daysUntilDue}d`}
                           </Badge>

@@ -17,8 +17,8 @@ Deno.serve(async (req) => {
     const targetEmail = nurse_email || user.email;
 
     // Fetch nurse performance data
-    const [completions, recommendations, audits, visits, skills] = await Promise.all([
-      base44.asServiceRole.entities.TrainingCompletion.filter({ nurse_email: targetEmail }),
+    const [assignments, recommendations, audits, visits, skills] = await Promise.all([
+      base44.asServiceRole.entities.TrainingAssignment.filter({ assigned_to_user_id: targetEmail }),
       base44.asServiceRole.entities.TrainingRecommendation.filter({ nurse_email: targetEmail }),
       base44.asServiceRole.entities.ComplianceAudit.filter({ nurse_email: targetEmail }),
       base44.asServiceRole.entities.Visit.filter({ created_by: targetEmail }),
@@ -31,6 +31,7 @@ Deno.serve(async (req) => {
       ? recentAudits.reduce((sum, a) => sum + (a.compliance_score || 0), 0) / recentAudits.length
       : 0;
 
+    const completedTrainingCount = assignments.filter(a => a.status === 'completed' || a.pass_fail_result === 'passed').length;
     const unaddressedRecs = recommendations.filter(r => !r.addressed);
     const weakAreas = {};
     
@@ -53,7 +54,7 @@ You are an expert nursing education specialist. Analyze this nurse's performance
 
 Performance Data:
 - Compliance Score: ${avgComplianceScore.toFixed(1)}%
-- Completed Training: ${completions.length}
+- Completed Training: ${completedTrainingCount}
 - Unaddressed Recommendations: ${unaddressedRecs.length}
 - Weak Areas: ${Object.entries(weakAreas).map(([area, count]) => `${area} (${count} issues)`).join(', ')}
 - Documented Skills: ${skills.length}
@@ -114,7 +115,7 @@ Return JSON format.
       estimated_completion_weeks: aiResponse.estimated_completion_weeks,
       performance_summary: {
         compliance_score: avgComplianceScore,
-        completed_training: completions.length,
+        completed_training: completedTrainingCount,
         identified_gaps: Object.keys(weakAreas).length
       }
     });

@@ -67,9 +67,10 @@ export default function AgencyAnalytics() {
     initialData: [],
   });
 
-  const { data: trainingCompletions = [] } = useQuery({
-    queryKey: ['training-completions'],
-    queryFn: () => base44.entities.TrainingCompletion.list('-created_date', 1000),
+  // Training activity from the live assignment system (TrainingCompletion retired).
+  const { data: trainingAssignments = [] } = useQuery({
+    queryKey: ['training-assignments-agency'],
+    queryFn: () => base44.entities.TrainingAssignment.list('-created_date', 5000),
     initialData: [],
   });
 
@@ -104,14 +105,14 @@ export default function AgencyAnalytics() {
 
   // Training completion stats
   const trainingStats = useMemo(() => {
-    const completed = trainingCompletions.filter(t => t.status === 'completed').length;
-    const total = trainingCompletions.length;
+    const completed = trainingAssignments.filter(t => t.status === 'completed' || t.pass_fail_result === 'passed').length;
+    const total = trainingAssignments.length;
     return {
       completed,
       total,
       rate: total > 0 ? ((completed / total) * 100).toFixed(1) : 0
     };
-  }, [trainingCompletions]);
+  }, [trainingAssignments]);
 
   const handleExport = () => {
     try {
