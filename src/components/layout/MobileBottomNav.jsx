@@ -1,20 +1,38 @@
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Home, Users, Brain, Send, Mail } from "lucide-react";
+import { Home, Users, Brain, Send, Mail, GraduationCap, CalendarDays } from "lucide-react";
+import { isClinicalUser, canViewPatients } from "@/lib/roles";
 
-const BOTTOM_NAV_ITEMS = [
-  { page: "Dashboard",          Icon: Home,     label: "Home" },
-  { page: "Patients",           Icon: Users,    label: "Patients" },
-  { page: "SmartNoteAssistant", Icon: Brain,    label: "Notes" },
-  { page: "SendFax",            Icon: Send,     label: "Fax" },
-  { page: "Messages",           Icon: Mail,     label: "Messages", hasBadge: true },
-];
+// The bottom nav is the ONE nav surface not driven by nav.manifest, so it must
+// honor the staff-discipline gate itself. Build exactly five tabs for the user's
+// role so a non-nurse never gets a Patients (patient-access) or Smart Notes
+// (nursing-only) tab they can't open. Always keep Home / Fax / Messages; fill the
+// middle two with the most relevant destinations the discipline can reach.
+function bottomNavItems(currentUser) {
+  const clinical = isClinicalUser(currentUser); // nurse or admin → nursing tools
+  const patient = canViewPatients(currentUser); // everyone except office staff
 
-export default function MobileBottomNav({ isActive, unreadMessageCount }) {
+  const middle = [];
+  if (patient) middle.push({ page: "Patients", Icon: Users, label: "Patients" });
+  if (clinical) middle.push({ page: "SmartNoteAssistant", Icon: Brain, label: "Notes" });
+  // Backfill with general destinations so non-clinical roles still get five tabs.
+  if (middle.length < 2) middle.push({ page: "LearningCenter", Icon: GraduationCap, label: "Learning" });
+  if (middle.length < 2) middle.push({ page: "TimeOff", Icon: CalendarDays, label: "Time Off" });
+
+  return [
+    { page: "Dashboard", Icon: Home, label: "Home" },
+    ...middle.slice(0, 2),
+    { page: "SendFax", Icon: Send, label: "Fax" },
+    { page: "Messages", Icon: Mail, label: "Messages", hasBadge: true },
+  ];
+}
+
+export default function MobileBottomNav({ isActive, unreadMessageCount, currentUser = null }) {
+  const items = bottomNavItems(currentUser);
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-200 shadow-[0_-4px_16px_rgba(15,23,42,0.06)] print:hidden safe-bottom">
       <div className="grid grid-cols-5 h-16">
-        {BOTTOM_NAV_ITEMS.map(({ page, Icon, label, hasBadge }) => {
+        {items.map(({ page, Icon, label, hasBadge }) => {
           const badge = hasBadge ? unreadMessageCount : 0;
           const active = isActive(page);
           return (

@@ -67,6 +67,7 @@ import { formatEastern } from "@/components/utils/timezone";
 import { toast } from "sonner";
 import { logActivity, ActivityActions } from "@/components/utils/activityLogger";
 import UserActivityPanel from "@/components/admin/UserActivityPanel";
+import { STAFF_ROLE_OPTIONS, staffRoleLabel, getStaffRole } from "@/lib/roles";
 
 export default function UserManagement() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -79,12 +80,12 @@ export default function UserManagement() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [resetPasswordResult, setResetPasswordResult] = useState(null);
   const [editedRole, setEditedRole] = useState("");
-  const [editForm, setEditForm] = useState({ full_name: '', phone: '', credential_type: '' });
+  const [editForm, setEditForm] = useState({ full_name: '', phone: '', credential_type: '', staff_role: 'nurse' });
   const [isSavingUser, setIsSavingUser] = useState(false);
   const [showDeleteInvitationDialog, setShowDeleteInvitationDialog] = useState(false);
   const [selectedInvitation, setSelectedInvitation] = useState(null);
   const [showUserSetupDialog, setShowUserSetupDialog] = useState(false);
-  const [setupFormData, setSetupFormData] = useState({ email: '', full_name: '', role: 'user', staff_type: '' });
+  const [setupFormData, setSetupFormData] = useState({ email: '', full_name: '', role: 'user', staff_role: 'nurse' });
   const [expandedActivityUser, setExpandedActivityUser] = useState(null);
 
   const queryClient = useQueryClient();
@@ -200,7 +201,7 @@ export default function UserManagement() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['userInvitations'] });
       setShowUserSetupDialog(false);
-      setSetupFormData({ email: '', full_name: '', role: 'user', staff_type: '' });
+      setSetupFormData({ email: '', full_name: '', role: 'user', staff_role: 'nurse' });
       toast.success('User invitation sent successfully!');
     },
     onError: (error) => {
@@ -215,6 +216,7 @@ export default function UserManagement() {
       full_name: user.full_name || '',
       phone: user.phone || '',
       credential_type: user.credential_type || '',
+      staff_role: getStaffRole(user),
     });
     setShowEditDialog(true);
   };
@@ -232,6 +234,7 @@ export default function UserManagement() {
         phone: editForm.phone,
         credential_type: editForm.credential_type,
         role: editedRole,
+        staff_role: editForm.staff_role,
       });
       logActivity(ActivityActions.USER_ROLE_CHANGED, {
         user_email: selectedUser.email,
@@ -304,7 +307,7 @@ export default function UserManagement() {
       invited_email: setupFormData.email,
       invited_name: setupFormData.full_name,
       role: setupFormData.role,
-      staff_type: setupFormData.staff_type,
+      staff_role: setupFormData.staff_role,
       entity_type: 'UserInvitation'
     });
     createUserMutation.mutate(setupFormData);
@@ -376,15 +379,18 @@ export default function UserManagement() {
     inactive: allUsers.filter(u => u.is_active === false).length,
   };
 
-  const getRoleBadge = (role) => {
+  const getRoleBadge = (user) => {
+    const role = user?.role;
     const colors = {
       admin: 'bg-slate-800 text-white border-slate-700 font-medium',
       user: 'bg-slate-100 text-slate-700 border-slate-200',
       manager: 'bg-slate-200 text-slate-800 border-slate-300 font-medium'
     };
+    // For non-admin staff, show their discipline (Nurse / Office Staff / Social
+    // Worker / Spiritual Care) rather than the generic account role "user".
     const labels = {
       admin: 'Admin',
-      user: 'Nurse',
+      user: staffRoleLabel(getStaffRole(user)),
       manager: 'Manager'
     };
     return (
@@ -449,7 +455,7 @@ export default function UserManagement() {
             <div className="flex items-center gap-2">
               <Users className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500 flex-shrink-0" />
               <div className="min-w-0">
-                <p className="text-xs text-slate-500 truncate">Nurses</p>
+                <p className="text-xs text-slate-500 truncate">Staff</p>
                 <p className="text-xl sm:text-2xl font-bold text-blue-600">{stats.nurses}</p>
               </div>
             </div>
@@ -504,7 +510,7 @@ export default function UserManagement() {
                 <SelectContent>
                   <SelectItem value="all">All Roles</SelectItem>
                   <SelectItem value="admin">Admin</SelectItem>
-                  <SelectItem value="user">Nurse</SelectItem>
+                  <SelectItem value="user">Staff</SelectItem>
                   <SelectItem value="manager">Manager</SelectItem>
                 </SelectContent>
               </Select>
@@ -725,7 +731,7 @@ export default function UserManagement() {
                             <span className="truncate">{user.email}</span>
                           </div>
                         </TableCell>
-                        <TableCell>{getRoleBadge(user.role)}</TableCell>
+                        <TableCell>{getRoleBadge(user)}</TableCell>
                         <TableCell>
                           <Badge className={`text-xs ${isActive ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'}`}>
                             {isActive ? 'Active' : 'Inactive'}
@@ -870,24 +876,45 @@ export default function UserManagement() {
                 </Select>
               </div>
               <div>
-                <Label>Role</Label>
+                <Label>Access Level</Label>
                 <Select value={editedRole} onValueChange={setEditedRole}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent style={{ zIndex: 9999 }}>
-                    <SelectItem value="user">Nurse</SelectItem>
+                    <SelectItem value="user">Staff Member</SelectItem>
                     <SelectItem value="admin">Admin</SelectItem>
                     <SelectItem value="manager">Manager</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
+              {editedRole === 'user' && (
+                <div>
+                  <Label>Discipline / Role</Label>
+                  <Select
+                    value={editForm.staff_role}
+                    onValueChange={(value) => setEditForm(prev => ({ ...prev, staff_role: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent style={{ zIndex: 9999 }}>
+                      {STAFF_ROLE_OPTIONS.map((opt) => (
+                        <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-slate-500 mt-1">
+                    {STAFF_ROLE_OPTIONS.find((o) => o.value === editForm.staff_role)?.description}
+                  </p>
+                </div>
+              )}
               <Alert>
                 <Shield className="w-4 h-4" />
                 <AlertDescription className="text-sm">
                   <strong>Admin:</strong> Full access to all features and settings.<br/>
                   <strong>Manager:</strong> Access to reports and user management.<br/>
-                  <strong>Nurse:</strong> Access to patient care and documentation.
+                  <strong>Staff Member:</strong> Access depends on discipline — nurses get clinical tools; social work &amp; spiritual care can view patients; office staff see non-clinical functions.
                 </AlertDescription>
               </Alert>
             </div>
@@ -1139,32 +1166,36 @@ export default function UserManagement() {
               />
             </div>
             <div>
-              <Label htmlFor="role">Role</Label>
+              <Label htmlFor="role">Access Level</Label>
               <Select value={setupFormData.role} onValueChange={(role) => setSetupFormData({ ...setupFormData, role })}>
                 <SelectTrigger className="mt-1">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent style={{ zIndex: 9999 }}>
-                  <SelectItem value="user">Nurse</SelectItem>
+                  <SelectItem value="user">Staff Member</SelectItem>
                   <SelectItem value="admin">Admin</SelectItem>
                   <SelectItem value="manager">Manager</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-            <div>
-              <Label htmlFor="staff_type">Staff Type (Optional)</Label>
-              <Select value={setupFormData.staff_type || "none"} onValueChange={(staff_type) => setSetupFormData({ ...setupFormData, staff_type: staff_type === "none" ? "" : staff_type })}>
-                <SelectTrigger className="mt-1">
-                  <SelectValue placeholder="Select staff type" />
-                </SelectTrigger>
-                <SelectContent style={{ zIndex: 9999 }}>
-                  <SelectItem value="none">None</SelectItem>
-                  <SelectItem value="RN">RN</SelectItem>
-                  <SelectItem value="LPN">LPN</SelectItem>
-                  <SelectItem value="office_staff">Office Staff</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            {setupFormData.role === 'user' && (
+              <div>
+                <Label htmlFor="staff_role">Discipline / Role</Label>
+                <Select value={setupFormData.staff_role} onValueChange={(staff_role) => setSetupFormData({ ...setupFormData, staff_role })}>
+                  <SelectTrigger className="mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent style={{ zIndex: 9999 }}>
+                    {STAFF_ROLE_OPTIONS.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-slate-500 mt-1">
+                  {STAFF_ROLE_OPTIONS.find((o) => o.value === setupFormData.staff_role)?.description}
+                </p>
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowUserSetupDialog(false)}>

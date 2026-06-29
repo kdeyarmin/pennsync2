@@ -9,7 +9,9 @@ import StatCard from "@/components/ui/stat-card";
 import { toast } from "sonner";
 import { formatEastern } from "@/components/utils/timezone";
 import CareScopeSelector from "@/components/profile/CareScopeSelector";
+import { isClinicalUser, canViewPatients, getStaffRole, staffRoleLabel } from "@/lib/roles";
 import PullToRefresh from "@/components/mobile/PullToRefresh";
+import { GraduationCap, CalendarDays, Mail, BookOpen, Users as UsersIcon } from "lucide-react";
 
 
 // Critical above-the-fold — eager loaded
@@ -148,12 +150,22 @@ export default function Dashboard() {
     ? "Home Health & Hospice"
     : "Home Health";
 
+  // Staff discipline drives which surfaces the dashboard shows. `clinical` =
+  // nurse or admin (nursing tools); `patientAccess` = everyone except office
+  // staff. Non-nurses get a streamlined, non-clinical dashboard.
+  const clinical = isClinicalUser(currentUser);
+  const patientAccess = canViewPatients(currentUser);
+  const eyebrow = clinical ? careScopeLabel : staffRoleLabel(getStaffRole(currentUser));
+
   if (isLoading) {
     return <DashboardSkeleton />;
   }
 
-  // If user hasn't set their care scope yet, prompt them
-  if (currentUser && !careScope) {
+  // Onboarding — care scope ("what type of nurse"). Only nurses/admins have a
+  // care scope; non-nurse staff skip straight to their dashboard. The staff
+  // discipline itself is admin-assigned (set at registration / in User
+  // Management), not self-selected here.
+  if (currentUser && clinical && !careScope) {
     return (
       <div className="max-w-lg mx-auto pt-8 px-4">
         <div className="text-center mb-6">
@@ -202,7 +214,7 @@ export default function Dashboard() {
       <PageHeader
         className="mb-4 sm:mb-6"
         icon={careScope === "hospice" ? Heart : Home}
-        eyebrow={careScopeLabel}
+        eyebrow={eyebrow}
         title={`${greeting}, ${firstName}!`}
         description={formatEastern(new Date(), 'EEEE, MMMM d, yyyy') || new Date().toLocaleDateString()}
         favoritePage="Dashboard"
@@ -220,9 +232,44 @@ export default function Dashboard() {
         </button>
       </div>
 
-      {/* Admin Announcements */}
+      {/* Admin Announcements — relevant to everyone */}
       <AnnouncementsWidget />
 
+      {/* Non-clinical roles (office staff, social work, spiritual care) get a
+          streamlined launchpad instead of the nurse stat cards / clinical widgets,
+          which wouldn't apply to them. Patient-access roles also keep a Patients tile. */}
+      {!clinical && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
+          {[
+            ...(patientAccess ? [{ page: "Patients", label: "Patients", Icon: UsersIcon }] : []),
+            { page: "LearningCenter", label: "Learning Center", Icon: GraduationCap },
+            { page: "TimeOff", label: "Time Off", Icon: CalendarDays },
+            { page: "Messages", label: "Messages", Icon: Mail },
+            { page: "SendFax", label: "Send Fax", Icon: Send },
+            { page: "ResourceLibrary", label: "Library", Icon: BookOpen },
+            { page: "Incidents", label: "Incidents", Icon: AlertTriangle },
+          ].map((item) => {
+            const ItemIcon = item.Icon;
+            return (
+              <Link key={item.page} to={`/${item.page}`} className="group">
+                <Card className="h-full transition-all duration-300 hover:-translate-y-1 hover:shadow-md hover:border-navy-200 bg-white/50 hover:bg-white">
+                  <CardContent className="p-4 sm:p-6 flex flex-col items-center justify-center text-center gap-3 min-h-[110px]">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-50 text-slate-500 ring-1 ring-inset ring-slate-200 transition-all group-hover:bg-navy-50 group-hover:text-navy-700 group-hover:ring-navy-200 shadow-sm">
+                      <ItemIcon className="h-6 w-6" />
+                    </div>
+                    <h3 className="text-sm font-semibold leading-tight text-slate-600 transition-colors group-hover:text-navy-900">{item.label}</h3>
+                  </CardContent>
+                </Card>
+              </Link>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Everything below is clinical (nurse/admin only) — care-scope-driven stats,
+          nursing quick actions, and patient/clinical widgets. */}
+      {clinical && (
+      <>
       {/* Scheduled Telehealth reminders */}
       <div className="mb-6">
         <UpcomingTelehealthWidget />
@@ -356,6 +403,8 @@ export default function Dashboard() {
            <TopTemplatesWidget />
          </div>
         </Suspense>
+      </>
+      )}
 
     </div>
     </PullToRefresh>

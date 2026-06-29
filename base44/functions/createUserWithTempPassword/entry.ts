@@ -10,7 +10,7 @@ Deno.serve(async (req) => {
     }
 
     const payload = await req.json();
-    const { email, full_name, role, care_scope, phone, credentials } = payload;
+    const { email, full_name, role, care_scope, phone, credentials, staff_role } = payload;
 
     if (!email || !full_name) {
       return Response.json({ error: 'Email and full name are required' }, { status: 400 });
@@ -18,13 +18,20 @@ Deno.serve(async (req) => {
 
     const userRole = role || 'user';
 
-    // Only 'admin' (facility admin) or 'user' (nurse) are assignable roles — super
-    // admin is an account_type, not a role granted via invitation. Reject anything
-    // else (e.g. 'super_admin') before it reaches the platform invite and the
-    // UserInvitation.role enum (which is admin/user only), matching
-    // userManagement.inviteUser.
+    // Staff discipline (orthogonal to the admin role). Validate against the
+    // User/UserInvitation enum and default to nurse; this is non-privileged so it
+    // needs no super-admin gate (unlike `role`). Mirrors lib/roles.js STAFF_ROLES.
+    const STAFF_ROLES = ['nurse', 'office_staff', 'social_worker', 'spiritual_care'];
+    const staffRole = STAFF_ROLES.includes(String(staff_role)) ? String(staff_role) : 'nurse';
+
+    // Only 'admin' (facility admin) or 'user' (staff member) are assignable roles —
+    // the staff member's discipline (nurse/office/social/spiritual) is carried by
+    // staff_role, not role. super admin is an account_type, not a role granted via
+    // invitation. Reject anything else (e.g. 'super_admin') before it reaches the
+    // platform invite and the UserInvitation.role enum (which is admin/user only),
+    // matching userManagement.inviteUser.
     if (!['admin', 'user'].includes(String(userRole))) {
-      return Response.json({ error: "role must be 'admin' (facility admin) or 'user' (nurse)" }, { status: 400 });
+      return Response.json({ error: "role must be 'admin' (facility admin) or 'user' (staff member)" }, { status: 400 });
     }
 
     // Privilege-propagation guard: the gate above admits a plain facility `admin`,
@@ -56,6 +63,7 @@ Deno.serve(async (req) => {
       full_name,
       role: userRole,
       care_scope: care_scope || 'home_health',
+      staff_role: staffRole,
       phone: phone || null,
       credentials: credentials || null,
       invited_by: user.email,

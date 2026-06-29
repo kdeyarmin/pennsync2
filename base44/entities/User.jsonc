@@ -79,6 +79,17 @@
       "default": "user",
       "description": "Account type for Learning Center permissions"
     },
+    "staff_role": {
+      "type": "string",
+      "enum": [
+        "nurse",
+        "office_staff",
+        "social_worker",
+        "spiritual_care"
+      ],
+      "default": "nurse",
+      "description": "Staff discipline that drives which functions are visible. 'nurse' (default) and admins see clinical + nursing tools (OASIS, clinical notes, care plans). 'social_worker' and 'spiritual_care' can view patients/records but not nursing tools. 'office_staff' sees only non-clinical functions (learning, PTO, messaging, resources). Orthogonal to the admin `role`/`account_type` tiers."
+    },
     "location": {
       "type": "string",
       "description": "Branch or location (optional)"
@@ -124,8 +135,6 @@
     }
   },
   "required": [
-    "credential_type",
-    "phone",
-    "care_scope"
+    "phone"
   ]
 }

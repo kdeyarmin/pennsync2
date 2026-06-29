@@ -174,9 +174,11 @@ export default function Layout({ children, currentPageName }) {
     openNotifications: () => setNotificationCenterOpen(true),
   }), []);
 
-  // Build nav arrays from manifest, then inject runtime badges/actions
+  // Build nav arrays from manifest, then inject runtime badges/actions. Pass the
+  // user so the sidebar honors the staff-discipline gate (office staff don't see
+  // Patients/OASIS, etc.) in addition to the admin gate.
   const navCategories = useMemo(() => {
-    const cats = buildNavCategories(NAV_MANIFEST);
+    const cats = buildNavCategories(NAV_MANIFEST, currentUser);
     return cats.map(cat => ({
       ...cat,
       items: cat.items.map(({ _badgeKey, ...item }) => ({
@@ -184,7 +186,7 @@ export default function Layout({ children, currentPageName }) {
         badge: _badgeKey ? (badgeValues[_badgeKey] ?? 0) : 0,
       })),
     }));
-  }, [badgeValues]);
+  }, [badgeValues, currentUser]);
 
   const adminItems = useMemo(() => {
     const cats = buildAdminItems(NAV_MANIFEST, isSuperAdminUser);
@@ -295,7 +297,7 @@ export default function Layout({ children, currentPageName }) {
       <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:bg-white focus:px-4 focus:py-2 focus:rounded-md focus:shadow-lg focus:text-blue-700 focus:font-medium">
         Skip to content
       </a>
-      <CommandPalette isAdmin={isAdmin} isSuperAdmin={isSuperAdminUser} />
+      <CommandPalette isAdmin={isAdmin} isSuperAdmin={isSuperAdminUser} user={currentUser} />
       <div className="min-h-screen flex">
         <DesktopSidebar
           collapsed={sidebarCollapsed}
@@ -338,7 +340,7 @@ export default function Layout({ children, currentPageName }) {
           </div>
         </main>
 
-        <MobileBottomNav isActive={isActive} unreadMessageCount={unreadMessageCount} />
+        <MobileBottomNav isActive={isActive} unreadMessageCount={unreadMessageCount} currentUser={currentUser} />
 
         {/* Floating Sync Status — only appears when there are pending items to sync */}
         <div className="fixed bottom-20 md:bottom-4 right-4 z-40 max-w-sm">

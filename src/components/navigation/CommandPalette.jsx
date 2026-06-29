@@ -36,7 +36,7 @@ function pushRecent(pageName) {
 
 const getCategory = (page) => page.category || paletteGroupFor(page.page);
 
-export default function CommandPalette({ isAdmin, isSuperAdmin = false }) {
+export default function CommandPalette({ isAdmin, isSuperAdmin = false, user = null }) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [recents, setRecents] = useState([]);
@@ -66,7 +66,7 @@ export default function CommandPalette({ isAdmin, isSuperAdmin = false }) {
     }
   }, [open]);
 
-  const pages = useMemo(() => buildPaletteEntries(NAV_MANIFEST, isAdmin, isSuperAdmin), [isAdmin, isSuperAdmin]);
+  const pages = useMemo(() => buildPaletteEntries(NAV_MANIFEST, isAdmin, isSuperAdmin, user), [isAdmin, isSuperAdmin, user]);
 
   const pageByName = useMemo(() => {
     const map = new Map();
