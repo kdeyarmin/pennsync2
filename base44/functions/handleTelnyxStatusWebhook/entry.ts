@@ -70,7 +70,10 @@ function mapCallStatus(eventType) {
 // Monotonic rank so a late/out-of-order call event can't regress a terminal
 // CallLog status. Mirrors the CALL_RANK guard the former handleTwilioCallStatus
 // enforced.
-const CALL_RANK = { ringing: 1, in_progress: 2, completed: 3 };
+// 'failed' (a missed/failed call) is terminal and ranks above 'completed' so the
+// trailing call.hangup event (which maps to 'completed') can't regress a call we
+// deliberately marked missed/failed back to a normal completion.
+const CALL_RANK = { ringing: 1, in_progress: 2, completed: 3, failed: 4 };
 
 // Best-effort call duration (seconds) from a Call Control hangup payload's
 // start/end timestamps. Returns null when they're missing/unparseable.
@@ -584,19 +587,29 @@ async function handleFaxEvent(base44, payload) {
     const failureReason = payload?.failure_reason || payload?.failover?.failure_reason || 'Fax delivery failed';
     // Honor the admin FaxRetryConfig: schedule a retry or give up (and notify once).
     const cfgRows = await base44.asServiceRole.entities.FaxRetryConfig.list('-created_date', 1).catch(() => []);
+    const cfg = cfgRows[0] || {};
+    const maxRetries = faxRetryConfig(cfg).maxRetries;
     const plan = planFaxRetry({
       retryCount: faxLog.retry_count || 0,
       errorCode: payload?.failure_code || payload?.error_code,
       errorMessage: failureReason,
       priority: faxLog.priority || 'normal',
-      config: cfgRows[0] || {},
+      config: cfg,
     });
-    if (plan.willRetry) {
+    // Only schedule a retry the cron will actually honor. planFaxRetry plans a
+    // retry whenever attempts < maxRetries (nextRetryCount = attempts + 1), but the
+    // cron's isFaxRetryDue refuses any fax whose retry_count >= maxRetries — so a
+    // planned retry with nextRetryCount === maxRetries would be written yet never
+    // re-sent AND never notified (stranded forever). Treat that boundary case as
+    // exhausted so the sender is told the fax failed.
+    if (plan.willRetry && plan.nextRetryCount < maxRetries) {
       update.next_retry_at = plan.nextRetryAt;
       update.retry_count = plan.nextRetryCount;
     } else {
       exhaustedNow = !faxLog.final_failure_notified;
       update.final_failure_notified = true;
+      // Record that we reached the retry cap even though no further send is scheduled.
+      if (plan.willRetry) update.retry_count = plan.nextRetryCount;
     }
     update.failure_reason = failureReason;
   }
@@ -795,6 +808,20 @@ async function handleCallEvent(base44, apiKey, eventType, payload) {
       if (hasNext) {
         await startRingdown(apiKey, state.a_leg, state.targets, state.callerId, next);
       } else {
+        // Ringdown exhausted: nobody answered. Mark the inbound call as missed
+        // BEFORE hanging up the caller leg. The CallLog status enum has no
+        // 'no_answer', so use 'failed' — every missed-call consumer (callbackQueue,
+        // comms dashboard, phone analytics, call history) already treats 'failed'
+        // as a missed call. Without this the trailing call.hangup maps to
+        // 'completed' and the missed call silently vanishes from the callback queue.
+        const inboundLogs = await base44.asServiceRole.entities.CallLog
+          .filter({ provider_call_id: state.a_leg }, '-created_date', 1).catch(() => []);
+        if (inboundLogs.length && inboundLogs[0].status !== 'failed') {
+          await base44.asServiceRole.entities.CallLog.update(inboundLogs[0].id, {
+            status: 'failed',
+            failure_reason: 'No answer — all on-call targets were unavailable',
+          }).catch(() => {});
+        }
         await callCommand(apiKey, state.a_leg, 'hangup', {});
       }
       return Response.json({ success: true, ringdown_advance: next, exhausted: !hasNext });

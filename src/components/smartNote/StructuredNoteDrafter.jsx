@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Sparkles, Copy, CheckCircle2, ClipboardList, ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
 import VoiceNoteIntegration from "./VoiceNoteIntegration";
-import { toCanonicalVitalSigns, extractCanonicalVitalsFromText, extractVitals } from "./compliance/factExtraction";
+import { toCanonicalVitalSigns, extractCanonicalVitalsFromText } from "./compliance/factExtraction";
 
 const VISIT_TYPES = [
   { value: "routine_visit", label: "Routine Visit" },
@@ -96,7 +96,16 @@ export default function StructuredNoteDrafter({ onDraftReady }) {
     // (text first, then grid) as its own line so it isn't lost.
     let handoff = draft.replace(/^Vitals:.*$/m, "").replace(/\n{3,}/g, "\n\n").trim();
     const gridWeight = vitals.weight && String(vitals.weight).trim() !== "" ? parseFloat(vitals.weight) : null;
-    const weight = extractVitals(draft).weight ?? gridWeight;
+    // Capture the weight value AND its unit from the SAME match (mirroring the
+    // regex extractVitals uses) so a documented kg reading is normalized to lbs —
+    // and so a stray "kg" elsewhere in the draft can't rescale a pounds value.
+    // Falls back to the grid weight (already in lbs) when the text has no weight.
+    const wtMatch = draft.match(/(?:wt|weight)\s*(\d{2,3}(?:\.\d)?)\s*(lbs?|kg)?/i);
+    let weight = gridWeight;
+    if (wtMatch) {
+      weight = parseFloat(wtMatch[1]);
+      if (/^kg$/i.test(wtMatch[2] || "")) weight = Math.round(weight * 2.20462 * 10) / 10;
+    }
     if (weight) handoff = `${handoff}\nWeight: ${weight} lbs.`.trim();
     onDraftReady(handoff, visitType, structuredVitals);
   };

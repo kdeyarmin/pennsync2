@@ -38,32 +38,31 @@ Deno.serve(async (req) => {
       diagnosis: refData.diagnoses?.primary_diagnosis || '',
       secondary_diagnoses: refData.diagnoses?.secondary_diagnoses || [],
       
-      // Vitals from referral
-      vital_signs: {
-        bp_systolic: refData.vital_signs?.blood_pressure_systolic || '',
-        bp_diastolic: refData.vital_signs?.blood_pressure_diastolic || '',
-        hr: refData.vital_signs?.heart_rate || '',
-        temp: refData.vital_signs?.temperature || '',
-        o2: refData.vital_signs?.oxygen_saturation || '',
-        pain: refData.vital_signs?.pain_level || ''
-      },
-      
+      // Vitals from referral. The extraction stores vitals as a single free-text
+      // string at clinical_info.vital_signs — there are no discrete numeric
+      // components to populate — so surface the text (the prior reads of
+      // refData.vital_signs.* did not exist and always came back blank).
+      vital_signs_text: refData.clinical_info?.vital_signs || '',
+
       // Admission-specific notes template
       admission_note_template: generateAdmissionNoteTemplate(refData),
-      
-      // Key clinical points
+
+      // Key clinical points (mapped to the real extraction schema keys: the prior
+      // icd10_codes / care_needs.skilled_nursing / urgent_clinical_items /
+      // admission_details.special_instructions keys are not produced by the
+      // extractor, so each came back empty).
       clinical_summary: {
         primary_diagnosis: refData.diagnoses?.primary_diagnosis,
-        icd10_codes: refData.diagnoses?.icd10_codes || [],
-        skilled_needs: refData.care_needs?.skilled_nursing || [],
+        primary_icd10: refData.diagnoses?.primary_icd10 || '',
+        comorbidity_adjustments: refData.diagnoses?.comorbidity_adjustments || [],
+        skilled_needs: refData.skilled_needs?.services_ordered || [],
+        specific_interventions: refData.skilled_needs?.specific_interventions || [],
         medications: refData.medications || [],
         allergies: refData.diagnoses?.allergies || 'NKDA',
-        
-        // Clinical urgency flags
-        urgent_clinical_items: refData.urgent_clinical_items || [],
-        
-        // Pre-visit instructions
-        instructions_from_referral: refData.admission_details?.special_instructions || ''
+
+        // Pre-visit instructions: the schema's closest source is the skilled-care
+        // goals, falling back to the referral reason.
+        instructions_from_referral: refData.skilled_needs?.goals_of_care || refData.admission_details?.referral_reason || ''
       },
       
       // Patient demographics for context
@@ -95,9 +94,14 @@ function generateAdmissionNoteTemplate(refData) {
     sections.push(`\nHISTORY OF PRESENT ILLNESS:\n${refData.admission_details.clinical_history}`);
   }
   
-  // Past Medical History
+  // Past Medical History — the schema stores each entry as an object
+  // ({ condition, onset_date, current_status, management }), so render the
+  // condition rather than emitting "[object Object]".
   if (refData.diagnoses?.past_medical_history?.length > 0) {
-    sections.push(`\nPAST MEDICAL HISTORY:\n${refData.diagnoses.past_medical_history.join(', ')}`);
+    const pmh = refData.diagnoses.past_medical_history
+      .map((h) => (typeof h === 'string' ? h : h?.condition))
+      .filter(Boolean);
+    if (pmh.length > 0) sections.push(`\nPAST MEDICAL HISTORY:\n${pmh.join(', ')}`);
   }
   
   // Current Medications (from referral)
@@ -111,26 +115,20 @@ function generateAdmissionNoteTemplate(refData) {
   // Allergies
   sections.push(`\nALLERGIES:\n${refData.diagnoses?.allergies || 'NKDA'}`);
   
-  // Skilled Nursing Needs
-  if (refData.care_needs?.skilled_nursing?.length > 0) {
-    sections.push(`\nSKILLED NURSING NEEDS:\n${refData.care_needs.skilled_nursing.join(', ')}`);
+  // Skilled Nursing Needs — schema field is skilled_needs.services_ordered.
+  if (refData.skilled_needs?.services_ordered?.length > 0) {
+    sections.push(`\nSKILLED NURSING NEEDS:\n${refData.skilled_needs.services_ordered.join(', ')}`);
   }
-  
-  // Vital Signs (from referral)
-  if (refData.vital_signs) {
-    const vitals = [];
-    if (refData.vital_signs.blood_pressure_systolic) vitals.push(`BP: ${refData.vital_signs.blood_pressure_systolic}/${refData.vital_signs.blood_pressure_diastolic}`);
-    if (refData.vital_signs.heart_rate) vitals.push(`HR: ${refData.vital_signs.heart_rate}`);
-    if (refData.vital_signs.temperature) vitals.push(`Temp: ${refData.vital_signs.temperature}`);
-    if (refData.vital_signs.oxygen_saturation) vitals.push(`O2 Sat: ${refData.vital_signs.oxygen_saturation}%`);
-    if (vitals.length > 0) {
-      sections.push(`\nVITAL SIGNS (from referral):\n${vitals.join(', ')}`);
-    }
+
+  // Vital Signs (from referral) — stored as a free-text string at
+  // clinical_info.vital_signs, not discrete numeric fields.
+  if (refData.clinical_info?.vital_signs) {
+    sections.push(`\nVITAL SIGNS (from referral):\n${refData.clinical_info.vital_signs}`);
   }
-  
-  // Special Instructions
-  if (refData.admission_details?.special_instructions) {
-    sections.push(`\nSPECIAL INSTRUCTIONS:\n${refData.admission_details.special_instructions}`);
+
+  // Goals of care / pre-visit instructions.
+  if (refData.skilled_needs?.goals_of_care) {
+    sections.push(`\nGOALS OF CARE:\n${refData.skilled_needs.goals_of_care}`);
   }
   
   return sections.join('\n\n');

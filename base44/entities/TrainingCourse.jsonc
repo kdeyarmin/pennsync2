@@ -267,6 +267,20 @@
         "type": "object"
       },
       "description": "Observable skills the learner will demonstrate — each item: { skill, criteria }"
+    },
+    "pre_assessment_json": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      },
+      "description": "Pre-assessment (test-out / baseline) questions generated for the course"
+    },
+    "brain_sparks_json": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      },
+      "description": "Brain-spark memory boosters (spaced-recall prompts) generated for the course"
     }
   },
   "required": [

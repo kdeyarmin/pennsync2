@@ -74,7 +74,16 @@ Deno.serve(async (req) => {
     // Get all available badges
     const allBadges = await base44.entities.SkillBadge.filter({ active: true });
 
-    // Check for Perfect Score (100%)
+    // Resolve the assignment and whether this attempt actually PASSED up front, so
+    // achievement badges (high score, early completion, streak) and the
+    // streak/courses counters are never awarded for a failed attempt.
+    const assignment = await base44.entities.TrainingAssignment.filter({ id: attemptData.assignment_id });
+    const passingScore = (assignment && assignment[0]?.passing_score_required) ?? 80;
+    const passed = attemptData.pass_fail_result
+      ? attemptData.pass_fail_result === 'passed'
+      : (Number(attemptData.score) || 0) >= passingScore;
+
+    // Check for Perfect Score (100%) — a perfect score is always a pass.
     if (attemptData.score === 100) {
       const perfectBadge = allBadges.find(b => b.badge_type === 'perfect_score');
       if (perfectBadge) {
@@ -101,8 +110,9 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Check for High Score (90%+)
-    if (attemptData.score >= 90 && attemptData.score < 100) {
+    // Check for High Score (90%+) — only when the attempt also passed (a course
+    // whose passing_score_required exceeds 90 can score 90-99 and still fail).
+    if (passed && attemptData.score >= 90 && attemptData.score < 100) {
       const highScoreBadge = allBadges.find(b => b.badge_type === 'high_score');
       if (highScoreBadge) {
         const userBadge = await base44.entities.UserBadge.create({
@@ -123,9 +133,9 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Check for Early Completion (completed before due date)
-    const assignment = await base44.entities.TrainingAssignment.filter({ id: attemptData.assignment_id });
-    if (assignment && assignment.length > 0) {
+    // Check for Early Completion (completed before due date) — only for a passing
+    // attempt; finishing a FAILED in-service early must not earn the badge/points.
+    if (passed && assignment && assignment.length > 0) {
       const dueDate = new Date(assignment[0].due_date);
       const completedDate = new Date(attemptData.submitted_at);
       const daysEarly = Math.ceil((dueDate - completedDate) / (1000 * 60 * 60 * 24));
@@ -152,13 +162,9 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Only a PASSING attempt advances the streak / course count. A failed attempt
-    // must not inflate current_streak / courses_completed or trip a streak badge.
-    const passingScore = (assignment && assignment[0]?.passing_score_required) ?? 80;
-    const passed = attemptData.pass_fail_result
-      ? attemptData.pass_fail_result === 'passed'
-      : (Number(attemptData.score) || 0) >= passingScore;
-
+    // Only a PASSING attempt advances the streak / course count (passed/passingScore
+    // resolved above). A failed attempt must not inflate current_streak /
+    // courses_completed or trip a streak badge.
     // Update streak (unchanged on a failed attempt rather than incremented)
     const newStreak = passed
       ? (leaderboardEntry.current_streak || 0) + 1

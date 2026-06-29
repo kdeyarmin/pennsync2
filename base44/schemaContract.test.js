@@ -208,6 +208,15 @@ const FIELD_USAGE = {
   Patient: ['merged_into_id', 'merged_at', 'merged_by', 'validation_overrides'],
   Referral: ['page_range', 'detection_confidence', 'manually_confirmed', 'rejection_date', 'rejected_by'],
   PatientAlert: ['contributing_factors', 'recommended_actions', 'risk_score'],
+  // OASISFeedback is written by two paths: the patient-match writers
+  // (feedback_type/extracted_name + match fields) and the AI-suggestion
+  // OASISFeedbackPanel (the fields below). The panel fields were historically
+  // absent from the schema, so every suggestion rating was silently dropped.
+  OASISFeedback: [
+    'visit_id', 'patient_id', 'suggestion_type', 'oasis_item', 'original_suggestion',
+    'user_action', 'modified_text', 'feedback_reason', 'reimbursement_impact_accuracy',
+    'clinical_accuracy', 'helpfulness_rating',
+  ],
 };
 
 test('curated registry references existing entities and enum fields', () => {

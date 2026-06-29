@@ -53,17 +53,24 @@ Deno.serve(async (req) => {
     // Verify admin for most actions
     const currentUser = await base44.auth.me();
     const isAdmin = currentUser?.role === 'admin';
+    // Granting the privileged 'admin' (facility admin) role requires super admin,
+    // matching the hardened sibling functions (createUserWithTempPassword,
+    // fixUserAccount): a plain facility admin must not be able to mint another
+    // facility admin without super-admin oversight.
+    const SUPER_ADMIN_EMAIL = (Deno.env.get('SUPER_ADMIN_EMAIL') || 'kdeyarmin@comcast.net').trim().toLowerCase();
+    const callerIsSuperAdmin = currentUser?.account_type === 'super_admin'
+      || String(currentUser?.email || '').trim().toLowerCase() === SUPER_ADMIN_EMAIL;
 
     switch (action) {
       case 'invite_user':
-        return await inviteUser(base44, currentUser, params, isAdmin);
-      
+        return await inviteUser(base44, currentUser, params, isAdmin, callerIsSuperAdmin);
+
       case 'resend_invitation':
         return await resendInvitation(base44, currentUser, params, isAdmin);
-      
+
       case 'reset_password':
         return await resetPassword(base44, currentUser, params, isAdmin);
-      
+
       case 'check_expired_invitations':
         // Gate like every other action: this reads all invitations and emails
         // all admins, so it must not be callable by a non-admin.
@@ -71,12 +78,12 @@ Deno.serve(async (req) => {
           return Response.json({ error: 'Unauthorized - Admin access required' }, { status: 403 });
         }
         return await checkExpiredInvitations(base44);
-      
+
       case 'cancel_invitation':
         return await cancelInvitation(base44, currentUser, params, isAdmin);
 
       case 'update_user':
-        return await updateUser(base44, currentUser, params, isAdmin);
+        return await updateUser(base44, currentUser, params, isAdmin, callerIsSuperAdmin);
 
       default:
         return Response.json({ error: 'Invalid action' }, { status: 400 });
@@ -90,7 +97,7 @@ Deno.serve(async (req) => {
   }
 });
 
-async function inviteUser(base44, currentUser, params, isAdmin) {
+async function inviteUser(base44, currentUser, params, isAdmin, callerIsSuperAdmin) {
   if (!isAdmin) {
     return Response.json({ error: 'Unauthorized - Admin access required' }, { status: 403 });
   }
@@ -105,6 +112,12 @@ async function inviteUser(base44, currentUser, params, isAdmin) {
   // may be invited; super admin is an account_type, not granted via invitation.
   if (role !== undefined && !(typeof role === 'string' && ['admin', 'user'].includes(role))) {
     return Response.json({ error: "role must be 'admin' (facility admin) or 'user' (nurse)" }, { status: 400 });
+  }
+
+  // Only a super admin may grant the privileged facility-admin role (consistent
+  // with createUserWithTempPassword); a plain admin may invite nurses only.
+  if (role === 'admin' && !callerIsSuperAdmin) {
+    return Response.json({ error: 'Only a super admin can invite a user with the admin role.' }, { status: 403 });
   }
 
   const now = new Date();
@@ -332,7 +345,7 @@ async function checkExpiredInvitations(base44) {
   });
 }
 
-async function updateUser(base44, currentUser, params, isAdmin) {
+async function updateUser(base44, currentUser, params, isAdmin, callerIsSuperAdmin) {
   if (!isAdmin) {
     return Response.json({ error: 'Unauthorized - Admin access required' }, { status: 403 });
   }
@@ -351,6 +364,12 @@ async function updateUser(base44, currentUser, params, isAdmin) {
   const ASSIGNABLE_ROLES = new Set(['admin', 'user']);
   if (role !== undefined && !(typeof role === 'string' && ASSIGNABLE_ROLES.has(role))) {
     return Response.json({ error: "role must be 'admin' (facility admin) or 'user' (nurse)" }, { status: 400 });
+  }
+
+  // Only a super admin may promote a user to the privileged facility-admin role
+  // (consistent with createUserWithTempPassword / fixUserAccount).
+  if (role === 'admin' && !callerIsSuperAdmin) {
+    return Response.json({ error: 'Only a super admin can grant the admin role.' }, { status: 403 });
   }
 
   // Only include fields that were actually provided so we never wipe values.

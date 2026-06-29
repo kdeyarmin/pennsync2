@@ -20,6 +20,7 @@ import { createPageUrl } from "@/utils";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import SearchablePatientSelect from "@/components/ui/SearchablePatientSelect";
+import { getNormalizedSignatureStatus, isSignatureOverdue } from "@/components/signature/signatureUtils";
 
 export default function DocumentSignatures() {
   const navigate = useNavigate();
@@ -50,7 +51,7 @@ export default function DocumentSignatures() {
   });
 
   const handleSignDocument = (sig) => {
-    const url = createPageUrl(`SignDocument?pdf_url=${encodeURIComponent(sig.original_pdf_url)}&signature_id=${sig.id}&patient_id=${sig.patient_id}`);
+    const url = createPageUrl(`SignDocument?pdf_url=${encodeURIComponent(sig.document_url || sig.original_pdf_url || '')}&signature_id=${sig.id}&patient_id=${sig.patient_id}`);
     navigate(url);
   };
 
@@ -65,9 +66,7 @@ export default function DocumentSignatures() {
     }
   };
 
-  const isOverdue = (sig) => {
-    return sig.status === 'pending' && sig.due_date && new Date(sig.due_date) < new Date();
-  };
+  const isOverdue = (sig) => isSignatureOverdue(sig);
 
   const filteredSignatures = allSignatures.filter(sig => {
     if (!searchQuery.trim()) return true;
@@ -77,13 +76,23 @@ export default function DocumentSignatures() {
     return (sig.document_name || '').toLowerCase().includes(query) || patientName.includes(query);
   });
 
-  const pendingSignatures = filteredSignatures.filter(s => s.status === 'pending');
-  const signedSignatures = filteredSignatures.filter(s => s.status === 'signed');
+  // Normalize before filtering: the DocumentSignature.status enum is
+  // pending/in_progress/completed/rejected — there is no 'signed' value (that is
+  // a display-only normalization), so a raw `=== 'signed'` filter never matches
+  // and a raw `=== 'pending'` filter drops partially-signed (in_progress) docs.
+  const pendingSignatures = filteredSignatures.filter(s => {
+    const n = getNormalizedSignatureStatus(s);
+    return n !== 'signed' && n !== 'declined' && n !== 'expired';
+  });
+  const signedSignatures = filteredSignatures.filter(s => getNormalizedSignatureStatus(s) === 'signed');
 
   const stats = {
     total: allSignatures.length,
-    pending: allSignatures.filter(s => s.status === 'pending').length,
-    signed: allSignatures.filter(s => s.status === 'signed').length,
+    pending: allSignatures.filter(s => {
+      const n = getNormalizedSignatureStatus(s);
+      return n !== 'signed' && n !== 'declined' && n !== 'expired';
+    }).length,
+    signed: allSignatures.filter(s => getNormalizedSignatureStatus(s) === 'signed').length,
     overdue: allSignatures.filter(s => isOverdue(s)).length
   };
 

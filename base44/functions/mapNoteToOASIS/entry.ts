@@ -314,10 +314,13 @@ Return JSON with detailed mapping results:`;
     // Log the mapping for audit trail
     try {
       await base44.asServiceRole.entities.SystemLog.create({
-        log_type: 'oasis_automation',
-        user_email: user.email,
+        job_name: 'OASIS Automation',
+        job_type: 'other',
+        status: 'success',
+        message: `Mapped note to OASIS for patient ${patientId} by ${user.email}`,
         details: {
           patient_id: patientId,
+          mapped_by: user.email,
           items_mapped: result.overall_summary?.total_items_mapped || 0,
           discrepancies: result.overall_summary?.discrepancy_count || 0,
           timestamp: new Date().toISOString()

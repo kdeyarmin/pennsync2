@@ -41,6 +41,12 @@ Deno.serve(async (req) => {
 
     const notifications = [];
     const adminNotifications = [];
+    // Deferred reminder-tier marker writes. These must run only AFTER the employee
+    // notifications are persisted — marking a tier "sent" before bulkCreate means a
+    // bulkCreate failure permanently suppresses that reminder for every record
+    // processed before the failure. Worst case if a marker write fails post-create
+    // is a duplicate reminder next run (the safe direction).
+    const markerUpdates = [];
 
     // Reminder tiers (days before expiration). Fire when the count is AT or
     // BELOW a tier that hasn't been sent yet, rather than on an exact-day match.
@@ -82,10 +88,11 @@ Deno.serve(async (req) => {
           renewal_due_date: assignment.renewal_due_date
         });
 
-        // Record every newly-crossed tier so it is never re-sent.
-        await base44.asServiceRole.entities.TrainingAssignment.update(assignment.id, {
+        // Record every newly-crossed tier so it is never re-sent — deferred until
+        // after the notifications are actually created (see markerUpdates above).
+        markerUpdates.push(() => base44.asServiceRole.entities.TrainingAssignment.update(assignment.id, {
           reminder_offsets_sent: [...remindersSent, ...dueOffsets]
-        });
+        }));
       }
     }
 
@@ -124,16 +131,23 @@ Deno.serve(async (req) => {
           expiration_date: credential.expiration_date
         });
 
-        // Record every newly-crossed tier so it is never re-sent.
-        await base44.asServiceRole.entities.PersonnelCredential.update(credential.id, {
+        // Record every newly-crossed tier so it is never re-sent — deferred until
+        // after the notifications are actually created (see markerUpdates above).
+        markerUpdates.push(() => base44.asServiceRole.entities.PersonnelCredential.update(credential.id, {
           reminder_offsets_sent: [...remindersSent, ...dueOffsets]
-        });
+        }));
       }
     }
 
     // Bulk create employee notifications
     if (notifications.length > 0) {
       await base44.asServiceRole.entities.Notification.bulkCreate(notifications);
+    }
+
+    // Only now that the employee notifications are persisted, record the crossed
+    // reminder tiers so a bulkCreate failure can't permanently drop a reminder.
+    for (const applyMarker of markerUpdates) {
+      await applyMarker();
     }
 
     // Create consolidated admin notification
