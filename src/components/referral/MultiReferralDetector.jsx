@@ -81,13 +81,31 @@ export default function MultiReferralDetector({ fileUrl, onDetectionComplete, on
   const { is_multiple_referrals, referral_count, referrals } = analysis;
 
   if (!is_multiple_referrals || referral_count <= 1) {
+    // Single-referral PDF: still give the user a way forward. Without these actions
+    // the upload dialog is stuck (the parent hides its create button while detection
+    // is in progress and never gets an onDetectionComplete/onDismiss callback).
     return (
-      <Alert className="bg-green-50 border-green-200">
-        <CheckCircle2 className="h-4 w-4 text-green-600" />
-        <AlertDescription className="text-green-900 ml-3">
-          Single referral detected. Ready to process.
-        </AlertDescription>
-      </Alert>
+      <Card className="border-green-200 bg-green-50">
+        <CardContent className="p-4 space-y-3">
+          <Alert className="bg-green-50 border-green-200">
+            <CheckCircle2 className="h-4 w-4 text-green-600" />
+            <AlertDescription className="text-green-900 ml-3">
+              Single referral detected. Ready to process.
+            </AlertDescription>
+          </Alert>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={onDismiss} className="flex-1">
+              Cancel
+            </Button>
+            <Button
+              onClick={() => onDetectionComplete(analysis, (referrals || []).map((r) => r.index))}
+              className="flex-1 bg-green-600 hover:bg-green-700"
+            >
+              Process Referral
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 

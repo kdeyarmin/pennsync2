@@ -82,6 +82,11 @@ export default function DocumentToTriageMapper({ onTriageCreated }) {
         // medications, allergies, urgency, ai_extracted, confidence_score) — all
         // silently dropped — plus an invalid document_type ('clinical_record').
         const URGENCY_TO_PRIORITY = { urgent: "urgent", high: "high", routine: "normal" };
+        // Referral.document_type is a FILE-FORMAT enum (pdf/fax/image/electronic).
+        // The extractor's document_info.document_type is a clinical document KIND
+        // (e.g. "clinical_record"), so only adopt it when it happens to be a valid
+        // format value; otherwise default to "electronic" for an uploaded document.
+        const REFERRAL_DOC_TYPES = ["pdf", "fax", "image", "electronic"];
         const referralData = {
           patient_id: patientId,
           referral_source: extractedData.document_info?.source_facility || "Document Upload",
@@ -89,7 +94,9 @@ export default function DocumentToTriageMapper({ onTriageCreated }) {
           priority: URGENCY_TO_PRIORITY[assessUrgency(extractedData)] || "normal",
           status: "new",
           referral_date: todayEastern(),
-          document_type: "electronic",
+          document_type: REFERRAL_DOC_TYPES.includes(extractedData.document_info?.document_type)
+            ? extractedData.document_info.document_type
+            : "electronic",
           extracted_data: {
             chief_complaint: extractedData.clinical?.chief_complaint || "",
             secondary_diagnoses: extractedData.clinical?.secondary_diagnoses || [],

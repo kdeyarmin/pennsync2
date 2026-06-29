@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 
@@ -134,6 +135,11 @@ export default function ClinicalPathwayTrigger({ pdgmData, _analysisResults, pat
 
   const createPathwayTasks = async (pathway) => {
     if (!pathway.recommended_tasks || pathway.recommended_tasks.length === 0) return;
+    // assigned_to is required on Task; abort if the current user isn't resolved yet.
+    if (!currentUser?.email) {
+      toast.error('Could not determine the current user. Please refresh and try again.');
+      return;
+    }
 
     const taskPromises = pathway.recommended_tasks.map(task => {
       const taskData = {

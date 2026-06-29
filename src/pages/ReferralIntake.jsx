@@ -210,12 +210,26 @@ export default function ReferralIntake() {
   const handleMultiReferralDetectionComplete = async (analysis, selectedIndices) => {
     setProcessingMultipleReferrals(true);
     try {
-      // Create referrals for each selected document
-      const referralsToProcess = analysis.referrals.filter(r => selectedIndices.includes(r.index));
-      
+      // Create referrals for each selected document.
+      const selected = (analysis.referrals || []).filter(r => selectedIndices?.includes(r.index));
+      // Single-referral PDF (or nothing individually selected): create ONE referral
+      // from the whole document so a single-referral PDF is never stuck in the dialog.
+      const isSingle = selected.length === 0;
+      const docs = isSingle
+        ? [{
+            patient_name: analysis.referrals?.[0]?.patient_name || newReferral.patient_name || '',
+            referral_source: analysis.referrals?.[0]?.referral_source || newReferral.referral_source || '',
+            referral_date: analysis.referrals?.[0]?.referral_date || todayEastern(),
+            estimated_start_page: analysis.referrals?.[0]?.estimated_start_page,
+            estimated_end_page: analysis.referrals?.[0]?.estimated_end_page,
+            confidence: analysis.referrals?.[0]?.confidence,
+          }]
+        : selected;
+
       // Independent inserts — create concurrently rather than one-by-one.
-      await Promise.all(referralsToProcess.map((referral) =>
-        base44.entities.Referral.create({
+      await Promise.all(docs.map((referral) => {
+        const hasPages = referral.estimated_start_page != null && referral.estimated_end_page != null;
+        const payload = {
           patient_name: referral.patient_name || '',
           referral_source: referral.referral_source || '',
           referral_date: referral.referral_date || todayEastern(),
@@ -223,17 +237,22 @@ export default function ReferralIntake() {
           priority: 'normal',
           document_url: multiReferralDetection.fileUrl,
           status: 'new',
-          page_range: `${referral.estimated_start_page}-${referral.estimated_end_page}`,
-          detection_confidence: referral.confidence,
-          // `notes` is not a Referral field (silently dropped by the backend); record
-          // the split provenance in the schema's structured follow_up_notes array.
-          follow_up_notes: [{
+        };
+        // page_range / detection_confidence are only meaningful for a multi-document
+        // split; omit them (rather than writing "null-null") for a single referral.
+        if (hasPages) payload.page_range = `${referral.estimated_start_page}-${referral.estimated_end_page}`;
+        if (referral.confidence != null) payload.detection_confidence = referral.confidence;
+        if (!isSingle) {
+          // Record the split provenance in the schema's structured follow_up_notes
+          // array (`notes` is not a Referral field and would be silently dropped).
+          payload.follow_up_notes = [{
             date: new Date().toISOString(),
-            note: `Extracted from multi-document PDF: ${multiReferralDetection.fileName}. Pages ${referral.estimated_start_page}-${referral.estimated_end_page}`,
+            note: `Extracted from multi-document PDF: ${multiReferralDetection.fileName}.${hasPages ? ` Pages ${referral.estimated_start_page}-${referral.estimated_end_page}` : ''}`,
             created_by: currentUser?.email || 'system',
-          }]
-        })
-      ));
+          }];
+        }
+        return base44.entities.Referral.create(payload);
+      }));
 
       // Reset form
       setMultiReferralDetection(null);
@@ -249,9 +268,11 @@ export default function ReferralIntake() {
       setUploadDialogOpen(false);
 
       queryClient.invalidateQueries({ queryKey: ['referrals'] });
-      toast.success(`Successfully created ${referralsToProcess.length} referral${referralsToProcess.length !== 1 ? 's' : ''} from multi-document PDF. They are ready for processing.`);
+      toast.success(isSingle
+        ? 'Referral created from PDF. It is ready for processing.'
+        : `Successfully created ${docs.length} referral${docs.length !== 1 ? 's' : ''} from multi-document PDF. They are ready for processing.`);
     } catch (error) {
-      console.error('Error processing multiple referrals:', error);
+      console.error('Error processing referrals:', error);
       toast.error('Failed to create referrals. Please try again.');
     } finally {
       setProcessingMultipleReferrals(false);

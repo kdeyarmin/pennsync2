@@ -162,13 +162,18 @@ export default function OASISTaskGenerator({
   }, [analysisResults, patientName]);
 
   const handleCreateTasks = async () => {
+    // assigned_to is required on Task; resolve the user up front and abort if we
+    // can't, so we never attempt a create with assigned_to undefined (which the
+    // backend rejects). Done before setIsCreating(true) so the button isn't stuck.
+    const currentUser = await base44.auth.me().catch(() => null);
+    if (!currentUser?.email) {
+      toast.error('Could not determine the current user. Please refresh and try again.');
+      return;
+    }
     setIsCreating(true);
-    
+
     try {
       const tasksToCreate = suggestedTasks.filter(t => selectedTasks.includes(t.id));
-      // assigned_to is required on Task; without it every create is rejected and
-      // no tasks are made.
-      const currentUser = await base44.auth.me().catch(() => null);
 
       for (const task of tasksToCreate) {
         await createTaskMutation.mutateAsync({

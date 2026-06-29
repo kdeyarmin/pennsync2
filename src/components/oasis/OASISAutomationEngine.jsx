@@ -145,6 +145,13 @@ Generate actionable tasks. Each task must have: title, description, priority (hi
   };
 
   const handleCreateTasks = async () => {
+    // assigned_to is required on Task; abort if the current user isn't resolved yet
+    // rather than attempting a bulkCreate with assigned_to undefined (which the
+    // backend rejects).
+    if (!currentUser?.email) {
+      toast.error('Could not determine the current user. Please refresh and try again.');
+      return;
+    }
     const tasksToCreate = selectedActions.map(idx => {
       const action = suggestedActions[idx];
       const dueDate = new Date();
