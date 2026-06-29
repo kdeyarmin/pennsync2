@@ -196,9 +196,13 @@ PROVIDE:
       return await base44.entities.OASISAudit.create({
         oasis_upload_id: oasisData.id,
         patient_id: patientId,
-        auditor_email: currentUser.email,
+        reviewed_by: currentUser.email,
         reviewed_at: new Date().toISOString(),
-        flag_reason: 'group_assignment_override',
+        // 'manual_flag' is the valid flag_reason enum member for a human override;
+        // the specific "group assignment override" semantics live in auditor_findings
+        // below. (The literal 'group_assignment_override' is not in the enum and was
+        // being silently dropped, leaving the audit row's flag_reason empty.)
+        flag_reason: 'manual_flag',
         auditor_findings: JSON.stringify({
           original_clinical_group: pdgmData?.clinical_group,
           original_functional_level: pdgmData?.functional_level,

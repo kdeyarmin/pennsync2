@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 
@@ -24,6 +25,13 @@ export default function ClinicalPathwayTrigger({ pdgmData, _analysisResults, pat
   const [triggeredPathways, setTriggeredPathways] = useState([]);
   const [_isAnalyzing, _setIsAnalyzing] = useState(false);
   const queryClient = useQueryClient();
+
+  // Current user — assigned_to is required on Task; without it the pathway task
+  // creates are rejected and nothing is generated.
+  const { data: currentUser } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me(),
+  });
 
   // Fetch all active clinical pathways
   const { data: pathways = [] } = useQuery({
@@ -127,10 +135,16 @@ export default function ClinicalPathwayTrigger({ pdgmData, _analysisResults, pat
 
   const createPathwayTasks = async (pathway) => {
     if (!pathway.recommended_tasks || pathway.recommended_tasks.length === 0) return;
+    // assigned_to is required on Task; abort if the current user isn't resolved yet.
+    if (!currentUser?.email) {
+      toast.error('Could not determine the current user. Please refresh and try again.');
+      return;
+    }
 
     const taskPromises = pathway.recommended_tasks.map(task => {
       const taskData = {
         patient_id: patientId || null,
+        assigned_to: currentUser?.email,
         title: task.task_title,
         description: `[Clinical Pathway: ${pathway.pathway_name}] ${task.task_description}`,
         type: task.task_type || 'other',

@@ -101,7 +101,7 @@ export default function DocumentPackageViewer({ packageId }) {
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => handlePreview(sig.original_pdf_url)}
+                    onClick={() => handlePreview(sig.document_url || sig.original_pdf_url)}
                     className="flex-1 gap-1"
                   >
                     <Eye className="w-3 h-3" />
@@ -110,7 +110,7 @@ export default function DocumentPackageViewer({ packageId }) {
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => handleDownload(sig.original_pdf_url, sig.document_name)}
+                    onClick={() => handleDownload(sig.document_url || sig.original_pdf_url, sig.document_name)}
                     className="flex-1 gap-1"
                   >
                     <Download className="w-3 h-3" />

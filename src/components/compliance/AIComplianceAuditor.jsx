@@ -487,9 +487,17 @@ For each area, provide:
         onIssuesFound(result);
       }
 
-      // Create ComplianceAudit record
+      // Create ComplianceAudit record. visit_id is required; for a patient with no
+      // visit on file it would resolve to undefined and the create would reject
+      // (silently losing the audit). Skip persistence in that case — the analysis
+      // is already shown — and tell the user why.
+      const resolvedVisitId = visitId || visits[0]?.id;
+      if (!resolvedVisitId) {
+        toast.warning('Audit completed, but there is no visit on file to attach it to. Document a visit to save this compliance audit.');
+        return;
+      }
       await base44.entities.ComplianceAudit.create({
-        visit_id: visitId || visits[0]?.id,
+        visit_id: resolvedVisitId,
         nurse_email: currentUser?.email || 'system',
         patient_id: patientId,
         compliance_score: result.overall_compliance_score,

@@ -77,12 +77,16 @@ export default function SupplyManagementDashboard() {
   });
 
   const acknowledgeAlertMutation = useMutation({
-    mutationFn: (id) =>
-      base44.entities.SupplyLowStockAlert.update(id, {
+    mutationFn: async (id) => {
+      // Record the real acknowledging user, not the literal string "current_user"
+      // (which made the audit field useless for every acknowledgment).
+      const me = await base44.auth.me().catch(() => null);
+      return base44.entities.SupplyLowStockAlert.update(id, {
         status: "acknowledged",
-        acknowledged_by: "current_user",
+        acknowledged_by: me?.email || "unknown",
         acknowledged_date: new Date().toISOString(),
-      }),
+      });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["supply-alerts"] });
       toast.success("Alert acknowledged");

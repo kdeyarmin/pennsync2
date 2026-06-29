@@ -41,7 +41,7 @@ Deno.serve(async (req) => {
       user.role === 'admin' ||
       user.account_type === 'super_admin' ||
       user.account_type === 'agency_admin' ||
-      String(user.email || '').trim().toLowerCase() === 'kdeyarmin@comcast.net';
+      String(user.email || '').trim().toLowerCase() === ((Deno.env.get('SUPER_ADMIN_EMAIL') || '').trim().toLowerCase() || null);
     if (!isAdmin) {
       return Response.json({ error: 'Only administrators can manage the number pool.' }, { status: 403 });
     }

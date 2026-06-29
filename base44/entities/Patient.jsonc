@@ -74,6 +74,23 @@
     "allergies": {
       "type": "string"
     },
+    "current_medications": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "dosage": { "type": "string" },
+          "frequency": { "type": "string" },
+          "route": { "type": "string" },
+          "prescriber": { "type": "string" },
+          "start_date": { "type": "string" },
+          "indication": { "type": "string" },
+          "status": { "type": "string" }
+        }
+      },
+      "description": "Patient's current medication list (read across the app as patient.current_medications). Populated from referral/import extraction."
+    },
     "past_medical_history": {
       "type": "array",
       "items": {

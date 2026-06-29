@@ -3,7 +3,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 // Financial visibility gate. MIRRORS src/lib/permissions.canViewFinancials
 // (isAdminLike) — backend Deno modules can't import src/lib, so the literal
 // owner email and admin checks are duplicated here. Keep in sync.
-const SUPER_ADMIN_EMAIL = ((typeof Deno !== 'undefined' && Deno.env.get('SUPER_ADMIN_EMAIL')) || 'kdeyarmin@comcast.net').trim().toLowerCase();
+const SUPER_ADMIN_EMAIL = ((typeof Deno !== 'undefined' && Deno.env.get('SUPER_ADMIN_EMAIL')) || '').trim().toLowerCase() || null;
 function canViewFinancials(user) {
   if (!user) return false;
   return (

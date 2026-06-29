@@ -18,12 +18,21 @@ Deno.serve(async (req) => {
 
     const userRole = role || 'user';
 
+    // Only 'admin' (facility admin) or 'user' (nurse) are assignable roles — super
+    // admin is an account_type, not a role granted via invitation. Reject anything
+    // else (e.g. 'super_admin') before it reaches the platform invite and the
+    // UserInvitation.role enum (which is admin/user only), matching
+    // userManagement.inviteUser.
+    if (!['admin', 'user'].includes(String(userRole))) {
+      return Response.json({ error: "role must be 'admin' (facility admin) or 'user' (nurse)" }, { status: 400 });
+    }
+
     // Privilege-propagation guard: the gate above admits a plain facility `admin`,
     // but the requested role is applied verbatim to the new account (with
     // is_approved: true) by onUserSignup / autoApproveInvitedUser. Without this, any
     // admin could mint another admin. Only a super_admin (or the platform owner) may
     // invite a user into a privileged role — mirrors the guard in fixUserAccount.
-    const SUPER_ADMIN_EMAIL = (Deno.env.get('SUPER_ADMIN_EMAIL') || 'kdeyarmin@comcast.net').trim().toLowerCase();
+    const SUPER_ADMIN_EMAIL = (Deno.env.get('SUPER_ADMIN_EMAIL') || '').trim().toLowerCase() || null;
     const callerIsSuperAdmin = user.account_type === 'super_admin'
       || String(user.email || '').trim().toLowerCase() === SUPER_ADMIN_EMAIL;
     const PRIVILEGED_ROLES = ['admin', 'super_admin'];

@@ -80,11 +80,14 @@ export default function DocumentReplacementDialog({
         previous_version_id: currentVersion ? currentVersion.id : null,
       });
 
-      // Update document signature to point to new PDF
+      // Update document signature to point to new PDF. The active source PDF is
+      // stored on the `document_url` field (the only PDF-url field the
+      // DocumentSignature schema defines and the one every signer read path
+      // consumes); writing the non-schema `original_pdf_url` was silently dropped,
+      // so the signer kept seeing the stale original.
       await base44.entities.DocumentSignature.update(documentSignature.id, {
-        original_pdf_url: file_url,
+        document_url: file_url,
         status: carryForwardSignatures ? documentSignature.status : 'pending',
-        updated_at: new Date().toISOString(),
       });
 
       return newVersion;

@@ -47,6 +47,21 @@ Deno.serve(async (req) => {
       );
       if (existingRenewal) continue;
 
+      // Skip if the user already holds a NEWER certificate for this course (i.e.
+      // they have already renewed). The superseded certificate is still
+      // non-revoked and within 30 days of its own expiration, and its prior
+      // renewal assignment is 'completed' (so it isn't caught by the active-status
+      // guard above) — without this check the job re-assigns the renewal and
+      // re-notifies every run despite a valid newer certificate.
+      const hasNewerCertificate = certificates.some((c) =>
+        c.id !== certificate.id &&
+        c.course_id === certificate.course_id &&
+        c.user_id === certificate.user_id &&
+        c.expiration_date &&
+        new Date(`${c.expiration_date}T00:00:00Z`).getTime() > expiration.getTime()
+      );
+      if (hasNewerCertificate) continue;
+
       const newAssignment = await base44.asServiceRole.entities.TrainingAssignment.create({
         course_id: certificate.course_id,
         course_title: certificate.course_title,

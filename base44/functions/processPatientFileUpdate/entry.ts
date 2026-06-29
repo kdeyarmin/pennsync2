@@ -175,9 +175,13 @@ function parseUploadedPatient(row, rowNumber) {
   const admission_date = normalizeDob(firstOf(row, ['admission_date', 'soc_date', 'start_of_care', 'admit_date']));
   const discharge_date = normalizeDob(firstOf(row, ['discharge_date', 'dc_date', 'discharged_on']));
   const rawStatus = firstOf(row, ['status', 'patient_status']).toLowerCase();
+  // Constrain to the Patient.status enum (active/discharged/hospitalized/merged);
+  // an arbitrary CSV value would be written verbatim and silently dropped. Unknown
+  // values map to '' so the Patient.status default ('active') applies intentionally.
   const status = rawStatus.includes('discharg') ? 'discharged'
+    : rawStatus.includes('hospital') ? 'hospitalized'
     : rawStatus.includes('active') ? 'active'
-    : (rawStatus || '');
+    : '';
   const payor = firstOf(row, ['payor', 'payer', 'insurance', 'primary_insurance']);
   const primary_diagnosis = firstOf(row, ['primary_diagnosis', 'diagnosis', 'dx', 'primary_dx']);
   const secondaryRaw = firstOf(row, ['secondary_diagnoses', 'secondary_diagnosis', 'other_diagnoses']);

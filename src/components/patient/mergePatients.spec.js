@@ -23,6 +23,9 @@ vi.mock("@/api/base44Client", () => {
   db.CarePlan = makeEntity();
   db.PatientAlert = makeEntity();
   db.PendingPatientUpdate = makeEntity();
+  // Representatives of the broader patient_id-linked set now reassigned on merge.
+  db.OASISAssessment = makeEntity();
+  db.DocumentSignature = makeEntity();
   db.Patient = makeEntity();
   return { base44: { entities: db } };
 });
@@ -38,6 +41,11 @@ beforeEach(() => {
   db.CarePlan.rows = [{ id: "cp1", patient_id: "dup" }];
   db.PatientAlert.rows = [];
   db.PendingPatientUpdate.rows = [{ id: "pu1", patient_id: "dup" }];
+  db.OASISAssessment.rows = [{ id: "oa1", patient_id: "dup" }];
+  db.DocumentSignature.rows = [
+    { id: "ds1", patient_id: "dup" },
+    { id: "ds2", patient_id: "other" },
+  ];
   db.Patient.rows = [
     { id: "keep", first_name: "John", is_archived: false, status: "active" },
     { id: "dup", first_name: "John", is_archived: false, status: "active" },
@@ -56,8 +64,13 @@ describe("mergePatientInto", () => {
     expect(db.Visit.rows.filter((r) => r.patient_id === "keep").map((r) => r.id)).toEqual(["v1", "v2"]);
     expect(db.CarePlan.rows.find((r) => r.id === "cp1").patient_id).toBe("keep");
     expect(db.PendingPatientUpdate.rows.find((r) => r.id === "pu1").patient_id).toBe("keep");
-    // An unrelated visit is untouched.
+    // Other patient_id-linked clinical records (OASIS, document signatures, …) also
+    // follow the patient to the survivor.
+    expect(db.OASISAssessment.rows.find((r) => r.id === "oa1").patient_id).toBe("keep");
+    expect(db.DocumentSignature.rows.find((r) => r.id === "ds1").patient_id).toBe("keep");
+    // An unrelated visit / signature is untouched.
     expect(db.Visit.rows.find((r) => r.id === "v3").patient_id).toBe("other");
+    expect(db.DocumentSignature.rows.find((r) => r.id === "ds2").patient_id).toBe("other");
 
     // The duplicate is soft-archived and pointed at the survivor — not deleted.
     const dup = db.Patient.rows.find((r) => r.id === "dup");
@@ -67,7 +80,10 @@ describe("mergePatientInto", () => {
     expect(dup.merged_by).toBe("admin@x.com");
     expect(dup.merged_at).toBeTruthy();
 
-    expect(result.reassigned).toEqual({ Visit: 2, CarePlan: 1, PatientAlert: 0, PendingPatientUpdate: 1 });
+    expect(result.reassigned).toEqual({
+      Visit: 2, CarePlan: 1, PatientAlert: 0, PendingPatientUpdate: 1,
+      OASISAssessment: 1, DocumentSignature: 1,
+    });
   });
 
   it("rejects merging a patient into itself", async () => {

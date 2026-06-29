@@ -72,7 +72,7 @@ export default function AnalyticsDashboard() {
     queryFn: () => base44.entities.NoteConversion.list('-created_date', 10000),
     select: (data) => data.filter(nc => {
       const ncDate = new Date(nc.created_date);
-      const inDateRange = ncDate >= new Date(startDate) && ncDate <= new Date(endDate);
+      const inDateRange = ncDate >= new Date(startDate) && ncDate <= new Date(endDate + 'T23:59:59.999');
       const userMatch = selectedUser === 'all' || nc.nurse_email === selectedUser;
       return inDateRange && userMatch;
     }),
@@ -84,7 +84,7 @@ export default function AnalyticsDashboard() {
     queryFn: () => base44.entities.ComplianceAudit.list('-audit_date', 10000),
     select: (data) => data.filter(ca => {
       const caDate = new Date(ca.audit_date || ca.created_date);
-      const inDateRange = caDate >= new Date(startDate) && caDate <= new Date(endDate);
+      const inDateRange = caDate >= new Date(startDate) && caDate <= new Date(endDate + 'T23:59:59.999');
       const userMatch = selectedUser === 'all' || ca.nurse_email === selectedUser;
       return inDateRange && userMatch;
     }),
@@ -96,7 +96,7 @@ export default function AnalyticsDashboard() {
     queryFn: () => base44.entities.UserActivity.list('-created_date', 10000),
     select: (data) => data.filter(ua => {
       const uaDate = new Date(ua.created_date);
-      const inDateRange = uaDate >= new Date(startDate) && uaDate <= new Date(endDate);
+      const inDateRange = uaDate >= new Date(startDate) && uaDate <= new Date(endDate + 'T23:59:59.999');
       const userMatch = selectedUser === 'all' || ua.user_email === selectedUser;
       return inDateRange && userMatch;
     }),

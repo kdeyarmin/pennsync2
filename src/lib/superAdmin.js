@@ -17,21 +17,28 @@
  */
 
 /**
- * The platform owner. This account is always treated as the super admin.
+ * The platform owner email used for the email-based super-admin override.
  *
- * Configurable per deployment via the build-time env var
- * `VITE_SUPER_ADMIN_EMAIL`; when unset it falls back to the original owner so
- * existing deployments are unaffected. Normalized (trimmed + lower-cased) so the
- * case-insensitive comparisons below hold for any configured value.
+ * OPT-IN: configured via the build-time env var `VITE_SUPER_ADMIN_EMAIL`. When
+ * unset there is NO hard-coded owner email — super-admin is then determined
+ * solely by `account_type === 'super_admin'` (see isSuperAdmin). This avoids
+ * baking an identifier into the build and removes the unintended privilege path
+ * where a missing env var would still treat a specific email as super admin.
+ * Normalized (trimmed + lower-cased) for case-insensitive comparison.
  */
 export const SUPER_ADMIN_EMAIL = (
-  import.meta.env?.VITE_SUPER_ADMIN_EMAIL || "kdeyarmin@comcast.net"
+  import.meta.env?.VITE_SUPER_ADMIN_EMAIL || ""
 )
   .trim()
   .toLowerCase();
 
-/** Case/whitespace-insensitive email match against the designated super admin. */
+/**
+ * Case/whitespace-insensitive email match against the configured super admin.
+ * Returns false when no owner email is configured, so an empty override can
+ * never match (including a user with no email).
+ */
 export function isSuperAdminEmail(email) {
+  if (!SUPER_ADMIN_EMAIL) return false;
   return String(email || "").trim().toLowerCase() === SUPER_ADMIN_EMAIL;
 }
 

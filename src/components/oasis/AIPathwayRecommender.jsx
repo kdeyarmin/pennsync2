@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { toast } from "sonner";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Loader2,
@@ -33,6 +34,13 @@ export default function AIPathwayRecommender({
   const [selectedPathways, setSelectedPathways] = useState([]);
   const [expandedPathway, setExpandedPathway] = useState(null);
   const queryClient = useQueryClient();
+
+  // Current user — assigned_to is required on Task; without it the bulkCreate of
+  // generated pathway tasks is rejected and nothing is created.
+  const { data: currentUser } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me(),
+  });
 
   const { data: availablePathways = [] } = useQuery({
     queryKey: ['clinicalPathways'],
@@ -220,6 +228,11 @@ Return JSON:
 
   const handleActivatePathways = async () => {
     if (!recommendations || selectedPathways.length === 0) return;
+    // assigned_to is required on Task; abort if the current user isn't resolved yet.
+    if (!currentUser?.email) {
+      toast.error('Could not determine the current user. Please refresh and try again.');
+      return;
+    }
 
     const tasksToCreate = [];
     
@@ -230,6 +243,7 @@ Return JSON:
           tasksToCreate.push({
             ...task,
             patient_id: patientId,
+            assigned_to: currentUser?.email,
             source: 'ai_generated',
             ai_reason: `Generated from ${pathway.pathway_name} pathway`
           });

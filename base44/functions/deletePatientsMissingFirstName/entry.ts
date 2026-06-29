@@ -63,7 +63,10 @@ Deno.serve(async (req) => {
       try {
         await base44.asServiceRole.entities.Patient.update(patient.id, {
           is_archived: true,
-          status: 'archived',
+          // 'merged' is the soft-archive sentinel the Patient.status enum defines
+          // (active|discharged|merged); the prior 'archived' value was not in the
+          // enum and was silently dropped, leaving these stubs flagged 'active'.
+          status: 'merged',
         });
         archivedCount++;
       } catch (error) {

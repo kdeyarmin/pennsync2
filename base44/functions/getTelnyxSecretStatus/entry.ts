@@ -14,7 +14,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
  * }
  */
 
-const SUPER_ADMIN_EMAIL = ((typeof Deno !== 'undefined' && Deno.env.get('SUPER_ADMIN_EMAIL')) || 'kdeyarmin@comcast.net').trim().toLowerCase();
+const SUPER_ADMIN_EMAIL = ((typeof Deno !== 'undefined' && Deno.env.get('SUPER_ADMIN_EMAIL')) || '').trim().toLowerCase() || null;
 
 const sameEmail = (a, b) =>
   String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase();
@@ -30,7 +30,7 @@ Deno.serve(async (req) => {
     const isAdmin =
       user.role === 'admin' ||
       user.account_type === 'super_admin' ||
-      sameEmail(user.email, SUPER_ADMIN_EMAIL);
+      (SUPER_ADMIN_EMAIL && sameEmail(user.email, SUPER_ADMIN_EMAIL));
     if (!isAdmin) {
       return Response.json({ error: 'Administrator access required.' }, { status: 403 });
     }

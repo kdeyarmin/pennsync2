@@ -3,14 +3,34 @@
 // history the same way instead of each re-implementing it slightly differently.
 import { base44 } from "@/api/base44Client";
 
-// Entities that reference a patient via `patient_id` and must follow the patient
-// when duplicates are merged, so visits / care plans / alerts are never left
-// orphaned on a record that's about to be archived.
+// Every entity that references a patient via `patient_id` must follow the patient
+// when duplicates are merged — otherwise those records stay attached to the
+// now-archived duplicate and disappear from the survivor's chart (the dialog
+// promises the full clinical history is transferred). This is the complete set of
+// patient_id-linked entities so nothing is orphaned on the archived record.
+// Reassignment is best-effort per entity/record (see mergePatientInto): an entity
+// the caller can't write (RLS) is skipped and logged, and the soft-archive +
+// merged_into_id pointer keeps anything left behind recoverable.
 export const PATIENT_RELATED_ENTITIES = [
-  "Visit",
-  "CarePlan",
-  "PatientAlert",
-  "PendingPatientUpdate",
+  // Visits / care plans / alerts / pending updates
+  "Visit", "CarePlan", "CarePlanProposal", "PatientAlert", "PendingPatientUpdate",
+  "CareCoordinationAlert", "PatientRecommendation", "PatientRiskAssessment",
+  // OASIS
+  "OASISAssessment", "OASISUpload", "OASISAudit", "OASISFeedback", "OASISScenario",
+  "OASISWorkflowExecution",
+  // Clinical events / documents / referrals / discharge
+  "ClinicalEvent", "Incident", "DischargeSummary", "Document", "DocumentSignature",
+  "DocumentPackage", "Referral", "NoteConversion", "ComplianceAudit", "Task", "TeamNote",
+  // Medications
+  "Medication", "MedicationReconciliation",
+  // Education
+  "PatientEducationAssignment", "PatientEducationDelivery", "SentEducationMaterial",
+  "TrainingRecommendation",
+  // Telehealth / supplies
+  "TelehealthSession", "SupplyUsageLog", "SupplyPrediction", "PDFIndex",
+  // Communications history
+  "CallLog", "SmsMessage", "SmsConsent", "ScheduledSms", "FaxLog", "ScheduledFax",
+  "FaxDraft", "Message",
 ];
 
 /**
@@ -40,11 +60,26 @@ export async function mergePatientInto(primaryId, duplicateId, { mergedBy = null
   for (const entityName of PATIENT_RELATED_ENTITIES) {
     const api = base44.entities[entityName];
     if (!api?.filter || !api?.update) continue;
-    const records = (await api.filter({ patient_id: duplicateId })) || [];
-    for (const record of records) {
-      await api.update(record.id, { patient_id: primaryId });
+    let moved = 0;
+    try {
+      const records = (await api.filter({ patient_id: duplicateId })) || [];
+      for (const record of records) {
+        try {
+          await api.update(record.id, { patient_id: primaryId });
+          moved += 1;
+        } catch (err) {
+          // Best-effort: a single record the caller can't write (RLS) is left on the
+          // archived duplicate (recoverable via merged_into_id) rather than aborting
+          // the whole merge.
+          console.error(`mergePatientInto: could not reassign ${entityName} ${record.id}:`, err?.message);
+        }
+      }
+    } catch (err) {
+      // Entity not readable for this caller (RLS) — skip; the merged_into_id pointer
+      // still ties its records to the survivor.
+      console.error(`mergePatientInto: could not read ${entityName} for reassignment:`, err?.message);
     }
-    reassigned[entityName] = records.length;
+    reassigned[entityName] = moved;
   }
 
   await base44.entities.Patient.update(duplicateId, {

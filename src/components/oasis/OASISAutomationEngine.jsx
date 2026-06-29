@@ -34,6 +34,13 @@ export default function OASISAutomationEngine({
   const [isExpanded, setIsExpanded] = useState(true);
   const queryClient = useQueryClient();
 
+  // Current user — assigned_to is required on Task; without it the bulkCreate
+  // below is rejected and the generated tasks are silently never created.
+  const { data: currentUser } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me(),
+  });
+
   // Fetch active automation rules
   const { data: automationRules = [] } = useQuery({
     queryKey: ['automationRules'],
@@ -138,6 +145,13 @@ Generate actionable tasks. Each task must have: title, description, priority (hi
   };
 
   const handleCreateTasks = async () => {
+    // assigned_to is required on Task; abort if the current user isn't resolved yet
+    // rather than attempting a bulkCreate with assigned_to undefined (which the
+    // backend rejects).
+    if (!currentUser?.email) {
+      toast.error('Could not determine the current user. Please refresh and try again.');
+      return;
+    }
     const tasksToCreate = selectedActions.map(idx => {
       const action = suggestedActions[idx];
       const dueDate = new Date();
@@ -145,6 +159,7 @@ Generate actionable tasks. Each task must have: title, description, priority (hi
 
       return {
         patient_id: patientId,
+        assigned_to: currentUser?.email,
         title: action.title,
         description: `${action.description}\n\n📋 Reason: ${action.reason}\n\n⚠️ Impact: ${action.compliance_risk_if_ignored || action.estimated_revenue_impact || 'Important for quality care'}`,
         type: action.type || 'followup',

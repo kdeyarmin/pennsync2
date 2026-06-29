@@ -96,7 +96,7 @@ Deno.serve(async (req) => {
     const isAdmin =
       user.role === 'admin' ||
       user.account_type === 'super_admin' ||
-      String(user.email || '').trim().toLowerCase() === 'kdeyarmin@comcast.net';
+      String(user.email || '').trim().toLowerCase() === ((Deno.env.get('SUPER_ADMIN_EMAIL') || '').trim().toLowerCase() || null);
     if (!isAdmin) {
       return Response.json({ error: 'Only administrators can test the Telnyx connection' }, { status: 403 });
     }

@@ -51,14 +51,20 @@ Deno.serve(async (req) => {
       audit_trail: updatedAuditTrail
     });
 
-    // Create archive log entry for compliance
+    // Create archive log entry for compliance. SystemLog's schema fields are
+    // job_name/job_type/status/message (all required) + a free-form details object;
+    // the previous action/user_email keys were silently dropped and the missing
+    // required fields meant no audit row was written at all.
     await base44.asServiceRole.entities.SystemLog.create({
-      action: 'document_archived',
-      user_email: user.email,
+      job_name: 'Document Archived',
+      job_type: 'other',
+      status: 'success',
+      message: `Document ${document_id} archived by ${user.email}`,
       details: {
         document_id,
         document_type: document.document_type,
         patient_id: document.patient_id,
+        archived_by: user.email,
         archive_date: new Date().toISOString(),
         total_signers: document.signers?.length || 0,
         archive_notes

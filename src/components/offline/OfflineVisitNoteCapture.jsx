@@ -107,12 +107,52 @@ export default function OfflineVisitNoteCapture({ patient, onComplete }) {
     }
 
     try {
-      // Save to offline queue
+      // Map the form onto the Visit ENTITY SCHEMA before queuing. The offline sync
+      // worker writes item.data verbatim via Visit.create and Base44 silently drops
+      // unknown fields — so the form's own field names (`vitals`, `assessment`,
+      // `interventions`, `plan`, `chief_complaint`, …) and the display-label
+      // `visit_type` were syncing an empty visit shell with no vitals and no
+      // clinical narrative. Map vitals -> `vital_signs` (numeric), the narrative ->
+      // `nurse_notes`, and the label -> the `visit_type` enum.
+      const rawVitals = visitData.vitals || {};
+      const vital_signs = {};
+      for (const [key, val] of Object.entries(rawVitals)) {
+        if (val === '' || val == null) continue;
+        const n = parseFloat(val);
+        if (Number.isFinite(n)) vital_signs[key] = n;
+      }
+      const hasVitals = Object.keys(vital_signs).length > 0;
+
+      // Form labels -> Visit.visit_type enum. Therapy/aide/social-work visits have
+      // no dedicated enum member, so they map to the generic 'routine_visit'.
+      const VISIT_TYPE_MAP = {
+        'Skilled Nursing': 'skilled_nursing',
+        'Physical Therapy': 'routine_visit',
+        'Occupational Therapy': 'routine_visit',
+        'Speech Therapy': 'routine_visit',
+        'Home Health Aide': 'routine_visit',
+        'Social Work': 'routine_visit',
+      };
+
+      const nurseNotes = [
+        visitData.chief_complaint && `Chief Complaint:\n${visitData.chief_complaint}`,
+        visitData.assessment && `Assessment:\n${visitData.assessment}`,
+        visitData.interventions && `Interventions:\n${visitData.interventions}`,
+        visitData.patient_response && `Patient Response:\n${visitData.patient_response}`,
+        visitData.plan && `Plan of Care:\n${visitData.plan}`,
+        visitData.clinical_notes && `Additional Notes:\n${visitData.clinical_notes}`,
+        visitData.visit_duration_minutes ? `Visit Duration: ${visitData.visit_duration_minutes} minutes` : null,
+        visitData.nurse_signature && `Signed: ${visitData.nurse_signature}`,
+      ].filter(Boolean).join('\n\n');
+
+      // Save the schema-conformant Visit to the offline queue.
       const _savedId = OfflineStorageManager.saveToQueue('visit', {
-        ...visitData,
+        patient_id: visitData.patient_id,
+        visit_date: visitData.visit_date,
+        visit_type: VISIT_TYPE_MAP[visitData.visit_type] || 'skilled_nursing',
+        vital_signs: hasVitals ? vital_signs : null,
+        nurse_notes: nurseNotes,
         status: 'completed',
-        offline_created: !isOnline,
-        captured_at: new Date().toISOString()
       });
 
       toast.success(

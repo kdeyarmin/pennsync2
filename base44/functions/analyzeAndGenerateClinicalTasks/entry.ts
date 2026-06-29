@@ -105,7 +105,7 @@ Return a JSON array of tasks:
   {
     "title": "Clear, specific task title",
     "description": "Detailed description of what needs to be done and why",
-    "type": "call|notify|schedule|order|coordinate|document|safety|followup|assessment|other",
+    "type": "call|notify|schedule|order|coordinate|document|safety|followup|other",
     "priority": "high|medium|low",
     "due_timeframe": "today|24_hours|48_hours|this_week|next_visit",
     "clinical_rationale": "Why this task is needed (for nurse understanding)",
@@ -123,7 +123,7 @@ Prioritize based on:
 Generate 3-7 tasks maximum, focusing on most clinically relevant items.
 
 Return ONLY valid JSON, no prose or code fences, with this shape:
-{"tasks":[{"title":"","description":"","type":"call|notify|schedule|order|coordinate|document|safety|followup|assessment|other","priority":"high|medium|low","due_timeframe":"today|24_hours|48_hours|this_week|next_visit","clinical_rationale":"","intervention_type":"monitoring|medication|education|safety|coordination|assessment","risk_level":"critical|high|moderate|low","suggested_actions":[""]}]}`;
+{"tasks":[{"title":"","description":"","type":"call|notify|schedule|order|coordinate|document|safety|followup|other","priority":"high|medium|low","due_timeframe":"today|24_hours|48_hours|this_week|next_visit","clinical_rationale":"","intervention_type":"monitoring|medication|education|safety|coordination|assessment","risk_level":"critical|high|moderate|low","suggested_actions":[""]}]}`;
 
     const rawResponse = await base44.integrations.Core.InvokeLLM({
       model: "claude_opus_4_8",

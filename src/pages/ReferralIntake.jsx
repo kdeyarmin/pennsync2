@@ -72,6 +72,7 @@ import { runReferralQuickScan } from "../components/referral/referralExtraction"
 import PatientMatchReview from "../components/referral/PatientMatchReview";
 import AIReferralCarePlanGenerator from "../components/referral/AIReferralCarePlanGenerator";
 import PatientVerificationStep from "../components/referral/PatientVerificationStep";
+import MultiReferralDetector from "../components/referral/MultiReferralDetector";
 
 const ReferralProcessor = lazy(() => import("@/components/hub-tabs/ReferralProcessor"));
 const ReferralAdmissionNote = lazy(() => import("@/components/hub-tabs/ReferralAdmissionNote"));
@@ -206,15 +207,29 @@ export default function ReferralIntake() {
     setIsUploading(false);
   };
 
-  const _handleMultiReferralDetectionComplete = async (analysis, selectedIndices) => {
+  const handleMultiReferralDetectionComplete = async (analysis, selectedIndices) => {
     setProcessingMultipleReferrals(true);
     try {
-      // Create referrals for each selected document
-      const referralsToProcess = analysis.referrals.filter(r => selectedIndices.includes(r.index));
-      
+      // Create referrals for each selected document.
+      const selected = (analysis.referrals || []).filter(r => selectedIndices?.includes(r.index));
+      // Single-referral PDF (or nothing individually selected): create ONE referral
+      // from the whole document so a single-referral PDF is never stuck in the dialog.
+      const isSingle = selected.length === 0;
+      const docs = isSingle
+        ? [{
+            patient_name: analysis.referrals?.[0]?.patient_name || newReferral.patient_name || '',
+            referral_source: analysis.referrals?.[0]?.referral_source || newReferral.referral_source || '',
+            referral_date: analysis.referrals?.[0]?.referral_date || todayEastern(),
+            estimated_start_page: analysis.referrals?.[0]?.estimated_start_page,
+            estimated_end_page: analysis.referrals?.[0]?.estimated_end_page,
+            confidence: analysis.referrals?.[0]?.confidence,
+          }]
+        : selected;
+
       // Independent inserts — create concurrently rather than one-by-one.
-      await Promise.all(referralsToProcess.map((referral) =>
-        base44.entities.Referral.create({
+      await Promise.all(docs.map((referral) => {
+        const hasPages = referral.estimated_start_page != null && referral.estimated_end_page != null;
+        const payload = {
           patient_name: referral.patient_name || '',
           referral_source: referral.referral_source || '',
           referral_date: referral.referral_date || todayEastern(),
@@ -222,17 +237,22 @@ export default function ReferralIntake() {
           priority: 'normal',
           document_url: multiReferralDetection.fileUrl,
           status: 'new',
-          page_range: `${referral.estimated_start_page}-${referral.estimated_end_page}`,
-          detection_confidence: referral.confidence,
-          // `notes` is not a Referral field (silently dropped by the backend); record
-          // the split provenance in the schema's structured follow_up_notes array.
-          follow_up_notes: [{
+        };
+        // page_range / detection_confidence are only meaningful for a multi-document
+        // split; omit them (rather than writing "null-null") for a single referral.
+        if (hasPages) payload.page_range = `${referral.estimated_start_page}-${referral.estimated_end_page}`;
+        if (referral.confidence != null) payload.detection_confidence = referral.confidence;
+        if (!isSingle) {
+          // Record the split provenance in the schema's structured follow_up_notes
+          // array (`notes` is not a Referral field and would be silently dropped).
+          payload.follow_up_notes = [{
             date: new Date().toISOString(),
-            note: `Extracted from multi-document PDF: ${multiReferralDetection.fileName}. Pages ${referral.estimated_start_page}-${referral.estimated_end_page}`,
+            note: `Extracted from multi-document PDF: ${multiReferralDetection.fileName}.${hasPages ? ` Pages ${referral.estimated_start_page}-${referral.estimated_end_page}` : ''}`,
             created_by: currentUser?.email || 'system',
-          }]
-        })
-      ));
+          }];
+        }
+        return base44.entities.Referral.create(payload);
+      }));
 
       // Reset form
       setMultiReferralDetection(null);
@@ -248,9 +268,11 @@ export default function ReferralIntake() {
       setUploadDialogOpen(false);
 
       queryClient.invalidateQueries({ queryKey: ['referrals'] });
-      toast.success(`Successfully created ${referralsToProcess.length} referral${referralsToProcess.length !== 1 ? 's' : ''} from multi-document PDF. They are ready for processing.`);
+      toast.success(isSingle
+        ? 'Referral created from PDF. It is ready for processing.'
+        : `Successfully created ${docs.length} referral${docs.length !== 1 ? 's' : ''} from multi-document PDF. They are ready for processing.`);
     } catch (error) {
-      console.error('Error processing multiple referrals:', error);
+      console.error('Error processing referrals:', error);
       toast.error('Failed to create referrals. Please try again.');
     } finally {
       setProcessingMultipleReferrals(false);
@@ -589,8 +611,10 @@ Actions available:
           updates.match_factors = matchAnalysis.match_factors;
           updates.discrepancies = matchAnalysis.discrepancies;
           
-          if (matchAnalysis.confidence_level === 'high' && matchAnalysis.confidence_score >= 90 && matchAnalysis.best_match_id) {
-            // High confidence (90%+) - auto-match but allow review
+          if (((matchAnalysis.confidence_level === 'definitive') || (matchAnalysis.confidence_level === 'high' && matchAnalysis.confidence_score >= 90)) && matchAnalysis.best_match_id) {
+            // Definitive (e.g. exact MRN) or high confidence (90%+) - auto-match.
+            // 'definitive' previously fell through every branch and silently created
+            // a DUPLICATE patient despite an exact-identifier match.
             if (!existingPatient) {
               existingPatient = allPatients.find(p => p.id === matchAnalysis.best_match_id);
             }
@@ -729,64 +753,77 @@ Actions available:
         allSuggestedTasks.push(...analysisTasksToCreate);
       }
       
-      // Tasks from initial OCR extraction
-      if (extractedData.care_needs) {
-        // Create tasks for critical care needs
-        if (extractedData.care_needs.wound_care) {
-          allSuggestedTasks.push({
-            patient_id: updates.patient_id || null,
-            title: "Coordinate wound care assessment and supplies",
-            description: "Patient requires wound care services. Schedule wound care assessment and order necessary supplies.",
-            type: "coordinate",
-            priority: "high",
-            status: "pending",
-            source: "ai_generated",
-            ai_reason: "Wound care identified in referral document",
-            related_visit_id: referralId
-          });
-        }
-        
-        if (extractedData.care_needs.iv_therapy) {
-          allSuggestedTasks.push({
-            patient_id: updates.patient_id || null,
-            title: "Arrange IV therapy services and supplies",
-            description: "Patient requires IV therapy. Coordinate with pharmacy and schedule IV-certified nurse.",
-            type: "coordinate",
-            priority: "high",
-            status: "pending",
-            source: "ai_generated",
-            ai_reason: "IV therapy identified in referral document",
-            related_visit_id: referralId
-          });
-        }
-        
-        if (extractedData.care_needs.therapy_requirements?.length > 0) {
-          allSuggestedTasks.push({
-            patient_id: updates.patient_id || null,
-            title: `Coordinate ${extractedData.care_needs.therapy_requirements.join(', ')} therapy services`,
-            description: `Patient requires ${extractedData.care_needs.therapy_requirements.join(', ')}. Contact therapy team for evaluation and scheduling.`,
-            type: "coordinate",
-            priority: "high",
-            status: "pending",
-            source: "ai_generated",
-            ai_reason: `Therapy requirements identified: ${extractedData.care_needs.therapy_requirements.join(', ')}`,
-            related_visit_id: referralId
-          });
-        }
-        
-        if (extractedData.care_needs.dme_needs?.length > 0) {
-          allSuggestedTasks.push({
-            patient_id: updates.patient_id || null,
-            title: "Order DME equipment",
-            description: `Order the following DME: ${extractedData.care_needs.dme_needs.join(', ')}`,
-            type: "order",
-            priority: "high",
-            status: "pending",
-            source: "ai_generated",
-            ai_reason: `DME needs identified: ${extractedData.care_needs.dme_needs.join(', ')}`,
-            related_visit_id: referralId
-          });
-        }
+      // Tasks from the full referral extraction. The extraction schema exposes
+      // skilled_needs (services_ordered / specific_interventions / dme_supplies)
+      // and functional_status.wounds — NOT a `care_needs` object with
+      // wound_care/iv_therapy/therapy_requirements/dme_needs flags. The previous
+      // reads of extractedData.care_needs.* were always undefined, so these
+      // wound/IV/therapy/DME coordination tasks were never created.
+      const skilledNeeds = extractedData.skilled_needs || {};
+      const orderedServices = [
+        ...(skilledNeeds.services_ordered || []),
+        ...(skilledNeeds.specific_interventions || []),
+      ];
+      const servicesText = orderedServices.join(' ').toLowerCase();
+      const woundsText = `${servicesText} ${extractedData.functional_status?.wounds || ''}`.toLowerCase();
+      const dmeNeeds = skilledNeeds.dme_supplies || [];
+      const therapyRequirements = (skilledNeeds.services_ordered || [])
+        .filter((s) => /physical therapy|occupational therapy|speech|\bpt\b|\bot\b|\bst\b|slp/i.test(s));
+
+      if (/wound|ulcer|pressure injury|incision|dressing change/.test(woundsText)) {
+        allSuggestedTasks.push({
+          patient_id: updates.patient_id || null,
+          title: "Coordinate wound care assessment and supplies",
+          description: "Patient requires wound care services. Schedule wound care assessment and order necessary supplies.",
+          type: "coordinate",
+          priority: "high",
+          status: "pending",
+          source: "ai_generated",
+          ai_reason: "Wound care identified in referral document",
+          related_visit_id: referralId
+        });
+      }
+
+      if (/\biv\b|infusion|intravenous|picc|central line|tpn/.test(servicesText)) {
+        allSuggestedTasks.push({
+          patient_id: updates.patient_id || null,
+          title: "Arrange IV therapy services and supplies",
+          description: "Patient requires IV therapy. Coordinate with pharmacy and schedule IV-certified nurse.",
+          type: "coordinate",
+          priority: "high",
+          status: "pending",
+          source: "ai_generated",
+          ai_reason: "IV therapy identified in referral document",
+          related_visit_id: referralId
+        });
+      }
+
+      if (therapyRequirements.length > 0) {
+        allSuggestedTasks.push({
+          patient_id: updates.patient_id || null,
+          title: `Coordinate ${therapyRequirements.join(', ')} therapy services`,
+          description: `Patient requires ${therapyRequirements.join(', ')}. Contact therapy team for evaluation and scheduling.`,
+          type: "coordinate",
+          priority: "high",
+          status: "pending",
+          source: "ai_generated",
+          ai_reason: `Therapy requirements identified: ${therapyRequirements.join(', ')}`,
+          related_visit_id: referralId
+        });
+      }
+
+      if (dmeNeeds.length > 0) {
+        allSuggestedTasks.push({
+          patient_id: updates.patient_id || null,
+          title: "Order DME equipment",
+          description: `Order the following DME: ${dmeNeeds.join(', ')}`,
+          type: "order",
+          priority: "high",
+          status: "pending",
+          source: "ai_generated",
+          ai_reason: `DME needs identified: ${dmeNeeds.join(', ')}`,
+          related_visit_id: referralId
+        });
       }
 
       // Create all tasks and track success. Default assigned_to to the intake
@@ -801,7 +838,10 @@ Actions available:
         ));
       }
       
-      // Auto-generate suggested care plans
+      // Optional fallback care-plan creation. The full extraction schema does not
+      // carry `suggested_care_plans` (that is a quick-scan field), so this is a
+      // no-op for the full-extraction path; care plans for processed referrals are
+      // generated by the dedicated AIReferralCarePlanGenerator shown in this dialog.
       let createdCarePlansCount = 0;
       if (extractedData.suggested_care_plans?.length > 0 && updates.patient_id) {
         const carePlansToCreate = extractedData.suggested_care_plans.map(cp => ({
@@ -1538,8 +1578,23 @@ Actions available:
                 </label>
               </div>
             </div>
+
+            {/* Multi-referral PDF flow: when an uploaded PDF may contain several
+                referrals, let the user review the detected split and create one
+                Referral per selected document. Without this the create button is
+                hidden (gated on !multiReferralDetection) and the PDF upload would
+                otherwise dead-end with no way to proceed. */}
+            {multiReferralDetection && (
+              <div className="border-t border-slate-200 pt-5">
+                <MultiReferralDetector
+                  fileUrl={multiReferralDetection.fileUrl}
+                  onDetectionComplete={handleMultiReferralDetectionComplete}
+                  onDismiss={() => { setMultiReferralDetection(null); setUploadedFile(null); }}
+                />
+              </div>
+            )}
           </div>
-          
+
           <DialogFooter className="flex-col sm:flex-row gap-3 pt-5 border-t border-slate-200">
             <Button variant="outline" onClick={() => setUploadDialogOpen(false)} className="min-h-[44px] w-full sm:w-auto order-2 sm:order-1">
               Cancel

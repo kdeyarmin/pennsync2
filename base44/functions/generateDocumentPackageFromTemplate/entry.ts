@@ -72,9 +72,9 @@ Deno.serve(async (req) => {
           status: 'pending',
         },
       ],
-      signer_email: patient.email || '',
-      signer_name: `${patient.first_name} ${patient.last_name}`,
-      requires_signature: true,
+      // signer_email / signer_name / requires_signature are legacy flats not in the
+      // DocumentSignature schema (silently dropped) — the signer identity is already
+      // captured in the signers[] array above.
     });
 
     // Create DocumentVersion with populated content

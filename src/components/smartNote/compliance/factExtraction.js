@@ -58,7 +58,9 @@ export function extractVitals(text) {
 
   // Anchor the trailing edge like BP above so a typo like "hr 1100" can't be
   // silently truncated to a plausible-looking 110 (dropping the extra digit).
-  const hrMatch = text.match(/(?:hr|heart\s*rate)\s*(\d{2,3})(?!\d)/i);
+  // Tolerate a colon separator ("HR: 82") like the BP/O2 patterns — a very common
+  // EMR/dictation style that otherwise dropped the value entirely.
+  const hrMatch = text.match(/(?:hr|heart\s*rate)\s*:?\s*(\d{2,3})(?!\d)/i);
   if (hrMatch) vitals.hr = parseInt(hrMatch[1]);
 
   // Allow the filler words nurses routinely write between the keyword and the
@@ -72,16 +74,21 @@ export function extractVitals(text) {
 
   // Anchor the "t" shorthand with word boundaries so it can't match the
   // trailing "t" of unrelated words ("weight 150" must NOT read as temp 150).
-  const tempMatch = text.match(/(?:\btemp\b|temperature|\bt\b)\s*(\d{2,3}(?:\.\d)?)/i);
+  // Full spellings ("Temp:", "Temperature:") support a colon; the bare single-letter
+  // "t" shorthand only matches its space-adjacent numeric form ("T 98.6") — allowing
+  // a colon on bare "t" would misread generic "T:" list labels as a temperature.
+  const tempMatch = text.match(/(?:\btemp\b|temperature)\s*:?\s*(\d{2,3}(?:\.\d)?)|\bt\b\s+(\d{2,3}(?:\.\d)?)/i);
   if (tempMatch) {
-    const t = parseFloat(tempMatch[1]);
+    const t = parseFloat(tempMatch[1] ?? tempMatch[2]);
     if (t > 90) vitals.temp = t;
   }
 
-  const rrMatch = text.match(/(?:rr|resp(?:iratory)?\s*rate)\s*(\d{1,2})/i);
+  // \brr\b is word-anchored so a word ending in "rr" before a colon ("corr: 5")
+  // can't be misread as a respiratory rate.
+  const rrMatch = text.match(/(?:\brr\b|resp(?:iratory)?\s*rate)\s*:?\s*(\d{1,2})/i);
   if (rrMatch) vitals.rr = parseInt(rrMatch[1]);
 
-  const wtMatch = text.match(/(?:wt|weight)\s*(\d{2,3}(?:\.\d)?)\s*(?:lbs?|kg)?/i);
+  const wtMatch = text.match(/(?:wt|weight)\s*:?\s*(\d{2,3}(?:\.\d)?)\s*(?:lbs?|kg)?/i);
   if (wtMatch) vitals.weight = parseFloat(wtMatch[1]);
 
   return vitals;

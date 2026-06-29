@@ -14,6 +14,10 @@
       "type": "string",
       "description": "Title/name of the document"
     },
+    "document_name": {
+      "type": "string",
+      "description": "Display name of the document — written by the package/signature creators and read directly by the signatures list and package viewer (falls back to document_title where absent)"
+    },
     "document_content": {
       "type": "string",
       "description": "Original document content before signing"

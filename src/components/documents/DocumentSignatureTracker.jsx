@@ -107,7 +107,7 @@ export default function DocumentSignatureTracker({ patientId }) {
       window.open(doc.signed_pdf_url, '_blank');
     } else {
       const params = new URLSearchParams({
-        pdf_url: doc.original_pdf_url,
+        pdf_url: doc.document_url || doc.original_pdf_url || '',
         patient_id: doc.patient_id,
         document_type: doc.normalizedName
       });

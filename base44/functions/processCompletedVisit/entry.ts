@@ -200,6 +200,7 @@ Only suggest tasks that are clinically necessary. If no follow-up is needed, ret
     // against the allowed sets and fall back to safe defaults before create.
     const ALLOWED_TASK_TYPES = new Set(['call', 'notify', 'schedule', 'order', 'coordinate', 'document', 'safety', 'followup', 'other']);
     const ALLOWED_TASK_PRIORITIES = new Set(['high', 'medium', 'low']);
+    const ALLOWED_TASK_TIMEFRAMES = new Set(['today', '24_hours', '48_hours', 'this_week', 'next_visit']);
 
     // Create follow-up tasks
     const createdTasks = [];
@@ -207,13 +208,14 @@ Only suggest tasks that are clinically necessary. If no follow-up is needed, ret
       for (const task of tasksResponse.tasks) {
         const taskType = ALLOWED_TASK_TYPES.has(task.type) ? task.type : 'followup';
         const taskPriority = ALLOWED_TASK_PRIORITIES.has(task.priority) ? task.priority : 'medium';
+        const taskTimeframe = ALLOWED_TASK_TIMEFRAMES.has(task.due_timeframe) ? task.due_timeframe : '24_hours';
         const createdTask = await base44.entities.Task.create({
           patient_id: visit.patient_id,
           title: task.title,
           description: task.description,
           type: taskType,
           priority: taskPriority,
-          due_timeframe: task.due_timeframe || '24_hours',
+          due_timeframe: taskTimeframe,
           assigned_to: user.email,
           source: 'ai_generated',
           ai_reason: task.reason,
