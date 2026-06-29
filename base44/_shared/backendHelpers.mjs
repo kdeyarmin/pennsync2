@@ -65,13 +65,16 @@ function isSafeFetchUrl(raw) {
 
   // Admin-tier predicate. Mirrors src/lib/superAdmin.js isAdminLike — every admin
   // surface accepts facility admin (role 'admin'), agency_admin/super_admin, and
-  // the platform owner. The owner email is configurable via the SUPER_ADMIN_EMAIL
-  // env var (mirrors VITE_SUPER_ADMIN_EMAIL on the frontend) and falls back to the
-  // original owner when unset. Keep the fallback in step with superAdmin.js.
-  isAdminLike: `const SUPER_ADMIN_EMAIL = ((typeof Deno !== 'undefined' && Deno.env.get('SUPER_ADMIN_EMAIL')) || 'kdeyarmin@comcast.net').trim().toLowerCase();
+  // (OPT-IN) the platform owner email. The owner email is configured via the
+  // SUPER_ADMIN_EMAIL env var (mirrors VITE_SUPER_ADMIN_EMAIL on the frontend);
+  // when unset there is NO hard-coded owner — admin status is then determined
+  // solely by role/account_type. The `SUPER_ADMIN_EMAIL &&` guard ensures an
+  // unset (empty) override can never match a user (including one with no email).
+  // Keep in step with superAdmin.js.
+  isAdminLike: `const SUPER_ADMIN_EMAIL = ((typeof Deno !== 'undefined' && Deno.env.get('SUPER_ADMIN_EMAIL')) || '').trim().toLowerCase();
 const sameEmail = (a, b) => String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase();
 const isAdminLike = (u) => !!u && (
   u.role === 'admin' || u.account_type === 'agency_admin' ||
-  u.account_type === 'super_admin' || sameEmail(u.email, SUPER_ADMIN_EMAIL)
+  u.account_type === 'super_admin' || (SUPER_ADMIN_EMAIL !== '' && sameEmail(u.email, SUPER_ADMIN_EMAIL))
 );`,
 };

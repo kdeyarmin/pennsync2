@@ -32,7 +32,7 @@ Deno.serve(async (req) => {
     // is_approved: true) by onUserSignup / autoApproveInvitedUser. Without this, any
     // admin could mint another admin. Only a super_admin (or the platform owner) may
     // invite a user into a privileged role — mirrors the guard in fixUserAccount.
-    const SUPER_ADMIN_EMAIL = (Deno.env.get('SUPER_ADMIN_EMAIL') || 'kdeyarmin@comcast.net').trim().toLowerCase();
+    const SUPER_ADMIN_EMAIL = (Deno.env.get('SUPER_ADMIN_EMAIL') || '').trim().toLowerCase() || null;
     const callerIsSuperAdmin = user.account_type === 'super_admin'
       || String(user.email || '').trim().toLowerCase() === SUPER_ADMIN_EMAIL;
     const PRIVILEGED_ROLES = ['admin', 'super_admin'];

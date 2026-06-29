@@ -57,7 +57,7 @@ Deno.serve(async (req) => {
     // matching the hardened sibling functions (createUserWithTempPassword,
     // fixUserAccount): a plain facility admin must not be able to mint another
     // facility admin without super-admin oversight.
-    const SUPER_ADMIN_EMAIL = (Deno.env.get('SUPER_ADMIN_EMAIL') || 'kdeyarmin@comcast.net').trim().toLowerCase();
+    const SUPER_ADMIN_EMAIL = (Deno.env.get('SUPER_ADMIN_EMAIL') || '').trim().toLowerCase() || null;
     const callerIsSuperAdmin = currentUser?.account_type === 'super_admin'
       || String(currentUser?.email || '').trim().toLowerCase() === SUPER_ADMIN_EMAIL;
 
