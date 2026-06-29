@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FileCheck2, ExternalLink, CheckCircle2, Loader2 } from "lucide-react";
+import { policyAcknowledgment } from "@/functions/policyAcknowledgment";
 import { toast } from "sonner";
 
 // Learner-facing policy sign-off. Lists the user's PolicyAcknowledgment rows;
@@ -40,13 +41,10 @@ export default function LearnerPolicyAcknowledgments() {
     }
     setBusyId(ack.id);
     try {
-      await base44.entities.PolicyAcknowledgment.update(ack.id, {
-        acknowledged: true,
-        acknowledged_at: new Date().toISOString(),
-        signed_name: signedName,
-        status: "acknowledged",
-        device_metadata: { user_agent: typeof navigator !== "undefined" ? navigator.userAgent : "" },
-      });
+      // Sign off through the service-role function — the acknowledgment is an
+      // audit record, so learners cannot write the row directly (write RLS is
+      // admin-only). The server validates ownership and stamps the transition.
+      await policyAcknowledgment({ action: "acknowledge", acknowledgment_id: ack.id, signed_name: signedName });
       toast.success("Policy acknowledged");
       queryClient.invalidateQueries({ queryKey: ["my-policy-acks", email] });
     } catch (err) {

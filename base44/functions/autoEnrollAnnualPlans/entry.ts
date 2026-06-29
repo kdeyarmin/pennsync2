@@ -95,6 +95,21 @@ Deno.serve(async (req) => {
       candidates = candidates.filter((u) => u.agency_name === me.agency_name);
     }
 
+    // Prefetch existing enrollments + assignments for the candidate plans once,
+    // so the per-user/per-course existence checks below are in-memory Set lookups
+    // rather than O(users × courses) filter() calls (which risk timeouts / rate
+    // limits on large orgs in the "Enroll All Staff" path).
+    const enrolledSet = new Set();   // `${plan_id}|${user_email}`
+    const assignedSet = new Set();   // `${plan_id}|${course_id}|${user_email}`
+    for (const plan of plans) {
+      const [enrollments, planAssignments] = await Promise.all([
+        svc.PlanEnrollment.filter({ plan_id: plan.id }, '-created_date', 10000),
+        svc.TrainingAssignment.filter({ plan_id: plan.id, annual_cycle_year: year }, '-created_date', 10000),
+      ]);
+      enrollments.forEach((e) => enrolledSet.add(`${plan.id}|${e.user_id}`));
+      planAssignments.forEach((x) => assignedSet.add(`${plan.id}|${x.course_id}|${x.assigned_to_user_id}`));
+    }
+
     let enrolledUsers = 0;
     let assignmentsCreated = 0;
 
@@ -103,8 +118,9 @@ Deno.serve(async (req) => {
       if (!plan) continue;
       const planItems = itemsByPlan[plan.id] || [];
 
-      const [existingEnrollment] = await svc.PlanEnrollment.filter({ plan_id: plan.id, user_id: user.email }, '-created_date', 1);
-      if (!existingEnrollment) {
+      const enrollKey = `${plan.id}|${user.email}`;
+      if (!enrolledSet.has(enrollKey)) {
+        enrolledSet.add(enrollKey);
         await svc.PlanEnrollment.create({
           plan_id: plan.id,
           plan_name: plan.name,
@@ -122,12 +138,9 @@ Deno.serve(async (req) => {
       }
 
       for (const item of planItems) {
-        const existing = await svc.TrainingAssignment.filter(
-          { plan_id: plan.id, course_id: item.course_id, assigned_to_user_id: user.email, annual_cycle_year: year },
-          '-created_date',
-          1,
-        );
-        if (existing.length > 0) continue;
+        const assignKey = `${plan.id}|${item.course_id}|${user.email}`;
+        if (assignedSet.has(assignKey)) continue;
+        assignedSet.add(assignKey);
 
         await svc.TrainingAssignment.create({
           course_id: item.course_id,

@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { configNotReadyMessage } from "@/lib/aiFeatureError";
 import { distributePolicyAcknowledgment } from "@/functions/distributePolicyAcknowledgment";
+import { policyAcknowledgment } from "@/functions/policyAcknowledgment";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -23,9 +24,20 @@ export default function PolicyAcknowledgmentManager() {
   const { data: currentUser } = useQuery({ queryKey: ["currentUser"], queryFn: () => base44.auth.me() });
   const isAdminUser = currentUser?.role === "admin" || currentUser?.account_type === "agency_admin" || currentUser?.account_type === "super_admin";
 
-  const { data: users = [] } = useQuery({ queryKey: ["policy-users"], queryFn: () => base44.entities.User.list("-created_date", 500), initialData: [] });
-  const { data: policies = [] } = useQuery({ queryKey: ["policy-library"], queryFn: () => base44.entities.PolicyLibrary.list("-created_date", 200), initialData: [] });
-  const { data: acks = [] } = useQuery({ queryKey: ["policy-acks"], queryFn: () => base44.entities.PolicyAcknowledgment.list("-created_date", 2000), initialData: [] });
+  const { data: users = [] } = useQuery({ queryKey: ["policy-users"], queryFn: () => base44.entities.User.list("-created_date", 500), initialData: [], enabled: isAdminUser });
+  const { data: policies = [] } = useQuery({ queryKey: ["policy-library"], queryFn: () => base44.entities.PolicyLibrary.list("-created_date", 200), initialData: [], enabled: isAdminUser });
+  // Read org-wide acknowledgments through the service-role `list` action so
+  // account_type admins (agency_admin/super_admin) see all rows, not just their
+  // own (the entity read RLS follows the codebase `role: admin` convention).
+  const { data: acks = [] } = useQuery({
+    queryKey: ["policy-acks"],
+    queryFn: async () => {
+      const res = await policyAcknowledgment({ action: "list" });
+      return (res?.data || res)?.acknowledgments || [];
+    },
+    initialData: [],
+    enabled: isAdminUser,
+  });
 
   const activePolicies = useMemo(() => policies.filter((p) => p.status !== "archived"), [policies]);
   const selectedPolicy = activePolicies.find((p) => p.id === selectedPolicyId);

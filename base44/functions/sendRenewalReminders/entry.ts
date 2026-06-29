@@ -13,8 +13,11 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 // is marked as sent so the learner gets exactly one (the most urgent) nudge.
 // ───────────────────────────────────────────────────────────────────────────
 
-// Descending tiers. 0 represents the "overdue" nudge.
-const TIERS = [60, 30, 14, 7, 1, 0];
+// Upcoming reminder tiers (days before due). Due-today (daysUntilDue === 0)
+// maps to the most urgent upcoming tier (1), NOT overdue. The overdue nudge is
+// a separate one-shot recorded under this sentinel offset.
+const UPCOMING_TIERS = [60, 30, 14, 7, 1];
+const OVERDUE_OFFSET = -1;
 
 Deno.serve(async (req) => {
   try {
@@ -36,9 +39,10 @@ Deno.serve(async (req) => {
     const todayIso = today.toISOString().slice(0, 10);
 
     const openStatuses = ['assigned', 'in_progress', 'overdue', 'failed'];
-    // Scan recent required assignments; the per-row window check below limits
-    // work to those actually near (or past) their due date.
-    const assignments = await svc.TrainingAssignment.list('-created_date', 5000);
+    // Order by due_date ascending so the overdue + soonest-due assignments are
+    // always within the fetch window, even in tenants with >5000 total rows
+    // (a newest-by-created_date cap could miss an old-but-due annual assignment).
+    const assignments = await svc.TrainingAssignment.list('due_date', 5000);
 
     // Resolve manager emails lazily via a small cache to copy supervisors.
     const userByEmail = {};
@@ -61,15 +65,19 @@ Deno.serve(async (req) => {
       const due = new Date(`${a.due_date}T00:00:00Z`);
       const daysUntilDue = Math.ceil((due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 
-      // Which tiers has the due date crossed? (daysUntilDue <= tier)
-      const applicable = TIERS.filter((t) => daysUntilDue <= t);
-      if (applicable.length === 0) continue; // more than 60 days out
+      // Overdue only AFTER the due date has passed (daysUntilDue < 0). Due-today
+      // (=== 0) is an upcoming reminder, not an overdue escalation.
+      const overdue = daysUntilDue < 0;
+      // Tiers the due date has crossed, and the most urgent (smallest) one to act
+      // on now. Overdue collapses to a single sentinel offset.
+      const crossed = overdue
+        ? [...UPCOMING_TIERS, OVERDUE_OFFSET]
+        : UPCOMING_TIERS.filter((t) => daysUntilDue <= t);
+      if (crossed.length === 0) continue; // more than 60 days out
 
       const alreadySent = Array.isArray(a.reminder_offsets_sent) ? a.reminder_offsets_sent : [];
-      const mostUrgent = Math.min(...applicable); // smallest tier = most urgent
-      if (alreadySent.includes(mostUrgent)) continue; // already nudged at this level
-
-      const overdue = mostUrgent === 0 && daysUntilDue <= 0;
+      const tier = Math.min(...crossed); // smallest = most urgent (OVERDUE_OFFSET if overdue)
+      if (alreadySent.includes(tier)) continue; // already nudged at this level
       const dueLabel = new Date(a.due_date).toLocaleDateString();
       const learnerMsg = overdue
         ? `Your required training "${a.course_title}" is overdue (was due ${dueLabel}). Please complete it as soon as possible.`
@@ -80,14 +88,14 @@ Deno.serve(async (req) => {
         title: overdue ? 'Training overdue' : 'Training due soon',
         message: learnerMsg,
         type: 'training_due',
-        priority: overdue || mostUrgent <= 7 ? 'high' : 'medium',
+        priority: overdue || tier <= 7 ? 'high' : 'medium',
         action_url: '/MyTraining',
         action_label: 'Open training',
-        metadata: { assignment_id: a.id, course_id: a.course_id, tier: mostUrgent, days_until_due: daysUntilDue },
+        metadata: { assignment_id: a.id, course_id: a.course_id, tier, days_until_due: daysUntilDue },
       });
 
       // Copy the learner's manager once the deadline is close or passed.
-      if (overdue || mostUrgent <= 7) {
+      if (overdue || tier <= 7) {
         const learner = await loadUser(a.assigned_to_user_id);
         const managerEmail = learner?.manager_email;
         if (managerEmail && managerEmail !== a.assigned_to_user_id) {
@@ -99,14 +107,14 @@ Deno.serve(async (req) => {
             priority: 'high',
             action_url: '/AdminTraining',
             action_label: 'Open admin training',
-            metadata: { assignment_id: a.id, staff_email: a.assigned_to_user_id, tier: mostUrgent },
+            metadata: { assignment_id: a.id, staff_email: a.assigned_to_user_id, tier },
           });
         }
       }
 
       // Mark every crossed tier as sent so a missed run doesn't replay old tiers.
       await svc.TrainingAssignment.update(a.id, {
-        reminder_offsets_sent: Array.from(new Set([...alreadySent, ...applicable])),
+        reminder_offsets_sent: Array.from(new Set([...alreadySent, ...crossed])),
         last_reminder_date: today.toISOString(),
         reminder_sent: true,
       });

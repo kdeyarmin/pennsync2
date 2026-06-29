@@ -19,11 +19,13 @@ export default function SMEReviewQueue() {
   const [notes, setNotes] = useState({});
 
   const { data: currentUser } = useQuery({ queryKey: ["currentUser"], queryFn: () => base44.auth.me() });
+  const isAdminUser = currentUser?.role === "admin" || currentUser?.account_type === "agency_admin" || currentUser?.account_type === "super_admin";
 
   const { data: pendingCourses = [], isLoading } = useQuery({
     queryKey: ["sme-review-queue"],
     queryFn: () => base44.entities.TrainingCourse.filter({ needs_sme_review: true }, "-updated_date", 200),
     initialData: [],
+    enabled: isAdminUser,
   });
 
   const refresh = () => {

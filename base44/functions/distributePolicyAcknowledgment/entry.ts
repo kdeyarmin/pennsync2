@@ -51,13 +51,18 @@ Deno.serve(async (req) => {
     let created = 0;
     const notifications = [];
 
+    // Prefetch existing acks for this (policy, version) once and check membership
+    // in memory — avoids an N+1 filter() per candidate that could time out on
+    // large cohorts.
+    const existingAcks = await svc.PolicyAcknowledgment.filter(
+      { policy_id: policyId, policy_version: version },
+      '-created_date',
+      10000,
+    );
+    const alreadyAssigned = new Set(existingAcks.map((a) => a.user_id));
+
     for (const user of candidates) {
-      const existing = await svc.PolicyAcknowledgment.filter(
-        { policy_id: policyId, policy_version: version, user_id: user.email },
-        '-created_date',
-        1,
-      );
-      if (existing.length > 0) continue;
+      if (alreadyAssigned.has(user.email)) continue;
 
       await svc.PolicyAcknowledgment.create({
         policy_id: policyId,

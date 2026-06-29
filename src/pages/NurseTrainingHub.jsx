@@ -134,7 +134,7 @@ export default function NurseTrainingHub() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['my-micro-progress'] });
+      queryClient.invalidateQueries({ queryKey: ['my-micro-progress', currentUser?.email] });
       setActiveTraining(null);
       setSelectedModule(null);
     }

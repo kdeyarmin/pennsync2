@@ -490,8 +490,12 @@ CONTENT CREATION RULES:
             }),
           });
 
-          const videoResult = await fetch(videoReq).then((r) => r.json()).catch(() => null);
-          video_generation_status = videoResult?.error ? 'error' : 'generating';
+          // Treat a non-2xx response, non-JSON body, or an { error } payload as a
+          // failure instead of silently reporting 'generating'.
+          const videoResult = await fetch(videoReq)
+            .then(async (r) => (r.ok ? await r.json().catch(() => null) : null))
+            .catch(() => null);
+          video_generation_status = (videoResult && !videoResult.error) ? 'generating' : 'error';
         }
       } catch {
         video_generation_status = 'error';
