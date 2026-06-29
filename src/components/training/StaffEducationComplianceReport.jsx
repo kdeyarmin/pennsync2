@@ -36,68 +36,100 @@ export default function StaffEducationComplianceReport() {
     queryFn: () => base44.entities.User.list(),
   });
 
-  const { data: allCompletions = [] } = useQuery({
-    queryKey: ['allCompletions'],
-    queryFn: () => base44.entities.TrainingCompletion.list('-completion_date', 1000),
-  });
-
-  const { data: allModules = [] } = useQuery({
-    queryKey: ['trainingModules'],
-    queryFn: () => base44.entities.TrainingModule.filter({}),
+  // Derive compliance from the entities the grading/certificate pipeline
+  // actually writes (TrainingAssignment). The legacy TrainingCompletion entity
+  // is no longer written, so reading it produced an empty/stale report.
+  const { data: allAssignments = [] } = useQuery({
+    queryKey: ['complianceAssignments'],
+    queryFn: () => base44.entities.TrainingAssignment.list('-created_date', 5000),
   });
 
   const complianceData = React.useMemo(() => {
+    const now = new Date();
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - parseInt(timeframe));
 
-    const recentCompletions = allCompletions.filter(c => 
-      new Date(c.completion_date || c.created_date) >= cutoffDate
-    );
+    const isCompleted = (a) => a.status === 'completed' || a.pass_fail_result === 'passed';
+    const isOverdue = (a) =>
+      !isCompleted(a) && (a.status === 'overdue' || (a.due_date && new Date(a.due_date) < now));
+    // Recency is based on when the assignment was acted on (completed) or, if
+    // still open, when it was assigned — so the timeframe filter reflects activity.
+    const activityDate = (a) => new Date(a.completion_date || a.submitted_at || a.assigned_date || a.created_date);
 
     const nurses = allUsers.filter(u => u.role === 'user' && u.is_approved);
-    
+
     const staffMetrics = nurses.map(nurse => {
-      const nurseCompletions = recentCompletions.filter(c => c.nurse_email === nurse.email);
-      const completed = nurseCompletions.filter(c => c.status === 'completed').length;
-      const avgScore = nurseCompletions.filter(c => c.score != null).reduce((sum, c) => sum + c.score, 0) / (nurseCompletions.filter(c => c.score != null).length || 1);
-      const overdue = nurseCompletions.filter(c => c.status !== 'completed' && c.due_date && new Date(c.due_date) < new Date()).length;
-      
+      const nurseAssignments = allAssignments.filter(a => a.assigned_to_user_id === nurse.email);
+      const recent = nurseAssignments.filter(a => activityDate(a) >= cutoffDate);
+      const scored = recent.filter(a => typeof a.score_percentage === 'number');
+      const avgScore = scored.reduce((sum, a) => sum + a.score_percentage, 0) / (scored.length || 1);
+      // Overdue is a current-state measure (not time-windowed) so audits surface
+      // every staff member who is behind, regardless of the selected timeframe.
+      const overdue = nurseAssignments.filter(isOverdue).length;
+
       return {
         name: nurse.full_name,
         email: nurse.email,
-        completed,
+        completed: recent.filter(isCompleted).length,
         avgScore: Math.round(avgScore),
         overdue,
-        total: nurseCompletions.length
+        total: recent.length,
       };
     });
 
-    const requiredModules = allModules.filter(m => m.is_required);
-    const totalRequired = requiredModules.length * nurses.length;
-    const completedRequired = nurses.reduce((sum, nurse) => {
-      return sum + requiredModules.filter(module => {
-        return recentCompletions.some(c => 
-          c.nurse_email === nurse.email && 
-          c.training_module_id === module.id && 
-          c.status === 'completed'
-        );
-      }).length;
-    }, 0);
-
+    // Compliance rate = required assignments completed / required assignments,
+    // measured over current state across active nurses.
+    const requiredAssignments = allAssignments.filter(
+      a => a.required && nurses.some(n => n.email === a.assigned_to_user_id)
+    );
+    const totalRequired = requiredAssignments.length;
+    const completedRequired = requiredAssignments.filter(isCompleted).length;
     const complianceRate = totalRequired > 0 ? (completedRequired / totalRequired * 100).toFixed(1) : 0;
+
+    const allRecent = allAssignments.filter(a => activityDate(a) >= cutoffDate);
+    const allScored = allRecent.filter(a => typeof a.score_percentage === 'number');
 
     return {
       staffMetrics: staffMetrics.sort((a, b) => b.completed - a.completed),
       totalStaff: nurses.length,
-      totalCompletions: recentCompletions.filter(c => c.status === 'completed').length,
-      avgScore: Math.round(recentCompletions.filter(c => c.score != null).reduce((sum, c) => sum + c.score, 0) / (recentCompletions.filter(c => c.score != null).length || 1)),
+      totalCompletions: allRecent.filter(isCompleted).length,
+      avgScore: Math.round(allScored.reduce((sum, a) => sum + a.score_percentage, 0) / (allScored.length || 1)),
       complianceRate,
       totalRequired,
       completedRequired,
       totalOverdue: staffMetrics.reduce((sum, s) => sum + s.overdue, 0),
       atRiskStaff: staffMetrics.filter(s => s.overdue > 0 || s.avgScore < 70).length
     };
-  }, [allUsers, allCompletions, allModules, timeframe]);
+  }, [allUsers, allAssignments, timeframe]);
+
+  const statusLabel = (staff) =>
+    (staff.avgScore >= 90 && staff.overdue === 0) ? 'Excellent'
+      : (staff.overdue > 0 || staff.avgScore < 70) ? 'At Risk'
+      : 'On Track';
+
+  const exportCSV = () => {
+    const headers = ['Staff Member', 'Email', 'Completed', 'Total', 'Avg Score (%)', 'Overdue', 'Status'];
+    const escape = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+    const rows = complianceData.staffMetrics.map((s) =>
+      [s.name || '', s.email || '', s.completed, s.total, s.avgScore, s.overdue, statusLabel(s)].map(escape).join(',')
+    );
+    const summary = [
+      ['Compliance rate (%)', complianceData.complianceRate],
+      ['Required completed', `${complianceData.completedRequired} of ${complianceData.totalRequired}`],
+      ['Active staff', complianceData.totalStaff],
+      ['At-risk staff', complianceData.atRiskStaff],
+      ['Overdue trainings', complianceData.totalOverdue],
+    ].map(([k, v]) => `${escape(k)},${escape(v)}`);
+    const csv = ['Staff Education Compliance Report', `Generated,${formatEastern(new Date(), 'yyyy-MM-dd')}`, '', 'Summary', ...summary, '', headers.map(escape).join(','), ...rows].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `Staff_Training_Compliance_${formatEastern(new Date(), 'yyyy-MM-dd')}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+    toast.success('CSV exported');
+  };
 
   const generatePDF = async () => {
     setIsGenerating(true);
@@ -168,6 +200,9 @@ export default function StaffEducationComplianceReport() {
                   <SelectItem value="365">Last year</SelectItem>
                 </SelectContent>
               </Select>
+              <Button variant="outline" onClick={exportCSV}>
+                <FileText className="w-4 h-4 mr-2" /> Export CSV
+              </Button>
               <Button onClick={generatePDF} disabled={isGenerating}>
                 {isGenerating ? (
                   <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Generating...</>

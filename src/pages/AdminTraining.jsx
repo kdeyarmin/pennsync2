@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BookOpen, Sparkles, TrendingDown, GraduationCap, Loader2, FileText, BarChart3, Clapperboard } from "lucide-react";
+import { BookOpen, Sparkles, TrendingDown, GraduationCap, Loader2, FileText, BarChart3, Clapperboard, ShieldCheck, FileCheck2 } from "lucide-react";
 import PageContainer from "@/components/ui/PageContainer";
 import PageHeader from "@/components/ui/PageHeader";
 import EducatorReadinessPanel from "@/components/learning/EducatorReadinessPanel";
@@ -16,13 +16,17 @@ import ManagerSkillGapSummary from "@/components/training/ManagerSkillGapSummary
 import ManagerSkillGapAreas from "@/components/training/ManagerSkillGapAreas";
 import ManagerSkillGapPeople from "@/components/training/ManagerSkillGapPeople";
 import StaffEducationComplianceReport from "@/components/training/StaffEducationComplianceReport";
+import SMEReviewQueue from "@/components/training/SMEReviewQueue";
+import PolicyAcknowledgmentManager from "@/components/training/PolicyAcknowledgmentManager";
 
 const TAB_KEYS = [
   "overview",
   "courses",
+  "review",
   "learning-plans",
   "ai-inservices",
   "annual-mandatory",
+  "policies",
   "skill-gaps",
   "video-studio",
   "compliance-report",
@@ -222,6 +226,10 @@ export default function AdminTraining() {
               <BookOpen className="w-4 h-4 mr-2" />
               Courses
             </TabsTrigger>
+            <TabsTrigger value="review" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
+              <ShieldCheck className="w-4 h-4 mr-2" />
+              Review Queue
+            </TabsTrigger>
             <TabsTrigger value="learning-plans" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
               Learning Plans
             </TabsTrigger>
@@ -231,6 +239,10 @@ export default function AdminTraining() {
             </TabsTrigger>
             <TabsTrigger value="annual-mandatory" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
               Annual Mandatory
+            </TabsTrigger>
+            <TabsTrigger value="policies" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
+              <FileCheck2 className="w-4 h-4 mr-2" />
+              Policies
             </TabsTrigger>
             <TabsTrigger value="skill-gaps" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
               <TrendingDown className="w-4 h-4 mr-2" />
@@ -259,6 +271,10 @@ export default function AdminTraining() {
           <CourseManager />
         </TabsContent>
 
+        <TabsContent value="review">
+          <SMEReviewQueue />
+        </TabsContent>
+
         <TabsContent value="learning-plans">
           <LearningPlanManager />
         </TabsContent>
@@ -269,6 +285,10 @@ export default function AdminTraining() {
 
         <TabsContent value="annual-mandatory">
           <AnnualMandatoryEducationHub />
+        </TabsContent>
+
+        <TabsContent value="policies">
+          <PolicyAcknowledgmentManager />
         </TabsContent>
 
         <TabsContent value="skill-gaps">
