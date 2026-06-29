@@ -360,30 +360,32 @@ export default function DuplicateDetector({ patients, onResolve }) {
             <div className="border-t pt-4">
               <Label className="text-sm font-medium mb-3 block">Automatic Resolution Strategy</Label>
               <div className="space-y-2">
-                <label className="flex items-center gap-2 cursor-pointer">
+                <label htmlFor="auto-resolve-merge" className="flex items-center gap-2 cursor-pointer">
                   <input
+                    id="auto-resolve-merge"
                     type="radio"
                     name="autoResolve"
                     checked={autoResolveStrategy === 'merge'}
                     onChange={() => setAutoResolveStrategy('merge')}
                     className="rounded-full"
                   />
-                  <div>
-                    <span className="text-sm font-medium">Auto-Update (Recommended)</span>
-                    <p className="text-xs text-slate-600">Automatically update existing records when MRN matches</p>
+                  <div className="text-sm font-medium">
+                    Auto-Update (Recommended)
+                    <p className="text-xs font-normal text-slate-600">Automatically update existing records when MRN matches</p>
                   </div>
                 </label>
-                <label className="flex items-center gap-2 cursor-pointer">
+                <label htmlFor="auto-resolve-manual" className="flex items-center gap-2 cursor-pointer">
                   <input
+                    id="auto-resolve-manual"
                     type="radio"
                     name="autoResolve"
                     checked={autoResolveStrategy === 'manual'}
                     onChange={() => setAutoResolveStrategy('manual')}
                     className="rounded-full"
                   />
-                  <div>
-                    <span className="text-sm font-medium">Manual Review</span>
-                    <p className="text-xs text-slate-600">Review each MRN match manually before updating</p>
+                  <div className="text-sm font-medium">
+                    Manual Review
+                    <p className="text-xs font-normal text-slate-600">Review each MRN match manually before updating</p>
                   </div>
                 </label>
               </div>

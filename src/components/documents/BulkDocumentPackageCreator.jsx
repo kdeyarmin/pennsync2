@@ -161,9 +161,11 @@ export default function BulkDocumentPackageCreator() {
                 templates.map((template) => (
                   <label
                     key={template.id}
+                    htmlFor={`template-${template.id}`}
                     className="flex items-start gap-3 p-2 hover:bg-slate-50 rounded cursor-pointer"
                   >
                     <Checkbox
+                      id={`template-${template.id}`}
                       checked={selectedTemplates.includes(template.id)}
                       onCheckedChange={() => toggleTemplate(template.id)}
                       className="mt-1"

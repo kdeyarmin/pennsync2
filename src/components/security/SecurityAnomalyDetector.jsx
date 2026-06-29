@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
+import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -294,9 +296,15 @@ export default function SecurityAnomalyDetector() {
                             </p>
                           </div>
                         </div>
-                        <Button size="sm" variant="outline" className="min-h-[44px]">
-                          <Eye className="w-4 h-4 mr-1" />
-                          Investigate
+                        <Button asChild size="sm" variant="outline" className="min-h-[44px]">
+                          <Link
+                            to={anomaly.user
+                              ? `${createPageUrl('UserActivityReport')}?user=${encodeURIComponent(anomaly.user)}`
+                              : createPageUrl('UserActivityReport')}
+                          >
+                            <Eye className="w-4 h-4 mr-1" />
+                            Investigate
+                          </Link>
                         </Button>
                       </div>
                     </CardContent>

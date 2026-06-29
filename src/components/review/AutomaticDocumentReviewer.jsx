@@ -271,6 +271,7 @@ Return detailed JSON analysis.`,
       console.error('Error reviewing document:', error);
       toast.error('Failed to review document. Please try again.');
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- AI hook object is intentionally omitted; its run() is stable, and including it would re-fire the call every render
   }, [currentUser?.email, diagnosis, medicareRules, noteContent, nurseEmail, onReviewComplete, patientData?.date_of_birth, queryClient, visitId, visitType, vitalSigns]);
 
   useEffect(() => {

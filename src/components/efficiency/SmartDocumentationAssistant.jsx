@@ -190,6 +190,7 @@ Format as JSON with clear sections`;
       console.error("Smart documentation generation failed:", error);
       toast.error("The AI request didn't complete. Please try again.");
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- AI hook object is intentionally omitted; its run() is stable, and including it would re-fire the call every render
   }, [carePlans, clinicalEvents, documentType, identifiedProblems, onDataGenerated, patient, recentVisits, visitType]);
 
   const applySection = (sectionId) => {
@@ -301,8 +302,9 @@ Format as JSON with clear sections`;
                     // Edit Mode
                     <div className="space-y-3">
                       <div>
-                        <label className="text-xs font-medium text-slate-600">Section Name</label>
+                        <label htmlFor="section-name" className="text-xs font-medium text-slate-600">Section Name</label>
                         <input
+                          id="section-name"
                           type="text"
                           value={editingSection.section_name}
                           onChange={(e) => setEditingSection({...editingSection, section_name: e.target.value})}
@@ -310,8 +312,9 @@ Format as JSON with clear sections`;
                         />
                       </div>
                       <div>
-                        <label className="text-xs font-medium text-slate-600">Content</label>
+                        <label htmlFor="section-content" className="text-xs font-medium text-slate-600">Content</label>
                         <textarea
+                          id="section-content"
                           value={JSON.stringify(editingSection.content, null, 2)}
                           onChange={(e) => {
                             try {

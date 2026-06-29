@@ -410,7 +410,7 @@ Return JSON:
                         <div className="flex items-center gap-2">
                           <p className="font-semibold text-sm">{alert.title}</p>
                           <Badge variant="outline" className="text-xs capitalize">
-                            {alert.alert_type.replace(/_/g, ' ')}
+                            {(alert.alert_type || '').replace(/_/g, ' ')}
                           </Badge>
                           {alert.flagged_urgent && (
                             <Badge className="bg-red-600 text-white text-xs">URGENT</Badge>
@@ -457,7 +457,7 @@ Return JSON:
                     {selectedAlert.severity}
                   </Badge>
                   <Badge variant="outline" className="capitalize">
-                    {selectedAlert.alert_type.replace(/_/g, ' ')}
+                    {(selectedAlert.alert_type || '').replace(/_/g, ' ')}
                   </Badge>
                   {selectedAlert.risk_score && (
                     <Badge variant="outline">Risk: {selectedAlert.risk_score}</Badge>

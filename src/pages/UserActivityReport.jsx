@@ -52,6 +52,12 @@ export default function UserActivityReport() {
 
   const [searchParams, setSearchParams] = useSearchParams();
   const requestedTab = searchParams.get("tab");
+  // Deep-link from e.g. the Security anomaly "Investigate" action: ?user=<email>
+  // pre-fills the search so the report opens scoped to that user.
+  const userParam = searchParams.get("user");
+  useEffect(() => {
+    if (userParam) setSearchQuery(userParam);
+  }, [userParam]);
   const activeTab = TAB_KEYS.includes(requestedTab) ? requestedTab : "report";
   // Reflect the active tab in the URL so tabs are shareable/bookmarkable and the
   // retired Activity Log page deep-links correctly. "report" is the default, so it
@@ -376,9 +382,9 @@ export default function UserActivityReport() {
           <CardContent className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="text-sm font-medium mb-2 block">Time Range</label>
+                <label htmlFor="activity-time-range" className="text-sm font-medium mb-2 block">Time Range</label>
                 <Select value={timeRange} onValueChange={setTimeRange}>
-                  <SelectTrigger>
+                  <SelectTrigger id="activity-time-range">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -392,9 +398,9 @@ export default function UserActivityReport() {
               </div>
 
               <div>
-                <label className="text-sm font-medium mb-2 block">Sort By</label>
+                <label htmlFor="activity-sort-by" className="text-sm font-medium mb-2 block">Sort By</label>
                 <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger>
+                  <SelectTrigger id="activity-sort-by">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -408,10 +414,11 @@ export default function UserActivityReport() {
               </div>
 
               <div>
-                <label className="text-sm font-medium mb-2 block">Search Users</label>
+                <label htmlFor="activity-search-users" className="text-sm font-medium mb-2 block">Search Users</label>
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
                   <Input
+                    id="activity-search-users"
                     placeholder="Search by name or email..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}

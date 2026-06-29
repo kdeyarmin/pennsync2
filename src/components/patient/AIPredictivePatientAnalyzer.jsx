@@ -272,6 +272,7 @@ Be specific, evidence-based, and actionable. Focus on Medicare home health best 
       console.error('Analysis error:', err);
       setError(err.message || 'Failed to analyze patient data');
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- AI hook object is intentionally omitted; its run() is stable, and including it would re-fire the call every render
   }, [carePlans, incidents, patient, visits]);
 
   useEffect(() => {

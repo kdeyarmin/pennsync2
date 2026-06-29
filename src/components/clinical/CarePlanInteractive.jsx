@@ -103,9 +103,9 @@ function CarePlanCard({ plan, currentUser, onUpdated }) {
             )}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
               <div>
-                <label className="text-xs font-semibold text-slate-700 mb-1 block">Update Status</label>
+                <label htmlFor="update-status" className="text-xs font-semibold text-slate-700 mb-1 block">Update Status</label>
                 <Select value={newStatus} onValueChange={setNewStatus}>
-                  <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
+                  <SelectTrigger id="update-status" className="h-9 text-sm"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {Object.entries(STATUS_CONFIG).map(([val, cfg]) => (
                       <SelectItem key={val} value={val}>{cfg.label}</SelectItem>
@@ -114,8 +114,9 @@ function CarePlanCard({ plan, currentUser, onUpdated }) {
                 </Select>
               </div>
               <div>
-                <label className="text-xs font-semibold text-slate-700 mb-1 block">Add Note</label>
+                <label htmlFor="add-note" className="text-xs font-semibold text-slate-700 mb-1 block">Add Note</label>
                 <Textarea
+                  id="add-note"
                   rows={2}
                   placeholder="Clinical note…"
                   value={note}

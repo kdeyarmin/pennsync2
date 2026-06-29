@@ -138,6 +138,7 @@ Return JSON:
     } catch (error) {
       console.error('Error analyzing care plans:', error);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- AI hook object is intentionally omitted; its run() is stable, and including it would re-fire the call every render
   }, [enhancedNote, existingCarePlans, recentVisits, diagnosis, patientData]);
 
   useEffect(() => {
@@ -325,7 +326,7 @@ Return JSON:
                               <div className="flex items-center gap-2 mb-1">
                                 <span className="font-semibold text-sm">{rec.problem}</span>
                                 <Badge variant="outline" className="text-xs">
-                                  {rec.type.replace(/_/g, ' ')}
+                                  {(rec.type || '').replace(/_/g, ' ')}
                                 </Badge>
                                 <Badge className={getSeverityColor(rec.severity)}>
                                   {rec.severity}

@@ -160,7 +160,8 @@ export default function DocumentOCRImporter({ onPatientExtracted }) {
             disabled={isProcessing}
           />
           <label htmlFor="ocr-upload">
-            <Button 
+            <span className="sr-only">Select Document(s) to Scan</span>
+            <Button
               className="w-full bg-navy-600 hover:bg-navy-700" 
               disabled={isProcessing}
               asChild

@@ -253,7 +253,7 @@ ${category.id === 'hipaa' ? '- Protected health information, patient rights, bre
                       <XCircle className="w-4 h-4 text-red-600 mt-0.5" />
                     )}
                     <div>
-                      <p className="text-xs font-medium text-slate-900">Q{idx + 1}: {q.question.substring(0, 60)}...</p>
+                      <p className="text-xs font-medium text-slate-900">Q{idx + 1}: {(q.question || '').substring(0, 60)}...</p>
                       {!answer?.isCorrect && (
                         <p className="text-xs text-green-700 mt-1">Correct: {q.options[q.correct_index]}</p>
                       )}

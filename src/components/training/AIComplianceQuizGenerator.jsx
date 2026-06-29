@@ -78,6 +78,7 @@ export default function AIComplianceQuizGenerator({ nurseEmail, _recommendations
         generateQuiz(topic);
       }
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional run-once auto-generate on mount; guarded so it can't re-fire
   }, [initialTopicId, quiz]);
 
   const savePracticeMutation = useMutation({

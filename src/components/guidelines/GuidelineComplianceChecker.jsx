@@ -363,7 +363,7 @@ Return JSON with GRANULAR compliance analysis:
                                         {req.severity}
                                       </Badge>
                                       <Badge variant="outline" className="text-xs">
-                                        {req.compliance_degree.replace(/_/g, ' ')}
+                                        {(req.compliance_degree || '').replace(/_/g, ' ')}
                                       </Badge>
                                     </div>
                                   </div>

@@ -213,7 +213,7 @@ export default function OASISActionWorkflow({
           patient_name: patientName,
           action_type: 'correction',
           category: getCategoryFromField(change.field),
-          oasis_item: change.field.toUpperCase().replace('_', ''),
+          oasis_item: (change.field || '').toUpperCase().replace('_', ''),
           current_value: change.original_value,
           proposed_value: change.new_value,
           rationale: `From scenario "${scenario.scenario_name}": Change ${change.field} to optimize PDGM payment`,
@@ -573,9 +573,9 @@ export default function OASISActionWorkflow({
                 )}
 
                 <div>
-                  <label className="text-sm font-medium mb-1 block">Assign To</label>
+                  <label htmlFor="action-assign-to" className="text-sm font-medium mb-1 block">Assign To</label>
                   <Select value={assignTo} onValueChange={setAssignTo}>
-                    <SelectTrigger>
+                    <SelectTrigger id="action-assign-to">
                       <SelectValue placeholder="Select assignee..." />
                     </SelectTrigger>
                     <SelectContent>
@@ -589,8 +589,9 @@ export default function OASISActionWorkflow({
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium mb-1 block">Review Notes</label>
-                  <Textarea 
+                  <label htmlFor="action-review-notes" className="text-sm font-medium mb-1 block">Review Notes</label>
+                  <Textarea
+                    id="action-review-notes"
                     value={reviewNotes}
                     onChange={(e) => setReviewNotes(e.target.value)}
                     placeholder="Add notes about your decision..."

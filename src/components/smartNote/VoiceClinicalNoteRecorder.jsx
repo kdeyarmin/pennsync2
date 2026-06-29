@@ -181,7 +181,7 @@ Return only the enhanced clinical narrative, no explanations.`,
         {transcription && (
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <label className="font-semibold text-slate-700">Raw Transcription</label>
+              <span className="font-semibold text-slate-700">Raw Transcription</span>
               <Button
                 variant="ghost"
                 size="sm"
@@ -202,7 +202,7 @@ Return only the enhanced clinical narrative, no explanations.`,
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-5 h-5 text-green-600" />
-                <label className="font-semibold text-slate-700">Enhanced Clinical Narrative</label>
+                <span className="font-semibold text-slate-700">Enhanced Clinical Narrative</span>
               </div>
               <Button
                 variant="ghost"

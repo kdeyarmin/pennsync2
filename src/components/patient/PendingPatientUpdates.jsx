@@ -239,7 +239,7 @@ export default function PendingPatientUpdates() {
                           >
                             <div className="flex items-start justify-between mb-2">
                               <span className="font-medium text-slate-900">
-                                {change.field.replace(/_/g, ' ')}
+                                {(change.field || '').replace(/_/g, ' ')}
                               </span>
                               {change.is_critical && (
                                 <Badge variant="destructive" className="text-xs">Critical</Badge>
@@ -332,7 +332,7 @@ export default function PendingPatientUpdates() {
                       change.is_critical ? 'border-red-300 bg-red-50' : 'border-slate-200 bg-slate-50'
                     }`}>
                       <div className="flex items-center justify-between mb-2">
-                        <span className="font-medium">{change.field.replace(/_/g, ' ')}</span>
+                        <span className="font-medium">{(change.field || '').replace(/_/g, ' ')}</span>
                         {change.is_critical && (
                           <Badge variant="destructive" className="text-xs">Critical Field</Badge>
                         )}
@@ -354,8 +354,9 @@ export default function PendingPatientUpdates() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-2">Review Notes (Optional)</label>
+                  <label htmlFor="pending-review-notes" className="block text-sm font-medium mb-2">Review Notes (Optional)</label>
                   <Textarea
+                    id="pending-review-notes"
                     value={reviewNotes}
                     onChange={(e) => setReviewNotes(e.target.value)}
                     placeholder="Add any notes about this review..."

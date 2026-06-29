@@ -364,7 +364,7 @@ Return JSON:
                           </div>
                           <div className="flex items-center gap-2">
                             <Badge className={getStatusColor(rec.progress_status)}>
-                              {rec.progress_status.replace('_', ' ')}
+                              {(rec.progress_status || '').replace('_', ' ')}
                             </Badge>
                             <Badge className={`${getPriorityColor(rec.priority)} text-white text-xs`}>
                               {rec.priority}
@@ -401,7 +401,7 @@ Return JSON:
                           <div className="bg-white p-2 rounded border mt-2">
                             <div className="flex items-center gap-1 text-xs font-semibold text-indigo-700 mb-1">
                               <ArrowRight className="w-3 h-3" />
-                              Recommended: {rec.recommendation_type.replace(/_/g, ' ')}
+                              Recommended: {(rec.recommendation_type || '').replace(/_/g, ' ')}
                             </div>
                             <p className="text-xs text-slate-700 mb-2">{rec.rationale}</p>
                             

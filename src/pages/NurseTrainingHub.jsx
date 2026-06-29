@@ -1,5 +1,7 @@
 import { lazy, Suspense, useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
+import { createPageUrl } from "@/utils";
+import { toast } from "sonner";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -70,6 +72,7 @@ export default function NurseTrainingHub() {
   }, [requestedTab, activeTab, setSearchParams]);
 
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -131,6 +134,41 @@ export default function NurseTrainingHub() {
       queryClient.invalidateQueries({ queryKey: ['myTrainingCompletions'] });
       setActiveTraining(null);
       setSelectedModule(null);
+    }
+  });
+
+  // Launch a module's course as a completable assignment. Reuses an existing
+  // assignment for this nurse+course if one exists (so we don't pile up
+  // duplicates), otherwise self-enrolls, then opens the player in the real
+  // (non-preview) flow where attempts can be submitted, scored and completed.
+  const startTrainingMutation = useMutation({
+    mutationFn: async (module) => {
+      const email = currentUser?.email;
+      if (!email || !module?.course_id) {
+        throw new Error('Missing user or course information');
+      }
+      const existing = await base44.entities.TrainingAssignment.filter(
+        { assigned_to_user_id: email, course_id: module.course_id },
+        '-assigned_date',
+        1
+      );
+      if (existing && existing[0]) return existing[0];
+      return base44.entities.TrainingAssignment.create({
+        course_id: module.course_id,
+        course_title: module.title,
+        assigned_to_user_id: email,
+        assigned_by: email,
+        assigned_date: new Date().toISOString(),
+        status: 'assigned',
+        required: !!module.is_required,
+        priority: module.is_required ? 'high' : 'medium',
+      });
+    },
+    onSuccess: (assignment) => {
+      navigate(`${createPageUrl('TrainingCoursePlayer')}?assignment=${assignment.id}`);
+    },
+    onError: (error) => {
+      toast.error(error?.message || 'Could not start training. Please try again.');
     }
   });
 
@@ -341,7 +379,11 @@ export default function NurseTrainingHub() {
                       </span>
                     </div>
                   ) : (
-                    <Button className="w-full bg-blue-600 hover:bg-blue-700">
+                    <Button
+                      className="w-full bg-blue-600 hover:bg-blue-700"
+                      onClick={() => startTrainingMutation.mutate(module)}
+                      disabled={startTrainingMutation.isPending}
+                    >
                       <PlayCircle className="w-4 h-4 mr-2" />
                       Start Training
                     </Button>
@@ -378,7 +420,12 @@ export default function NurseTrainingHub() {
                       </span>
                     </div>
                   ) : (
-                    <Button className="w-full" variant="outline">
+                    <Button
+                      className="w-full"
+                      variant="outline"
+                      onClick={() => startTrainingMutation.mutate(module)}
+                      disabled={startTrainingMutation.isPending}
+                    >
                       <PlayCircle className="w-4 h-4 mr-2" />
                       Start Training
                     </Button>

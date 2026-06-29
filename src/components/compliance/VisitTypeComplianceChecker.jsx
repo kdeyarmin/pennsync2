@@ -243,6 +243,7 @@ Return detailed compliance analysis in JSON format.`;
       console.error("Compliance check error:", error);
       setComplianceResults({ error: "Failed to perform compliance check" });
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- AI hook object is intentionally omitted; its run() is stable, and including it would re-fire the call every render
   }, [visitType, noteContent, careType, oasisData, patientData, vitalSigns, onIssuesDetected]);
 
   useEffect(() => {

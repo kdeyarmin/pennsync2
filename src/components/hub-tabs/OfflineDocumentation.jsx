@@ -63,8 +63,9 @@ export default function OfflineDocumentation() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2 max-w-md">
-                <label className="text-sm font-medium text-slate-700">Patient</label>
+                <label htmlFor="offline-patient-select" className="text-sm font-medium text-slate-700">Patient</label>
                 <SearchablePatientSelect
+                  id="offline-patient-select"
                   patients={patients}
                   value={selectedPatientId}
                   onValueChange={setSelectedPatientId}

@@ -123,7 +123,7 @@ export default function NurseLearningDashboard({
                       <p className="text-xs font-semibold text-slate-700">Recent examples:</p>
                       {deficit.examples.slice(0, 2).map((ex, i) => (
                         <p key={i} className="text-xs text-slate-600 italic pl-3 border-l-2 border-slate-200">
-                          "{ex.text.substring(0, 100)}..." - from {ex.source}
+                          "{(ex.text || '').substring(0, 100)}..." - from {ex.source}
                         </p>
                       ))}
                     </div>

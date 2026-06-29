@@ -143,7 +143,7 @@ export default function CareCoordinationDashboard() {
                         <Badge className={getSeverityColor(alert.severity)}>
                           {alert.severity}
                         </Badge>
-                        <Badge variant="outline">{alert.alert_type.replace(/_/g, ' ')}</Badge>
+                        <Badge variant="outline">{(alert.alert_type || '').replace(/_/g, ' ')}</Badge>
                         {alert.team_meeting_suggested && (
                           <Badge className="bg-navy-100 text-navy-800">
                             Team Meeting

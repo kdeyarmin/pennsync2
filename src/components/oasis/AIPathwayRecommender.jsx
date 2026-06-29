@@ -209,6 +209,7 @@ Return JSON:
       setRecommendations({ error: "Failed to generate pathway recommendations." });
     }
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- AI hook object is intentionally omitted; its run() is stable, and including it would re-fire the call every render
   }, [analysisResults, availablePathways, navigationData, patientId, pdgmData]);
 
   useEffect(() => {

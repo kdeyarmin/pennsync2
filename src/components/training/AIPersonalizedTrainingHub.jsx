@@ -135,7 +135,7 @@ ${skillGaps.slice(0, 10).map((gap, idx) => `${idx + 1}. ${gap.category}: ${gap.o
    Examples: ${gap.examples.slice(0, 2).join('; ')}`).join('\n')}
 
 RECENT AI RECOMMENDATIONS:
-${recommendations.slice(0, 15).map(r => `- ${r.recommendation_type}: ${r.recommendation_text.substring(0, 100)}...`).join('\n')}
+${recommendations.slice(0, 15).map(r => `- ${r.recommendation_type}: ${(r.recommendation_text || '').substring(0, 100)}...`).join('\n')}
 
 AVAILABLE TRAINING MODULES:
 ${allModules.slice(0, 20).map(m => `- ${m.title} (${m.category}, ${m.difficulty_level})`).join('\n')}

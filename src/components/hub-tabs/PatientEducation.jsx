@@ -61,11 +61,11 @@ export default function PatientEducation() {
         <CardContent className="p-4">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1">
-              <label className="text-sm font-medium text-slate-700 mb-1 block">
+              <label htmlFor="education-patient-select" className="text-sm font-medium text-slate-700 mb-1 block">
                 Select Patient (Optional)
               </label>
               <Select value={selectedPatientId || "none"} onValueChange={(val) => setSelectedPatientId(val === "none" ? "" : val)}>
-                <SelectTrigger>
+                <SelectTrigger id="education-patient-select">
                   <SelectValue placeholder="Choose a patient..." />
                 </SelectTrigger>
                 <SelectContent>

@@ -93,7 +93,7 @@ export default function AnnualLearningPlanPanel({ plans = [], courses = [], year
       <Card>
         <CardHeader><CardTitle>Plan Modules</CardTitle></CardHeader>
         <CardContent className="space-y-3 max-h-[720px] overflow-y-auto">
-          {!selectedPlan ? <div className="text-sm text-slate-500">Select an annual plan to add required education items.</div> : courses.map((course) => <label key={course.id} className="flex items-start gap-3 rounded-xl border p-4 bg-white"><Checkbox checked={selectedCourses.includes(course.id)} onCheckedChange={() => setSelectedCourses((prev) => prev.includes(course.id) ? prev.filter((item) => item !== course.id) : [...prev, course.id])} /><div><p className="font-semibold text-slate-900">{course.title}</p><p className="text-sm text-slate-500">{course.business_line_scope || 'all'}</p></div></label>)}
+          {!selectedPlan ? <div className="text-sm text-slate-500">Select an annual plan to add required education items.</div> : courses.map((course) => <label key={course.id} htmlFor={`plan-course-${course.id}`} className="flex items-start gap-3 rounded-xl border p-4 bg-white"><Checkbox id={`plan-course-${course.id}`} checked={selectedCourses.includes(course.id)} onCheckedChange={() => setSelectedCourses((prev) => prev.includes(course.id) ? prev.filter((item) => item !== course.id) : [...prev, course.id])} /><div><p className="font-semibold text-slate-900">{course.title}</p><p className="text-sm text-slate-500">{course.business_line_scope || 'all'}</p></div></label>)}
           {selectedPlan && <Button className="w-full" onClick={savePlanCourses}>Save plan modules</Button>}
         </CardContent>
       </Card>

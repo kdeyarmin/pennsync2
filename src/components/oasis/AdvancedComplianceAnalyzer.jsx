@@ -226,6 +226,7 @@ DELIVER A COMPREHENSIVE COMPLIANCE RISK REPORT.`,
       console.error("Advanced compliance analysis error:", error);
       setComplianceReport({ error: "Failed to generate advanced compliance analysis. Please try again." });
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- AI hook object is intentionally omitted; its run() is stable, and including it would re-fire the call every render
   }, [analysisResults, pdgmData, historicalOASIS, historicalAudits]);
 
   // Auto-analyze when data is available

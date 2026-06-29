@@ -75,13 +75,13 @@ export default function PDFFieldMapper({ onFieldsChange, initialFields = [] }) {
       <Card className="p-4">
         <div className="space-y-3">
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
+            <label htmlFor="mapper-field-type" className="block text-sm font-medium text-slate-700 mb-1">
               Field Type
             </label>
-            <Select value={newField.type} onValueChange={(val) => 
+            <Select value={newField.type} onValueChange={(val) =>
               setNewField({ ...newField, type: val })
             }>
-              <SelectTrigger className="text-sm">
+              <SelectTrigger id="mapper-field-type" className="text-sm">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -96,10 +96,11 @@ export default function PDFFieldMapper({ onFieldsChange, initialFields = [] }) {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
+              <label htmlFor="mapper-field-label" className="block text-sm font-medium text-slate-700 mb-1">
                 Label
               </label>
               <Input
+                id="mapper-field-label"
                 placeholder="e.g., Patient Name"
                 value={newField.label}
                 onChange={(e) => setNewField({ ...newField, label: e.target.value })}
@@ -108,10 +109,11 @@ export default function PDFFieldMapper({ onFieldsChange, initialFields = [] }) {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
+              <label htmlFor="mapper-field-name" className="block text-sm font-medium text-slate-700 mb-1">
                 Field Name
               </label>
               <Input
+                id="mapper-field-name"
                 placeholder="e.g., patient_name"
                 value={newField.fieldName}
                 onChange={(e) => setNewField({ ...newField, fieldName: e.target.value })}
@@ -122,13 +124,13 @@ export default function PDFFieldMapper({ onFieldsChange, initialFields = [] }) {
 
           {newField.type !== "signature" && newField.type !== "initials" && (
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
+              <label htmlFor="mapper-data-source" className="block text-sm font-medium text-slate-700 mb-1">
                 Data Source
               </label>
               <Select value={newField.dataSource} onValueChange={(val) =>
                 setNewField({ ...newField, dataSource: val })
               }>
-                <SelectTrigger className="text-sm">
+                <SelectTrigger id="mapper-data-source" className="text-sm">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -141,13 +143,13 @@ export default function PDFFieldMapper({ onFieldsChange, initialFields = [] }) {
 
           {newField.dataSource === "patient" && newField.type !== "signature" && (
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
+              <label htmlFor="mapper-patient-field" className="block text-sm font-medium text-slate-700 mb-1">
                 Patient Field
               </label>
               <Select value={newField.dataField} onValueChange={(val) =>
                 setNewField({ ...newField, dataField: val })
               }>
-                <SelectTrigger className="text-sm">
+                <SelectTrigger id="mapper-patient-field" className="text-sm">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

@@ -192,22 +192,23 @@ export default function OfflineVisitNoteCapture({ patient, onComplete }) {
         </CardHeader>
         <CardContent className="space-y-3">
           <div>
-            <label className="text-sm font-medium text-slate-700 mb-1 block">Patient</label>
-            <Input value={visitData.patient_name} disabled className="bg-slate-50" />
+            <label htmlFor="visit-patient" className="text-sm font-medium text-slate-700 mb-1 block">Patient</label>
+            <Input id="visit-patient" value={visitData.patient_name} disabled className="bg-slate-50" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-sm font-medium text-slate-700 mb-1 block">Visit Date</label>
+              <label htmlFor="visit-date" className="text-sm font-medium text-slate-700 mb-1 block">Visit Date</label>
               <Input
+                id="visit-date"
                 type="date"
                 value={visitData.visit_date}
                 onChange={(e) => updateField('visit_date', e.target.value)}
               />
             </div>
             <div>
-              <label className="text-sm font-medium text-slate-700 mb-1 block">Visit Type</label>
+              <label htmlFor="visit-type" className="text-sm font-medium text-slate-700 mb-1 block">Visit Type</label>
               <Select value={visitData.visit_type} onValueChange={(val) => updateField('visit_type', val)}>
-                <SelectTrigger>
+                <SelectTrigger id="visit-type">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -232,8 +233,9 @@ export default function OfflineVisitNoteCapture({ patient, onComplete }) {
         <CardContent>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             <div>
-              <label className="text-xs font-medium text-slate-700 mb-1 block">BP Systolic</label>
+              <label htmlFor="vital-bp-systolic" className="text-xs font-medium text-slate-700 mb-1 block">BP Systolic</label>
               <Input
+                id="vital-bp-systolic"
                 type="number"
                 placeholder="120"
                 value={visitData.vitals.blood_pressure_systolic}
@@ -241,8 +243,9 @@ export default function OfflineVisitNoteCapture({ patient, onComplete }) {
               />
             </div>
             <div>
-              <label className="text-xs font-medium text-slate-700 mb-1 block">BP Diastolic</label>
+              <label htmlFor="vital-bp-diastolic" className="text-xs font-medium text-slate-700 mb-1 block">BP Diastolic</label>
               <Input
+                id="vital-bp-diastolic"
                 type="number"
                 placeholder="80"
                 value={visitData.vitals.blood_pressure_diastolic}
@@ -250,8 +253,9 @@ export default function OfflineVisitNoteCapture({ patient, onComplete }) {
               />
             </div>
             <div>
-              <label className="text-xs font-medium text-slate-700 mb-1 block">Heart Rate</label>
+              <label htmlFor="vital-heart-rate" className="text-xs font-medium text-slate-700 mb-1 block">Heart Rate</label>
               <Input
+                id="vital-heart-rate"
                 type="number"
                 placeholder="72"
                 value={visitData.vitals.heart_rate}
@@ -259,8 +263,9 @@ export default function OfflineVisitNoteCapture({ patient, onComplete }) {
               />
             </div>
             <div>
-              <label className="text-xs font-medium text-slate-700 mb-1 block">Resp Rate</label>
+              <label htmlFor="vital-resp-rate" className="text-xs font-medium text-slate-700 mb-1 block">Resp Rate</label>
               <Input
+                id="vital-resp-rate"
                 type="number"
                 placeholder="16"
                 value={visitData.vitals.respiratory_rate}
@@ -268,8 +273,9 @@ export default function OfflineVisitNoteCapture({ patient, onComplete }) {
               />
             </div>
             <div>
-              <label className="text-xs font-medium text-slate-700 mb-1 block">Temp (°F)</label>
+              <label htmlFor="vital-temperature" className="text-xs font-medium text-slate-700 mb-1 block">Temp (°F)</label>
               <Input
+                id="vital-temperature"
                 type="number"
                 step="0.1"
                 placeholder="98.6"
@@ -278,8 +284,9 @@ export default function OfflineVisitNoteCapture({ patient, onComplete }) {
               />
             </div>
             <div>
-              <label className="text-xs font-medium text-slate-700 mb-1 block">O2 Sat (%)</label>
+              <label htmlFor="vital-oxygen-saturation" className="text-xs font-medium text-slate-700 mb-1 block">O2 Sat (%)</label>
               <Input
+                id="vital-oxygen-saturation"
                 type="number"
                 placeholder="98"
                 value={visitData.vitals.oxygen_saturation}
@@ -287,8 +294,9 @@ export default function OfflineVisitNoteCapture({ patient, onComplete }) {
               />
             </div>
             <div>
-              <label className="text-xs font-medium text-slate-700 mb-1 block">Pain (0-10)</label>
+              <label htmlFor="vital-pain-level" className="text-xs font-medium text-slate-700 mb-1 block">Pain (0-10)</label>
               <Input
+                id="vital-pain-level"
                 type="number"
                 min="0"
                 max="10"
@@ -298,8 +306,9 @@ export default function OfflineVisitNoteCapture({ patient, onComplete }) {
               />
             </div>
             <div>
-              <label className="text-xs font-medium text-slate-700 mb-1 block">Weight (lbs)</label>
+              <label htmlFor="vital-weight" className="text-xs font-medium text-slate-700 mb-1 block">Weight (lbs)</label>
               <Input
+                id="vital-weight"
                 type="number"
                 placeholder="150"
                 value={visitData.vitals.weight}
@@ -317,10 +326,11 @@ export default function OfflineVisitNoteCapture({ patient, onComplete }) {
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <label className="text-sm font-medium text-slate-700 mb-1 block">
+            <label htmlFor="clinical-chief-complaint" className="text-sm font-medium text-slate-700 mb-1 block">
               Chief Complaint
             </label>
             <Textarea
+              id="clinical-chief-complaint"
               placeholder="Patient's primary concern or reason for visit..."
               value={visitData.chief_complaint}
               onChange={(e) => updateField('chief_complaint', e.target.value)}
@@ -329,10 +339,11 @@ export default function OfflineVisitNoteCapture({ patient, onComplete }) {
           </div>
 
           <div>
-            <label className="text-sm font-medium text-slate-700 mb-1 block">
+            <label htmlFor="clinical-assessment" className="text-sm font-medium text-slate-700 mb-1 block">
               Assessment <span className="text-red-500">*</span>
             </label>
             <Textarea
+              id="clinical-assessment"
               placeholder="Clinical assessment, findings, and observations..."
               value={visitData.assessment}
               onChange={(e) => updateField('assessment', e.target.value)}
@@ -341,10 +352,11 @@ export default function OfflineVisitNoteCapture({ patient, onComplete }) {
           </div>
 
           <div>
-            <label className="text-sm font-medium text-slate-700 mb-1 block">
+            <label htmlFor="clinical-interventions" className="text-sm font-medium text-slate-700 mb-1 block">
               Interventions Performed
             </label>
             <Textarea
+              id="clinical-interventions"
               placeholder="Nursing interventions, treatments, education provided..."
               value={visitData.interventions}
               onChange={(e) => updateField('interventions', e.target.value)}
@@ -353,10 +365,11 @@ export default function OfflineVisitNoteCapture({ patient, onComplete }) {
           </div>
 
           <div>
-            <label className="text-sm font-medium text-slate-700 mb-1 block">
+            <label htmlFor="clinical-patient-response" className="text-sm font-medium text-slate-700 mb-1 block">
               Patient Response
             </label>
             <Textarea
+              id="clinical-patient-response"
               placeholder="How patient responded to interventions..."
               value={visitData.patient_response}
               onChange={(e) => updateField('patient_response', e.target.value)}
@@ -365,10 +378,11 @@ export default function OfflineVisitNoteCapture({ patient, onComplete }) {
           </div>
 
           <div>
-            <label className="text-sm font-medium text-slate-700 mb-1 block">
+            <label htmlFor="clinical-plan" className="text-sm font-medium text-slate-700 mb-1 block">
               Plan of Care <span className="text-red-500">*</span>
             </label>
             <Textarea
+              id="clinical-plan"
               placeholder="Ongoing plan, follow-up, next visit plan..."
               value={visitData.plan}
               onChange={(e) => updateField('plan', e.target.value)}
@@ -377,10 +391,11 @@ export default function OfflineVisitNoteCapture({ patient, onComplete }) {
           </div>
 
           <div>
-            <label className="text-sm font-medium text-slate-700 mb-1 block">
+            <label htmlFor="clinical-notes" className="text-sm font-medium text-slate-700 mb-1 block">
               Additional Clinical Notes
             </label>
             <Textarea
+              id="clinical-notes"
               placeholder="Any additional relevant information..."
               value={visitData.clinical_notes}
               onChange={(e) => updateField('clinical_notes', e.target.value)}

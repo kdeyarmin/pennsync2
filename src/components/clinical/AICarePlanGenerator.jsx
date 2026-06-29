@@ -112,10 +112,11 @@ Make the care plan specific to home health nursing, focusing on skilled nursing 
         </CardHeader>
         <CardContent className="p-4 space-y-4">
           <div>
-            <label className="text-sm font-medium text-slate-700 mb-2 block">
+            <label htmlFor="primary-diagnosis" className="text-sm font-medium text-slate-700 mb-2 block">
               Primary Diagnosis
             </label>
             <input
+              id="primary-diagnosis"
               type="text"
               value={diagnosis}
               onChange={(e) => setDiagnosis(e.target.value)}
@@ -125,10 +126,11 @@ Make the care plan specific to home health nursing, focusing on skilled nursing 
           </div>
 
           <div>
-            <label className="text-sm font-medium text-slate-700 mb-2 block">
+            <label htmlFor="patient-needs" className="text-sm font-medium text-slate-700 mb-2 block">
               Patient Needs / Clinical Situation (Optional)
             </label>
             <textarea
+              id="patient-needs"
               value={needs}
               onChange={(e) => setNeeds(e.target.value)}
               placeholder="Additional information about patient's condition, limitations, support system..."

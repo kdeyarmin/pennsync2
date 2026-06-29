@@ -139,6 +139,7 @@ Return JSON with overall_compliance_score (0-100), rule_violations array with ru
       console.error('Compliance check error:', error);
       toast.error("The AI request didn't complete. Please try again.");
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- AI hook object is intentionally omitted; its run() is stable, and including it would re-fire the call every render
   }, [noteContent, complianceRules, visitType, diagnosis, nurseType, patientData]);
 
   useEffect(() => {

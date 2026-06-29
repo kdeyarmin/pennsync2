@@ -396,7 +396,7 @@ export default function PatientAlertsDashboard({ patientId = null, _showAllPatie
                                 </Badge>
                               )}
                               <Badge variant="outline" className="text-xs">
-                                {alert.alert_type.replace(/_/g, ' ')}
+                                {(alert.alert_type || '').replace(/_/g, ' ')}
                               </Badge>
                             </div>
                             

@@ -159,9 +159,9 @@ Format recommendations to be actionable and motivating. Focus on improvement, no
 
       for (const rec of highPriorityRecs) {
         // Find matching module
-        const matchingModule = availableModules.find(m => 
-          m.title.toLowerCase().includes(rec.module_title.toLowerCase()) ||
-          rec.module_title.toLowerCase().includes(m.title.toLowerCase())
+        const matchingModule = availableModules.find(m =>
+          (m.title || '').toLowerCase().includes((rec.module_title || '').toLowerCase()) ||
+          (rec.module_title || '').toLowerCase().includes((m.title || '').toLowerCase())
         );
 
         if (matchingModule) {
@@ -204,6 +204,7 @@ Format recommendations to be actionable and motivating. Focus on improvement, no
       console.error("Error analyzing training needs:", error);
       toast.error("The AI request didn't complete. Please try again.");
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- AI hook object is intentionally omitted; its run() is stable, and including it would re-fire the call every render
   }, [complianceAudits, trainingRecommendations, completedTraining, availableModules, userEmail, queryClient, getDueDate]);
 
   // Mark training as started

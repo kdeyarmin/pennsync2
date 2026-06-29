@@ -28,13 +28,14 @@ import { cn } from "@/lib/utils";
 import { base44 } from "@/api/base44Client";
 import { useQueryClient } from "@tanstack/react-query";
 
-export default function SearchablePatientSelect({ 
-  patients = [], 
-  value, 
+export default function SearchablePatientSelect({
+  patients = [],
+  value,
   onValueChange,
   onChange, // Support both for backwards compatibility
   placeholder = "Select patient...",
-  className 
+  className,
+  id, // forwarded to the trigger so a <Label htmlFor> can target this control
 }) {
   // Use either onValueChange or onChange
   const handleChange = onValueChange || onChange || (() => {});
@@ -186,6 +187,7 @@ export default function SearchablePatientSelect({
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild disabled={false}>
         <Button
+          id={id}
           variant="outline"
           role="combobox"
           aria-expanded={open}

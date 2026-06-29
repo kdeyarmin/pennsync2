@@ -193,6 +193,7 @@ Return JSON array:
       toast.error("The AI request didn't complete. Please try again.");
     }
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- AI hook object is intentionally omitted; its run() is stable, and including it would re-fire the call every render
   }, [patients, visits, carePlans, incidents, calculateVitalTrends]);
 
   useEffect(() => {
@@ -453,7 +454,7 @@ Return JSON array:
                         <div>
                           <h3 className="font-semibold text-slate-900">{assessment.patient_name}</h3>
                           <Badge className={getRiskLevelColor(assessment.overall_risk_level)}>
-                            {assessment.overall_risk_level.toUpperCase()} RISK
+                            {(assessment.overall_risk_level || '').toUpperCase()} RISK
                           </Badge>
                         </div>
                       </div>

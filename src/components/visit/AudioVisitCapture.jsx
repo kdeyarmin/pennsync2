@@ -236,7 +236,7 @@ export default function AudioVisitCapture({ currentUser, visitId = null }) {
           <div>
             <div className="flex items-center gap-1.5 mb-2">
               <User className="w-3.5 h-3.5 text-navy-600" />
-              <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide">Patient</label>
+              <span className="text-xs font-semibold text-slate-600 uppercase tracking-wide">Patient</span>
             </div>
             <SearchablePatientSelect
               patients={patients}
@@ -248,7 +248,7 @@ export default function AudioVisitCapture({ currentUser, visitId = null }) {
           <div>
             <div className="flex items-center gap-1.5 mb-2">
               <ClipboardList className="w-3.5 h-3.5 text-navy-600" />
-              <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide">Visit Type</label>
+              <span className="text-xs font-semibold text-slate-600 uppercase tracking-wide">Visit Type</span>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
               {visitTypes.map(v => (

@@ -551,9 +551,10 @@ export default function LearningPlanManager() {
                                 }
                               />
                             </div>
-                            <label className="flex flex-col items-center gap-1 cursor-pointer">
+                            <label htmlFor={`plan-course-required-${pc.id}`} className="flex flex-col items-center gap-1 cursor-pointer">
                               <span className="text-[10px] uppercase tracking-wide text-slate-400">Required</span>
                               <Switch
+                                id={`plan-course-required-${pc.id}`}
                                 checked={pc.is_required !== false}
                                 onCheckedChange={(checked) =>
                                   updateCourseMutation.mutate({ id: pc.id, patch: { is_required: checked } })

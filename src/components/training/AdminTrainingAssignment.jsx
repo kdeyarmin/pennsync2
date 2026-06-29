@@ -165,11 +165,11 @@ export default function AdminTrainingAssignment() {
         <CardContent className="space-y-4">
           {/* Select Nurse */}
           <div>
-            <label className="text-sm font-medium text-slate-700 mb-2 block">
+            <label htmlFor="assign-nurse" className="text-sm font-medium text-slate-700 mb-2 block">
               Select Nurse
             </label>
             <Select value={selectedNurse} onValueChange={setSelectedNurse}>
-              <SelectTrigger>
+              <SelectTrigger id="assign-nurse">
                 <SelectValue placeholder="Choose a nurse..." />
               </SelectTrigger>
               <SelectContent>
@@ -191,11 +191,11 @@ export default function AdminTrainingAssignment() {
 
           {/* Select Module */}
           <div>
-            <label className="text-sm font-medium text-slate-700 mb-2 block">
+            <label htmlFor="assign-module" className="text-sm font-medium text-slate-700 mb-2 block">
               Training Module
             </label>
             <Select value={selectedModule} onValueChange={setSelectedModule}>
-              <SelectTrigger>
+              <SelectTrigger id="assign-module">
                 <SelectValue placeholder="Choose a module..." />
               </SelectTrigger>
               <SelectContent>
@@ -217,11 +217,12 @@ export default function AdminTrainingAssignment() {
 
           {/* Due Date */}
           <div>
-            <label className="text-sm font-medium text-slate-700 mb-2 block flex items-center gap-2">
+            <label htmlFor="assign-due-date" className="text-sm font-medium text-slate-700 mb-2 block flex items-center gap-2">
               <Calendar className="w-4 h-4" />
               Due Date
             </label>
             <Input
+              id="assign-due-date"
               type="date"
               value={dueDate}
               onChange={(e) => setDueDate(e.target.value)}
@@ -231,10 +232,11 @@ export default function AdminTrainingAssignment() {
 
           {/* Reason */}
           <div>
-            <label className="text-sm font-medium text-slate-700 mb-2 block">
+            <label htmlFor="assign-reason" className="text-sm font-medium text-slate-700 mb-2 block">
               Assignment Reason (optional)
             </label>
             <Textarea
+              id="assign-reason"
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               placeholder="E.g., Low compliance score, new policy requirement..."

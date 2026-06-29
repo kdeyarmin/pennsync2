@@ -440,12 +440,12 @@ export default function Messages() {
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <label className="mb-2 block text-sm font-semibold">Recipients *</label>
+              <label htmlFor="new-message-recipients" className="mb-2 block text-sm font-semibold">Recipients *</label>
               <Select
                 value={newMessage.recipients[0] || ""}
                 onValueChange={(value) => setNewMessage({ ...newMessage, recipients: [value] })}
               >
-                <SelectTrigger className="h-11">
+                <SelectTrigger id="new-message-recipients" className="h-11">
                   <SelectValue placeholder="Select recipient" />
                 </SelectTrigger>
                 <SelectContent>
@@ -459,12 +459,12 @@ export default function Messages() {
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-semibold">Related Patient (Optional)</label>
+              <label htmlFor="new-message-patient" className="mb-2 block text-sm font-semibold">Related Patient (Optional)</label>
               <Select
                 value={newMessage.patient_id || "none"}
                 onValueChange={(value) => setNewMessage({ ...newMessage, patient_id: value === "none" ? null : value })}
               >
-                <SelectTrigger className="h-11">
+                <SelectTrigger id="new-message-patient" className="h-11">
                   <SelectValue placeholder="Select patient" />
                 </SelectTrigger>
                 <SelectContent>
@@ -479,12 +479,12 @@ export default function Messages() {
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-semibold">Priority</label>
+              <label htmlFor="new-message-priority" className="mb-2 block text-sm font-semibold">Priority</label>
               <Select
                 value={newMessage.priority}
                 onValueChange={(value) => setNewMessage({ ...newMessage, priority: value })}
               >
-                <SelectTrigger className="h-11">
+                <SelectTrigger id="new-message-priority" className="h-11">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -496,8 +496,9 @@ export default function Messages() {
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-semibold">Subject *</label>
+              <label htmlFor="new-message-subject" className="mb-2 block text-sm font-semibold">Subject *</label>
               <Input
+                id="new-message-subject"
                 value={newMessage.subject}
                 onChange={(e) => setNewMessage({ ...newMessage, subject: e.target.value })}
                 placeholder="Enter subject"
@@ -506,8 +507,9 @@ export default function Messages() {
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-semibold">Message *</label>
+              <label htmlFor="new-message-text" className="mb-2 block text-sm font-semibold">Message *</label>
               <Textarea
+                id="new-message-text"
                 value={newMessage.message_text}
                 onChange={(e) => setNewMessage({ ...newMessage, message_text: e.target.value })}
                 placeholder="Type your message here..."

@@ -286,11 +286,11 @@ export default function DuplicatePatientManager() {
               </Alert>
 
               <div>
-                <label className="text-sm font-medium mb-2 block">
+                <label htmlFor="primary-record-select" className="text-sm font-medium mb-2 block">
                   Select Primary Record to Keep:
                 </label>
                 <Select value={primaryPatientId} onValueChange={setPrimaryPatientId}>
-                  <SelectTrigger>
+                  <SelectTrigger id="primary-record-select">
                     <SelectValue placeholder="Select primary record" />
                   </SelectTrigger>
                   <SelectContent>

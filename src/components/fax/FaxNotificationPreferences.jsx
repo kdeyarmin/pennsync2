@@ -98,19 +98,21 @@ export default function FaxNotificationPreferences() {
         <div className="space-y-3">
           <p className="font-medium text-sm">Alert Me When:</p>
           <div className="flex items-center justify-between pl-2">
-            <label className="text-sm text-slate-700 cursor-pointer">
+            <label htmlFor="notify-on-delivered" className="text-sm text-slate-700 cursor-pointer">
               Fax is delivered
             </label>
             <Switch
+              id="notify-on-delivered"
               checked={preferences.notifyOnDelivered}
               onCheckedChange={() => handleToggle('notifyOnDelivered')}
             />
           </div>
           <div className="flex items-center justify-between pl-2">
-            <label className="text-sm text-slate-700 cursor-pointer">
+            <label htmlFor="notify-on-failed" className="text-sm text-slate-700 cursor-pointer">
               Fax fails to send
             </label>
             <Switch
+              id="notify-on-failed"
               checked={preferences.notifyOnFailed}
               onCheckedChange={() => handleToggle('notifyOnFailed')}
             />

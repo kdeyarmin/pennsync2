@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
+import { Link } from "react-router-dom";
+import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -241,8 +243,10 @@ export default function NurseTrainingSuggestions({ nurseEmail, compact = false }
                       </div>
                       <p className="text-xs text-slate-500">{module.recommendationCount} recs</p>
                     </div>
-                    <Button size="sm" variant="outline">
-                      Start <ChevronRight className="w-4 h-4 ml-1" />
+                    <Button asChild size="sm" variant="outline">
+                      <Link to={createPageUrl('NurseTrainingHub')}>
+                        Start <ChevronRight className="w-4 h-4 ml-1" />
+                      </Link>
                     </Button>
                   </div>
                 </div>

@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
+import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -296,13 +298,14 @@ export default function NursePerformanceDashboard() {
 
           <Tabs defaultValue="insights" className="space-y-4 sm:space-y-6">
           <div className="overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0">
-            <TabsList className="inline-flex md:grid md:w-full md:grid-cols-8 gap-1 min-w-max h-auto">
+            <TabsList className="inline-flex md:grid md:w-full md:grid-cols-9 gap-1 min-w-max h-auto">
               <TabsTrigger value="insights" className="py-2 sm:py-3 text-xs sm:text-sm whitespace-nowrap">Insights</TabsTrigger>
               <TabsTrigger value="quality" className="py-2 sm:py-3 text-xs sm:text-sm whitespace-nowrap">Quality</TabsTrigger>
               <TabsTrigger value="outcomes" className="py-2 sm:py-3 text-xs sm:text-sm whitespace-nowrap">Outcomes</TabsTrigger>
               <TabsTrigger value="utilization" className="py-2 sm:py-3 text-xs sm:text-sm whitespace-nowrap">Utilization</TabsTrigger>
               <TabsTrigger value="burnout" className="py-2 sm:py-3 text-xs sm:text-sm whitespace-nowrap">Burnout</TabsTrigger>
               <TabsTrigger value="goals" className="py-2 sm:py-3 text-xs sm:text-sm whitespace-nowrap">Goals</TabsTrigger>
+              <TabsTrigger value="skills" className="py-2 sm:py-3 text-xs sm:text-sm whitespace-nowrap">Skills</TabsTrigger>
               <TabsTrigger value="trends" className="py-2 sm:py-3 text-xs sm:text-sm whitespace-nowrap">Trends</TabsTrigger>
               <TabsTrigger value="suggestions" className="py-2 sm:py-3 text-xs sm:text-sm whitespace-nowrap">Suggest</TabsTrigger>
             </TabsList>
@@ -741,9 +744,11 @@ export default function NursePerformanceDashboard() {
                             <Badge variant={rec.urgency === 'high' ? 'destructive' : rec.urgency === 'medium' ? 'default' : 'secondary'}>
                               {rec.urgency} urgency
                             </Badge>
-                            <Button size="sm" variant="outline" className="ml-auto">
-                              Start Training
-                              <ChevronRight className="w-3 h-3 ml-1" />
+                            <Button asChild size="sm" variant="outline" className="ml-auto">
+                              <Link to={createPageUrl('NurseTrainingHub')}>
+                                Start Training
+                                <ChevronRight className="w-3 h-3 ml-1" />
+                              </Link>
                             </Button>
                           </div>
                         </div>
@@ -974,14 +979,13 @@ export default function NursePerformanceDashboard() {
                                   {rec.severity}
                                 </Badge>
                                 <Badge variant="outline">{rec.recommendation_type}</Badge>
-                                <span className="text-xs text-slate-500">{rec.source.replace(/_/g, ' ')}</span>
+                                <span className="text-xs text-slate-500">{(rec.source || '').replace(/_/g, ' ')}</span>
                               </div>
                               <p className="text-sm text-slate-900">{rec.recommendation_text}</p>
                               {rec.context_data?.element && (
                                 <p className="text-xs text-slate-500 mt-1">Context: {rec.context_data.element}</p>
                               )}
                             </div>
-                            <Button size="sm" variant="outline">Review</Button>
                           </div>
                         </div>
                       ))}
@@ -1019,11 +1023,13 @@ export default function NursePerformanceDashboard() {
                               <p className="text-sm text-slate-600 mb-3">{gap.recommendation}</p>
                               <div className="flex items-center gap-2">
                                 <span className="text-xs text-slate-500">Current level:</span>
-                                <Badge variant="outline">{gap.current_level.replace(/_/g, ' ')}</Badge>
+                                <Badge variant="outline">{(gap.current_level || 'unknown').replace(/_/g, ' ')}</Badge>
                               </div>
                             </div>
-                            <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
-                              Take Training
+                            <Button asChild size="sm" className="bg-blue-600 hover:bg-blue-700">
+                              <Link to={createPageUrl('NurseTrainingHub')}>
+                                Take Training
+                              </Link>
                             </Button>
                           </div>
                         </div>

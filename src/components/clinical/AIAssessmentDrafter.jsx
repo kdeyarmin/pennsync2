@@ -117,10 +117,11 @@ Format the response professionally for OASIS documentation. Be specific and use 
         </CardHeader>
         <CardContent className="p-4 space-y-4">
           <div>
-            <label className="text-sm font-medium text-slate-700 mb-2 block">
+            <label htmlFor="visit-notes" className="text-sm font-medium text-slate-700 mb-2 block">
               Visit Notes / Clinical Information
             </label>
             <Textarea
+              id="visit-notes"
               value={customNotes}
               onChange={(e) => setCustomNotes(e.target.value)}
               placeholder="Enter visit notes, observations, or patient information to generate OASIS assessment..."

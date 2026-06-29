@@ -161,6 +161,7 @@ Referral Data: ${JSON.stringify(referralData)}`,
       setAnalysisError(true);
       toast.error('Failed to analyze referral. Please try again.');
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- AI hook object is intentionally omitted; its run() is stable, and including it would re-fire the call every render
   }, [referralData]);
 
   useEffect(() => {

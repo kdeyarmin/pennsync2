@@ -240,6 +240,7 @@ Be thorough, specific, and actionable. Provide actual example text for suggestio
       console.error('Error analyzing documentation:', error);
       toast.error('Failed to analyze documentation. Please try again.');
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- AI hook object is intentionally omitted; its run() is stable, and including it would re-fire the call every render
   }, [noteContent, noteType, patientData]);
 
   useEffect(() => {

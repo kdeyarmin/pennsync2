@@ -183,7 +183,7 @@ Return JSON:
                   <div className="mt-2 space-y-1">
                     {optimization.quick_wins.map((win, idx) => (
                       <div key={idx} className="flex items-center justify-between bg-white p-2 rounded">
-                        <span className="text-[10px] flex-1">{win.action.substring(0, 60)}...</span>
+                        <span className="text-[10px] flex-1">{(win.action || '').substring(0, 60)}...</span>
                         <Badge className="text-[10px] bg-green-600 text-white ml-2">
                           {win.impact}
                         </Badge>

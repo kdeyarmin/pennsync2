@@ -357,7 +357,7 @@ export default function OfflineSyncManager() {
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1">
                           <p className="text-xs font-semibold text-red-900">
-                            {error.type === 'visit' ? 'Visit' : 'Update'} #{error.itemId.substring(0, 12)}...
+                            {error.type === 'visit' ? 'Visit' : 'Update'} #{(error.itemId || '').substring(0, 12)}...
                           </p>
                           <p className="text-xs text-red-700 mt-1">{error.error}</p>
                           <p className="text-xs text-slate-500 mt-1">

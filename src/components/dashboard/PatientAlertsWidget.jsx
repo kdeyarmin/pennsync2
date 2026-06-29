@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,6 +9,8 @@ import { formatEastern } from "../utils/timezone";
 
 export default function PatientAlertsWidget({ alerts, patientId, expanded = false }) {
   const queryClient = useQueryClient();
+  const [showAll, setShowAll] = useState(false);
+  const isExpanded = expanded || showAll;
 
   const acknowledgeAlertMutation = useMutation({
     mutationFn: async (alertId) => {
@@ -31,7 +34,7 @@ export default function PatientAlertsWidget({ alerts, patientId, expanded = fals
   });
 
   const activeAlerts = alerts.filter(a => a.status === 'active' || a.status === 'acknowledged');
-  const displayAlerts = expanded ? activeAlerts : activeAlerts.slice(0, 3);
+  const displayAlerts = isExpanded ? activeAlerts : activeAlerts.slice(0, 3);
 
   const getSeverityColor = (severity) => {
     switch (severity) {
@@ -126,8 +129,8 @@ export default function PatientAlertsWidget({ alerts, patientId, expanded = fals
               </div>
             ))}
             
-            {!expanded && activeAlerts.length > 3 && (
-              <Button variant="outline" size="sm" className="w-full">
+            {!isExpanded && activeAlerts.length > 3 && (
+              <Button variant="outline" size="sm" className="w-full" onClick={() => setShowAll(true)}>
                 View All {activeAlerts.length} Alerts
               </Button>
             )}

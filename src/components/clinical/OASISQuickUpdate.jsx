@@ -125,8 +125,9 @@ export default function OASISQuickUpdate({ patient, currentUser }) {
           </div>
 
           <div>
-            <label className="text-xs font-semibold text-slate-700 mb-1.5 block">Clinical Note</label>
+            <label htmlFor="clinical-note" className="text-xs font-semibold text-slate-700 mb-1.5 block">Clinical Note</label>
             <Textarea
+              id="clinical-note"
               rows={3}
               placeholder="Add clinical observations or notes for this assessment…"
               value={clinicalNote}

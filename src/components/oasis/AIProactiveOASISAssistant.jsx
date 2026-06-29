@@ -248,6 +248,7 @@ Provide detailed, actionable recommendations that a home health nurse can immedi
       console.error('Error performing OASIS analysis:', error);
       toast.error('Failed to perform OASIS analysis. Please try again.');
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- AI hook object is intentionally omitted; its run() is stable, and including it would re-fire the call every render
   }, [patient, visits, incidents, carePlans, existingOASIS, patientId, queryClient, calculateAge]);
 
   React.useEffect(() => {
@@ -330,7 +331,7 @@ Provide detailed, actionable recommendations that a home health nurse can immedi
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="text-lg font-bold text-slate-900">Documentation Completeness</h3>
                   <Badge className={`${getRiskColor(analysis.compliance_risk_level)} text-white text-lg px-4 py-2`}>
-                    {analysis.compliance_risk_level.toUpperCase()}
+                    {(analysis.compliance_risk_level || '').toUpperCase()}
                   </Badge>
                 </div>
                 <div className="flex items-center gap-4 mb-3">

@@ -88,6 +88,7 @@ For each issue found, provide:
       console.error("Compliance check failed:", error);
       toast.error("Compliance check failed");
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- AI hook object is intentionally omitted; its run() is stable, and including it would re-fire the call every render
   }, [documentContent, documentType]);
 
   const applyFix = async (issue) => {

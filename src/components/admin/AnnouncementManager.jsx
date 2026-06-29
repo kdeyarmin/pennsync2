@@ -371,8 +371,9 @@ export default function AnnouncementManager() {
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4 mt-4 overflow-visible">
             <div>
-              <label className="text-sm font-medium">Title</label>
+              <label htmlFor="announcement-title" className="text-sm font-medium">Title</label>
               <Input
+                id="announcement-title"
                 value={formData.title}
                 onChange={(e) => setFormData({...formData, title: e.target.value})}
                 required
@@ -381,8 +382,9 @@ export default function AnnouncementManager() {
               />
             </div>
             <div>
-              <label className="text-sm font-medium">Content</label>
+              <label htmlFor="announcement-content" className="text-sm font-medium">Content</label>
               <Textarea
+                id="announcement-content"
                 value={formData.content}
                 onChange={(e) => setFormData({...formData, content: e.target.value})}
                 required

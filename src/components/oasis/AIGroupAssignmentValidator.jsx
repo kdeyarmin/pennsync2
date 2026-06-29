@@ -182,6 +182,7 @@ PROVIDE:
       console.error('Group assignment validation error:', error);
       setAssignment({ error: 'Failed to validate group assignment' });
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- AI hook object is intentionally omitted; its run() is stable, and including it would re-fire the call every render
   }, [oasisData, pdgmData, analysisResults]);
 
   useEffect(() => {

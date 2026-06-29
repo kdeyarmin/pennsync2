@@ -100,8 +100,9 @@ export default function AdminTrainingAnalytics() {
   // Module popularity
   const moduleData = modules.map(module => {
     const moduleCompletions = completions.filter(c => c.training_module_id === module.id);
+    const title = module.title || 'Untitled module';
     return {
-      name: module.title.substring(0, 30) + (module.title.length > 30 ? '...' : ''),
+      name: title.substring(0, 30) + (title.length > 30 ? '...' : ''),
       completions: moduleCompletions.length,
       avgScore: moduleCompletions.length > 0
         ? Math.round(moduleCompletions.reduce((sum, c) => sum + (c.score || 0), 0) / moduleCompletions.length)

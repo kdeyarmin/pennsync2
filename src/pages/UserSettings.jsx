@@ -822,10 +822,11 @@ export default function UserSettings() {
                     <li>Retains clinical/PHI records per your agency's data-retention policy</li>
                   </ul>
                   <div className="pt-3 border-t">
-                    <label className="text-sm font-medium text-slate-900 block mb-2">
+                    <label htmlFor="delete-account-confirm" className="text-sm font-medium text-slate-900 block mb-2">
                       Type <span className="font-bold text-red-600">DELETE</span> to confirm:
                     </label>
                     <Input
+                      id="delete-account-confirm"
                       type="text"
                       placeholder="Type DELETE"
                       value={deleteConfirm}

@@ -11,8 +11,43 @@ import {
   FileText, Search, Eye, Download, CheckCircle,
   Clock, Send
 } from 'lucide-react';
+import { toast } from 'sonner';
 
 import DischargeSummaryWorkflow from '@/components/discharge/DischargeSummaryWorkflow';
+
+const formatPdfDate = (value) => value ? new Date(value).toLocaleDateString() : '—';
+
+async function downloadSummaryPDF(summary) {
+  try {
+    const { exportToPDF } = await import('@/components/utils/pdfExporter');
+    const content = [];
+    const addSection = (label, value) => {
+      if (value === undefined || value === null || value === '') return;
+      content.push({ type: 'heading', text: label, size: 12 });
+      content.push({ type: 'text', text: String(value) });
+      content.push({ type: 'spacer', height: 3 });
+    };
+    addSection('Primary Diagnosis', summary.primary_diagnosis);
+    if (Array.isArray(summary.secondary_diagnoses) && summary.secondary_diagnoses.length) {
+      addSection('Secondary Diagnoses', summary.secondary_diagnoses.join(', '));
+    }
+    addSection('Admission / Discharge', `${formatPdfDate(summary.admission_date)} to ${formatPdfDate(summary.discharge_date)}`);
+    addSection('Reason for Admission', summary.reason_for_admission);
+    addSection('Summary of Care', summary.summary_of_care);
+    if (summary.signature?.signed_by_name) {
+      addSection('Signed By', `${summary.signature.signed_by_name}${summary.signature.signed_date ? ` on ${new Date(summary.signature.signed_date).toLocaleString()}` : ''}`);
+    }
+    await exportToPDF({
+      filename: `discharge_summary_${(summary.patient_name || 'patient').replace(/\s+/g, '_')}.pdf`,
+      title: 'Discharge Summary',
+      subtitle: summary.patient_name || '',
+      content,
+    });
+  } catch (err) {
+    console.error('Discharge summary PDF error:', err);
+    toast.error('Failed to generate PDF');
+  }
+}
 
 export default function DischargeSummaries() {
   const queryClient = useQueryClient();
@@ -20,6 +55,16 @@ export default function DischargeSummaries() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedSummaryId, setSelectedSummaryId] = useState(null);
   const [showWorkflow, setShowWorkflow] = useState(false);
+  const [workflowStep, setWorkflowStep] = useState('generate');
+
+  // Open the workflow for an existing summary. Already-generated summaries open
+  // at the review step (so signing acts on that record); a contentless draft
+  // falls back to the generate step.
+  const openSummary = (summary, step) => {
+    setSelectedSummaryId(summary.id);
+    setWorkflowStep(step || (summary.summary_of_care ? 'review' : 'generate'));
+    setShowWorkflow(true);
+  };
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -197,22 +242,22 @@ export default function DischargeSummaries() {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => {
-                          setSelectedSummaryId(summary.id);
-                          setShowWorkflow(true);
-                        }}
+                        onClick={() => openSummary(summary)}
                       >
                         <Eye className="w-3 h-3 mr-1" />
                         View
                       </Button>
                       {summary.status === 'pending_review' && (
-                        <Button size="sm">
+                        <Button
+                          size="sm"
+                          onClick={() => openSummary(summary, 'review')}
+                        >
                           <CheckCircle className="w-3 h-3 mr-1" />
                           Review & Sign
                         </Button>
                       )}
                       {summary.status === 'signed' && (
-                        <Button size="sm" variant="outline">
+                        <Button size="sm" variant="outline" onClick={() => downloadSummaryPDF(summary)}>
                           <Download className="w-3 h-3 mr-1" />
                           Download PDF
                         </Button>
@@ -229,6 +274,8 @@ export default function DischargeSummaries() {
       {showWorkflow && selectedSummaryId && (
         <DischargeSummaryWorkflow
           patientId={summaries.find(s => s.id === selectedSummaryId)?.patient_id}
+          summaryId={selectedSummaryId}
+          initialStep={workflowStep}
           onClose={() => {
             setShowWorkflow(false);
             setSelectedSummaryId(null);

@@ -112,14 +112,14 @@ export default function PatientChartRecommendations({ patientId }) {
                     }>
                       {rec.priority}
                     </Badge>
-                    <Badge variant="outline" className="text-xs">{rec.recommendation_type.replace(/_/g, ' ')}</Badge>
+                    <Badge variant="outline" className="text-xs">{(rec.recommendation_type || '').replace(/_/g, ' ')}</Badge>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 text-xs text-slate-500">
                   <Clock className="w-3 h-3" />
                   <span>{new Date(rec.created_date).toLocaleDateString()}</span>
                   <span>•</span>
-                  <span>From {rec.source_type.replace(/_/g, ' ')}</span>
+                  <span>From {(rec.source_type || '').replace(/_/g, ' ')}</span>
                 </div>
               </CardContent>
             </Card>
@@ -161,7 +161,7 @@ export default function PatientChartRecommendations({ patientId }) {
                   </div>
                   <div>
                     <p className="text-xs text-slate-600">Type:</p>
-                    <Badge variant="outline">{selectedRec.recommendation_type.replace(/_/g, ' ')}</Badge>
+                    <Badge variant="outline">{(selectedRec.recommendation_type || '').replace(/_/g, ' ')}</Badge>
                   </div>
                 </div>
 

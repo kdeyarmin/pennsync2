@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
+import { Link } from "react-router-dom";
+import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -241,8 +243,10 @@ export default function NurseFeedbackAggregator({ nurseEmail, onTrainingRecommen
                       </Badge>
                       <span className="text-xs font-medium text-slate-700">{gap.category}</span>
                     </div>
-                    <Button size="sm" variant="ghost" className="h-6 text-xs text-indigo-600">
-                      <BookOpen className="w-3 h-3 mr-1" /> Train
+                    <Button asChild size="sm" variant="ghost" className="h-6 text-xs text-indigo-600">
+                      <Link to={createPageUrl('NurseTrainingHub')}>
+                        <BookOpen className="w-3 h-3 mr-1" /> Train
+                      </Link>
                     </Button>
                   </div>
                 ))}

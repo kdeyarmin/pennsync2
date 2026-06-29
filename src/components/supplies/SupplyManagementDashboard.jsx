@@ -90,7 +90,7 @@ export default function SupplyManagementDashboard() {
   });
 
   const filteredSupplies = supplies.filter((s) =>
-    s.name.toLowerCase().includes(searchTerm.toLowerCase())
+    (s.name || "").toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const criticalAlerts = alerts.filter((a) => a.severity === "critical");
@@ -280,7 +280,7 @@ export default function SupplyManagementDashboard() {
                       <div className="flex-1">
                         <h4 className="font-semibold text-slate-900">{supply.name}</h4>
                         <p className="text-sm text-slate-600">
-                          {supply.category.replace(/_/g, " ")} • {supply.unit}
+                          {(supply.category || "").replace(/_/g, " ")} • {supply.unit}
                         </p>
                       </div>
                       <Badge className={statusColor}>{(supply.status || "unknown").replace("_", " ")}</Badge>
@@ -373,7 +373,7 @@ export default function SupplyManagementDashboard() {
                       alert.severity === "out_of_stock" ? "bg-red-700" :
                       "bg-yellow-600"
                     }>
-                      {alert.severity.replace("_", " ")}
+                      {(alert.severity || "").replace("_", " ")}
                     </Badge>
                   </div>
 

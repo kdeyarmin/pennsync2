@@ -119,6 +119,7 @@ Generate actionable tasks. Each task must have: title, description, priority (hi
       setSuggestedActions([]);
     }
 
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- AI hook object is intentionally omitted; its run() is stable, and including it would re-fire the call every render
   }, [analysisResults, automationRules]);
 
   // Analyze results and generate actions
