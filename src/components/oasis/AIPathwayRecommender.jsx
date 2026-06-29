@@ -34,6 +34,13 @@ export default function AIPathwayRecommender({
   const [expandedPathway, setExpandedPathway] = useState(null);
   const queryClient = useQueryClient();
 
+  // Current user — assigned_to is required on Task; without it the bulkCreate of
+  // generated pathway tasks is rejected and nothing is created.
+  const { data: currentUser } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me(),
+  });
+
   const { data: availablePathways = [] } = useQuery({
     queryKey: ['clinicalPathways'],
     queryFn: () => base44.entities.ClinicalPathway.filter({ is_active: true }),
@@ -230,6 +237,7 @@ Return JSON:
           tasksToCreate.push({
             ...task,
             patient_id: patientId,
+            assigned_to: currentUser?.email,
             source: 'ai_generated',
             ai_reason: `Generated from ${pathway.pathway_name} pathway`
           });

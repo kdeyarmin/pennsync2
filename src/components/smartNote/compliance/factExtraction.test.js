@@ -36,6 +36,18 @@ test("extractVitals tolerates a colon between the label and value (HR/temp/RR/we
   assert.equal(extractVitals("RR: 22").rr, 22);
   assert.equal(extractVitals("Respiratory Rate: 18").rr, 18);
   assert.equal(extractVitals("Weight: 180").weight, 180);
+  // The bare single-letter "T 99.1" space form still parses as a temperature.
+  assert.equal(extractVitals("T 99.1").temp, 99.1);
+});
+
+test("colon support does not misread generic 'T:'/'...rr:' labels as vitals", () => {
+  // The colon was added to Temp/Temperature/RR full spellings only — a bare "T:"
+  // list label or a word ending in 'rr' before a colon must NOT become a vital.
+  assert.equal(extractVitals("Item T: 98 reviewed").temp, undefined);
+  assert.equal(extractVitals("List T: 100 entries total").temp, undefined);
+  assert.equal(extractVitals("Room T: 95 degrees ambient").temp, undefined);
+  assert.equal(extractVitals("corr: 5 days").rr, undefined);
+  assert.equal(extractVitals("burr: 12").rr, undefined);
 });
 
 test("extractVitals reads O2 saturation with the filler words nurses actually write", () => {

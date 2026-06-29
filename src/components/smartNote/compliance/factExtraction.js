@@ -74,13 +74,18 @@ export function extractVitals(text) {
 
   // Anchor the "t" shorthand with word boundaries so it can't match the
   // trailing "t" of unrelated words ("weight 150" must NOT read as temp 150).
-  const tempMatch = text.match(/(?:\btemp\b|temperature|\bt\b)\s*:?\s*(\d{2,3}(?:\.\d)?)/i);
+  // Full spellings ("Temp:", "Temperature:") support a colon; the bare single-letter
+  // "t" shorthand only matches its space-adjacent numeric form ("T 98.6") — allowing
+  // a colon on bare "t" would misread generic "T:" list labels as a temperature.
+  const tempMatch = text.match(/(?:\btemp\b|temperature)\s*:?\s*(\d{2,3}(?:\.\d)?)|\bt\b\s+(\d{2,3}(?:\.\d)?)/i);
   if (tempMatch) {
-    const t = parseFloat(tempMatch[1]);
+    const t = parseFloat(tempMatch[1] ?? tempMatch[2]);
     if (t > 90) vitals.temp = t;
   }
 
-  const rrMatch = text.match(/(?:rr|resp(?:iratory)?\s*rate)\s*:?\s*(\d{1,2})/i);
+  // \brr\b is word-anchored so a word ending in "rr" before a colon ("corr: 5")
+  // can't be misread as a respiratory rate.
+  const rrMatch = text.match(/(?:\brr\b|resp(?:iratory)?\s*rate)\s*:?\s*(\d{1,2})/i);
   if (rrMatch) vitals.rr = parseInt(rrMatch[1]);
 
   const wtMatch = text.match(/(?:wt|weight)\s*:?\s*(\d{2,3}(?:\.\d)?)\s*(?:lbs?|kg)?/i);

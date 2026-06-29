@@ -1048,10 +1048,15 @@ Provide SPECIFIC, ACTIONABLE predictions with clinical reasoning.`,
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {predictions.proactive_recommendations
+                  {[...predictions.proactive_recommendations]
                     .sort((a, b) => {
+                      // Default a missing/out-of-enum AI priority to the end so the
+                      // comparator never returns NaN (which sort treats as "equal",
+                      // scrambling the order). Copy the array first so the AI result
+                      // object isn't mutated in place.
                       const priorityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
-                      return priorityOrder[a.priority] - priorityOrder[b.priority];
+                      const rank = (p) => priorityOrder[p] ?? 99;
+                      return rank(a.priority) - rank(b.priority);
                     })
                     .map((rec, idx) => (
                     <Card key={idx} className="border-l-4 border-l-blue-600">
