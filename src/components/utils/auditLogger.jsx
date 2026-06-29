@@ -89,10 +89,12 @@ export async function logAudit({
         timestamp: new Date().toISOString(),
         user_agent: navigator.userAgent,
         page: window.location.pathname,
+        // severity is not a top-level UserActivity field (it was silently dropped);
+        // keep it inside the free-form details object so it is actually recorded.
+        severity,
       },
       entity_type: entityType,
       entity_id: entityId,
-      severity,
     };
 
     // Add change tracking if provided

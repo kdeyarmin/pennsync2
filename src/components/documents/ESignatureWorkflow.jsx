@@ -225,9 +225,10 @@ export default function ESignatureWorkflow({ document, documentType, patient, on
                             <SelectItem value="patient">Patient</SelectItem>
                             <SelectItem value="guardian">Guardian</SelectItem>
                             <SelectItem value="witness">Witness</SelectItem>
+                            {/* 'clinician'/'other' cover physician/nurse; the
+                                signers[].role enum has no physician/nurse members,
+                                so those selections were silently dropped. */}
                             <SelectItem value="clinician">Clinician</SelectItem>
-                            <SelectItem value="physician">Physician</SelectItem>
-                            <SelectItem value="nurse">Nurse</SelectItem>
                             <SelectItem value="other">Other</SelectItem>
                           </SelectContent>
                         </Select>

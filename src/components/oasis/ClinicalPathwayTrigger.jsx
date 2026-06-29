@@ -25,6 +25,13 @@ export default function ClinicalPathwayTrigger({ pdgmData, _analysisResults, pat
   const [_isAnalyzing, _setIsAnalyzing] = useState(false);
   const queryClient = useQueryClient();
 
+  // Current user — assigned_to is required on Task; without it the pathway task
+  // creates are rejected and nothing is generated.
+  const { data: currentUser } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me(),
+  });
+
   // Fetch all active clinical pathways
   const { data: pathways = [] } = useQuery({
     queryKey: ['clinicalPathways'],
@@ -131,6 +138,7 @@ export default function ClinicalPathwayTrigger({ pdgmData, _analysisResults, pat
     const taskPromises = pathway.recommended_tasks.map(task => {
       const taskData = {
         patient_id: patientId || null,
+        assigned_to: currentUser?.email,
         title: task.task_title,
         description: `[Clinical Pathway: ${pathway.pathway_name}] ${task.task_description}`,
         type: task.task_type || 'other',

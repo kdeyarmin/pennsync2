@@ -204,7 +204,7 @@ const ENUM_USAGE = {
 const FIELD_USAGE = {
   Notification: ['metadata'],
   FaxLog: ['retry_claimed_by', 'retry_claimed_at'],
-  DocumentSignature: ['document_title', 'signers', 'last_reminder_sent_at'],
+  DocumentSignature: ['document_title', 'document_name', 'signers', 'last_reminder_sent_at'],
   Patient: ['merged_into_id', 'merged_at', 'merged_by', 'validation_overrides'],
   Referral: ['page_range', 'detection_confidence', 'manually_confirmed', 'rejection_date', 'rejected_by'],
   PatientAlert: ['contributing_factors', 'recommended_actions', 'risk_score'],

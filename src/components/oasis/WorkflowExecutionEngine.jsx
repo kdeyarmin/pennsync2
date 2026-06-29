@@ -115,6 +115,8 @@ export default function WorkflowExecutionEngine({
         try {
           const task = await createTaskMutation.mutateAsync({
             patient_id: patientId,
+            // assigned_to is required on Task; without it the create is rejected.
+            assigned_to: config.assignee_email || currentUser?.email,
             title: config.task_title_template || `${rule.rule_name} - Action Required`,
             description: `${config.task_description_template || `Automated workflow triggered: ${rule.description}`}\n\nTrigger context: ${JSON.stringify(triggerContext)}`,
             type: config.task_type || "other",

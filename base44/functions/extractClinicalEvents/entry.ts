@@ -179,6 +179,9 @@ IMPORTANT: For source_text, provide the EXACT verbatim text from the note, not a
 
         await base44.asServiceRole.entities.Task.create({
           patient_id,
+          // assigned_to is required on Task; without it the create is rejected and
+          // the follow-up task is silently never made.
+          assigned_to: evPatient.created_by || user.email,
           title: `Follow-up: ${event.event_title}`,
           description: event.followup_notes || event.event_description,
           type: taskType,

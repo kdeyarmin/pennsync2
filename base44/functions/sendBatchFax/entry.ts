@@ -120,6 +120,12 @@ Deno.serve(async (req) => {
       }
     }
 
+    // FaxLog.priority only accepts urgent/normal/low, but the input param and
+    // analyzeFaxPriority can yield 'high' (and other) values that Base44 would
+    // silently drop on the FaxLog.create below. Normalize to a valid enum member.
+    const FAXLOG_PRIORITY = { urgent: 'urgent', high: 'urgent', normal: 'normal', medium: 'normal', low: 'low' };
+    finalPriority = FAXLOG_PRIORITY[String(finalPriority).toLowerCase()] || 'normal';
+
     const results = [];
     const estimatedCostPerPage = 10;
     const recentCutoff = new Date(Date.now() - 2 * 60 * 1000).toISOString();

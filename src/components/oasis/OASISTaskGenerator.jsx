@@ -166,10 +166,14 @@ export default function OASISTaskGenerator({
     
     try {
       const tasksToCreate = suggestedTasks.filter(t => selectedTasks.includes(t.id));
-      
+      // assigned_to is required on Task; without it every create is rejected and
+      // no tasks are made.
+      const currentUser = await base44.auth.me().catch(() => null);
+
       for (const task of tasksToCreate) {
         await createTaskMutation.mutateAsync({
           patient_id: patientId || null,
+          assigned_to: currentUser?.email,
           title: task.title,
           description: task.description,
           type: task.type,

@@ -134,6 +134,62 @@
       "type": "boolean",
       "default": true,
       "description": "Whether inbound fax receiving is enabled"
+    },
+    "a2p_10dlc_status": {
+      "type": "string",
+      "enum": [
+        "not_registered",
+        "pending",
+        "registered"
+      ],
+      "default": "not_registered",
+      "description": "A2P 10DLC SMS brand/campaign registration status"
+    },
+    "a2p_brand_id": {
+      "type": "string",
+      "description": "A2P 10DLC brand id from the messaging provider"
+    },
+    "a2p_campaign_id": {
+      "type": "string",
+      "description": "A2P 10DLC campaign id from the messaging provider"
+    },
+    "main_office_number_e164": {
+      "type": "string",
+      "description": "E.164 main office phone number used for office transfers"
+    },
+    "default_off_duty_template": {
+      "type": "string",
+      "description": "Default auto-reply template used when staff are off duty"
+    },
+    "sms_quick_replies": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      },
+      "description": "Configured SMS quick-reply options (label/text)"
+    },
+    "sms_templates": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      },
+      "description": "Configured reusable SMS message templates"
+    },
+    "voicemail_enabled": {
+      "type": "boolean",
+      "description": "Whether voicemail capture is enabled for unanswered calls"
+    },
+    "voicemail_greeting": {
+      "type": "string",
+      "description": "Greeting played before recording a voicemail"
+    },
+    "allow_international": {
+      "type": "boolean",
+      "description": "Whether outbound SMS/voice to international numbers is allowed"
+    },
+    "business_hours": {
+      "type": "object",
+      "description": "Per-day business-hours schedule (keyed by weekday, each with start/end/enabled) used by calling-hours routing"
     }
   },
   "rls": {

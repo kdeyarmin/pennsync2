@@ -120,7 +120,28 @@ export default function DocumentOCRImporter({ onPatientExtracted }) {
     if (results.length === 0) return;
 
     try {
-      const patientsToCreate = results.map(r => r.data);
+      // Normalize OCR-extracted enum fields to the Patient schema. The extraction
+      // returns free-form strings ("Home Health", "Active", "New", "Skilled
+      // Nursing") that don't match the lowercase enums, so Base44 would silently
+      // drop them and fall back to defaults. Drop unrecognized values (so the
+      // schema default applies) rather than writing an out-of-enum string.
+      const CARE_TYPES = ['home_health', 'hospice'];
+      const STATUSES = ['active', 'discharged', 'hospitalized', 'merged'];
+      const STATUS_SYNONYMS = { new: 'active', admitted: 'active', hospital: 'hospitalized', discharge: 'discharged' };
+      const normEnum = (v, allowed, synonyms = {}) => {
+        if (!v) return undefined;
+        const key = String(v).trim().toLowerCase().replace(/\s+/g, '_');
+        const mapped = synonyms[key] ?? key;
+        return allowed.includes(mapped) ? mapped : undefined;
+      };
+      const patientsToCreate = results.map(r => {
+        const d = { ...r.data };
+        const ct = normEnum(d.care_type, CARE_TYPES);
+        if (ct) d.care_type = ct; else delete d.care_type;
+        const st = normEnum(d.status, STATUSES, STATUS_SYNONYMS);
+        if (st) d.status = st; else delete d.status;
+        return d;
+      });
       await base44.entities.Patient.bulkCreate(patientsToCreate);
       toast.success(`Successfully created ${results.length} patient record(s)`);
       

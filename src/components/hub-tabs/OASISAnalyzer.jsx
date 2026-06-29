@@ -292,14 +292,21 @@ export default function OASISAnalyzer() {
         : patientName;
       
       // Map assessment type abbreviations to full names
+      // Map to the OASISUpload.assessment_type enum
+      // (SOC/ROC/Recertification/Follow-up/Transfer/Discharge/Other). The prior
+      // 'Start of Care'/'Resumption of Care' strings belong to a DIFFERENT entity
+      // (OASISAssessment.visit_type) and were silently dropped by Base44, losing the
+      // type on the two highest-volume assessments.
       const mapAssessmentType = (type) => {
         if (!type) return 'Other';
         const typeUpper = type.toUpperCase().trim();
-        if (typeUpper === 'SOC' || typeUpper.includes('START OF CARE')) return 'Start of Care';
-        if (typeUpper === 'ROC' || typeUpper.includes('RESUMPTION')) return 'Resumption of Care';
+        if (typeUpper === 'SOC' || typeUpper.includes('START OF CARE')) return 'SOC';
+        if (typeUpper === 'ROC' || typeUpper.includes('RESUMPTION')) return 'ROC';
         if (typeUpper === 'RECERT' || typeUpper.includes('RECERTIFICATION')) return 'Recertification';
+        if (typeUpper.includes('FOLLOW')) return 'Follow-up';
+        if (typeUpper.includes('TRANSFER')) return 'Transfer';
         if (typeUpper === 'DISCHARGE' || typeUpper.includes('DISCHARGE')) return 'Discharge';
-        return type; // Return as-is if no match
+        return 'Other'; // Coerce any unrecognized value to the enum-safe default
       };
       
       // Deep sanitize to remove circular references and non-serializable objects

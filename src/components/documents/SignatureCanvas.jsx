@@ -85,6 +85,10 @@ export default function SignatureCanvas({ onSave, onCancel, signerName, isInitia
   }, [isInitials, typedSignature, selectedFont]);
 
   const handleSave = () => {
+    // Map to a DocumentSignature.signature_method enum value (digital_signature /
+    // signature_image / initials). Both the draw and type tabs produce a PNG image;
+    // the raw tab ids 'draw'/'type' are not in the enum and were silently dropped.
+    const resolvedSignatureMethod = isInitials ? "initials" : "signature_image";
     if (signatureMethod === "type") {
       if (!typedSignature) {
         toast.error("Please enter your signature");
@@ -95,7 +99,7 @@ export default function SignatureCanvas({ onSave, onCancel, signerName, isInitia
       setTimeout(() => {
         const canvas = typeCanvasRef.current;
         if (!canvas) return;
-        onSave(canvas.toDataURL("image/png"), signatureMethod);
+        onSave(canvas.toDataURL("image/png"), resolvedSignatureMethod);
       }, 100);
       return;
     }
@@ -113,7 +117,7 @@ export default function SignatureCanvas({ onSave, onCancel, signerName, isInitia
       return;
     }
 
-    onSave(canvas.toDataURL("image/png"), signatureMethod);
+    onSave(canvas.toDataURL("image/png"), resolvedSignatureMethod);
   };
 
   useEffect(() => {

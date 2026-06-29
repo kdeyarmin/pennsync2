@@ -76,21 +76,29 @@ export default function DocumentToTriageMapper({ onTriageCreated }) {
 
       // Create referral/triage
       if ((mapping.createTriage || mapping.createReferral) && patientId) {
+        // Only Referral schema fields persist; clinical detail goes in the
+        // free-form extracted_data blob. The previous payload wrote many fields
+        // the schema doesn't define (chief_complaint, secondary_diagnoses, vitals,
+        // medications, allergies, urgency, ai_extracted, confidence_score) — all
+        // silently dropped — plus an invalid document_type ('clinical_record').
+        const URGENCY_TO_PRIORITY = { urgent: "urgent", high: "high", routine: "normal" };
         const referralData = {
           patient_id: patientId,
           referral_source: extractedData.document_info?.source_facility || "Document Upload",
-          chief_complaint: extractedData.clinical?.chief_complaint || "",
           diagnosis: extractedData.clinical?.primary_diagnosis || "",
-          secondary_diagnoses: extractedData.clinical?.secondary_diagnoses || [],
-          vitals: extractedData.vitals || {},
-          medications: extractedData.clinical?.current_medications || [],
-          allergies: extractedData.clinical?.allergies || "",
-          urgency: assessUrgency(extractedData),
+          priority: URGENCY_TO_PRIORITY[assessUrgency(extractedData)] || "normal",
           status: "new",
           referral_date: todayEastern(),
-          ai_extracted: true,
-          document_type: extractedData.document_info?.document_type || "clinical_record",
-          confidence_score: extractedData.document_info?.confidence_score || 0
+          document_type: "electronic",
+          extracted_data: {
+            chief_complaint: extractedData.clinical?.chief_complaint || "",
+            secondary_diagnoses: extractedData.clinical?.secondary_diagnoses || [],
+            vitals: extractedData.vitals || {},
+            medications: extractedData.clinical?.current_medications || [],
+            allergies: extractedData.clinical?.allergies || "",
+            ai_extracted: true,
+            confidence_score: extractedData.document_info?.confidence_score || 0,
+          },
         };
 
         const referral = await base44.entities.Referral.create(referralData);
