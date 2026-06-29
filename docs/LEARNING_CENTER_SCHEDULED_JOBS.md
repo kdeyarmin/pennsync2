@@ -12,6 +12,7 @@ send it as the `x-internal-secret` header; an admin session also passes.
 | `sendRenewalReminders` | Tiered learner + manager nudges (60/30/14/7/1 days, then overdue) for required training. Idempotent via `TrainingAssignment.reminder_offsets_sent`. | Daily |
 | `processTrainingRenewals` | Create renewal assignment + notification 30 days before a certificate expires (non-annual). | Daily (existing) |
 | `processAnnualEducationRenewals` | Same, for annual-cycle certificates (rolls to next `annual_cycle_year`). | Daily (existing) |
+| `syncTrainingVideoStatuses` | Finalize in-flight HeyGen presenter videos (modules stuck `video_status: 'processing'`) so they complete even when no admin has Video Studio open. No-op unless `HEYGEN_API_KEY` is set. | Every 10–15 min |
 
 ## Registration steps (Base44 dashboard)
 1. Set `INTERNAL_FN_SECRET` in the app's function environment.

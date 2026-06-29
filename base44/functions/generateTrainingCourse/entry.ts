@@ -469,24 +469,29 @@ CONTENT CREATION RULES:
         if (!HEYGEN_API_KEY) {
           video_generation_status = 'skipped_no_api_key';
         } else {
-          // Kick off video generation for the course (async — will poll internally)
+          // Kick off video generation via manageTrainingVideos (action: 'start').
+          // That path is non-blocking: it CREATES the HeyGen jobs, stamps each
+          // module video_status='processing' + video_job_id, and returns — the
+          // jobs then finalize asynchronously (Video Studio polling +
+          // syncTrainingVideoStatuses). We AWAIT here so the jobs are reliably
+          // created before this request ends (a detached fire-and-forget could
+          // be killed before HeyGen is ever called); we do NOT wait for renders.
           const videoFnUrl = new URL(req.url);
-          videoFnUrl.pathname = videoFnUrl.pathname.replace('generateTrainingCourse', 'generateTrainingVideo');
+          videoFnUrl.pathname = videoFnUrl.pathname.replace('generateTrainingCourse', 'manageTrainingVideos');
 
           const videoReq = new Request(videoFnUrl.toString(), {
             method: 'POST',
             headers: req.headers,
             body: JSON.stringify({
+              action: 'start',
               course_id: course.id,
               avatar_id: video_avatar_id || undefined,
               voice_id: video_voice_id || undefined,
             }),
           });
 
-          // Fire and forget — video generation can take minutes per module
-          // The generateTrainingVideo function will update modules as videos complete
-          fetch(videoReq).catch(() => {});
-          video_generation_status = 'generating';
+          const videoResult = await fetch(videoReq).then((r) => r.json()).catch(() => null);
+          video_generation_status = videoResult?.error ? 'error' : 'generating';
         }
       } catch {
         video_generation_status = 'error';
