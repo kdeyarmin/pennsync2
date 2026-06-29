@@ -4,6 +4,7 @@ import { createPageUrl } from "@/utils";
 import { toast } from "sonner";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMyTrainingCompletions } from "@/hooks/useMyTrainingCompletions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -85,14 +86,9 @@ export default function NurseTrainingHub() {
     initialData: []
   });
 
-  const { data: myCompletions = [] } = useQuery({
-    queryKey: ['myTrainingCompletions', currentUser?.email],
-    queryFn: () => base44.entities.TrainingCompletion.filter({ 
-      nurse_email: currentUser?.email 
-    }),
-    enabled: !!currentUser?.email,
-    initialData: []
-  });
+  // Live completion data (course assignments/certs) + AI micro-training progress,
+  // replacing the retired per-module TrainingCompletion entity.
+  const { completedCourseIds, scoreByCourse, microProgress, assignments } = useMyTrainingCompletions(currentUser?.email);
 
   const { data: skillGaps = [] } = useQuery({
     queryKey: ['mySkillGaps', currentUser?.email],
@@ -120,18 +116,25 @@ export default function NurseTrainingHub() {
     }
   });
 
+  // AI-generated personalized training completions are recorded as
+  // MicroLearningProgress (the live entity for AI micro-learning) rather than the
+  // retired TrainingCompletion. Real catalog courses go through the course
+  // player + grading pipeline via startTrainingMutation instead.
   const completeModuleMutation = useMutation({
-    mutationFn: async ({ moduleId, score, _timeSpent }) => {
-      return await base44.entities.TrainingCompletion.create({
+    mutationFn: async ({ score, _timeSpent }) => {
+      return await base44.entities.MicroLearningProgress.create({
         nurse_email: currentUser.email,
-        training_module_id: moduleId,
-        completion_date: new Date().toISOString().split('T')[0],
-        score: score,
-        status: 'completed'
+        skill_area: activeTraining?.title || activeTraining?.skill_gap || 'Personalized training',
+        module_type: 'micro_lesson',
+        status: 'completed',
+        score,
+        attempts: 1,
+        source: 'ai_recommendation',
+        content: activeTraining || {},
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['myTrainingCompletions'] });
+      queryClient.invalidateQueries({ queryKey: ['my-micro-progress', currentUser?.email] });
       setActiveTraining(null);
       setSelectedModule(null);
     }
@@ -172,21 +175,28 @@ export default function NurseTrainingHub() {
     }
   });
 
-  const getCompletionStatus = (moduleId) => {
-    const completion = myCompletions.find(c => c.training_module_id === moduleId);
-    return completion?.status || 'not_started';
-  };
-
-  const getCompletionScore = (moduleId) => {
-    const completion = myCompletions.find(c => c.training_module_id === moduleId);
-    return completion?.score || 0;
-  };
+  // A module is complete when its linked course has a passing assignment/cert.
+  const courseIdByModuleId = Object.fromEntries(trainingModules.map(m => [m.id, m.course_id]));
+  const getCompletionStatus = (moduleId) =>
+    completedCourseIds.has(courseIdByModuleId[moduleId]) ? 'completed' : 'not_started';
+  const getCompletionScore = (moduleId) => scoreByCourse[courseIdByModuleId[moduleId]] || 0;
 
   const requiredModules = trainingModules.filter(m => m.is_required);
   const recommendedModules = trainingModules.filter(m => !m.is_required);
 
+  const completedModulesCount = trainingModules.filter(m => m.course_id && completedCourseIds.has(m.course_id)).length;
+  const inProgressCount = assignments.filter(a => a.status === 'in_progress').length;
+
+  // Unified completion history: completed course assignments + AI micro-training.
+  const completionHistory = [
+    ...assignments
+      .filter(a => a.status === 'completed' || a.pass_fail_result === 'passed')
+      .map(a => ({ id: a.id, title: a.course_title, status: 'completed', score: a.score_percentage, completion_date: a.completion_date })),
+    ...microProgress.map(p => ({ id: p.id, title: p.skill_area || 'AI-Generated Training', status: p.status, score: p.score, completion_date: p.updated_date || p.created_date })),
+  ];
+
   const completionRate = trainingModules.length > 0
-    ? Math.round((myCompletions.filter(c => c.status === 'completed').length / trainingModules.length) * 100)
+    ? Math.round((completedModulesCount / trainingModules.length) * 100)
     : 0;
 
   if (activeTraining) {
@@ -235,7 +245,7 @@ export default function NurseTrainingHub() {
               <div>
                 <p className="text-sm text-slate-600 mb-1">Completed</p>
                 <p className="text-3xl font-bold text-emerald-600">
-                  {myCompletions.filter(c => c.status === 'completed').length}
+                  {completedModulesCount}
                 </p>
               </div>
               <CheckCircle2 className="w-8 h-8 text-emerald-400" />
@@ -249,7 +259,7 @@ export default function NurseTrainingHub() {
               <div>
                 <p className="text-sm text-slate-600 mb-1">In Progress</p>
                 <p className="text-3xl font-bold text-orange-600">
-                  {myCompletions.filter(c => c.status === 'in_progress').length}
+                  {inProgressCount}
                 </p>
               </div>
               <Clock className="w-8 h-8 text-orange-400" />
@@ -456,14 +466,16 @@ export default function NurseTrainingHub() {
 
               <ScrollArea className="h-96">
                 <div className="space-y-3">
-                  {myCompletions.map(completion => {
-                    const module = trainingModules.find(m => m.id === completion.training_module_id);
+                  {completionHistory.length === 0 && (
+                    <p className="text-sm text-slate-500 text-center py-8">No completed training yet.</p>
+                  )}
+                  {completionHistory.map(completion => {
                     return (
                       <div key={completion.id} className="p-4 border rounded-lg">
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
                             <h4 className="font-semibold text-slate-900">
-                              {module?.title || 'AI-Generated Training'}
+                              {completion.title || 'AI-Generated Training'}
                             </h4>
                             <div className="flex items-center gap-2 mt-2">
                               <Badge className={

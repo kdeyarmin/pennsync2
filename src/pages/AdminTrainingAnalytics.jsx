@@ -47,9 +47,11 @@ export default function AdminTrainingAnalytics() {
     enabled: currentUser?.role === 'admin'
   });
 
-  const { data: completions = [] } = useQuery({
-    queryKey: ['allCompletions'],
-    queryFn: () => base44.entities.TrainingCompletion.list(),
+  // Org-wide training activity now comes from the live TrainingAssignment system
+  // (the retired TrainingCompletion entity is no longer written).
+  const { data: assignments = [] } = useQuery({
+    queryKey: ['allTrainingAssignments'],
+    queryFn: () => base44.entities.TrainingAssignment.list('-created_date', 5000),
     enabled: currentUser?.role === 'admin'
   });
 
@@ -74,39 +76,38 @@ export default function AdminTrainingAnalytics() {
   }
 
   const nurses = allUsers.filter(u => u.role === 'user');
-  
-  // Analytics calculations
-  const totalCompletions = completions.filter(c => c.status === 'completed').length;
-  const avgScore = completions.length > 0
-    ? completions.reduce((sum, c) => sum + (c.score || 0), 0) / completions.length
-    : 0;
-  const inProgress = completions.filter(c => c.status === 'in_progress').length;
+
+  // Analytics calculations (course-assignment based)
+  const isCompleted = (a) => a.status === 'completed' || a.pass_fail_result === 'passed';
+  const avg = (rows) => rows.length > 0 ? Math.round(rows.reduce((s, a) => s + a.score_percentage, 0) / rows.length) : 0;
+  const completedAssignments = assignments.filter(isCompleted);
+  const scoredAssignments = assignments.filter(a => typeof a.score_percentage === 'number');
+
+  const totalCompletions = completedAssignments.length;
+  const avgScore = avg(scoredAssignments);
+  const inProgress = assignments.filter(a => a.status === 'in_progress').length;
   const unaddressedRecs = recommendations.filter(r => !r.addressed).length;
 
   // Completion rate by nurse
   const nurseCompletionData = nurses.map(nurse => {
-    const nurseCompletions = completions.filter(c => 
-      c.nurse_email === nurse.email && c.status === 'completed'
-    );
+    const done = completedAssignments.filter(a => a.assigned_to_user_id === nurse.email);
     return {
       name: nurse.full_name || nurse.email,
-      completions: nurseCompletions.length,
-      avgScore: nurseCompletions.length > 0
-        ? Math.round(nurseCompletions.reduce((sum, c) => sum + (c.score || 0), 0) / nurseCompletions.length)
-        : 0
+      completions: done.length,
+      avgScore: avg(done.filter(a => typeof a.score_percentage === 'number'))
     };
   }).sort((a, b) => b.completions - a.completions);
 
-  // Module popularity
+  // Module popularity — mapped to each module's linked course.
   const moduleData = modules.map(module => {
-    const moduleCompletions = completions.filter(c => c.training_module_id === module.id);
+    const courseAssignments = module.course_id
+      ? completedAssignments.filter(a => a.course_id === module.course_id)
+      : [];
     const title = module.title || 'Untitled module';
     return {
       name: title.substring(0, 30) + (title.length > 30 ? '...' : ''),
-      completions: moduleCompletions.length,
-      avgScore: moduleCompletions.length > 0
-        ? Math.round(moduleCompletions.reduce((sum, c) => sum + (c.score || 0), 0) / moduleCompletions.length)
-        : 0
+      completions: courseAssignments.length,
+      avgScore: avg(courseAssignments.filter(a => typeof a.score_percentage === 'number'))
     };
   }).sort((a, b) => b.completions - a.completions).slice(0, 10);
 
@@ -120,11 +121,11 @@ export default function AdminTrainingAnalytics() {
     value: count
   }));
 
-  // Completion trends (by week)
+  // Completion trends (by day)
   const weeklyData = {};
-  completions.forEach(c => {
-    if (c.completion_date) {
-      const week = new Date(c.completion_date).toISOString().substring(0, 10);
+  completedAssignments.forEach(a => {
+    if (a.completion_date) {
+      const week = new Date(a.completion_date).toISOString().substring(0, 10);
       weeklyData[week] = (weeklyData[week] || 0) + 1;
     }
   });

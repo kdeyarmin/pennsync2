@@ -20,12 +20,13 @@ Deno.serve(async (req) => {
     // to the caller's own email (reliable regardless of per-id RLS). Callers pass
     // inconsistent shapes (moduleName / module_title+certificate_id /
     // completion_id+module_id) — all are resolved here.
-    const [myCerts, myCompletions] = await Promise.all([
+    const [myCerts, myAssignments] = await Promise.all([
       base44.asServiceRole.entities.TrainingCertificate.filter({ user_id: user.email }, '-issued_at', 500).catch(() => []),
-      base44.asServiceRole.entities.TrainingCompletion.filter({ nurse_email: user.email, status: 'completed' }, '-completion_date', 500).catch(() => []),
+      base44.asServiceRole.entities.TrainingAssignment.filter({ assigned_to_user_id: user.email }, '-completion_date', 500).catch(() => []),
     ]);
+    const myCompleted = myAssignments.filter((a) => a.status === 'completed' || a.pass_fail_result === 'passed');
 
-    if (myCerts.length === 0 && myCompletions.length === 0) {
+    if (myCerts.length === 0 && myCompleted.length === 0) {
       return Response.json({ error: 'No completed training found for this account.' }, { status: 403 });
     }
 
@@ -42,15 +43,15 @@ Deno.serve(async (req) => {
       completionDate = cert.completion_date || cert.issued_at || null;
       score = typeof cert.score === 'number' ? cert.score : null;
     } else {
-      const comp = myCompletions.find((c) =>
-        (recordId && c.id === recordId) || (moduleId && c.training_module_id === moduleId));
+      // Fall back to a completed course assignment the caller owns. Match by the
+      // assignment id (recordId) or, for legacy callers, the course id (moduleId).
+      const comp = myCompleted.find((a) =>
+        (recordId && a.id === recordId) || (moduleId && a.course_id === moduleId) ||
+        (requestedModule && norm(a.course_title) === norm(requestedModule)));
       if (comp) {
         completionDate = comp.completion_date || null;
-        score = typeof comp.score === 'number' ? comp.score : null;
-        try {
-          const mod = await base44.asServiceRole.entities.TrainingModule.filter({ id: comp.training_module_id }, '-created_date', 1);
-          moduleName = mod?.[0]?.title || requestedModule;
-        } catch { moduleName = requestedModule; }
+        score = typeof comp.score_percentage === 'number' ? comp.score_percentage : null;
+        moduleName = comp.course_title || requestedModule;
       } else if (recordId) {
         // A specific record was requested but none of the caller's records match
         // it — refuse rather than mint against an id they don't own.

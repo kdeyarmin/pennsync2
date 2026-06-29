@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
+import { useMyTrainingCompletions } from "@/hooks/useMyTrainingCompletions";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -59,17 +60,11 @@ export default function NurseTraining() {
     enabled: !!currentUser?.email,
   });
 
-  const { data: allCompletions = [] } = useQuery({
-    queryKey: ['trainingCompletions', currentUser?.email],
-    queryFn: () => base44.entities.TrainingCompletion.filter({ 
-      nurse_email: currentUser?.email 
-    }),
-    enabled: !!currentUser?.email,
-    initialData: [],
-  });
+  // Completed courses come from the live assignment/certificate system.
+  const { completedCourseIds } = useMyTrainingCompletions(currentUser?.email);
 
-  const completedCount = (trainingProgress?.filter(p => p?.status === 'completed')?.length || 0) + 
-                         (allCompletions?.filter(c => c?.status === 'completed')?.length || 0);
+  const completedCount = (trainingProgress?.filter(p => p?.status === 'completed')?.length || 0) +
+                         completedCourseIds.size;
   // Average only completed/scored modules — dividing by all rows (incl. in-progress
   // ones whose score is masked to 0) dilutes the average downward.
   const scoredProgress = trainingProgress?.filter(p => p?.status === 'completed' && typeof p?.score === 'number') || [];

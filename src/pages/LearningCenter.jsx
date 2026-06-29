@@ -36,7 +36,9 @@ import {
   Flame,
   Star,
   Download,
-  CalendarPlus
+  CalendarPlus,
+  FileCheck2,
+  Brain
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
@@ -46,6 +48,8 @@ import EmbeddedPage from '@/components/ui/embeddedPage';
 import { createPageUrl } from '@/utils';
 import { Link, useSearchParams } from 'react-router-dom';
 import CertificateDownloadButton from '@/components/training/CertificateDownloadButton';
+import LearnerPolicyAcknowledgments from '@/components/training/LearnerPolicyAcknowledgments';
+import LearnerMemoryBoosters from '@/components/training/LearnerMemoryBoosters';
 import EducatorReadinessPanel from '@/components/learning/EducatorReadinessPanel';
 import GamificationDashboard from '@/components/training/GamificationDashboard';
 import { selfEnrollCourse } from '@/functions/selfEnrollCourse';
@@ -67,7 +71,7 @@ const EmployeeTranscript = lazy(() => import('@/components/hub-tabs/EmployeeTran
 // "active" is the default.
 const TAB_KEYS = [
   'active', 'plans', 'catalog', 'competencies', 'certificates', 'renewals', 'achievements',
-  'courses', 'inservices', 'annual', 'transcripts',
+  'boosters', 'courses', 'inservices', 'annual', 'policies', 'transcripts',
 ];
 
 const tabLoader = (
@@ -818,6 +822,10 @@ export default function LearningCenter() {
               <Trophy className="w-4 h-4 mr-2" />
               Achievements
             </TabsTrigger>
+            <TabsTrigger value="boosters" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
+              <Brain className="w-4 h-4 mr-2" />
+              Memory Boosters
+            </TabsTrigger>
             <TabsTrigger value="courses" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
               <BookOpen className="w-4 h-4 mr-2" />
               My Courses
@@ -829,6 +837,10 @@ export default function LearningCenter() {
             <TabsTrigger value="annual" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
               <Calendar className="w-4 h-4 mr-2" />
               Annual Education
+            </TabsTrigger>
+            <TabsTrigger value="policies" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
+              <FileCheck2 className="w-4 h-4 mr-2" />
+              Policies
             </TabsTrigger>
             <TabsTrigger value="transcripts" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
               <Award className="w-4 h-4 mr-2" />
@@ -1303,6 +1315,11 @@ export default function LearningCenter() {
           {user?.email && <GamificationDashboard userId={user.email} />}
         </TabsContent>
 
+        {/* Memory Boosters — spaced-repetition reviews of passed in-services. */}
+        <TabsContent value="boosters" className="space-y-3">
+          <LearnerMemoryBoosters />
+        </TabsContent>
+
         {/* My Courses — the full course dashboard (formerly the My Learning page). */}
         <TabsContent value="courses">
           <Suspense fallback={tabLoader}>
@@ -1344,6 +1361,11 @@ export default function LearningCenter() {
               </TabsContent>
             </Tabs>
           </Suspense>
+        </TabsContent>
+
+        {/* Policies — read & acknowledge agency policies (Relias-style sign-off). */}
+        <TabsContent value="policies" className="space-y-3">
+          <LearnerPolicyAcknowledgments />
         </TabsContent>
 
         {/* Transcripts — Annual and Employee certificate history. */}

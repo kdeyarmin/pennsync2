@@ -187,8 +187,6 @@ const ENUM_USAGE = {
   'PatientAlert.alert_type': ['care_gap', 'documentation_risk', 'readmission_risk'],
   // Patient.status — 'merged' is written by deduplicatePatients' merge-archive step.
   'Patient.status': ['active', 'discharged', 'merged'],
-  // TrainingCompletion.status — written by the assign + grading flows.
-  'TrainingCompletion.status': ['assigned', 'in_progress', 'completed', 'expired'],
 };
 
 // ---------------------------------------------------------------------------
@@ -209,7 +207,6 @@ const FIELD_USAGE = {
   DocumentSignature: ['document_title', 'signers', 'last_reminder_sent_at'],
   Patient: ['merged_into_id', 'merged_at', 'merged_by', 'validation_overrides'],
   Referral: ['page_range', 'detection_confidence', 'manually_confirmed', 'rejection_date', 'rejected_by'],
-  TrainingCompletion: ['training_module_id', 'due_date'],
   PatientAlert: ['contributing_factors', 'recommended_actions', 'risk_score'],
 };
 

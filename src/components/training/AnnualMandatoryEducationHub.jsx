@@ -8,6 +8,7 @@ import { assignInService } from "@/functions/assignInService";
 import { assignAnnualLearningPlan } from "@/functions/assignAnnualLearningPlan";
 import { duplicateInService } from "@/functions/duplicateInService";
 import { seedYearlyRequiredInServices } from "@/functions/seedYearlyRequiredInServices";
+import { autoEnrollAnnualPlans } from "@/functions/autoEnrollAnnualPlans";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -55,6 +56,8 @@ export default function AnnualMandatoryEducationHub() {
   const [generating, setGenerating] = useState(false);
   const [seeding, setSeeding] = useState(false);
   const [seedResult, setSeedResult] = useState(null);
+  const [enrollingAll, setEnrollingAll] = useState(false);
+  const [enrollAllResult, setEnrollAllResult] = useState(null);
   const [retakeSettings, setRetakeSettings] = useState({
     passingScoreRequired: 80,
     maxAttempts: 3,
@@ -158,6 +161,20 @@ export default function AnnualMandatoryEducationHub() {
       setSeedResult({ error: configNotReadyMessage(error) || error?.message || "Failed to create yearly required in-services." });
     } finally {
       setSeeding(false);
+    }
+  };
+
+  const enrollAllStaff = async () => {
+    setEnrollingAll(true);
+    setEnrollAllResult(null);
+    try {
+      const result = await autoEnrollAnnualPlans({ scope: 'all' });
+      setEnrollAllResult(result?.data || result);
+      queryClient.invalidateQueries({ queryKey: ["annual-assignments"] });
+    } catch (error) {
+      setEnrollAllResult({ error: configNotReadyMessage(error) || error?.message || "Failed to enroll staff." });
+    } finally {
+      setEnrollingAll(false);
     }
   };
 
@@ -331,6 +348,30 @@ export default function AnnualMandatoryEducationHub() {
         </TabsContent>
 
         <TabsContent value="plans" className="space-y-6">
+          <Card className="border-emerald-200 bg-emerald-50/40">
+            <CardContent className="p-5 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+              <div className="flex items-start gap-3 min-w-0">
+                <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center flex-shrink-0">
+                  <Send className="w-5 h-5" />
+                </div>
+                <div className="min-w-0">
+                  <h2 className="font-semibold text-slate-900">Auto-enroll all staff in {year} required in-services</h2>
+                  <p className="text-sm text-slate-600">
+                    Enrolls every active employee into the {year} annual plan that matches their business line and role (nurses vs. all staff), creating their required in-service assignments. Safe to run repeatedly &mdash; existing enrollments are reused, not duplicated. New hires are enrolled automatically on sign-up.
+                  </p>
+                  {enrollAllResult && !enrollAllResult.error && (
+                    <p className="text-sm text-emerald-700 mt-2">
+                      Done. {enrollAllResult.enrolled_users || 0} staff newly enrolled, {enrollAllResult.assignments_created || 0} assignment{(enrollAllResult.assignments_created || 0) === 1 ? '' : 's'} created across {enrollAllResult.plans_considered || 0} plan{(enrollAllResult.plans_considered || 0) === 1 ? '' : 's'}.
+                    </p>
+                  )}
+                  {enrollAllResult?.error && <p className="text-sm text-red-600 mt-2">{enrollAllResult.error}</p>}
+                </div>
+              </div>
+              <Button className="flex-shrink-0" onClick={enrollAllStaff} disabled={enrollingAll}>
+                {enrollingAll ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Enrolling...</> : <><Send className="w-4 h-4 mr-2" />Enroll All Staff</>}
+              </Button>
+            </CardContent>
+          </Card>
           <AnnualLearningPlanPanel plans={plans} courses={annualCourses} year={year} onRefresh={() => queryClient.invalidateQueries({ queryKey: ['annual-plans'] })} />
           <div className="grid grid-cols-1 xl:grid-cols-[360px_minmax(0,1fr)] gap-6">
             <Card>

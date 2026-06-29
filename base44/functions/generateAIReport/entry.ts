@@ -44,7 +44,7 @@ Deno.serve(async (req) => {
       base44.asServiceRole.entities.User.list('-created_date', 5000),
       base44.asServiceRole.entities.CarePlan.list('-created_date', 5000),
       base44.asServiceRole.entities.ComplianceAudit.list('-created_date', 500),
-      base44.asServiceRole.entities.TrainingCompletion.list('-created_date', 5000),
+      base44.asServiceRole.entities.TrainingAssignment.list('-created_date', 5000),
       base44.asServiceRole.entities.NoteConversion.list('-created_date', 5000),
       base44.asServiceRole.entities.PatientAlert.list('-created_date', 5000),
       base44.asServiceRole.entities.Task.list('-created_date', 5000)
@@ -147,9 +147,10 @@ function calculateMetrics(data) {
   const completedTasks = tasks.filter(t => t.status === 'completed').length;
   const taskCompletionRate = tasks.length > 0 ? (completedTasks / tasks.length * 100).toFixed(1) : 0;
 
-  const completedTraining = trainings.filter(t => t.status === 'completed').length;
-  const avgTrainingScore = trainings.filter(t => t.score).length > 0
-    ? (trainings.filter(t => t.score).reduce((sum, t) => sum + t.score, 0) / trainings.filter(t => t.score).length).toFixed(1)
+  const completedTraining = trainings.filter(t => t.status === 'completed' || t.pass_fail_result === 'passed').length;
+  const scoredTraining = trainings.filter(t => typeof t.score_percentage === 'number');
+  const avgTrainingScore = scoredTraining.length > 0
+    ? (scoredTraining.reduce((sum, t) => sum + t.score_percentage, 0) / scoredTraining.length).toFixed(1)
     : 0;
 
   // Nurse performance
