@@ -193,10 +193,13 @@ Deno.serve(async (req) => {
           is_required: true
         });
 
+        const ALLOWED_Q_TYPES = new Set(['mcq', 'multi_select', 'true_false', 'short_answer', 'matching', 'scenario_based']);
         for (const [index, question] of microContent.questions.entries()) {
           await base44.asServiceRole.entities.TrainingQuestion.create({
             course_id: microCourse.id,
-            type: question.type || 'mcq',
+            // Coerce the AI-supplied type to the TrainingQuestion enum; an out-of-enum
+            // value would be rejected and abort the whole corrective-action build.
+            type: ALLOWED_Q_TYPES.has(question.type) ? question.type : 'mcq',
             prompt: question.prompt || `Micro-learning question ${index + 1}`,
             options_json: question.options || [],
             correct_answer_json: { answer: question.correct_answer },

@@ -100,7 +100,7 @@ export default function StructuredNoteDrafter({ onDraftReady }) {
     // regex extractVitals uses) so a documented kg reading is normalized to lbs —
     // and so a stray "kg" elsewhere in the draft can't rescale a pounds value.
     // Falls back to the grid weight (already in lbs) when the text has no weight.
-    const wtMatch = draft.match(/(?:wt|weight)\s*(\d{2,3}(?:\.\d)?)\s*(lbs?|kg)?/i);
+    const wtMatch = draft.match(/(?:wt|weight)\s*:?\s*(\d{2,3}(?:\.\d)?)\s*(lbs?|kg)?/i);
     let weight = gridWeight;
     if (wtMatch) {
       weight = parseFloat(wtMatch[1]);

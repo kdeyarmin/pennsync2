@@ -225,10 +225,14 @@ Provide detailed, actionable recommendations that a home health nurse can immedi
 
       setAnalysis(result);
 
-      // Create a compliance audit record if risk is high/critical
-      if (result.compliance_risk_level === 'high' || result.compliance_risk_level === 'critical') {
+      // Create a compliance audit record if risk is high/critical. ComplianceAudit
+      // requires visit_id, so only persist when the patient has a visit to attach
+      // it to (otherwise the create would reject and surface a misleading error
+      // while the analysis itself already rendered).
+      if ((result.compliance_risk_level === 'high' || result.compliance_risk_level === 'critical') && visits[0]?.id) {
         await base44.entities.ComplianceAudit.create({
           patient_id: patientId,
+          visit_id: visits[0].id,
           nurse_email: (await base44.auth.me()).email,
           audit_date: new Date().toISOString(),
           compliance_score: result.completeness_score,

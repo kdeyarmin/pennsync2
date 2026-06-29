@@ -3,6 +3,11 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 // CMS PDGM base payment rate
 const BASE_PAYMENT_RATE_2026 = 2038.22; // CY2026 national standardized 30-day period payment, quality submitters (CMS-1828-F, eff. 2026-01-01)
 
+// CY2026 national labor-related share of the 30-day base payment (CMS-1828-F). The
+// wage index adjusts ONLY this labor portion; the non-labor remainder is paid
+// unadjusted. Overridable per rate year via PDGMRateConfig.rates.laborShare.
+const PDGM_LABOR_SHARE_2026 = 0.7676;
+
 // Clinical Group Weights by Admission Source and Episode Timing (CMS PDGM model)
 // Format: { [clinicalGroup]: { community_early, community_late, institutional_early, institutional_late } }
 const CLINICAL_GROUP_WEIGHTS = {
@@ -95,6 +100,7 @@ const COMORBIDITY_MULTIPLIERS = {
 // current each CMS rate year. Shape mirrors src/components/pdgm/pdgmRates.js.
 const DEFAULT_RATES = {
   basePaymentRate: BASE_PAYMENT_RATE_2026,
+  laborShare: PDGM_LABOR_SHARE_2026,
   clinicalGroupWeights: CLINICAL_GROUP_WEIGHTS,
   functionalThresholds: FUNCTIONAL_THRESHOLDS,
   functionalMultipliers: FUNCTIONAL_MULTIPLIERS,
@@ -802,6 +808,9 @@ function calculatePDGMRevenue(data, wageIndex = 1.0, rates = DEFAULT_RATES, isOf
   const comorbidityMultipliersTable = rates?.comorbidityMultipliers || COMORBIDITY_MULTIPLIERS;
   const functionalThresholdsTable = rates?.functionalThresholds || FUNCTIONAL_THRESHOLDS;
   const basePayment = Number.isFinite(rates?.basePaymentRate) ? rates.basePaymentRate : BASE_PAYMENT_RATE_2026;
+  // Labor-related share (clamped to [0,1]); the wage index adjusts only this portion.
+  const laborShareRaw = Number.isFinite(rates?.laborShare) ? rates.laborShare : PDGM_LABOR_SHARE_2026;
+  const laborShare = Math.min(1, Math.max(0, laborShareRaw));
 
   // Extract data - try multiple fields for primary diagnosis
   const primaryDiagnosis = data.primary_diagnosis || data.primary_diagnosis_description || '';
@@ -846,8 +855,9 @@ function calculatePDGMRevenue(data, wageIndex = 1.0, rates = DEFAULT_RATES, isOf
   // Note: Source and timing are already factored into the individual weights
   const caseMixWeight = clinicalWeight * functionalMultiplier * comorbidityMultiplier;
 
-  // Apply wage index to base payment
-  const adjustedBasePayment = Math.round(basePayment * wageIndex * 100) / 100;
+  // Apply the wage index to the LABOR SHARE only; the non-labor remainder is paid
+  // unadjusted (CMS methodology). With wageIndex 1.0 this leaves base unchanged.
+  const adjustedBasePayment = Math.round(basePayment * (laborShare * wageIndex + (1 - laborShare)) * 100) / 100;
 
   // Calculate payment with wage-adjusted base
   const totalPayment = Math.round(adjustedBasePayment * caseMixWeight * 100) / 100;
@@ -881,10 +891,10 @@ function calculatePDGMRevenue(data, wageIndex = 1.0, rates = DEFAULT_RATES, isOf
     totalPayment,
     calculationBreakdown: {
       formula: wageIndex !== 1.0
-        ? 'Base Payment × Wage Index × Clinical Weight × Functional Multiplier × Comorbidity Multiplier'
+        ? 'Wage-Adjusted Base (wage index applied to labor share only) × Clinical Weight × Functional Multiplier × Comorbidity Multiplier'
         : 'Base Payment × Clinical Weight × Functional Multiplier × Comorbidity Multiplier',
       values: wageIndex !== 1.0
-        ? `$${basePayment} × ${wageIndex.toFixed(4)} × ${clinicalWeight.toFixed(4)} × ${functionalMultiplier.toFixed(4)} × ${comorbidityMultiplier.toFixed(4)}`
+        ? `$${adjustedBasePayment} × ${clinicalWeight.toFixed(4)} × ${functionalMultiplier.toFixed(4)} × ${comorbidityMultiplier.toFixed(4)}`
         : `$${basePayment} × ${clinicalWeight.toFixed(4)} × ${functionalMultiplier.toFixed(4)} × ${comorbidityMultiplier.toFixed(4)}`,
       result: `$${totalPayment.toFixed(2)}`
     }

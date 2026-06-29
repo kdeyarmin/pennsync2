@@ -25,6 +25,19 @@ test("extractVitals parses BP, HR, and O2", () => {
   assert.equal(v.o2, 95);
 });
 
+test("extractVitals tolerates a colon between the label and value (HR/temp/RR/weight)", () => {
+  // Regression: HR/temp/RR/weight only matched without a colon, while BP/O2 did,
+  // so the very common "HR: 82" / "Temp: 101.5" EMR style dropped the value
+  // entirely (chart data loss + missed escalation/trend detection).
+  assert.equal(extractVitals("HR: 82").hr, 82);
+  assert.equal(extractVitals("Heart Rate: 110").hr, 110);
+  assert.equal(extractVitals("Temp: 101.5").temp, 101.5);
+  assert.equal(extractVitals("Temperature: 98.6").temp, 98.6);
+  assert.equal(extractVitals("RR: 22").rr, 22);
+  assert.equal(extractVitals("Respiratory Rate: 18").rr, 18);
+  assert.equal(extractVitals("Weight: 180").weight, 180);
+});
+
 test("extractVitals reads O2 saturation with the filler words nurses actually write", () => {
   // Regression: only the bare "O2 85%" form matched, so the severe-hypoxia
   // escalation was silently missed for "O2 sat 85%", "SpO2 of 86%", etc.
