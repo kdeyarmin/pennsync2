@@ -185,7 +185,7 @@ export default function Dashboard() {
           <h1 className="mt-1 text-2xl font-bold text-slate-900">Let’s set up your profile</h1>
           <p className="text-slate-500 mt-1">Tell us your role and we’ll tailor your experience.</p>
         </div>
-        <StaffRoleSelector currentUser={currentUser} onSaved={() => {
+        <StaffRoleSelector currentUser={currentUser} requireExplicitChoice onSaved={() => {
           queryClient.invalidateQueries({ queryKey: ['currentUser'] });
           toast.success('Role saved! Setting up your dashboard...');
         }} />

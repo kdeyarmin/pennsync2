@@ -49,6 +49,10 @@ describe("isClinicalUser — sees nursing tools (OASIS, notes, care plans)", () 
     expect(isClinicalUser(social)).toBe(false);
     expect(isClinicalUser(spiritual)).toBe(false);
   });
+  it("fails closed for a not-yet-loaded (falsy) user", () => {
+    expect(isClinicalUser(null)).toBe(false);
+    expect(isClinicalUser(undefined)).toBe(false);
+  });
 });
 
 describe("canViewPatients — everyone except office staff", () => {
@@ -60,6 +64,9 @@ describe("canViewPatients — everyone except office staff", () => {
   });
   it("blocks office staff", () => {
     expect(canViewPatients(office)).toBe(false);
+  });
+  it("fails closed for a not-yet-loaded (falsy) user", () => {
+    expect(canViewPatients(null)).toBe(false);
   });
 });
 
@@ -83,6 +90,13 @@ describe("canAccessLevel — the shared per-page gate", () => {
     expect(canAccessLevel(spiritual, ACCESS.PATIENT)).toBe(true);
     expect(canAccessLevel(admin, ACCESS.PATIENT)).toBe(true);
     expect(canAccessLevel(office, ACCESS.PATIENT)).toBe(false);
+  });
+  it("fails closed for a falsy user (non-general) and unknown levels", () => {
+    expect(canAccessLevel(null, ACCESS.GENERAL)).toBe(true);
+    expect(canAccessLevel(null, ACCESS.PATIENT)).toBe(false);
+    expect(canAccessLevel(null, ACCESS.NURSING)).toBe(false);
+    expect(canAccessLevel(nurse, "made_up_level")).toBe(false);
+    expect(canAccessLevel(admin, "made_up_level")).toBe(true);
   });
 });
 

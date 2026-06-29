@@ -72,15 +72,23 @@ export default function DataQualityDashboard() {
       ? ((visits.length - visitIssues.length) / visits.length * 100).toFixed(1)
       : 100;
 
-    // Credential tracking. PersonnelCredential is 1-to-many per user (multiple
-    // credential types / renewals), so the row count is not the number of users
-    // covered — counting unique user_ids prevents >100% coverage and a negative
-    // "missing" figure.
-    const coveredUsers = new Set(credentials.map(c => c.user_id).filter(Boolean)).size;
-    const missingCredentials = Math.max(0, users.length - coveredUsers);
-    const credentialCoverage = users.length > 0
-      ? ((coveredUsers / users.length) * 100).toFixed(1)
-      : 0;
+    // Credential tracking. Only nurses carry personnel credentials (licenses /
+    // certifications), so the coverage denominator is the nurse population — non-
+    // nurse staff (office, social work, spiritual care) must not be counted as
+    // "missing credentials" or drag the coverage score down forever.
+    // PersonnelCredential is 1-to-many per user (multiple types / renewals) and its
+    // user_id is the user's email, so counting unique covered nurse emails prevents
+    // >100% coverage and a negative "missing" figure.
+    const nurseEmails = new Set(
+      users.filter(u => getStaffRole(u) === 'nurse').map(u => u.email).filter(Boolean)
+    );
+    const coveredUsers = new Set(
+      credentials.map(c => c.user_id).filter(id => nurseEmails.has(id))
+    ).size;
+    const missingCredentials = Math.max(0, nurseEmails.size - coveredUsers);
+    const credentialCoverage = nurseEmails.size > 0
+      ? ((coveredUsers / nurseEmails.size) * 100).toFixed(1)
+      : 100;
 
     return {
       patientIssues,

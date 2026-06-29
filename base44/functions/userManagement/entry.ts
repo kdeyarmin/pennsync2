@@ -108,10 +108,11 @@ async function inviteUser(base44, currentUser, params, isAdmin, callerIsSuperAdm
     return Response.json({ error: 'Email and full name are required' }, { status: 400 });
   }
 
-  // Same role model as updateUser: only 'admin' (facility admin) or 'user' (nurse)
-  // may be invited; super admin is an account_type, not granted via invitation.
+  // Same role model as updateUser: only 'admin' (facility admin) or 'user' (staff
+  // member) may be invited; the discipline is carried by staff_role. super admin is
+  // an account_type, not granted via invitation.
   if (role !== undefined && !(typeof role === 'string' && ['admin', 'user'].includes(role))) {
-    return Response.json({ error: "role must be 'admin' (facility admin) or 'user' (nurse)" }, { status: 400 });
+    return Response.json({ error: "role must be 'admin' (facility admin) or 'user' (staff member)" }, { status: 400 });
   }
 
   // Staff discipline (non-privileged, orthogonal to role). Validate + default.
@@ -366,15 +367,16 @@ async function updateUser(base44, currentUser, params, isAdmin, callerIsSuperAdm
     return Response.json({ error: 'Invalid staff_role' }, { status: 400 });
   }
 
-  // The app's role model has three tiers: super admin, facility admin, nurse.
+  // The app's role tiers are: super admin, facility admin, and staff member.
   // Super admin is an account_type (managed via SuperAdminConfig/ensureSuperAdmin),
   // NOT settable through this role field — which is exactly the privilege boundary
   // we want. So the only assignable `role` values are the two the user-management
-  // UI offers: 'admin' (facility admin) and 'user' (nurse). Reject anything else
+  // UI offers: 'admin' (facility admin) and 'user' (staff member); the staff
+  // member's discipline is carried separately by staff_role. Reject anything else
   // rather than writing an arbitrary/garbage or privilege-implying role string.
   const ASSIGNABLE_ROLES = new Set(['admin', 'user']);
   if (role !== undefined && !(typeof role === 'string' && ASSIGNABLE_ROLES.has(role))) {
-    return Response.json({ error: "role must be 'admin' (facility admin) or 'user' (nurse)" }, { status: 400 });
+    return Response.json({ error: "role must be 'admin' (facility admin) or 'user' (staff member)" }, { status: 400 });
   }
 
   // Only a super admin may promote a user to the privileged facility-admin role

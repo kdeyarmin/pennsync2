@@ -122,16 +122,23 @@ export function getStaffRole(user) {
 /**
  * True when the user works with nursing documentation tools (OASIS, clinical
  * notes, care plans). That's nurses and any administrator (admins see all).
+ *
+ * Fails closed for a not-yet-loaded user (falsy) so a clinical surface never
+ * flashes before the user record resolves — distinct from getStaffRole's nurse
+ * default, which is only for an EXISTING user that predates the staff_role field.
  */
 export function isClinicalUser(user) {
+  if (!user) return false;
   return isAdminView(user) || getStaffRole(user) === "nurse";
 }
 
 /**
  * True when the user may see patient records (roster, charts, alerts). Everyone
- * EXCEPT office staff — nurses, social workers, spiritual care, and admins.
+ * EXCEPT office staff — nurses, social workers, spiritual care, and admins. Fails
+ * closed for a not-yet-loaded (falsy) user.
  */
 export function canViewPatients(user) {
+  if (!user) return false;
   if (isAdminView(user)) return true;
   return getStaffRole(user) !== "office_staff";
 }
@@ -147,14 +154,17 @@ export const ACCESS = { GENERAL: "general", PATIENT: "patient", NURSING: "nursin
 /**
  * Whether `user` may see a surface declared at the given access level. Admins
  * always pass; otherwise the staff discipline decides. This is the single gate
- * the sidebar, command palette and route guard share.
+ * the sidebar, command palette and route guard share, so it FAILS CLOSED: a
+ * not-yet-loaded (falsy) user gets only general surfaces, and an unrecognized
+ * `level` is denied rather than waved through.
  */
 export function canAccessLevel(user, level) {
   if (!level || level === ACCESS.GENERAL) return true;
+  if (!user) return false;
   if (isAdminView(user)) return true;
   if (level === ACCESS.NURSING) return getStaffRole(user) === "nurse";
   if (level === ACCESS.PATIENT) return getStaffRole(user) !== "office_staff";
-  return true;
+  return false;
 }
 
 export { isSuperAdmin, isSuperAdminEmail };

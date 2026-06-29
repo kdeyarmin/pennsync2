@@ -33,7 +33,11 @@ export default function QuickHealthOverview() {
     !u.phone || u.phone === '' || (getStaffRole(u) === 'nurse' && !u.care_scope)
   ).length;
 
-  const usersWithoutCreds = users.length - new Set(credentials.map(c => c.user_id)).size;
+  // Only nurses carry personnel credentials, so non-nurse staff (office, social
+  // work, spiritual care) must not be counted as "missing credentials".
+  const nurseEmails = new Set(users.filter(u => getStaffRole(u) === 'nurse').map(u => u.email).filter(Boolean));
+  const credentialedEmails = new Set(credentials.map(c => c.user_id));
+  const usersWithoutCreds = [...nurseEmails].filter(email => !credentialedEmails.has(email)).length;
 
   const now = new Date();
   const expiredCreds = credentials.filter(c => new Date(c.expiration_date) < now).length;

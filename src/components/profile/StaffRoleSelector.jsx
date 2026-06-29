@@ -22,9 +22,14 @@ const COLORS = {
   spiritual_care: { base: "border-indigo-300 bg-indigo-50", selected: "bg-indigo-600 border-indigo-600 text-white", icon: "text-indigo-600" },
 };
 
-export default function StaffRoleSelector({ currentUser, onSaved }) {
+export default function StaffRoleSelector({ currentUser, onSaved, requireExplicitChoice = false }) {
   const queryClient = useQueryClient();
-  const [selected, setSelected] = useState(currentUser?.staff_role || "");
+  // Pre-select the user's effective role so a legacy user (no staff_role yet, but
+  // shown elsewhere as "Nurse") doesn't face an empty picker with a disabled Save.
+  // Brand-new onboarding passes requireExplicitChoice to force a deliberate first pick.
+  const [selected, setSelected] = useState(
+    currentUser?.staff_role || (requireExplicitChoice ? "" : getStaffRole(currentUser))
+  );
   const [saving, setSaving] = useState(false);
 
   const handleSave = async () => {
@@ -61,6 +66,7 @@ export default function StaffRoleSelector({ currentUser, onSaved }) {
               <button
                 key={opt.value}
                 type="button"
+                aria-pressed={isSelected}
                 onClick={() => setSelected(opt.value)}
                 className={`w-full text-left rounded-xl border-2 p-4 transition-all active:scale-98 ${
                   isSelected ? color.selected : `${color.base} hover:shadow-md`

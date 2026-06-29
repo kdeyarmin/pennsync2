@@ -24,13 +24,14 @@ Deno.serve(async (req) => {
     const STAFF_ROLES = ['nurse', 'office_staff', 'social_worker', 'spiritual_care'];
     const staffRole = STAFF_ROLES.includes(String(staff_role)) ? String(staff_role) : 'nurse';
 
-    // Only 'admin' (facility admin) or 'user' (nurse) are assignable roles — super
-    // admin is an account_type, not a role granted via invitation. Reject anything
-    // else (e.g. 'super_admin') before it reaches the platform invite and the
-    // UserInvitation.role enum (which is admin/user only), matching
-    // userManagement.inviteUser.
+    // Only 'admin' (facility admin) or 'user' (staff member) are assignable roles —
+    // the staff member's discipline (nurse/office/social/spiritual) is carried by
+    // staff_role, not role. super admin is an account_type, not a role granted via
+    // invitation. Reject anything else (e.g. 'super_admin') before it reaches the
+    // platform invite and the UserInvitation.role enum (which is admin/user only),
+    // matching userManagement.inviteUser.
     if (!['admin', 'user'].includes(String(userRole))) {
-      return Response.json({ error: "role must be 'admin' (facility admin) or 'user' (nurse)" }, { status: 400 });
+      return Response.json({ error: "role must be 'admin' (facility admin) or 'user' (staff member)" }, { status: 400 });
     }
 
     // Privilege-propagation guard: the gate above admits a plain facility `admin`,
