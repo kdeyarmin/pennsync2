@@ -10,13 +10,19 @@ Deno.serve(async (req) => {
     }
 
     const payload = await req.json();
-    const { email, full_name, role, care_scope, phone, credentials } = payload;
+    const { email, full_name, role, care_scope, phone, credentials, staff_role } = payload;
 
     if (!email || !full_name) {
       return Response.json({ error: 'Email and full name are required' }, { status: 400 });
     }
 
     const userRole = role || 'user';
+
+    // Staff discipline (orthogonal to the admin role). Validate against the
+    // User/UserInvitation enum and default to nurse; this is non-privileged so it
+    // needs no super-admin gate (unlike `role`). Mirrors lib/roles.js STAFF_ROLES.
+    const STAFF_ROLES = ['nurse', 'office_staff', 'social_worker', 'spiritual_care'];
+    const staffRole = STAFF_ROLES.includes(String(staff_role)) ? String(staff_role) : 'nurse';
 
     // Only 'admin' (facility admin) or 'user' (nurse) are assignable roles — super
     // admin is an account_type, not a role granted via invitation. Reject anything
@@ -56,6 +62,7 @@ Deno.serve(async (req) => {
       full_name,
       role: userRole,
       care_scope: care_scope || 'home_health',
+      staff_role: staffRole,
       phone: phone || null,
       credentials: credentials || null,
       invited_by: user.email,

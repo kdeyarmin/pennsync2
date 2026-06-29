@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Link } from "react-router-dom";
+import { getStaffRole } from "@/lib/roles";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, ArrowRight, CheckCircle2, Database } from "lucide-react";
 
@@ -28,8 +29,8 @@ export default function QuickHealthOverview() {
     !p.emergency_contact_name || !p.emergency_contact_phone || !p.physician_name
   ).length;
 
-  const incompleteUsers = users.filter(u => 
-    !u.phone || u.phone === '' || !u.care_scope
+  const incompleteUsers = users.filter(u =>
+    !u.phone || u.phone === '' || (getStaffRole(u) === 'nurse' && !u.care_scope)
   ).length;
 
   const usersWithoutCreds = users.length - new Set(credentials.map(c => c.user_id)).size;

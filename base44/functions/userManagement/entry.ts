@@ -102,7 +102,7 @@ async function inviteUser(base44, currentUser, params, isAdmin, callerIsSuperAdm
     return Response.json({ error: 'Unauthorized - Admin access required' }, { status: 403 });
   }
 
-  const { email, full_name, role, care_scope, phone, credentials } = params;
+  const { email, full_name, role, care_scope, phone, credentials, staff_role } = params;
 
   if (!email || !full_name) {
     return Response.json({ error: 'Email and full name are required' }, { status: 400 });
@@ -113,6 +113,10 @@ async function inviteUser(base44, currentUser, params, isAdmin, callerIsSuperAdm
   if (role !== undefined && !(typeof role === 'string' && ['admin', 'user'].includes(role))) {
     return Response.json({ error: "role must be 'admin' (facility admin) or 'user' (nurse)" }, { status: 400 });
   }
+
+  // Staff discipline (non-privileged, orthogonal to role). Validate + default.
+  const STAFF_ROLES = ['nurse', 'office_staff', 'social_worker', 'spiritual_care'];
+  const staffRole = STAFF_ROLES.includes(String(staff_role)) ? String(staff_role) : 'nurse';
 
   // Only a super admin may grant the privileged facility-admin role (consistent
   // with createUserWithTempPassword); a plain admin may invite nurses only.
@@ -128,6 +132,7 @@ async function inviteUser(base44, currentUser, params, isAdmin, callerIsSuperAdm
     full_name,
     role: role || 'user',
     care_scope: care_scope || 'home_health',
+    staff_role: staffRole,
     phone: phone || null,
     credentials: credentials || null,
     invited_by: currentUser.email,
@@ -350,9 +355,15 @@ async function updateUser(base44, currentUser, params, isAdmin, callerIsSuperAdm
     return Response.json({ error: 'Unauthorized - Admin access required' }, { status: 403 });
   }
 
-  const { user_id, full_name, phone, credential_type, role } = params;
+  const { user_id, full_name, phone, credential_type, role, staff_role } = params;
   if (!user_id) {
     return Response.json({ error: 'user_id is required' }, { status: 400 });
+  }
+
+  // Staff discipline is non-privileged; validate against the enum when provided.
+  const STAFF_ROLES = ['nurse', 'office_staff', 'social_worker', 'spiritual_care'];
+  if (staff_role !== undefined && !STAFF_ROLES.includes(String(staff_role))) {
+    return Response.json({ error: 'Invalid staff_role' }, { status: 400 });
   }
 
   // The app's role model has three tiers: super admin, facility admin, nurse.
@@ -378,6 +389,7 @@ async function updateUser(base44, currentUser, params, isAdmin, callerIsSuperAdm
   if (typeof phone === 'string') updates.phone = phone;
   if (typeof credential_type === 'string') updates.credential_type = credential_type;
   if (typeof role === 'string' && role) updates.role = role;
+  if (typeof staff_role === 'string' && staff_role) updates.staff_role = staff_role;
 
   if (Object.keys(updates).length === 0) {
     return Response.json({ error: 'No fields to update' }, { status: 400 });

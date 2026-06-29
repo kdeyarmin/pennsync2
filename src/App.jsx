@@ -20,7 +20,7 @@ import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import Layout from '@/components/Layout';
 import ErrorBoundary from '@/components/utils/ErrorBoundary';
 import { ROUTES, REDIRECTS, MAIN_PAGE } from '@/routes';
-import { getRoleView } from '@/lib/roles';
+import { getRoleView, canAccessLevel } from '@/lib/roles';
 
 // Public (no-login) patient telehealth join page.
 const JoinTelehealth = lazy(() => import('@/pages/JoinTelehealth'));
@@ -42,6 +42,22 @@ const AdminOnlyFallback = ({ superAdmin = false }) => (
       {superAdmin
         ? 'This is a platform-level page reserved for the super administrator.'
         : 'You don’t have permission to view this page. If you believe this is a mistake, contact your agency administrator.'}
+    </p>
+  </div>
+);
+
+// Shown when a non-nurse staff member (office staff / social worker / spiritual
+// care) navigates by URL to a page their discipline doesn't include. The page is
+// hidden from their sidebar + command palette; this is the matching URL-level
+// gate (server RLS remains the real boundary). `nursing` pages are nurse-only;
+// `patient` pages are hidden from office staff.
+const RoleAccessFallback = ({ access }) => (
+  <div className="flex min-h-[60vh] flex-col items-center justify-center p-8 text-center">
+    <h1 className="text-2xl font-bold text-slate-900">Not available for your role</h1>
+    <p className="mt-2 max-w-md text-slate-600">
+      {access === 'nursing'
+        ? 'This is a clinical nursing tool, available to nursing staff. If you need access, contact your agency administrator.'
+        : 'This page shows patient information and isn’t part of your role. If you need access, contact your agency administrator.'}
     </p>
   </div>
 );
@@ -131,11 +147,15 @@ const AuthenticatedApp = () => {
     }>
       <Routes>
         <Route path="/" element={<Navigate to={`/${MAIN_PAGE}`} replace />} />
-        {ROUTES.map(({ name, Component, adminOnly, superAdminOnly }) => {
+        {ROUTES.map(({ name, Component, adminOnly, superAdminOnly, access }) => {
           // Role gate: platform-level pages require super_admin; other admin
           // pages require facility_admin or super_admin; everything else is open.
           const blockedSuperAdmin = superAdminOnly && !isSuperAdminUser;
           const blockedAdmin = adminOnly && !isAdmin;
+          // Staff-discipline gate: a non-admin whose discipline doesn't include
+          // this page's access level (patient / nursing) is blocked by URL too —
+          // not just hidden from the sidebar. Admins pass canAccessLevel.
+          const blockedAccess = !blockedAdmin && !blockedSuperAdmin && !canAccessLevel(user, access);
           return (
             <Route
               key={name}
@@ -152,7 +172,9 @@ const AuthenticatedApp = () => {
                       ? <AdminOnlyFallback superAdmin />
                       : blockedAdmin
                         ? <AdminOnlyFallback />
-                        : <Component />}
+                        : blockedAccess
+                          ? <RoleAccessFallback access={access} />
+                          : <Component />}
                   </ErrorBoundary>
                 </LayoutWrapper>
               }
