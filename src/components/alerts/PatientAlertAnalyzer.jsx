@@ -31,6 +31,13 @@ export default function PatientAlertAnalyzer({
   const [generatedAlerts, setGeneratedAlerts] = useState([]);
   const queryClient = useQueryClient();
 
+  // Current user — needed to assign generated tasks (Task.assigned_to is required;
+  // without it the critical-alert escalation task create silently fails).
+  const { data: currentUser } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me(),
+  });
+
   // Fetch patient data
   const { data: patient } = useQuery({
     queryKey: ['patient', patientId],
@@ -107,6 +114,7 @@ export default function PatientAlertAnalyzer({
         // Create a high-priority task for critical alerts
         await base44.entities.Task.create({
           patient_id: patientId,
+          assigned_to: currentUser?.email,
           title: `🚨 CRITICAL ALERT: ${alert.title}`,
           description: `${alert.message}\n\nContributing Factors:\n${alert.contributing_factors?.join('\n')}\n\nRecommended Actions:\n${alert.recommended_actions?.join('\n')}`,
           priority: 'high',
@@ -119,7 +127,7 @@ export default function PatientAlertAnalyzer({
         console.error("Error creating alert task:", error);
       }
     }
-  }, [patientId]);
+  }, [patientId, currentUser]);
 
   const runAnalysis = useCallback(async () => {
     if (!patient) return;

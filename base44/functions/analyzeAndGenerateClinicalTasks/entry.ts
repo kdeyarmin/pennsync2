@@ -105,7 +105,7 @@ Return a JSON array of tasks:
   {
     "title": "Clear, specific task title",
     "description": "Detailed description of what needs to be done and why",
-    "type": "call|notify|schedule|order|coordinate|document|safety|followup|assessment|other",
+    "type": "call|notify|schedule|order|coordinate|document|safety|followup|other",
     "priority": "high|medium|low",
     "due_timeframe": "today|24_hours|48_hours|this_week|next_visit",
     "clinical_rationale": "Why this task is needed (for nurse understanding)",

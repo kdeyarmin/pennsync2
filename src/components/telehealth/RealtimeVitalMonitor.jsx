@@ -48,7 +48,7 @@ const VITAL_ICONS = {
   oxygen_saturation: Wind,
 };
 
-export default function RealtimeVitalMonitor({ _sessionId, patientId }) {
+export default function RealtimeVitalMonitor({ sessionId, patientId }) {
   const [vitals, setVitals] = useState({
     heart_rate: null,
     blood_pressure_systolic: null,
@@ -68,60 +68,72 @@ export default function RealtimeVitalMonitor({ _sessionId, patientId }) {
     initialData: [],
   });
 
-  // Fetch recent vital readings. React Query v5 removed the useQuery onSuccess
-  // callback, so the latest reading is applied in an effect below instead.
-  const { data: vitalReadings } = useQuery({
-    queryKey: ['vital-readings', patientId],
-    queryFn: () => base44.entities.VitalSignsForm?.filter?.({ patient_id: patientId }, '-created_date', 5) || Promise.resolve([]),
+  // Read the vitals captured on this telehealth session. The prior code read a
+  // non-existent VitalSignsForm entity (always empty); the session's purpose-built
+  // `vitals_captured` object is the real store. Polls so a co-participant's entry
+  // shows up.
+  const { data: sessionRow } = useQuery({
+    queryKey: ['telehealth-session-vitals', sessionId, patientId],
+    queryFn: () => (sessionId
+      ? base44.entities.TelehealthSession.filter({ id: sessionId }).then(r => r?.[0] || null)
+      : Promise.resolve(null)),
     refetchInterval: 15000,
-    enabled: !!patientId,
+    enabled: !!sessionId,
   });
 
   useEffect(() => {
-    if (!vitalReadings?.length) return;
-    const latest = vitalReadings[0];
+    const captured = sessionRow?.vitals_captured;
+    if (!captured) return;
     setVitals(prev => ({
       ...prev,
-      heart_rate: latest.heart_rate ?? prev.heart_rate,
-      blood_pressure_systolic: latest.blood_pressure_systolic ?? prev.blood_pressure_systolic,
-      blood_pressure_diastolic: latest.blood_pressure_diastolic ?? prev.blood_pressure_diastolic,
-      temperature: latest.temperature ?? prev.temperature,
-      respiratory_rate: latest.respiratory_rate ?? prev.respiratory_rate,
-      oxygen_saturation: latest.oxygen_saturation ?? prev.oxygen_saturation,
+      heart_rate: captured.heart_rate ?? prev.heart_rate,
+      blood_pressure_systolic: captured.blood_pressure_systolic ?? prev.blood_pressure_systolic,
+      blood_pressure_diastolic: captured.blood_pressure_diastolic ?? prev.blood_pressure_diastolic,
+      temperature: captured.temperature ?? prev.temperature,
+      respiratory_rate: captured.respiratory_rate ?? prev.respiratory_rate,
+      oxygen_saturation: captured.oxygen_saturation ?? prev.oxygen_saturation,
     }));
-    if (latest.created_date) setLastUpdate(new Date(latest.created_date));
-  }, [vitalReadings]);
+    if (captured.recorded_at) setLastUpdate(new Date(captured.recorded_at));
+  }, [sessionRow]);
 
   const handleInputChange = (field, value) => {
     setManualInput(prev => ({ ...prev, [field]: parseFloat(value) || null }));
   };
 
   const handleRecordVital = async (field) => {
-    if (manualInput[field] === null) return;
+    if (manualInput[field] === null || manualInput[field] === undefined) return;
 
     // Reject physiologically impossible values rather than storing them verbatim.
     const err = vitalSanityError(field, manualInput[field]);
     if (err) { toast.error(err); return; }
 
-    const vitalData = {
-      patient_id: patientId,
-      [field]: manualInput[field],
-      recorded_at: new Date().toISOString(),
-    };
+    if (!sessionId) {
+      toast.error('No active telehealth session — cannot record vitals.');
+      return;
+    }
 
+    const update = { [field]: manualInput[field] };
     if (field === 'blood_pressure_systolic' && manualInput['blood_pressure_diastolic']) {
       const dErr = vitalSanityError('blood_pressure_diastolic', manualInput['blood_pressure_diastolic']);
       if (dErr) { toast.error(dErr); return; }
-      vitalData.blood_pressure_diastolic = manualInput['blood_pressure_diastolic'];
+      update.blood_pressure_diastolic = manualInput['blood_pressure_diastolic'];
     }
 
     try {
-      await base44.entities.VitalSignsForm.create(vitalData);
-      setVitals(prev => ({ ...prev, [field]: manualInput[field] }));
+      // Merge into the session's vitals_captured object (the real, schema-defined
+      // store) and surface failures instead of silently swallowing them.
+      const merged = {
+        ...(sessionRow?.vitals_captured || {}),
+        ...update,
+        recorded_at: new Date().toISOString(),
+      };
+      await base44.entities.TelehealthSession.update(sessionId, { vitals_captured: merged });
+      setVitals(prev => ({ ...prev, ...update }));
       setManualInput(prev => ({ ...prev, [field]: null }));
       setLastUpdate(new Date());
     } catch (error) {
       console.error('Error recording vital:', error);
+      toast.error('Failed to record vital. Please try again.');
     }
   };
 

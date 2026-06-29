@@ -156,8 +156,10 @@ Return comprehensive analysis with actionable coordination alerts.`,
               items: {
                 type: "object",
                 properties: {
-                  alert_type: { type: "string" },
-                  severity: { type: "string" },
+                  // Constrain to the CareCoordinationAlert schema enums so the model
+                  // can't emit a value the backend drops (both are required fields).
+                  alert_type: { type: "string", enum: ["care_gap", "provider_communication_needed", "medication_discrepancy", "duplicate_services", "missing_specialist_input", "hospitalization_followup", "transition_of_care"] },
+                  severity: { type: "string", enum: ["urgent", "high", "medium", "low"] },
                   title: { type: "string" },
                   description: { type: "string" },
                   identified_gap: { type: "string" },
@@ -208,10 +210,15 @@ Return comprehensive analysis with actionable coordination alerts.`,
         ? format(addDays(new Date(), 7), 'yyyy-MM-dd')
         : format(addDays(new Date(), 14), 'yyyy-MM-dd');
 
+      // Coerce the AI values to the schema enums (defense-in-depth): alert_type and
+      // severity are required, so an out-of-enum value would make the create throw.
+      const ALLOWED_ALERT_TYPES = new Set(['care_gap', 'provider_communication_needed', 'medication_discrepancy', 'duplicate_services', 'missing_specialist_input', 'hospitalization_followup', 'transition_of_care']);
+      const ALLOWED_SEVERITIES = new Set(['urgent', 'high', 'medium', 'low']);
+
       await base44.entities.CareCoordinationAlert.create({
         patient_id: patientId,
-        alert_type: alertData.alert_type,
-        severity: alertData.severity,
+        alert_type: ALLOWED_ALERT_TYPES.has(alertData.alert_type) ? alertData.alert_type : 'care_gap',
+        severity: ALLOWED_SEVERITIES.has(alertData.severity) ? alertData.severity : 'medium',
         title: alertData.title,
         description: alertData.description,
         identified_gap: alertData.identified_gap,

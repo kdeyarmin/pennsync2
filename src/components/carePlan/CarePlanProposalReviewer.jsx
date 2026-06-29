@@ -53,19 +53,12 @@ export default function CarePlanProposalReviewer({ patientId = null, compact = f
       const proposal = proposals.find(p => p.id === proposalId);
       if (!proposal) throw new Error('Proposal no longer available');
 
-      // Update proposal status
-      await base44.entities.CarePlanProposal.update(proposalId, {
-        status: implementNow ? 'implemented' : 'approved',
-        reviewed_by: currentUser.email,
-        reviewed_date: new Date().toISOString(),
-        nurse_notes: notes,
-        implemented_date: implementNow ? new Date().toISOString() : null
-      });
-
-      // If implementing now, update the actual care plan
+      // Apply the care-plan change FIRST so the proposal is only marked
+      // 'implemented' once the plan write actually succeeds — otherwise a failed
+      // create/update left a phantom 'implemented' proposal with no care plan.
       if (implementNow && proposal.care_plan_id) {
         const carePlan = await base44.entities.CarePlan.get(proposal.care_plan_id);
-        
+
         const updatedInterventions = [
           ...(carePlan.interventions || []),
           ...(proposal.proposed_interventions || [])
@@ -83,15 +76,27 @@ export default function CarePlanProposalReviewer({ patientId = null, compact = f
           goal: updatedGoal
         });
       } else if (implementNow && !proposal.care_plan_id) {
-        // Create new care plan
+        // Create new care plan. CarePlan requires patient_id/problem/goal — the
+        // 'problem' (clinical finding) was previously omitted, so the create
+        // violated the schema contract; source it from the proposal's analysis.
         await base44.entities.CarePlan.create({
           patient_id: proposal.patient_id,
+          problem: proposal.ai_analysis?.clinical_finding || 'AI-proposed care plan update',
           interventions: proposal.proposed_interventions,
           goal: (proposal.proposed_goals || []).join('; '),
           status: 'active',
           created_by: currentUser.email
         });
       }
+
+      // Record the review decision on the proposal only after the plan write above.
+      await base44.entities.CarePlanProposal.update(proposalId, {
+        status: implementNow ? 'implemented' : 'approved',
+        reviewed_by: currentUser.email,
+        reviewed_date: new Date().toISOString(),
+        nurse_notes: notes,
+        implemented_date: implementNow ? new Date().toISOString() : null
+      });
 
       return proposalId;
     },

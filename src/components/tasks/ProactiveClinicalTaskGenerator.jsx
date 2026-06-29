@@ -18,6 +18,16 @@ import {
 } from "lucide-react";
 import { toast } from 'sonner';
 
+// Coerce AI-suggested task fields to the Task schema enums so an out-of-enum value
+// (e.g. type 'assessment') isn't silently dropped on create, leaving the task
+// unclassified. Mirrors the validation in the processCompletedVisit backend.
+const ALLOWED_TASK_TYPES = new Set(['call', 'notify', 'schedule', 'order', 'coordinate', 'document', 'safety', 'followup', 'other']);
+const ALLOWED_TASK_PRIORITIES = new Set(['high', 'medium', 'low']);
+const ALLOWED_TASK_TIMEFRAMES = new Set(['today', '24_hours', '48_hours', 'this_week', 'next_visit']);
+const safeTaskType = (t) => (ALLOWED_TASK_TYPES.has(t) ? t : 'followup');
+const safeTaskPriority = (p) => (ALLOWED_TASK_PRIORITIES.has(p) ? p : 'medium');
+const safeTaskTimeframe = (d) => (ALLOWED_TASK_TIMEFRAMES.has(d) ? d : '24_hours');
+
 export default function ProactiveClinicalTaskGenerator({ 
   patientId,
   _patientName,
@@ -79,11 +89,11 @@ export default function ProactiveClinicalTaskGenerator({
         patient_id: patientId,
         title: task.title,
         description: task.description,
-        type: task.type,
-        priority: task.priority,
+        type: safeTaskType(task.type),
+        priority: safeTaskPriority(task.priority),
         assigned_to: currentUser?.email,
         due_date: task.due_date,
-        due_timeframe: task.due_timeframe,
+        due_timeframe: safeTaskTimeframe(task.due_timeframe),
         source: 'ai_generated',
         ai_reason: task.clinical_rationale,
         status: 'pending'
@@ -113,11 +123,11 @@ export default function ProactiveClinicalTaskGenerator({
           patient_id: patientId,
           title: task.title,
           description: task.description,
-          type: task.type,
-          priority: task.priority,
+          type: safeTaskType(task.type),
+          priority: safeTaskPriority(task.priority),
           assigned_to: currentUser?.email,
           due_date: task.due_date,
-          due_timeframe: task.due_timeframe,
+          due_timeframe: safeTaskTimeframe(task.due_timeframe),
           source: 'ai_generated',
           ai_reason: task.clinical_rationale,
           status: 'pending'

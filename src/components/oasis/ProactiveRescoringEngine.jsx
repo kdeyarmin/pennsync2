@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useAICall } from "@/hooks/useAICall";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,6 +24,14 @@ export default function ProactiveRescoringEngine({
 }) {
   const ai = useAICall();
   const [opportunities, setOpportunities] = useState(null);
+  // Keep the parent callback out of analyze's identity so an inline
+  // onOpportunitiesFound prop doesn't change the callback every render and
+  // re-fire the (expensive) rescoring LLM call. The ref always holds the latest.
+  const onFoundRef = useRef(onOpportunitiesFound);
+  onFoundRef.current = onOpportunitiesFound;
+  // Tracks the oasisData we've already auto-analyzed, so the auto-run fires once
+  // per OASIS document rather than on every re-render.
+  const autoRanForRef = useRef(null);
 
   const analyzeRescoringOpportunities = useCallback(async () => {
     if (!oasisData) return;
@@ -116,18 +124,21 @@ For each opportunity, calculate:
       });
 
       setOpportunities(result);
-      if (onOpportunitiesFound) {
-        onOpportunitiesFound(result);
+      if (onFoundRef.current) {
+        onFoundRef.current(result);
       }
     } catch (error) {
       console.error('Rescoring analysis error:', error);
       toast.error("The AI request didn't complete. Please try again.");
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- AI hook object is intentionally omitted; its run() is stable, and including it would re-fire the call every render
-  }, [oasisData, patientData, clinicalContext, onOpportunitiesFound]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- AI hook object and onOpportunitiesFound (via onFoundRef) are intentionally omitted; including them would re-fire the call every render
+  }, [oasisData, patientData, clinicalContext]);
 
   useEffect(() => {
-    if (autoAnalyze && oasisData) {
+    // Guard on oasisData identity so a parent re-render doesn't re-trigger the
+    // expensive rescoring LLM call for an already-analyzed OASIS document.
+    if (autoAnalyze && oasisData && autoRanForRef.current !== oasisData) {
+      autoRanForRef.current = oasisData;
       analyzeRescoringOpportunities();
     }
   }, [autoAnalyze, oasisData, analyzeRescoringOpportunities]);

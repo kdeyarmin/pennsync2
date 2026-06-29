@@ -9,11 +9,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ClipboardList, CheckCircle2, Clock, AlertCircle, ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
 
+// Keys MUST match the CarePlan.status schema enum (active/met/not_met/revised) —
+// the prior completed/on_hold/discontinued values are not in the enum, so saving
+// them was silently dropped by the backend while the UI reported success.
 const STATUS_CONFIG = {
   active: { label: "Active", color: "bg-blue-100 text-blue-800", icon: Clock },
-  completed: { label: "Completed", color: "bg-green-100 text-green-800", icon: CheckCircle2 },
-  on_hold: { label: "On Hold", color: "bg-amber-100 text-amber-800", icon: AlertCircle },
-  discontinued: { label: "Discontinued", color: "bg-red-100 text-red-800", icon: AlertCircle },
+  met: { label: "Goal Met", color: "bg-green-100 text-green-800", icon: CheckCircle2 },
+  not_met: { label: "Goal Not Met", color: "bg-red-100 text-red-800", icon: AlertCircle },
+  revised: { label: "Revised", color: "bg-amber-100 text-amber-800", icon: AlertCircle },
 };
 
 function CarePlanCard({ plan, currentUser, onUpdated }) {
