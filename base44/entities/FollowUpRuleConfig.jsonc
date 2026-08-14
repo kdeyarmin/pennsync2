@@ -1,0 +1,34 @@
+{
+  "name": "FollowUpRuleConfig",
+  "type": "object",
+  "properties": {
+    "disabled_rules": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Rule ids (see FOLLOW_UP_RULES) the agency has turned off"
+    },
+    "severity_overrides": {
+      "type": "object",
+      "description": "Map of rule id -> severity (critical|high|medium) overriding the default"
+    },
+    "custom_items": {
+      "type": "array",
+      "description": "Agency-defined request items: { title, question, category (compliance|reimbursement), severity, why, citation?, impact?, hint?, response_type? }"
+    },
+    "updated_by_email": {
+      "type": "string",
+      "description": "Email of the admin who last saved this configuration"
+    }
+  },
+  "required": [],
+  "rls": {
+    "read": {},
+    "write": {
+      "user_condition": {
+        "role": "__service_role_only__"
+      }
+    }
+  }
+}
