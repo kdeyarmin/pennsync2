@@ -23,7 +23,7 @@ import AIContentResponsibilityAgreement from '@/components/compliance/AIContentR
 import Layout from '@/components/Layout';
 import ErrorBoundary from '@/components/utils/ErrorBoundary';
 import { ROUTES, REDIRECTS, MAIN_PAGE, ROUTER_PATHS } from '@/routes';
-import { getRoleView } from '@/lib/roles';
+import { getRoleView, canAccessLevel } from '@/lib/roles';
 import { hasAcceptedAiContentAgreement } from '@/lib/aiContentAgreement';
 import { getRouterBasename } from '@/lib/routerBasename';
 import { isPublicTokenPath } from '@/lib/publicRoutes';
@@ -67,6 +67,17 @@ const AdminOnlyFallback = ({ superAdmin = false }) => (
       {superAdmin
         ? 'This is a platform-level page reserved for the super administrator.'
         : 'You don’t have permission to view this page. If you believe this is a mistake, contact your agency administrator.'}
+    </p>
+  </div>
+);
+
+const RoleAccessFallback = ({ access }) => (
+  <div className="flex min-h-[60vh] flex-col items-center justify-center p-8 text-center">
+    <h1 className="text-2xl font-bold text-slate-900">Not available for your role</h1>
+    <p className="mt-2 max-w-md text-slate-600">
+      {access === 'nursing'
+        ? 'This clinical nursing tool is available to nursing staff. If you need access, contact your agency administrator.'
+        : 'This patient-information page is not part of your role. If you need access, contact your agency administrator.'}
     </p>
   </div>
 );
@@ -127,9 +138,10 @@ const AuthenticatedApp = () => {
   // so link clicks do nothing. By keeping <Routes> fresh on every render while
   // reusing the same <Route> element references, React Router doesn't rebuild
   // its matcher (the original issue) but still re-renders on location change.
-  const routeElements = useMemo(() => ROUTES.map(({ name, Component, adminOnly, superAdminOnly }) => {
+  const routeElements = useMemo(() => ROUTES.map(({ name, Component, adminOnly, superAdminOnly, access }) => {
     const blockedSuperAdmin = superAdminOnly && !isSuperAdminUser;
     const blockedAdmin = adminOnly && !isAdmin;
+    const blockedAccess = !blockedSuperAdmin && !blockedAdmin && !canAccessLevel(user, access);
     return (
       <Route
         key={name}
@@ -140,6 +152,8 @@ const AuthenticatedApp = () => {
               ? <AdminOnlyFallback superAdmin />
               : blockedAdmin
                 ? <AdminOnlyFallback />
+                : blockedAccess
+                  ? <RoleAccessFallback access={access} />
                 : (
                   <Suspense fallback={<RoutePageLoader />}>
                     <Component />
@@ -149,7 +163,7 @@ const AuthenticatedApp = () => {
         }
       />
     );
-  }), [isSuperAdminUser, isAdmin]);
+  }), [isSuperAdminUser, isAdmin, user]);
 
   const redirectElements = useMemo(() => REDIRECTS.map(({ from, to }) => (
     <Route key={from} path={from} element={<RedirectTo to={to} />} />

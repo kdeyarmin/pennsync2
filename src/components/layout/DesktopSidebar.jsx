@@ -7,6 +7,7 @@ import FeedbackButton from "@/components/feedback/FeedbackButton";
 import { BRAND_LOGO_URL } from "@/lib/brand";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
+import { userRoleLabel } from "@/lib/roles";
 
 // Active nav item: light navy tint with a gold left indicator bar.
 function navItemClasses(active) {
@@ -223,7 +224,7 @@ export default function DesktopSidebar({
           {!collapsed && (
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-white truncate">{currentUser?.full_name || 'User'}</p>
-              <p className="text-xs text-slate-400 truncate capitalize">{currentUser?.role || 'user'}</p>
+              <p className="text-xs text-slate-400 truncate">{userRoleLabel(currentUser)}</p>
             </div>
           )}
           <Button

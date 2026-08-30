@@ -257,7 +257,7 @@ export default function Layout() {
 
   // Build nav arrays from manifest, then inject runtime badges/actions
   const navCategories = useMemo(() => {
-    const cats = buildNavCategories(NAV_MANIFEST);
+    const cats = buildNavCategories(NAV_MANIFEST, currentUser);
     return cats.map(cat => ({
       ...cat,
       items: cat.items.map(({ _badgeKey, ...item }) => ({
@@ -265,7 +265,7 @@ export default function Layout() {
         badge: _badgeKey ? (badgeValues[_badgeKey] ?? 0) : 0,
       })),
     }));
-  }, [badgeValues]);
+  }, [badgeValues, currentUser]);
 
   const adminItems = useMemo(() => {
     const cats = buildAdminItems(NAV_MANIFEST, isSuperAdminUser);
@@ -387,7 +387,7 @@ export default function Layout() {
       <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:bg-white focus:px-4 focus:py-2 focus:rounded-md focus:shadow-lg focus:text-blue-700 focus:font-medium">
         Skip to content
       </a>
-      <CommandPalette isAdmin={isAdmin} isSuperAdmin={isSuperAdminUser} />
+      <CommandPalette isAdmin={isAdmin} isSuperAdmin={isSuperAdminUser} user={currentUser} />
       <div className="min-h-screen flex">
         <DesktopSidebar
           collapsed={sidebarCollapsed}
@@ -432,7 +432,7 @@ export default function Layout() {
           </div>
         </main>
 
-        <MobileBottomNav isActive={isActive} unreadMessageCount={unreadMessageCount} isAdmin={isAdmin} />
+        <MobileBottomNav isActive={isActive} unreadMessageCount={unreadMessageCount} isAdmin={isAdmin} currentUser={currentUser} />
 
         <SessionTimeoutManager timeoutMinutes={15} warningMinutes={2} />
 
