@@ -184,6 +184,52 @@ function getAppBaseUrl() {
   return 'https://caremetricai.base44.app';
 }
 
+const STAFF_ROLES = ['nurse', 'office_staff', 'social_worker', 'spiritual_care'];
+const normalizeEmail = (email) => String(email || '').trim().toLowerCase();
+
+async function findUserInvitationByEmail(base44, email) {
+  const target = normalizeEmail(email);
+  if (!target) return null;
+  const invitations = await base44.asServiceRole.entities.UserInvitation
+    .list('-updated_date', 5000)
+    .catch(() => []);
+  return (Array.isArray(invitations) ? invitations : []).find((inv) =>
+    normalizeEmail(inv.email || inv.invited_email) === target
+  ) || null;
+}
+
+async function upsertAcceptedUserInvitationForUser(base44, currentUser, targetUser, staffRole) {
+  if (!STAFF_ROLES.includes(String(staffRole))) return null;
+  const now = new Date().toISOString();
+  const invitation = await findUserInvitationByEmail(base44, targetUser.email);
+  const fields = {
+    staff_role: staffRole,
+    status: 'accepted',
+    accepted_at: invitation?.accepted_at || now,
+  };
+  if (invitation?.id) {
+    await base44.asServiceRole.entities.UserInvitation.update(invitation.id, fields);
+    return invitation.id;
+  }
+  const created = await base44.asServiceRole.entities.UserInvitation.create({
+    email: targetUser.email,
+    full_name: targetUser.full_name || targetUser.email,
+    role: targetUser.role || 'user',
+    care_scope: targetUser.care_scope || 'home_health',
+    staff_role: staffRole,
+    phone: targetUser.phone || null,
+    credentials: targetUser.credentials || null,
+    invited_by: currentUser.email,
+    agency_name: targetUser.agency_name || currentUser.agency_name || null,
+    status: 'accepted',
+    expires_at: now,
+    accepted_at: now,
+    last_sent_at: now,
+    resend_count: 0,
+  });
+  return created?.id || null;
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -262,7 +308,6 @@ async function inviteUser(base44, currentUser, params, isAdmin, callerIsSuperAdm
   }
 
   // Staff discipline (non-privileged, orthogonal to role). Validate + default.
-  const STAFF_ROLES = ['nurse', 'office_staff', 'social_worker', 'spiritual_care'];
   const staffRole = STAFF_ROLES.includes(String(staff_role)) ? String(staff_role) : 'nurse';
 
   // Only a super admin may grant the privileged facility-admin role (consistent
@@ -643,7 +688,6 @@ async function updateUser(base44, currentUser, params, isAdmin, callerIsSuperAdm
   }
 
   // Staff discipline is non-privileged; validate against the enum when provided.
-  const STAFF_ROLES = ['nurse', 'office_staff', 'social_worker', 'spiritual_care'];
   if (staff_role !== undefined && !STAFF_ROLES.includes(String(staff_role))) {
     return Response.json({ error: 'Invalid staff_role' }, { status: 400 });
   }
@@ -715,12 +759,25 @@ async function updateUser(base44, currentUser, params, isAdmin, callerIsSuperAdm
   }
 
   await base44.asServiceRole.entities.User.update(user_id, updates);
+  let invitationId = null;
+  if (typeof updates.staff_role === 'string') {
+    invitationId = await upsertAcceptedUserInvitationForUser(
+      base44,
+      currentUser,
+      { ...targetUser, ...updates },
+      updates.staff_role,
+    );
+  }
 
   await base44.asServiceRole.entities.UserActivity.create({
     user_email: currentUser.email,
     user_name: currentUser.full_name,
     action: 'user_updated',
-    details: { target_user_id: user_id, updated_fields: Object.keys(updates) },
+    details: {
+      target_user_id: user_id,
+      updated_fields: Object.keys(updates),
+      ...(invitationId && { authoritative_invitation_id: invitationId }),
+    },
     page: 'UserManagement',
     entity_type: 'User',
     entity_id: user_id

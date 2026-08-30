@@ -343,12 +343,13 @@ Deno.serve(async (req) => {
       credentials: credentials || null,
       invited_by: user.email,
       agency_name: user.agency_name || null,
-      status: 'pending',
+      status: 'accepted',
       expires_at: expiresAt.toISOString(),
+      accepted_at: now.toISOString(),
       last_sent_at: now.toISOString(),
       resend_count: 0
     });
-    console.log('✓ Invitation record created');
+    console.log('✓ Accepted invitation record created for staff_role authority');
 
     // Send the branded PennSync welcome email (best-effort). This complements the
     // platform's transactional invite with app-install instructions and the
