@@ -1,5 +1,14 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
+// <<<BEGIN SHARED HELPER: requireActiveUser — generated, edit base44/_shared/backendHelpers.mjs>>>
+const isDeactivatedUser = (u) => !!u && u.is_active === false;
+const DEACTIVATED_USER_RESPONSE = () => Response.json(
+  { error: 'Unauthorized - account is deactivated' },
+  { status: 403 },
+);
+// <<<END SHARED HELPER: requireActiveUser>>>
+
+
 const isAdminUser = (user) => user?.role === 'admin' || user?.account_type === 'agency_admin' || user?.account_type === 'super_admin';
 
 const normalizeValue = (value) => JSON.stringify(value ?? '').toLowerCase().replace(/\s+/g, '');
@@ -15,7 +24,16 @@ const gradeObjectiveQuestion = (question, answer) => {
     return JSON.stringify(norm(answer)) === JSON.stringify(norm(correct));
   }
   if (question.type === 'matching') {
-    return normalizeValue(answer) === normalizeValue(correct);
+    // The learner submits a { [leftPrompt]: selectedOptionValue } map (see
+    // TrainingQuestionRenderer). The correct answer is stored as
+    // correct_answer_json.answer.pairs = [{ left, right }] where `right` is the
+    // value of the option that correctly matches `left`. Compare per-pair so key
+    // order and any extra keys don't matter — a flat stringify comparison here
+    // was order-sensitive and compared against the wrong shape entirely.
+    const pairs = Array.isArray(correct?.pairs) ? correct.pairs : [];
+    if (pairs.length === 0) return false;
+    const submitted = answer && typeof answer === 'object' && !Array.isArray(answer) ? answer : {};
+    return pairs.every((pair) => normalizeValue(submitted[pair.left]) === normalizeValue(pair.right));
   }
   return normalizeValue(answer) === normalizeValue(correct);
 };
@@ -71,7 +89,7 @@ ${JSON.stringify(questionsForGrading)}`;
   try {
     parsed = await base44.asServiceRole.integrations.Core.InvokeLLM({
       prompt,
-      model: 'claude_opus_4_8',
+      model: 'automatic',
       response_json_schema: {
         type: 'object',
         properties: {
@@ -97,31 +115,36 @@ ${JSON.stringify(questionsForGrading)}`;
     // still counting them in the denominator, failing a learner because of an
     // AI hiccup. Surface the error so the attempt is NOT recorded and the
     // learner can retry without consuming an attempt.
-    throw new Error('AI grading is temporarily unavailable. Your attempt was not recorded — please try again.');
+    // Tag it so the outer catch relays this text instead of a generic 500 —
+    // the learner needs to know the attempt wasn't consumed.
+    const unavailable = new Error('AI grading is temporarily unavailable. Your attempt was not recorded — please try again.');
+    unavailable.userFacing = true;
+    throw unavailable;
   }
   return parsed?.evaluations || [];
 };
 
-/** A course with nothing to grade — no questions to score against. */
+/** A course with nothing to grade — no ACTIVE questions to score against. */
 function hasNoGradableQuestions(questions) {
   return !Array.isArray(questions) || questions.length === 0;
 }
 
 /**
- * What to do with an attempt that has NO questions to grade.
+ * What to do with an attempt that has NO active questions to grade.
  *
  * `attestation_required` alone does NOT prove a course was authored without an
  * assessment: assignAnnualLearningPlan sets it on every annual-plan assignment
  * (`settings.attestationRequired !== false`), and the seeded annual courses
- * require attestation AND carry graded questions. Keying an auto-pass off it
+ * require attestation AND carry graded questions. Keying the auto-pass off it
  * would hand a 100% completion — certificate included — to a learner whose
- * course had simply lost its questions.
+ * course had simply had its questions deactivated.
  *
  * The honest discriminator is whether the course has any questions AT ALL:
  *   - none authored + attestation required → attestation-only in-service; the
  *     acknowledgement IS the completion, so pass.
- *   - questions exist but none came back → a misconfiguration, and an
- *     unassessed pass must not enter the Medicare in-service record.
+ *   - questions exist but none are active → an admin deactivated them; a
+ *     misconfiguration, and an unassessed pass must not enter the Medicare
+ *     in-service record.
  *   - nothing authored and nothing attested → nothing to record at all.
  * The last two are refused rather than written down, matching the
  * partial-AI-grading guard.
@@ -154,7 +177,8 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
-
+    if (isDeactivatedUser(user)) return DEACTIVATED_USER_RESPONSE();
+    
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -164,7 +188,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'assignmentId is required' }, { status: 400 });
     }
 
-    const [assignment] = await base44.asServiceRole.entities.TrainingAssignment.filter({ id: assignmentId });
+    const [assignment] = await base44.asServiceRole.entities.TrainingAssignment.filter({ id: assignmentId }, undefined, 5000);
     if (!assignment) {
       return Response.json({ error: 'Assignment not found' }, { status: 404 });
     }
@@ -173,34 +197,58 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const [course] = await base44.asServiceRole.entities.TrainingCourse.filter({ id: assignment.course_id });
-    const questions = await base44.asServiceRole.entities.TrainingQuestion.filter({ course_id: assignment.course_id }, 'order_index', 500);
+    const [course] = await base44.asServiceRole.entities.TrainingCourse.filter({ id: assignment.course_id }, undefined, 5000);
+    // Grade only ACTIVE questions — the player (getCoursePlayerQuestions) serves
+    // only active:true, so including inactive ones here made the "all questions
+    // answered" check below reject every submission the moment an admin
+    // deactivated any question in the course.
+    const questions = await base44.asServiceRole.entities.TrainingQuestion.filter({ course_id: assignment.course_id, active: true }, 'order_index', 500);
     const attempts = await base44.asServiceRole.entities.TrainingAttempt.filter({ assignment_id: assignmentId, user_id: assignment.assigned_to_user_id }, '-created_date', 100);
     const assignmentNotes = parseAssignmentNotes(assignment.notes);
 
-    if (assignment.max_attempts && attempts.length >= assignment.max_attempts) {
+    // Competency gates must come from the ADMIN-OWNED course, not solely from
+    // the TrainingAssignment row. TrainingAssignment write RLS grants the
+    // assignee (the learner) full row write, so trusting the assignment's
+    // passing_score_required / max_attempts / waiting_period_hours for gating
+    // let a learner POST { passing_score_required: 1 } to their own assignment,
+    // answer one question, and have the passing TrainingAttempt drive
+    // issueCertificate into minting a compliance/CEU certificate. A
+    // learner-writable value may only make a gate STRICTER than the course
+    // baseline (raise the pass mark, lower the attempt cap, lengthen the
+    // cooldown), never weaker.
+    const courseRetake = (course && typeof course.retake_settings_json === 'object' && course.retake_settings_json) || {};
+
+    const attemptCaps = [assignment.max_attempts, courseRetake.max_attempts]
+      .map(Number)
+      .filter((n) => Number.isFinite(n) && n > 0);
+    const effectiveMaxAttempts = attemptCaps.length ? Math.min(...attemptCaps) : null;
+    if (effectiveMaxAttempts && attempts.length >= effectiveMaxAttempts) {
       return Response.json({ error: 'Maximum attempts reached for this in-service' }, { status: 400 });
     }
 
-    if (assignment.waiting_period_hours && attempts.length > 0) {
+    const effectiveWaitHours = Math.max(
+      Number(assignment.waiting_period_hours) || 0,
+      Number(courseRetake.waiting_period_hours) || 0,
+    );
+    if (effectiveWaitHours && attempts.length > 0) {
       const lastAttempt = attempts[0];
       const submittedAt = lastAttempt.submitted_at ? new Date(lastAttempt.submitted_at).getTime() : 0;
       const hoursSince = (Date.now() - submittedAt) / (1000 * 60 * 60);
-      if (lastAttempt.passed === false && hoursSince < assignment.waiting_period_hours) {
-        return Response.json({ error: `Retake available in ${Math.ceil(assignment.waiting_period_hours - hoursSince)} hour(s)` }, { status: 400 });
+      if (lastAttempt.passed === false && hoursSince < effectiveWaitHours) {
+        return Response.json({ error: `Retake available in ${Math.ceil(effectiveWaitHours - hoursSince)} hour(s)` }, { status: 400 });
       }
     }
 
-    if ((assignment.attestation_required || course?.requires_attestation) && (!attestation.acknowledged || !attestation.signedName)) {
+    const attestationRequired = !!(assignment.attestation_required || course?.requires_attestation);
+    if (attestationRequired && (!attestation.acknowledged || !attestation.signedName)) {
       return Response.json({ error: 'Attestation is required before submitting the test' }, { status: 400 });
     }
 
-    // Nothing to grade: work out WHY before deciding. `attestation_required` is
-    // set on every annual-plan assignment and so cannot stand in for "authored
-    // without an assessment" (see resolveUngradedOutcome). The extra read only
-    // happens on this rare path.
+    // Nothing to grade: work out WHY before deciding, because
+    // `attestation_required` is set on every annual-plan assignment and so
+    // cannot stand in for "authored without an assessment" (see
+    // resolveUngradedOutcome). The extra read only happens on this rare path.
     if (hasNoGradableQuestions(questions)) {
-      const attestationRequired = !!(assignment.attestation_required || course?.requires_attestation);
       const anyQuestion = await base44.asServiceRole.entities.TrainingQuestion
         .filter({ course_id: assignment.course_id }, undefined, 1)
         .catch(() => null);
@@ -217,7 +265,7 @@ Deno.serve(async (req) => {
       });
       if (outcome === 'questions_deactivated') {
         return Response.json({
-          error: 'This in-service has no gradable questions, so it cannot be scored. Your attempt was not recorded — ask your administrator to restore its questions.',
+          error: 'This in-service has no active questions, so it cannot be scored. Your attempt was not recorded — ask your administrator to restore its questions.',
         }, { status: 409 });
       }
       if (outcome === 'nothing_to_record') {
@@ -239,6 +287,21 @@ Deno.serve(async (req) => {
       const answer = responseMap.get(question.id);
       if (answer === undefined || answer === null || answer === '' || (Array.isArray(answer) && answer.length === 0)) {
         return Response.json({ error: 'All questions must be answered before submission' }, { status: 400 });
+      }
+
+      // A matching answer is a { [left]: value } map; require a selection for
+      // every pair, otherwise a partially-filled map slips past the check above
+      // and is silently graded wrong.
+      if (question.type === 'matching') {
+        const pairs = Array.isArray(question.correct_answer_json?.answer?.pairs)
+          ? question.correct_answer_json.answer.pairs
+          : [];
+        const answered = answer && typeof answer === 'object' && !Array.isArray(answer)
+          ? pairs.every((pair) => answer[pair.left] !== undefined && answer[pair.left] !== '')
+          : false;
+        if (!answered) {
+          return Response.json({ error: 'All questions must be answered before submission' }, { status: 400 });
+        }
       }
 
       if (question.type === 'short_answer' || question.type === 'scenario_based') {
@@ -278,7 +341,9 @@ Deno.serve(async (req) => {
       const gradedIds = new Set(subjectiveEvaluations.map((e) => e.questionId));
       const ungraded = subjectivePayload.filter((q) => !gradedIds.has(q.questionId));
       if (ungraded.length > 0) {
-        throw new Error('AI grading did not return results for all questions. Your attempt was not recorded — please try again.');
+        const partial = new Error('AI grading did not return results for all questions. Your attempt was not recorded — please try again.');
+        partial.userFacing = true;
+        throw partial;
       }
     }
 
@@ -302,7 +367,12 @@ Deno.serve(async (req) => {
     }
 
     const score = computeAttemptScore(questions, earnedPoints);
-    const passingScore = assignment.passing_score_required || course?.passing_score || 80;
+    // Floor the pass mark at the admin-owned course value (see the competency-gate
+    // note above). The learner-writable assignment.passing_score_required may only
+    // RAISE the bar, never drop it below the course floor — otherwise a learner
+    // sets passing_score_required:1, answers one question, and mints a certificate.
+    const courseFloorScore = Number(course?.passing_score ?? courseRetake.passing_threshold) || 80;
+    const passingScore = Math.max(courseFloorScore, Number(assignment.passing_score_required) || 0);
     const passed = score >= passingScore;
     const attemptNumber = attempts.length + 1;
     const submittedAt = new Date().toISOString();
@@ -352,9 +422,7 @@ Deno.serve(async (req) => {
           user_id: assignment.assigned_to_user_id,
           course_id: assignment.course_id,
           score,
-          // Proves this is the trusted internal caller (see issueCertificate
-          // lockdown). No-op unless INTERNAL_FN_SECRET is configured.
-          _internal_secret: Deno.env.get('INTERNAL_FN_SECRET')
+          internal_secret: Deno.env.get('INTERNAL_FN_SECRET') || '',
         });
         
         if (certResult.data?.certificate) {
@@ -367,7 +435,12 @@ Deno.serve(async (req) => {
       }
     }
 
-    const maxAttemptsReached = assignment.max_attempts && attemptNumber >= assignment.max_attempts && !passed;
+    // Use the EFFECTIVE cap (course ∩ assignment), the same value the attempt
+    // gate above enforces. Using the learner-writable assignment.max_attempts
+    // here would leave the assignment 'failed' with retake_required:true even
+    // when the stricter course cap is already reached, so the UI would offer a
+    // retake that the gate then always rejects (a dead end).
+    const maxAttemptsReached = !!effectiveMaxAttempts && attemptNumber >= effectiveMaxAttempts && !passed;
     await base44.asServiceRole.entities.TrainingAssignment.update(assignmentId, {
       status: passed ? 'completed' : maxAttemptsReached ? 'locked' : 'failed',
       latest_attempt_number: attemptNumber,
@@ -390,7 +463,7 @@ Deno.serve(async (req) => {
       const requiredAssignments = planAssignments.filter((item) => item.required !== false);
       const completedCount = requiredAssignments.filter((item) => item.id === assignmentId ? passed : item.status === 'completed').length;
       const progressPercentage = Math.round((completedCount / Math.max(requiredAssignments.length, 1)) * 100);
-      const [existingEnrollment] = await base44.asServiceRole.entities.PlanEnrollment.filter({ plan_id: assignment.plan_id, user_id: assignment.assigned_to_user_id });
+      const [existingEnrollment] = await base44.asServiceRole.entities.PlanEnrollment.filter({ plan_id: assignment.plan_id, user_id: assignment.assigned_to_user_id }, undefined, 5000);
       if (existingEnrollment) {
         await base44.asServiceRole.entities.PlanEnrollment.update(existingEnrollment.id, {
           courses_completed: completedCount,
@@ -468,6 +541,12 @@ Deno.serve(async (req) => {
       remediation_message: !passed ? (assignment.remediation_message || 'Review the lesson content and retry.') : ''
     });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error('gradeTrainingAttempt failed:', error);
+    // Relay the purpose-written "attempt was NOT recorded" messages; a generic
+    // 500 left the learner unsure whether a retry costs them an attempt.
+    if (error?.userFacing) {
+      return Response.json({ error: error.message }, { status: 503 });
+    }
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
 });

@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { useAgencyScopedQuery } from '@/hooks/useAgencyScopedQuery';
+import { useScopedPatients, excludeArchived } from "@/hooks/useScopedPatients";
 import { useConfirm } from "@/components/ui/confirm-dialog";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -38,13 +40,11 @@ export default function DuplicatePatients() {
     queryFn: () => base44.auth.me(),
   });
 
-  const { data: patients = [], isLoading } = useQuery({
-    queryKey: ['all-patients-duplicate-scan'],
-    queryFn: async () => {
-      const all = await base44.entities.Patient.list('-created_date', 10000);
-      // Don't surface already-archived/merged records as fresh duplicates.
-      return all.filter((p) => !p.is_archived);
-    },
+  const { data: patients = [], isLoading } = useScopedPatients({
+    sort: '-created_date',
+    limit: 10000,
+    // Don't surface already-archived/merged records as fresh duplicates.
+    select: excludeArchived,
     // Always pull a fresh roster when the page mounts. Caching let the page show
     // duplicate groups computed from a STALE roster (and from before matching-logic
     // fixes deployed), which looked like "the fix didn't work" when it actually had.
@@ -52,9 +52,9 @@ export default function DuplicatePatients() {
     refetchOnMount: 'always',
   });
 
-  const { data: allVisits = [], isLoading: visitsLoading } = useQuery({
+  const { data: allVisits = [], isLoading: visitsLoading } = useAgencyScopedQuery({
     queryKey: ['all-visits-duplicate-analysis'],
-    queryFn: () => base44.entities.Visit.list('-created_date', 5000),
+    fetch: () => base44.entities.Visit.list('-created_date', 5000),
     enabled: patients.length > 0
   });
 
@@ -115,7 +115,6 @@ export default function DuplicatePatients() {
           (moved > 0 ? ` and moved ${moved} related record(s).` : '.')
       );
       setDuplicateGroups((prev) => prev.filter((_, i) => `group-${i}` !== groupKey));
-      queryClient.invalidateQueries({ queryKey: ['all-patients-duplicate-scan'] });
       queryClient.invalidateQueries({ queryKey: ['patients'] });
     } catch (error) {
       console.error('Merge error:', error);
@@ -172,7 +171,6 @@ export default function DuplicatePatients() {
 
     // Drop only the groups that merged; keep failures visible for retry.
     setDuplicateGroups((prev) => prev.filter((_, i) => failedKeys.has(`group-${i}`)));
-    queryClient.invalidateQueries({ queryKey: ['all-patients-duplicate-scan'] });
     queryClient.invalidateQueries({ queryKey: ['patients'] });
 
     if (failedKeys.size === 0) {
@@ -265,7 +263,7 @@ export default function DuplicatePatients() {
               <Button
                 onClick={handleMergeAll}
                 disabled={isMergingAll}
-                className="bg-emerald-600 hover:bg-emerald-700 whitespace-nowrap"
+                className="whitespace-nowrap"
               >
                 {isMergingAll ? (
                   <>
@@ -408,7 +406,7 @@ export default function DuplicatePatients() {
                               size="sm"
                               onClick={() => handleMergeGroup(group, groupKey, patient)}
                               disabled={isMerging}
-                              className="bg-emerald-600 hover:bg-emerald-700 whitespace-nowrap"
+                              className="whitespace-nowrap"
                             >
                               {isMerging ? (
                                 <Loader2 className="w-4 h-4 mr-1 animate-spin" />

@@ -17,6 +17,45 @@ function parseLLMJson(raw) {
   }
 }
 
+
+// <<<BEGIN SHARED HELPER: requireActiveUser — generated, edit base44/_shared/backendHelpers.mjs>>>
+const isDeactivatedUser = (u) => !!u && u.is_active === false;
+const DEACTIVATED_USER_RESPONSE = () => Response.json(
+  { error: 'Unauthorized - account is deactivated' },
+  { status: 403 },
+);
+// <<<END SHARED HELPER: requireActiveUser>>>
+
+// <<<BEGIN SHARED HELPER: formatAge — generated, edit base44/_shared/backendHelpers.mjs>>>
+function parseLocalDate(value) {
+  if (value == null || value === '') return null;
+  if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : value;
+  const iso = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(String(value).trim());
+  if (iso) {
+    const y = Number(iso[1]);
+    const mo = Number(iso[2]) - 1;
+    const day = Number(iso[3]);
+    const d = new Date(y, mo, day);
+    if (d.getFullYear() !== y || d.getMonth() !== mo || d.getDate() !== day) return null;
+    return d;
+  }
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+function calculateAge(dob, now = new Date()) {
+  const birth = parseLocalDate(dob);
+  const today = parseLocalDate(now);
+  if (!birth || !today) return null;
+  let age = today.getFullYear() - birth.getFullYear();
+  const m = today.getMonth() - birth.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+  return age;
+}
+function formatAge(dob, now = new Date(), fallback = 'Unknown') {
+  const age = calculateAge(dob, now);
+  return age == null ? fallback : age;
+}
+// <<<END SHARED HELPER: formatAge>>>
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -25,6 +64,7 @@ Deno.serve(async (req) => {
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    if (isDeactivatedUser(user)) return DEACTIVATED_USER_RESPONSE();
 
     const { 
       roughNote, 
@@ -42,14 +82,12 @@ Deno.serve(async (req) => {
 
     // Fetch patient data once for all analyses
     let patientData = null;
-    let carePlans = [];
     let recentVisits = [];
     let oasisData = null;
 
     if (patientId) {
-      const [patient, plans, visits, oasis] = await Promise.all([
+      const [patient, visits, oasis] = await Promise.all([
         base44.asServiceRole.entities.Patient.filter({ id: patientId }, '', 1),
-        base44.asServiceRole.entities.CarePlan.filter({ patient_id: patientId, status: 'active' }),
         base44.asServiceRole.entities.Visit.filter({ patient_id: patientId, status: 'completed' }, '-visit_date', 3),
         base44.asServiceRole.entities.OASISUpload.filter({ patient_id: patientId }, '-created_date', 1)
       ]);
@@ -57,10 +95,31 @@ Deno.serve(async (req) => {
       patientData = patient[0] || null;
       // Authorize against the patient before its PHI drives the analyses
       // (assigned nurse or admin). RLS-independent code check.
-      if (patientData && user.role !== 'admin' && patientData.created_by !== user.email && !(Array.isArray(patientData.assigned_nurses) && patientData.assigned_nurses.includes(user.email))) {
-        return Response.json({ error: 'Forbidden' }, { status: 403 });
+      if (patientData) {
+        const isSuperAdmin = user.account_type === 'super_admin';
+        const isAgencyScopedAdmin =
+          user.account_type === 'agency_admin'
+          || (user.role === 'admin' && !!user.agency_name && !isSuperAdmin);
+        const isPlatformAdmin = isSuperAdmin || (user.role === 'admin' && !user.agency_name);
+        const isAssigned = patientData.created_by === user.email
+          || (Array.isArray(patientData.assigned_nurses) && patientData.assigned_nurses.includes(user.email));
+        if (!isPlatformAdmin && !isAgencyScopedAdmin && !isAssigned) {
+          return Response.json({ error: 'Forbidden' }, { status: 403 });
+        }
+        if (isAgencyScopedAdmin) {
+          if (!user.agency_name) return Response.json({ error: 'Forbidden' }, { status: 403 });
+          const agencyUsers = await base44.asServiceRole.entities.User.list('-created_date', 5000).catch(() => []);
+          const agencyEmails = new Set(
+            (agencyUsers || [])
+              .filter((u) => u.agency_name === user.agency_name && u.email)
+              .map((u) => u.email),
+          );
+          const inAgency = (patientData.created_by && agencyEmails.has(patientData.created_by))
+            || (Array.isArray(patientData.assigned_nurses)
+              && patientData.assigned_nurses.some((e) => agencyEmails.has(e)));
+          if (!inAgency) return Response.json({ error: 'Forbidden' }, { status: 403 });
+        }
       }
-      carePlans = plans || [];
       recentVisits = visits || [];
       oasisData = oasis[0] || null;
     }
@@ -70,15 +129,13 @@ Deno.serve(async (req) => {
 PATIENT DATA:
 ${patientData ? `- Name: ${patientData.first_name} ${patientData.last_name}
 - Primary Diagnosis: ${patientData.primary_diagnosis || diagnosis}
-- Age: ${patientData.date_of_birth ? Math.floor((new Date() - new Date(patientData.date_of_birth)) / (365.25 * 24 * 60 * 60 * 1000)) : 'Unknown'}
+- Age: ${formatAge(patientData.date_of_birth)}
 - Allergies: ${patientData.allergies || 'None documented'}` : ''}
 
 VISIT DETAILS:
 - Visit Type: ${visitType}
 - Diagnosis: ${diagnosis}
 - Vitals: ${JSON.stringify(vitalSigns)}
-
-ACTIVE CARE PLANS: ${carePlans.length > 0 ? carePlans.map(cp => `${cp.problem}: ${cp.goal}`).join('; ') : 'None'}
 
 RECENT VISITS: ${recentVisits.length > 0 ? `Last visit ${recentVisits[0].visit_date}` : 'None'}
 `;
@@ -90,7 +147,7 @@ RECENT VISITS: ${recentVisits.length > 0 ? `Last visit ${recentVisits[0].visit_d
     if (analysisTypes.includes('compliance') && (roughNote || enhancedNote)) {
       promises.push(
         base44.asServiceRole.integrations.Core.InvokeLLM({
-          model: "claude_opus_4_8",
+          model: "automatic",
           prompt: `Analyze this clinical note for Medicare compliance. Return score and specific gaps.
 
 ${sharedContext}
@@ -107,7 +164,7 @@ Return ONLY valid JSON, no prose or code fences, with this shape:
     if (analysisTypes.includes('oasis') && enhancedNote && oasisData) {
       promises.push(
         base44.asServiceRole.integrations.Core.InvokeLLM({
-          model: "claude_opus_4_8",
+          model: "automatic",
           prompt: `Map this clinical note to OASIS items with confidence scores and justifications.
 
 ${sharedContext}
@@ -124,7 +181,7 @@ Return ONLY valid JSON, no prose or code fences, with this shape:
     if (analysisTypes.includes('pdgm') && enhancedNote && patientData) {
       promises.push(
         base44.asServiceRole.integrations.Core.InvokeLLM({
-          model: "claude_opus_4_8",
+          model: "automatic",
           prompt: `Analyze for PDGM optimization opportunities.
 
 ${sharedContext}
@@ -142,7 +199,7 @@ Return ONLY valid JSON, no prose or code fences, with this shape:
     if (analysisTypes.includes('proactive') && (roughNote || enhancedNote)) {
       promises.push(
         base44.asServiceRole.integrations.Core.InvokeLLM({
-          model: "claude_opus_4_8",
+          model: "automatic",
           prompt: `Generate proactive suggestions for tasks, care plan updates, and clinical alerts.
 
 ${sharedContext}
@@ -168,7 +225,6 @@ Return ONLY valid JSON, no prose or code fences, with this shape:
       context: {
         patient_id: patientId,
         has_oasis: !!oasisData,
-        care_plans_count: carePlans.length,
         recent_visits_count: recentVisits.length
       }
     });
@@ -176,7 +232,7 @@ Return ONLY valid JSON, no prose or code fences, with this shape:
   } catch (error) {
     console.error('Batch analysis error:', error);
     return Response.json({ 
-      error: error.message,
+      error: 'Internal server error',
       success: false 
     }, { status: 500 });
   }

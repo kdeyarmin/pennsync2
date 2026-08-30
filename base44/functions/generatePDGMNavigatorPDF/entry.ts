@@ -1,13 +1,41 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
-import { jsPDF } from 'npm:jspdf@2.5.1';
+import { jsPDF } from 'npm:jspdf@2.5.2';
+
+// <<<BEGIN SHARED HELPER: requireActiveUser — generated, edit base44/_shared/backendHelpers.mjs>>>
+const isDeactivatedUser = (u) => !!u && u.is_active === false;
+const DEACTIVATED_USER_RESPONSE = () => Response.json(
+  { error: 'Unauthorized - account is deactivated' },
+  { status: 403 },
+);
+// <<<END SHARED HELPER: requireActiveUser>>>
+
+
+// Financial visibility gate. MIRRORS src/lib/permissions.canViewFinancials
+// (which is isAdminLike): backend Deno modules can't import src/lib, so the
+// admin checks are duplicated here. Keep in sync. PDGM payment/revenue is
+// restricted to administrators; clinical staff (nurses) must never receive
+// dollar figures, even by calling this endpoint directly.
+function canViewFinancials(user) {
+  if (!user) return false;
+  return (
+    user.role === 'admin' ||
+    user.account_type === 'agency_admin' ||
+    user.account_type === 'super_admin'
+  );
+}
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
-
+    if (isDeactivatedUser(user)) return DEACTIVATED_USER_RESPONSE();
+    
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    if (!canViewFinancials(user)) {
+      return Response.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     const { navigationData, pdgmData, patientName } = await req.json();
@@ -174,6 +202,7 @@ Deno.serve(async (req) => {
       }
     });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error('generatePDGMNavigatorPDF failed:', error);
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
 });

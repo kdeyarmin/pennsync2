@@ -36,7 +36,7 @@ export default function AutomatedTaskGenerator({
       const activeCarePlans = carePlans.filter(cp => cp.status === 'active');
 
       const result = await ai.run({
-        model: "claude_opus_4_8",
+        model: "automatic",
         prompt: `You are a nurse task automation system. Generate specific, actionable tasks for nurses based on active care plans.
 
 PATIENT: ${patient.first_name} ${patient.last_name}
@@ -148,7 +148,14 @@ Return JSON:`,
       
       const createdTasks = [];
       for (const task of selected) {
-        const dueDate = format(addDays(new Date(), task.suggested_due_days || 7), 'yyyy-MM-dd');
+        // `?? 7`, not `|| 7`: the schema's own due_timeframe enum starts at
+        // "today", whose suggested_due_days is 0 — and `|| 7` pushed exactly
+        // those urgent tasks a week out while the card above still read
+        // "Due: 0 day(s) from now". Clamp negatives so an out-of-range model
+        // answer can't back-date a task.
+        const suggestedDays = Number(task.suggested_due_days);
+        const dueInDays = Number.isFinite(suggestedDays) ? Math.max(0, suggestedDays) : 7;
+        const dueDate = format(addDays(new Date(), dueInDays), 'yyyy-MM-dd');
         
         const newTask = await base44.entities.Task.create({
           patient_id: patient.id,

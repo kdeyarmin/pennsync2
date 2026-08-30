@@ -1,11 +1,15 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { base44 } from "@/api/base44Client";
+import { useAgencyScopedQuery } from '@/hooks/useAgencyScopedQuery';
+import { useScopedPatients, excludeArchived } from "@/hooks/useScopedPatients";
+import { calculateAge, parseLocalDate, toLocalISODate } from "@/lib/dateLocal";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Plus, User, ArrowUpDown, Users, UserCheck, Target, CalendarPlus } from "lucide-react";
+import { Plus, User, ArrowUpDown, Users, UserCheck, CalendarPlus } from "lucide-react";
 import { secureDelete, handleSecureError } from "../components/utils/security";
 
 import PatientForm from "../components/patient/PatientForm";
+import { getPatientDisplayParts } from "../components/patient/patientDisplay";
 import { patientMatchesSearch } from "../components/patient/AdvancedPatientFilters";
 import AdvancedPatientFilters from "../components/patient/AdvancedPatientFilters";
 import BulkPatientActions from "../components/patient/BulkPatientActions";
@@ -15,6 +19,7 @@ import PageHeader from "@/components/ui/PageHeader";
 import PageContainer from "@/components/ui/PageContainer";
 import StatCard from "@/components/ui/stat-card";
 import EmptyState from "@/components/ui/empty-state";
+import VirtualList from "@/components/ui/VirtualList";
 import { logActivity, ActivityActions } from "../components/utils/activityLogger";
 import PatientCardSkeleton from "../components/loading/PatientCardSkeleton";
 import SwipeablePatientCard from "../components/mobile/SwipeablePatientCard";
@@ -36,6 +41,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+
+// Sort on the SAME name the roster renders. Interpolating the raw fields put the
+// literal string "undefined" in the key whenever one was missing (so a
+// partially-entered chart sorted under "u"), and it ignored the comma-form and
+// payer-noise normalization getPatientDisplayParts applies to the visible name —
+// so the order could disagree with what the user was reading. Module scope keeps
+// it out of the roster memo's dependency list.
+const patientSortKey = (patient) => {
+  const { first, last } = getPatientDisplayParts(patient);
+  return `${last} ${first}`.trim().toLowerCase();
+};
 
 export default function Patients() {
   const queryClient = useQueryClient();
@@ -76,25 +92,15 @@ export default function Patients() {
     }
   }, [currentUser?.email]);
 
-  const { data: patients, isLoading, error: patientsError } = useQuery({
-    queryKey: ['patients'],
-    queryFn: async () => {
-      const allPatients = await base44.entities.Patient.list('-created_date', 2000);
-      return allPatients.filter(patient => !patient.is_archived);
-    },
-    initialData: [],
+  const { data: patients, isLoading, error: patientsError } = useScopedPatients({
+    sort: '-created_date',
+    limit: 2000,
+    select: excludeArchived,
   });
 
-  const { data: allVisits = [] } = useQuery({
+  const { data: allVisits = [] } = useAgencyScopedQuery({
     queryKey: ['allVisits'],
-    queryFn: () => base44.entities.Visit.list('-visit_date', 500),
-    initialData: [],
-    staleTime: 300000,
-  });
-
-  const { data: allCarePlans = [] } = useQuery({
-    queryKey: ['allCarePlans'],
-    queryFn: () => base44.entities.CarePlan.list('-updated_date', 300),
+    fetch: () => base44.entities.Visit.list('-visit_date', 5000),
     initialData: [],
     staleTime: 300000,
   });
@@ -133,30 +139,6 @@ export default function Patients() {
     deletePatientMutation.mutate(patientToDelete.id);
   };
 
-  const calculateAge = (dob) => {
-    if (!dob) return null;
-    const today = new Date();
-    // Parse a bare ISO date (YYYY-MM-DD) as PLAIN calendar components. `new
-    // Date("YYYY-MM-DD")` parses as UTC midnight, so in a timezone behind UTC the
-    // local day shifts back one (e.g. 1961-12-01 → 1961-11-30), which can flip the
-    // birthday comparison and report the wrong age at the Medicare-band boundary.
-    let birthYear, birthMonth, birthDay;
-    const iso = /^(\d{4})-(\d{1,2})-(\d{1,2})/.exec(String(dob).trim());
-    if (iso) {
-      birthYear = Number(iso[1]); birthMonth = Number(iso[2]) - 1; birthDay = Number(iso[3]);
-    } else {
-      const birthDate = new Date(dob);
-      if (Number.isNaN(birthDate.getTime())) return null;
-      birthYear = birthDate.getFullYear(); birthMonth = birthDate.getMonth(); birthDay = birthDate.getDate();
-    }
-    let age = today.getFullYear() - birthYear;
-    const m = today.getMonth() - birthMonth;
-    if (m < 0 || (m === 0 && today.getDate() < birthDay)) {
-      age--;
-    }
-    return age;
-  };
-
   const lastVisitDateByPatientId = useMemo(() => {
     const map = {};
     for (const v of allVisits) {
@@ -176,15 +158,7 @@ export default function Patients() {
     return map;
   }, [allVisits]);
 
-  const carePlanCountByPatientId = useMemo(() => {
-    const map = {};
-    for (const cp of allCarePlans) {
-      map[cp.patient_id] = (map[cp.patient_id] || 0) + 1;
-    }
-    return map;
-  }, [allCarePlans]);
-
-  // Roster summary stats — memoized so the four StatCards don't re-scan the full
+  // Roster summary stats — memoized so the StatCards don't re-scan the full
   // patient list on every unrelated re-render (search typing, dialog open, etc.).
   const rosterStats = useMemo(() => {
     const list = patients || [];
@@ -192,12 +166,22 @@ export default function Patients() {
     return {
       total: list.length,
       active: list.filter(p => p.status === 'active').length,
-      withCarePlans: list.filter(p => (carePlanCountByPatientId[p.id] || 0) > 0).length,
       recent: list.filter(p => p.created_date && new Date(p.created_date).getTime() >= cutoff).length,
     };
-  }, [patients, carePlanCountByPatientId]);
+  }, [patients]);
 
-  const filteredPatients = useMemo(() => (patients || []).filter(patient => {
+  const filteredPatients = useMemo(() => {
+    // Date-range bounds, hoisted out of the per-patient loop. The pickers emit
+    // date-only strings ("2026-07-01"); `new Date(...)` parsed them as UTC
+    // midnight, so comparing against full created_date timestamps (a) excluded
+    // every patient added ON the "To" day and (b) shifted both bounds by the
+    // local UTC offset. Parse as local calendar days and make "To" inclusive
+    // through end of day.
+    const afterStart = filters.createdAfter ? parseLocalDate(filters.createdAfter) : null;
+    const beforeEnd = filters.createdBefore ? parseLocalDate(filters.createdBefore) : null;
+    if (beforeEnd) beforeEnd.setHours(23, 59, 59, 999);
+
+    return (patients || []).filter(patient => {
     if (!patient) return false;
 
     // Fuzzy search across name, MRN, phone, diagnosis (debounced)
@@ -221,26 +205,20 @@ export default function Patients() {
       (filters.hasVisits === 'yes' && patientVisitCount > 0) ||
       (filters.hasVisits === 'no' && patientVisitCount === 0);
 
-    // Care plan filter — use pre-built index instead of filtering allCarePlans per patient
-    const patientCarePlanCount = carePlanCountByPatientId[patient.id] || 0;
-    const matchesCarePlans = !filters.hasCarePlans || filters.hasCarePlans === 'all' ||
-      (filters.hasCarePlans === 'yes' && patientCarePlanCount > 0) ||
-      (filters.hasCarePlans === 'no' && patientCarePlanCount === 0);
-
-    // Date range filter
+    // Date range filter (bounds computed above; inclusive of both boundary days)
     const createdDate = new Date(patient.created_date);
-    const matchesAfter = !filters.createdAfter || createdDate >= new Date(filters.createdAfter);
-    const matchesBefore = !filters.createdBefore || createdDate <= new Date(filters.createdBefore);
+    const matchesAfter = !afterStart || createdDate >= afterStart;
+    const matchesBefore = !beforeEnd || createdDate <= beforeEnd;
 
     return matchesSearch && matchesStatus && matchesDiagnosis &&
            matchesAgeMin && matchesAgeMax && matchesVisits &&
-           matchesCarePlans && matchesAfter && matchesBefore;
+           matchesAfter && matchesBefore;
   }).sort((a, b) => {
     switch (sortBy) {
       case 'name-asc':
-        return (`${a.last_name} ${a.first_name}`).localeCompare(`${b.last_name} ${b.first_name}`);
+        return patientSortKey(a).localeCompare(patientSortKey(b));
       case 'name-desc':
-        return (`${b.last_name} ${b.first_name}`).localeCompare(`${a.last_name} ${a.first_name}`);
+        return patientSortKey(b).localeCompare(patientSortKey(a));
       case 'newest':
         return new Date(b.created_date || 0) - new Date(a.created_date || 0);
       case 'oldest':
@@ -255,10 +233,15 @@ export default function Patients() {
         const bCount = visitCountByPatientId[b.id] || 0;
         return bCount - aCount;
       }
+      // Carried over from PaginatedPatientList's own sort control, which this
+      // page now suppresses (it owns the ordering); same comparison as before.
+      case 'status':
+        return (a.status || '').localeCompare(b.status || '');
       default:
         return 0;
     }
-  }), [patients, filters, debouncedSearch, sortBy, visitCountByPatientId, lastVisitDateByPatientId, carePlanCountByPatientId]);
+  });
+  }, [patients, filters, debouncedSearch, sortBy, visitCountByPatientId, lastVisitDateByPatientId]);
 
   const togglePatientSelection = (patient) => {
     setSelectedPatients(prev => {
@@ -296,17 +279,37 @@ export default function Patients() {
         }
       />
 
-      {/* Roster summary — shared StatCard treatment, matching the Dashboard. */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <StatCard label="Total Patients" value={rosterStats.total} icon={Users} tone="navy" />
-        <StatCard label="Active" value={rosterStats.active} icon={UserCheck} tone="emerald" />
-        <StatCard label="With Care Plans" value={rosterStats.withCarePlans} icon={Target} tone="gold" />
-        <StatCard
-          label="New (30 days)"
-          value={rosterStats.recent}
-          icon={CalendarPlus}
-          tone="slate"
-        />
+      {/* Roster summary — shared StatCard treatment, matching the Dashboard.
+          Each card is a one-tap filter: tapping the number a user is already
+          looking at narrows the roster instead of hunting through the popover. */}
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+        <button
+          type="button"
+          onClick={() => setFilters(prev => ({ ...prev, status: 'all' }))}
+          className="w-full text-left rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-navy-500"
+          aria-label="Show all patients"
+          title="Show all patients"
+        >
+          <StatCard label="Total Patients" value={rosterStats.total} icon={Users} tone="navy" />
+        </button>
+        <button
+          type="button"
+          onClick={() => setFilters(prev => ({ ...prev, status: 'active' }))}
+          className="w-full text-left rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-navy-500"
+          aria-label="Filter to active patients"
+          title="Filter to active patients"
+        >
+          <StatCard label="Active" value={rosterStats.active} icon={UserCheck} tone="emerald" />
+        </button>
+        <button
+          type="button"
+          onClick={() => setFilters(prev => ({ ...prev, createdAfter: toLocalISODate(new Date(Date.now() - 30 * 86400000)) }))}
+          className="w-full text-left rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-navy-500"
+          aria-label="Filter to patients added in the last 30 days"
+          title="Filter to patients added in the last 30 days"
+        >
+          <StatCard label="New (30 days)" value={rosterStats.recent} icon={CalendarPlus} tone="slate" />
+        </button>
       </div>
 
       {showForm && (
@@ -323,15 +326,13 @@ export default function Patients() {
         />
       )}
 
-      <div className="mb-6">
-        <AdvancedPatientFilters
-          onFilterChange={setFilters}
-          activeFilters={filters}
-        />
-      </div>
+      <AdvancedPatientFilters
+        onFilterChange={setFilters}
+        activeFilters={filters}
+      />
 
       {/* Sort & Results Count */}
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex items-center justify-between">
         <p className="text-sm text-slate-500">
           {filteredPatients.length} {filteredPatients.length === 1 ? 'patient' : 'patients'}
           {filters.search && ` matching "${filters.search}"`}
@@ -349,6 +350,7 @@ export default function Patients() {
               <SelectItem value="name-desc">Name Z-A</SelectItem>
               <SelectItem value="last-visit">Last Visit</SelectItem>
               <SelectItem value="most-visits">Most Visits</SelectItem>
+              <SelectItem value="status">Status</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -372,14 +374,14 @@ export default function Patients() {
         </div>
       )}
 
-      {/* Mobile Optimized List */}
-      <div className="lg:hidden space-y-3 mb-20">
+      {/* Mobile Optimized List — virtualized when the filtered roster is large */}
+      <div className="lg:hidden mb-20">
         {isLoading ? (
-          <>
+          <div className="space-y-3">
             <PatientCardSkeleton />
             <PatientCardSkeleton />
             <PatientCardSkeleton />
-          </>
+          </div>
         ) : filteredPatients.length === 0 ? (
           <EmptyState
             icon={User}
@@ -393,27 +395,34 @@ export default function Patients() {
             )}
           />
         ) : (
-          filteredPatients.map((patient) => (
-            <SwipeablePatientCard
-              key={patient.id}
-              patient={patient}
-              isSelected={selectedPatients.some(p => p.id === patient.id)}
-              onToggleSelect={togglePatientSelection}
-              onEdit={(p) => {
-                setEditingPatient(p);
-                setShowForm(true);
-              }}
-              onDelete={(p) => {
-                setPatientToDelete(p);
-                setDeleteDialogOpen(true);
-              }}
-            />
-          ))
+          <VirtualList
+            items={filteredPatients}
+            estimateSize={132}
+            height="min(70vh, 640px)"
+            className="space-y-0"
+            itemClassName="pb-3"
+            getItemKey={(patient) => patient.id}
+            renderItem={(patient) => (
+              <SwipeablePatientCard
+                patient={patient}
+                isSelected={selectedPatients.some(p => p.id === patient.id)}
+                onToggleSelect={togglePatientSelection}
+                onEdit={(p) => {
+                  setEditingPatient(p);
+                  setShowForm(true);
+                }}
+                onDelete={(p) => {
+                  setPatientToDelete(p);
+                  setDeleteDialogOpen(true);
+                }}
+              />
+            )}
+          />
         )}
       </div>
 
       {/* Desktop Grid View */}
-      <div className="hidden lg:grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 md:gap-6">
+      <div className="hidden lg:grid grid-cols-1 gap-3 sm:gap-4">
         {isLoading ? (
           <>
             <PatientCardSkeleton />
@@ -440,6 +449,9 @@ export default function Patients() {
               patients={filteredPatients}
               showCheckboxes={true}
               showSearch={false}
+              // This page owns filtering and sorting (see the sort control above);
+              // letting the list re-sort would discard that order.
+              sortable={false}
               selectedPatients={selectedPatients.map(p => p.id)}
               onSelectionChange={(ids) => {
                 const selected = filteredPatients.filter(p => ids.includes(p.id));

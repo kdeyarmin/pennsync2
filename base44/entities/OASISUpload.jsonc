@@ -68,7 +68,15 @@
     },
     "estimated_payment": {
       "type": "number",
-      "description": "Estimated PDGM payment amount"
+      "description": "Estimated PDGM payment amount (ORIGINAL, as originally documented)"
+    },
+    "optimized_payment": {
+      "type": "number",
+      "description": "Estimated PDGM payment after the analyzer's documentation corrections (the 'after' figure). Absent when no corrected scenario was computed. Financial field — stripped for non-financial users by listOASISUploads."
+    },
+    "revenue_uplift": {
+      "type": "number",
+      "description": "optimized_payment − estimated_payment: the reimbursement impact of the documentation corrections for this assessment. Financial field — stripped for non-financial users."
     },
     "status": {
       "type": "string",
@@ -86,29 +94,48 @@
     },
     "extracted_data": {
       "type": "object",
-      "description": "Structured data extracted from the OASIS document"
+      "description": "Extracted/edited OASIS field data (item values, AI suggestions, supervisor approvals)"
     },
     "supervisor_review_status": {
       "type": "string",
       "enum": [
-        "pending",
         "approved",
         "rejected"
       ],
-      "default": "pending",
-      "description": "Supervisor review decision for this OASIS"
+      "description": "Supervisor approval decision for this OASIS"
     },
     "supervisor_reviewed_by": {
       "type": "string",
-      "description": "Email of the supervisor who reviewed this OASIS"
+      "description": "Email of supervisor who reviewed this OASIS"
     },
     "supervisor_reviewed_at": {
       "type": "string",
       "format": "date-time",
-      "description": "When the supervisor reviewed this OASIS"
+      "description": "When the supervisor review was recorded"
+    },
+    "comprehensive_review": {
+      "type": "object",
+      "description": "Persisted Comprehensive OASIS Review (AI): { results, reviewed_at }. Stored so reopening a saved upload restores the review instead of re-running the billed LLM call. Nested revenue/payment keys inside results are financial — stripped for non-financial users by listOASISUploads."
     }
   },
   "required": [
     "file_url"
-  ]
+  ],
+  // PHI read-scoping: with no read rule, ANY authenticated user could bulk-
+  // .list() every row (an OASIS upload carries the full assessment extract for a patient).
+  // Reads are scoped to the owning user (+ admin), matching the app's
+  // Patient/Visit/ComplianceAudit role model: non-admin staff see only their
+  // own rows on agency-wide report surfaces; admins see everything. "write": {}
+  // deliberately preserves the existing open write behavior — this change is
+  // read-scoping only (several write flows are legitimately cross-user), the
+  // same shape as the ClinicalLibraryTemplate read-scoping fix.
+  "rls": {
+    "read": {
+      "$or": [
+        { "created_by": "{{user.email}}" },
+        { "user_condition": { "role": "admin" } }
+      ]
+    },
+    "write": {}
+  }
 }

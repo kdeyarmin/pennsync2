@@ -36,7 +36,7 @@ export default function AIAdmissionDocumentationAssistant({
     setIsGenerating(true);
     try {
       const response = await invokeLLM({
-        model: "claude_opus_4_8",
+        model: "automatic",
         prompt: `You are an expert home health nurse creating comprehensive admission documentation. Using the provided referral data, OASIS analysis, and patient information, draft detailed clinical documentation sections.
 
 **REFERRAL DATA:**
@@ -212,7 +212,7 @@ For each section, provide:
 
           // Use AI to incorporate the subjective inputs into the section
           const enhancedContent = await invokeLLM({
-            model: "claude_opus_4_8",
+            model: "automatic",
             prompt: `Enhance this clinical documentation section by incorporating the nurse's subjective observations and assessments.
 
 **ORIGINAL SECTION (${section.title}):**
@@ -431,7 +431,7 @@ Return ONLY the enhanced documentation text.`
                 <Button
                   onClick={incorporateSubjectiveInputs}
                   disabled={isGenerating || Object.keys(subjectiveInputs).length === 0}
-                  className="w-full bg-orange-600 hover:bg-orange-700"
+                  className="w-full"
                 >
                   {isGenerating ? (
                     <>
@@ -534,7 +534,6 @@ Return ONLY the enhanced documentation text.`
                             <Button
                               onClick={() => onSaveSection(section.title, section.content)}
                               size="sm"
-                              className="bg-green-600 hover:bg-green-700"
                             >
                               <FileText className="w-4 h-4 mr-2" />
                               Save to Chart

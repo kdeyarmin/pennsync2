@@ -24,8 +24,15 @@ export default function PatientDeteriorationPredictor({ patientId, recentVisits,
     if (!recentVisits || recentVisits.length < 2) return;
 
     try {
+      // recentVisits arrives most-recent-FIRST (getPatientContext orders Visit by
+      // '-visit_date'). The prompt below presents trends "most recent last", so put
+      // the visits in chronological order (oldest -> newest) before serializing —
+      // otherwise the model reads every trend backwards (a declining O2 looks like
+      // it is improving) and can suppress a needed deterioration escalation.
+      const chronologicalVisits = [...recentVisits].reverse();
+
       // Extract vital signs trends
-      const vitalTrends = recentVisits
+      const vitalTrends = chronologicalVisits
         .filter(v => v.vital_signs)
         .map(v => ({
           date: v.visit_date,
@@ -37,13 +44,13 @@ export default function PatientDeteriorationPredictor({ patientId, recentVisits,
           pain: v.vital_signs.pain_level
         }));
 
-      const noteSummaries = recentVisits
+      const noteSummaries = chronologicalVisits
         .filter(v => v.nurse_notes)
         .map(v => v.nurse_notes.substring(0, 500))
         .join('\n---\n');
 
       const result = await ai.run({
-        model: "claude_opus_4_8",
+        model: "automatic",
         prompt: `You are a clinical deterioration risk analyst. Analyze this patient's vital signs trends and visit notes to predict deterioration risk.
 
 VITAL SIGNS TRENDS (most recent last):
@@ -147,7 +154,7 @@ Return a deterioration risk assessment with:
         {!analysis && !ai.loading && (
           <Button
             onClick={analyzeDeteriorationRisk}
-            className="w-full bg-orange-600 hover:bg-orange-700"
+            className="w-full"
           >
             <Brain className="w-4 h-4 mr-2" />
             Analyze Deterioration Risk

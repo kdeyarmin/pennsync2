@@ -5,8 +5,14 @@ import { TrendingUp, Users, CheckCircle, AlertCircle, Loader2 } from 'lucide-rea
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import ReportFilters from './ReportFilters';
+import { isPastLocalDueDate } from '@/lib/dateLocal';
 
 const _COLORS = ['#0b407f', '#fbbf24', '#10b981', '#ef4444'];
+
+function isAssignmentOverdue(a) {
+  if (!a || a.status === 'completed' || a.pass_fail_result === 'passed') return false;
+  return a.status === 'overdue' || isPastLocalDueDate(a.due_date);
+}
 
 export default function EnrollmentSummaryDashboard() {
   const [filters, setFilters] = useState({
@@ -36,27 +42,21 @@ export default function EnrollmentSummaryDashboard() {
     });
   }, [allAssignments, filters]);
 
-  const { data: attempts = [] } = useQuery({
-    queryKey: ['attempts-summary', filters],
-    queryFn: () => base44.entities.TrainingAttempt.list('-submitted_at', 1000),
-    initialData: []
-  });
-
+  // No TrainingAttempt query here: its result fed an avgScore that was never
+  // rendered, and it was keyed on the whole `filters` object while the fetch
+  // ignored filters — so every keystroke in the filter inputs minted a new cache
+  // key and refetched 1000 rows for nothing.
   const stats = useMemo(() => {
     const completed = assignments.filter(a => a.status === 'completed').length;
-    const overdue = assignments.filter(a => a.status === 'overdue').length;
-    const avgScore = attempts.length > 0
-      ? Math.round(attempts.reduce((sum, a) => sum + (a.score || 0), 0) / attempts.length)
-      : 0;
+    const overdue = assignments.filter(a => isAssignmentOverdue(a)).length;
 
     return {
       totalEnrolled: assignments.length,
       completed,
       completionRate: assignments.length > 0 ? Math.round((completed / assignments.length) * 100) : 0,
-      overdue,
-      avgScore
+      overdue
     };
-  }, [assignments, attempts]);
+  }, [assignments]);
 
   const courseCompletionData = useMemo(() => {
     const grouped = {};
@@ -69,13 +69,16 @@ export default function EnrollmentSummaryDashboard() {
         grouped[a.course_title].completed++;
       }
     });
-    return Object.values(grouped).slice(0, 10);
+    // Top 10 by completions, not an arbitrary first 10.
+    return Object.values(grouped).sort((a, b) => b.completed - a.completed).slice(0, 10);
   }, [assignments]);
 
   const statusData = useMemo(() => {
     const statuses = { assigned: 0, in_progress: 0, completed: 0, overdue: 0 };
     assignments.forEach(a => {
-      if (statuses.hasOwnProperty(a.status)) {
+      if (isAssignmentOverdue(a)) {
+        statuses.overdue++;
+      } else if (Object.prototype.hasOwnProperty.call(statuses, a.status)) {
         statuses[a.status]++;
       }
     });
@@ -94,6 +97,9 @@ export default function EnrollmentSummaryDashboard() {
           <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
         </div>
       )}
+      {/* showDateRange is off because the assignments memo has no date predicate:
+          rendering From/To pickers made the report look date-scoped while the KPIs
+          and charts never changed. */}
       <ReportFilters
         onFilterChange={setFilters}
         businessLineOptions={[
@@ -102,6 +108,7 @@ export default function EnrollmentSummaryDashboard() {
           { value: 'all', label: 'All' }
         ]}
         showPlan={false}
+        showDateRange={false}
         onExport={(_format) => {
           // Export functionality
         }}

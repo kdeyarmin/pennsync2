@@ -1,5 +1,42 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
+// <<<BEGIN SHARED HELPER: schedulerAuth — generated, edit base44/_shared/backendHelpers.mjs>>>
+const SCHEDULER_SECRET_HEADER = 'x-internal-secret';
+function isSchedulerAdmin(user) {
+  return !!user && (
+    user.role === 'admin' || user.account_type === 'agency_admin' ||
+    user.account_type === 'super_admin'
+  );
+}
+// Constant-time string compare for the shared-secret check (mirrors
+// createTelehealthToken's timingSafeEqual). A plain === short-circuits on the
+// first differing character, so response timing could leak how much of the
+// secret matched. Dependency-free char-code XOR so the identical source runs
+// under Deno (consumers) and Node (tests).
+function timingSafeEqualStr(a, b) {
+  if (typeof a !== 'string' || typeof b !== 'string' || a.length !== b.length) return false;
+  let mismatch = 0;
+  for (let i = 0; i < a.length; i++) mismatch |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return mismatch === 0;
+}
+function getSchedulerAuthError(req, user) {
+  if (isSchedulerAdmin(user)) return null;
+  const expectedSecret = String(Deno.env.get('INTERNAL_FN_SECRET') || '').trim();
+  if (!expectedSecret) {
+    return Response.json(
+      { error: 'Server misconfigured: INTERNAL_FN_SECRET is required for scheduled/internal functions' },
+      { status: 500 },
+    );
+  }
+  const providedSecret = String(req.headers.get(SCHEDULER_SECRET_HEADER) || '').trim();
+  if (timingSafeEqualStr(providedSecret, expectedSecret)) return null;
+  return Response.json(
+    { error: user ? 'Forbidden: admin or scheduler secret required' : 'Unauthorized: scheduler secret required' },
+    { status: user ? 403 : 401 },
+  );
+}
+// <<<END SHARED HELPER: schedulerAuth>>>
+
 /**
  * dispatchScheduledSms — cron job that sends due ScheduledSms rows. Configure a
  * schedule (e.g. every 5 minutes) for this function in the Base44 dashboard.
@@ -18,8 +55,26 @@ const BATCH_LIMIT = 100;
 // reminder is worse than none. Mirrors redriveFailedSms' 24h ceiling.
 const MAX_SCHEDULE_AGE_MS = 24 * 60 * 60 * 1000;
 
-async function getAgencyConfig(base44) {
-  const settings = await base44.asServiceRole.entities.AgencySettings.list('-created_date', 1).catch(() => []);
+async function getAgencyConfig(base44, agencyHint) {
+  // Prefer a settings row matching the nurse/agency when multi-tenant rows exist.
+  let settings = [];
+  if (agencyHint) {
+    settings = await base44.asServiceRole.entities.AgencySettings
+      .filter({ agency_code: agencyHint }, '-created_date', 1)
+      .catch(() => []);
+    if (!settings?.length) {
+      settings = await base44.asServiceRole.entities.AgencySettings
+        .filter({ office_name: agencyHint }, '-created_date', 1)
+        .catch(() => []);
+    }
+  }
+  if (!settings?.length) {
+    const newest = await base44.asServiceRole.entities.AgencySettings.list('-created_date', 5).catch(() => []);
+    if ((newest || []).length > 1) {
+      return { settings: {}, smsEnabled: false, missingAgencySettings: true };
+    }
+    settings = (newest || []).slice(0, 1);
+  }
   const s = settings[0] || {};
   return {
     settings: s,
@@ -96,29 +151,59 @@ async function sendTelnyx(apiKey, messagingProfileId, from, to, body, webhookUrl
   throw new Error('sendTelnyx exhausted attempts');
 }
 
-/**
- * Resolve Telnyx credentials: prefer env vars, then the in-app IntegrationSecret
- * row with provider 'telnyx'. Either path configures the integration, so the
- * Base44 dashboard env is optional.
- */
+// <<<BEGIN SHARED HELPER: resolveTelnyxCreds — generated, edit base44/_shared/backendHelpers.mjs>>>
 async function resolveTelnyxCreds(base44) {
   const pick = (v) => (v && String(v).trim() ? String(v).trim() : null);
-  let apiKey = pick(Deno.env.get('TELNYX_API_KEY'));
-  let publicKey = pick(Deno.env.get('TELNYX_PUBLIC_KEY'));
-  let messagingProfileId = pick(Deno.env.get('TELNYX_MESSAGING_PROFILE_ID'));
-  let voiceConnectionId = pick(Deno.env.get('TELNYX_VOICE_CONNECTION_ID')) || pick(Deno.env.get('TELNYX_CONNECTION_ID'));
-  let faxConnectionId = pick(Deno.env.get('TELNYX_FAX_CONNECTION_ID'));
+  let record = null;
+  let readError = null;
   try {
-    const rows = await base44.asServiceRole.entities.IntegrationSecret.filter({ provider: 'telnyx' });
-    const rec = rows?.[0] || {};
-    if (!apiKey) apiKey = pick(rec.api_key);
-    if (!publicKey) publicKey = pick(rec.public_key);
-    if (!messagingProfileId) messagingProfileId = pick(rec.messaging_profile_id);
-    if (!voiceConnectionId) voiceConnectionId = pick(rec.voice_connection_id);
-    if (!faxConnectionId) faxConnectionId = pick(rec.fax_connection_id);
-  } catch { /* ignore */ }
-  return { apiKey, publicKey, messagingProfileId, voiceConnectionId, faxConnectionId };
+    const rows = await base44.asServiceRole.entities.IntegrationSecret
+      .filter({ provider: 'telnyx' }, '-updated_date', 5000);
+    const list = Array.isArray(rows) ? rows : [];
+    // Deterministic row selection. This read used to be unsorted with no is_active
+    // filter and took rows[0], and saveTelnyxSecret picks from the same unordered
+    // query — so with two telnyx rows the admin could be writing one row while the
+    // senders read the other, and re-entering the key could never fix it.
+    record = list.find((r) => r && r.is_active === true && pick(r.api_key))
+      || list.find((r) => r && pick(r.api_key))
+      || list[0]
+      || null;
+  } catch (err) {
+    // Do NOT collapse this into "not configured". A failed read (this invocation
+    // path carries no service token, entity 404, 401/403, rate limit, platform
+    // blip) is a completely different problem from an unconfigured integration,
+    // and reporting them identically is what sent operators chasing a credential
+    // they had already entered correctly.
+    readError = (err && err.message) ? String(err.message) : 'IntegrationSecret read failed';
+    // The catch used to be bare, so an unreadable credential row left no
+    // server-side breadcrumb at all — the only signal was a misleading
+    // "not configured" reply. Log it; unattended runs have nowhere else to say so.
+    console.error('resolveTelnyxCreds: could not read the Telnyx IntegrationSecret row:', readError);
+  }
+  const rec = record || {};
+  return {
+    apiKey: pick(rec.api_key),
+    publicKey: pick(rec.public_key),
+    messagingProfileId: pick(rec.messaging_profile_id),
+    voiceConnectionId: pick(rec.voice_connection_id),
+    faxConnectionId: pick(rec.fax_connection_id),
+    record,
+    readError,
+  };
 }
+
+// Build the caller-facing message for a missing Telnyx credential. Distinguishing
+// "could not read" from "not stored" is the whole point: the first is not fixed by
+// entering a key, and telling an admin to enter one is what caused two reverted
+// env-fallback regressions.
+function telnyxCredsMessage(creds, what) {
+  const label = what || 'credentials';
+  if (creds && creds.readError) {
+    return `Could not read Telnyx ${label} — the stored-credential lookup failed (${creds.readError}). This is NOT a missing key, so re-entering it will not help. Retry; if it persists, this function is running without service-role access to IntegrationSecret.`;
+  }
+  return `Telnyx ${label} not configured — add the API key in Admin › Telnyx (it is stored on the IntegrationSecret row; TELNYX_* environment variables are not read).`;
+}
+// <<<END SHARED HELPER: resolveTelnyxCreds>>>
 
 // ---- TCPA quiet hours (mirrors src/components/voice/quietHours.js) ----
 // <<<BEGIN SHARED HELPER: areaCodeTimezone — generated, edit base44/_shared/backendHelpers.mjs>>>
@@ -245,7 +330,7 @@ const AREA_CODE_TIMEZONE = {
   561: "America/New_York",
   562: "America/Los_Angeles",
   563: "America/Chicago",
-  564: "America/New_York",
+  564: "America/Los_Angeles",
   567: "America/New_York",
   570: "America/New_York",
   571: "America/New_York",
@@ -421,21 +506,42 @@ function quietHoursCheck(toNumber, now, settings) {
 }
 
 // ---- cost controls (mirrors sendSms / src/components/voice/costControls.js) ----
-const PREMIUM_AREA_CODES = new Set(['900', '976']);
+// <<<BEGIN SHARED HELPER: isAllowedDestination — generated, edit base44/_shared/backendHelpers.mjs>>>
+// Cost-control destination gate. Single source of truth is the frontend
+// src/components/voice/costControls.js — this copy is generated from it verbatim.
+const PREMIUM_AREA_CODES = new Set(["900", "976"]);
 function isAllowedDestination(e164, settings = {}) {
   const s = settings || {};
-  const e = String(e164 || '').trim();
-  if (/^\+1\d{10}$/.test(e)) {
+  const e = String(e164 || "").trim();
+  const isNanp = /^\+1\d{10}$/.test(e);
+
+  if (isNanp) {
     const areaCode = e.slice(2, 5);
-    if (PREMIUM_AREA_CODES.has(areaCode)) return { allowed: false, reason: 'premium_number_blocked' };
-    const blocked = Array.isArray(s.blocked_area_codes) ? s.blocked_area_codes.map((a) => String(a).replace(/[^\d]/g, '')) : [];
-    if (blocked.includes(areaCode)) return { allowed: false, reason: 'blocked_area_code' };
-    return { allowed: true, reason: 'allowed' };
+    if (PREMIUM_AREA_CODES.has(areaCode)) return { allowed: false, reason: "premium_number_blocked" };
+    const blocked = Array.isArray(s.blocked_area_codes) ? s.blocked_area_codes.map((a) => String(a).replace(/[^\d]/g, "")) : [];
+    if (blocked.includes(areaCode)) return { allowed: false, reason: "blocked_area_code" };
+    return { allowed: true, reason: "allowed" };
   }
-  if (!/^\+\d{8,15}$/.test(e)) return { allowed: false, reason: 'invalid_destination' };
-  if (s.allow_international === true) return { allowed: true, reason: 'international_allowed' };
-  return { allowed: false, reason: 'international_blocked' };
+
+  // A +1-prefixed number that isn't exactly 10 NANP digits is malformed, not
+  // international — never let the international toggle dial/text a broken US number.
+  if (/^\+1/.test(e)) return { allowed: false, reason: "invalid_destination" };
+
+  // Not a +1 NANP number → treat as international.
+  if (!/^\+\d{8,15}$/.test(e)) return { allowed: false, reason: "invalid_destination" };
+  if (s.allow_international === true) return { allowed: true, reason: "international_allowed" };
+  return { allowed: false, reason: "international_blocked" };
 }
+// <<<END SHARED HELPER: isAllowedDestination>>>
+
+// <<<BEGIN SHARED HELPER: requireActiveUser — generated, edit base44/_shared/backendHelpers.mjs>>>
+const isDeactivatedUser = (u) => !!u && u.is_active === false;
+const DEACTIVATED_USER_RESPONSE = () => Response.json(
+  { error: 'Unauthorized - account is deactivated' },
+  { status: 403 },
+);
+// <<<END SHARED HELPER: requireActiveUser>>>
+
 function monthStartISO(now = new Date()) {
   return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString();
 }
@@ -444,30 +550,87 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
 
-    // Authorization: privileged cron job (service-role reads/writes + billable
-    // Telnyx sends, no end user). Opt-in lockdown mirroring pollFaxStatuses — a
-    // real scheduler runs unauthenticated and still passes while no secret is
-    // configured; once INTERNAL_FN_SECRET is set it must present the header, and
-    // a logged-in non-admin is always rejected (closing the "any logged-in user
-    // can force-dispatch queued SMS off-schedule" vector).
+    // Authorization: privileged cron job (service-role reads/writes + billable Telnyx sends, no end user). Only admins or the configured scheduler secret may invoke it.
     const me = await base44.auth.me().catch(() => null);
-    const isAdmin = me?.role === 'admin';
-    const internalSecret = Deno.env.get('INTERNAL_FN_SECRET');
-    if (internalSecret) {
-      if (!isAdmin && req.headers.get('x-internal-secret') !== internalSecret) {
-        return Response.json({ error: 'Forbidden' }, { status: 403 });
-      }
-    } else if (me && !isAdmin) {
-      return Response.json({ error: 'Forbidden: admin access required' }, { status: 403 });
+    const authError = getSchedulerAuthError(req, me);
+    if (authError) return authError;
+    if (isDeactivatedUser(me)) return DEACTIVATED_USER_RESPONSE();
+
+    const telnyxCreds = await resolveTelnyxCreds(base44);
+
+    const { apiKey, messagingProfileId } = telnyxCreds;
+
+    // Bail out BEFORE claiming any row when Telnyx credentials are unavailable.
+    // This guard used to sit inside the per-row loop and call fail(), which set
+    // status 'failed' permanently — and since this cron only ever reads
+    // status:'pending', every appointment and medication reminder that came due
+    // during a credential outage was destroyed: restoring the key sent none of
+    // them, and the nurse's own pending list (ScheduledSmsList) silently dropped
+    // them with no failure indicator. A missing/unreadable credential is an
+    // agency-wide infrastructure problem, not a per-message one, so leave the
+    // queue untouched and let the next run send it. Rows that genuinely go stale
+    // are still expired by the MAX_SCHEDULE_AGE_MS check below, so this cannot
+    // requeue forever.
+    if (!apiKey) {
+      const reason = telnyxCredsMessage(telnyxCreds, 'SMS credentials');
+      console.error(`dispatchScheduledSms: no dispatch attempted — ${reason}`);
+      return Response.json({ success: false, error: reason, processed: 0, sent: 0, failed: 0, skipped: 0 }, { status: 500 });
     }
 
-    const { apiKey, messagingProfileId } = await resolveTelnyxCreds(base44);
-    const { smsEnabled, settings } = await getAgencyConfig(base44);
+    // Resolve agency config PER ROW from the sending nurse. A single unhinted
+    // getAgencyConfig() returns smsEnabled:false whenever more than one tenant's
+    // AgencySettings row exists (the normal multi-tenant state), which used to
+    // fail() every due reminder on every tick — the same queue-destruction hazard
+    // the credential guard above fixed. Cache the nurse->agency and agency->config
+    // lookups so the loop stays cheap.
+    const nurseAgencyCache = new Map();
+    const agencyConfigCache = new Map();
+    const resolveRowConfig = async (nurseEmail) => {
+      const key = String(nurseEmail || '');
+      let agencyName = nurseAgencyCache.get(key);
+      if (agencyName === undefined) {
+        const [u] = key
+          ? await base44.asServiceRole.entities.User.filter({ email: key }, undefined, 1).catch(() => [])
+          : [];
+        agencyName = String(u?.agency_name || '').trim();
+        nurseAgencyCache.set(key, agencyName);
+      }
+      if (!agencyConfigCache.has(agencyName)) {
+        agencyConfigCache.set(agencyName, await getAgencyConfig(base44, agencyName));
+      }
+      return agencyConfigCache.get(agencyName);
+    };
+    // Agency email cohort for scoping the monthly SMS cap (mirrors sendSms).
+    // Cached per agency; null when the row's nurse has no agency (legacy
+    // single-tenant → count unscoped, as sendSms does for an agency-less caller).
+    const agencyCohortCache = new Map();
+    const resolveAgencyCohort = async (agencyName) => {
+      const key = String(agencyName || '').trim();
+      if (!key) return null;
+      if (agencyCohortCache.has(key)) return agencyCohortCache.get(key);
+      const agencyUsers = await base44.asServiceRole.entities.User
+        .filter({ agency_name: key }, '-created_date', 5000)
+        .catch(() => []);
+      const cohort = new Set(
+        (Array.isArray(agencyUsers) ? agencyUsers : []).map((u) => u?.email).filter(Boolean)
+      );
+      agencyCohortCache.set(key, cohort);
+      return cohort;
+    };
     // A unique id for THIS cron run, used to claim rows (see the claim below).
     const runId = crypto.randomUUID();
 
     // Reconcile terminal delivery status via the DLR webhook (mirrors sendSms).
-    const functionsBaseUrl = (Deno.env.get('FUNCTIONS_BASE_URL') || '').trim().replace(/\/+$/, '');
+    // Derive the functions base from this request's own URL — every backend
+    // function (including handleTelnyxStatusWebhook) is served from the same
+    // base, so the status-webhook peer is one path segment over. Replaces the
+    // retired FUNCTIONS_BASE_URL secret; non-https (local dev) derives nothing.
+    const functionsBaseUrl = (() => {
+      try {
+        const u = new URL(req.url);
+        return u.protocol === 'https:' ? (u.origin + u.pathname).replace(/\/+$/, '').replace(/\/[^/]+$/, '') : '';
+      } catch { return ''; }
+    })();
     const statusCallback = functionsBaseUrl ? `${functionsBaseUrl}/handleTelnyxStatusWebhook` : undefined;
 
     const nowIso = new Date().toISOString();
@@ -499,6 +662,19 @@ Deno.serve(async (req) => {
         result.skipped++;
         continue;
       }
+      // A cancel can race the claim two ways: it can land between the due-list
+      // fetch and the claim (the claim then overwrites status 'canceled' back to
+      // 'sending' — but canceled_at survives), or between the claim and this
+      // re-read (claimed_by still matches). Either way the user explicitly
+      // canceled; honoring the send would text a patient after a cancel.
+      // canceled_at is the reliable signal because the claim never clears it.
+      if (claimCheck[0].canceled_at || claimCheck[0].status === 'canceled') {
+        await base44.asServiceRole.entities.ScheduledSms.update(row.id, {
+          status: 'canceled', claimed_by: '', claimed_at: null,
+        }).catch(() => {});
+        result.skipped++;
+        continue;
+      }
       result.processed++;
 
       const fail = async (reason) => {
@@ -516,26 +692,52 @@ Deno.serve(async (req) => {
         continue;
       }
 
-      if (!apiKey) { await fail('Telnyx SMS credentials not configured'); continue; }
-      if (!smsEnabled) { await fail('SMS messaging disabled for the agency'); continue; }
+      // Resolve THIS row's agency config from the nurse who scheduled it.
+      const cfg = await resolveRowConfig(row.nurse_email);
+      if (cfg.missingAgencySettings) {
+        // Could not resolve this row's agency among multiple tenant rows — an
+        // agency-resolution problem, not a per-message one. Release the claim to
+        // pending so a later run (or a corrected agency mapping) can send it,
+        // instead of destroying the reminder. Staleness is still bounded by the
+        // MAX_SCHEDULE_AGE_MS expiry above.
+        await base44.asServiceRole.entities.ScheduledSms.update(row.id, {
+          status: 'pending', claimed_by: '', claimed_at: null,
+        }).catch(() => {});
+        result.skipped++;
+        continue;
+      }
+      const settings = cfg.settings;
+      if (!cfg.smsEnabled) { await fail('SMS messaging disabled for the agency'); continue; }
 
       // Cost control: block premium/blocked/international destinations by default
       // (mirrors sendSms). A blocked destination is terminal — fail the row.
       const destAllowed = isAllowedDestination(row.to_number, settings);
       if (!destAllowed.allowed) { await fail(`Destination blocked at send time: ${destAllowed.reason}`); continue; }
 
-      // Cost control: enforce the optional monthly outbound-SMS cap (mirrors
-      // sendSms). When the cap is already reached, leave the row pending so a
-      // later run (next month / after the cap is raised) can pick it up rather
-      // than failing a scheduled reminder outright.
+      // Cost control: enforce the optional monthly outbound-SMS cap, scoped to
+      // THIS row's agency cohort (mirrors sendSms). Counting every tenant's
+      // outbound rows made one busy agency trip every other agency's cap. When
+      // the cap is already reached, leave the row pending so a later run (next
+      // month / after the cap is raised) can pick it up rather than failing a
+      // scheduled reminder outright.
       const monthlyCap = Number(settings?.monthly_sms_cap);
       if (Number.isFinite(monthlyCap) && monthlyCap > 0) {
         const since = monthStartISO();
+        // nurseAgencyCache was populated by resolveRowConfig() above for this row.
+        const rowAgency = nurseAgencyCache.get(String(row.nurse_email || '')) || '';
+        const agencyNurseEmails = await resolveAgencyCohort(rowAgency);
+        const fetchLimit = agencyNurseEmails
+          ? Math.min(Math.max(monthlyCap * 20, monthlyCap), 5000)
+          : monthlyCap;
         const recentOutbound = await base44.asServiceRole.entities.SmsMessage
-          .filter({ direction: 'outbound' }, '-created_date', monthlyCap)
+          .filter({ direction: 'outbound' }, '-created_date', fetchLimit)
           .catch(() => []);
         const sentThisMonth = (Array.isArray(recentOutbound) ? recentOutbound : [])
-          .filter((m) => m.created_date && m.created_date >= since).length;
+          .filter((m) => m.created_date && m.created_date >= since)
+          .filter((m) => !agencyNurseEmails
+            || (m.nurse_email && agencyNurseEmails.has(m.nurse_email))
+            || m.sent_by === row.nurse_email)
+          .length;
         if (sentThisMonth >= monthlyCap) {
           await base44.asServiceRole.entities.ScheduledSms.update(row.id, {
             status: 'pending', claimed_by: '', claimed_at: null,
@@ -545,20 +747,25 @@ Deno.serve(async (req) => {
         }
       }
 
-      // Re-check opt-out at send time (fail closed on a read error).
-      let optedOut = true;
+      // Re-check consent at send time (fail closed on a read error). Require
+      // explicit opted_in — unknown/missing is not sufficient for TCPA.
+      let allowed = false;
       try {
         const consents = await base44.asServiceRole.entities.SmsConsent
           .filter({ phone_e164: row.to_number }, '-captured_at', 1);
-        optedOut = consents[0]?.consent_status === 'opted_out';
+        allowed = consents[0]?.consent_status === 'opted_in';
+        if (consents[0]?.consent_status === 'opted_out') {
+          await fail('Recipient opted out before the scheduled send');
+          continue;
+        }
       } catch {
-        optedOut = true;
+        allowed = false;
       }
-      if (optedOut) { await fail('Recipient opted out before the scheduled send'); continue; }
+      if (!allowed) { await fail('No texting consent on file at send time'); continue; }
 
       // TCPA quiet hours (recipient timezone). When enabled and the recipient is
       // in their quiet hours, leave the row pending to retry on a later run.
-      if (settings?.tcpa_quiet_hours_enabled === true) {
+      if (settings?.tcpa_quiet_hours_enabled !== false) {
         const q = quietHoursCheck(row.to_number, new Date(), settings);
         if (!q.allowed) {
           await base44.asServiceRole.entities.ScheduledSms.update(row.id, {
@@ -631,6 +838,6 @@ Deno.serve(async (req) => {
     return Response.json({ success: true, ...result, checked_at: nowIso });
   } catch (error) {
     console.error('dispatchScheduledSms error:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
 });

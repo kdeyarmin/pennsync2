@@ -1,20 +1,47 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 import { jsPDF } from 'npm:jspdf@4.0.0';
 
+// <<<BEGIN SHARED HELPER: requireActiveUser — generated, edit base44/_shared/backendHelpers.mjs>>>
+const isDeactivatedUser = (u) => !!u && u.is_active === false;
+const DEACTIVATED_USER_RESPONSE = () => Response.json(
+  { error: 'Unauthorized - account is deactivated' },
+  { status: 403 },
+);
+// <<<END SHARED HELPER: requireActiveUser>>>
+
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
-
+    if (isDeactivatedUser(user)) return DEACTIVATED_USER_RESPONSE();
+    
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const { employeeId, certificateIds, dateRangeStart, dateRangeEnd } = await req.json();
 
+    // Require the id up front: an undefined employeeId is dropped by the SDK's
+    // filter, so User/certificate queries below would run unscoped.
+    if (!employeeId || typeof employeeId !== 'string') {
+      return Response.json({ error: 'employeeId is required' }, { status: 400 });
+    }
+
     // Authorization: only admins can generate for others, users can only generate for themselves
-    if (employeeId !== user.email && user.account_type !== 'agency_admin' && user.account_type !== 'super_admin') {
+    const isSuperAdmin = user.account_type === 'super_admin';
+    const isAgencyAdmin = user.account_type === 'agency_admin';
+    if (employeeId !== user.email && !isAgencyAdmin && !isSuperAdmin) {
       return Response.json({ error: 'Forbidden' }, { status: 403 });
+    }
+    // Agency admins are scoped to their OWN agency — they must not pull certificate
+    // packets for employees of other agencies. Super admins are cross-agency.
+    if (employeeId !== user.email && isAgencyAdmin && !isSuperAdmin) {
+      const targets = await base44.asServiceRole.entities.User.filter({ email: employeeId }, '-created_date', 1);
+      const target = targets?.[0];
+      if (!target || !user.agency_name || target.agency_name !== user.agency_name) {
+        return Response.json({ error: 'Forbidden' }, { status: 403 });
+      }
     }
 
     // Check for existing valid cache. The cache key only tracks user_id + date
@@ -22,13 +49,15 @@ Deno.serve(async (req) => {
     // reuse a packet cached for a different selection — skip the cache (and
     // regenerate) whenever explicit certificateIds are supplied.
     const hasExplicitIds = Array.isArray(certificateIds) && certificateIds.length > 0;
-    const cacheQuery = { user_id: employeeId };
-    if (dateRangeStart) cacheQuery.date_range_start = dateRangeStart;
-    if (dateRangeEnd) cacheQuery.date_range_end = dateRangeEnd;
+    const cacheQuery = {
+      user_id: employeeId,
+      date_range_start: dateRangeStart || null,
+      date_range_end: dateRangeEnd || null
+    };
 
     const existingCache = hasExplicitIds
       ? []
-      : await base44.entities.CertificatePacketCache.filter(cacheQuery);
+      : await base44.entities.CertificatePacketCache.filter(cacheQuery, undefined, 5000);
     
     if (existingCache && existingCache.length > 0) {
       const cache = existingCache[0];
@@ -65,7 +94,7 @@ Deno.serve(async (req) => {
     // the authenticated caller (auth.me()).
     let employee = user;
     if (employeeId !== user.email) {
-      const employees = await base44.asServiceRole.entities.User.filter({ email: employeeId });
+      const employees = await base44.asServiceRole.entities.User.filter({ email: employeeId }, undefined, 5000);
       if (!employees || employees.length === 0) {
         return Response.json({ error: 'Employee not found' }, { status: 404 });
       }
@@ -84,7 +113,8 @@ Deno.serve(async (req) => {
 
     const certificates = await base44.asServiceRole.entities.TrainingCertificate.filter(
       query,
-      '-issued_at'
+      '-issued_at',
+      5000,
     );
 
     // Generate PDF server-side
@@ -163,8 +193,9 @@ Deno.serve(async (req) => {
     const pdfBytes = doc.output('arraybuffer');
 
     // Upload to private storage
+    const packetFile = new File([pdfBytes], 'certificate_packet.pdf', { type: 'application/pdf' });
     const uploadResponse = await base44.integrations.Core.UploadPrivateFile({
-      file: new Blob([pdfBytes], { type: 'application/pdf' })
+      file: packetFile
     });
 
     // Save cache entry
@@ -205,6 +236,6 @@ Deno.serve(async (req) => {
 
   } catch (error) {
     console.error('Certificate packet generation failed:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
 });

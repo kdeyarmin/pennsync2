@@ -4,10 +4,20 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 // stubs, so searchPDFs can finally match real document content.
 import { extractText, getDocumentProxy } from 'npm:unpdf@1.6.2';
 
+// <<<BEGIN SHARED HELPER: requireActiveUser — generated, edit base44/_shared/backendHelpers.mjs>>>
+const isDeactivatedUser = (u) => !!u && u.is_active === false;
+const DEACTIVATED_USER_RESPONSE = () => Response.json(
+  { error: 'Unauthorized - account is deactivated' },
+  { status: 403 },
+);
+// <<<END SHARED HELPER: requireActiveUser>>>
+
+
 // <<<BEGIN SHARED HELPER: isSafeFetchUrl — generated, edit base44/_shared/backendHelpers.mjs>>>
-// SSRF guard: only fetch https URLs on public hosts, never internal IPs /
-// metadata. Set FILE_URL_ALLOWED_HOSTS (comma-separated) to restrict to your
-// storage host(s).
+// SSRF guard: only fetch https URLs on the app's own storage/app hosts, never
+// internal IPs / metadata. The allowlist is hardcoded (always-on, fail-closed)
+// rather than env-configured; add a host here if file storage ever moves.
+const FILE_URL_ALLOWED_HOSTS = ['qtrypzzcjebvfcihiynt.supabase.co', 'base44.app', 'base44.io'];
 function isSafeFetchUrl(raw) {
   let u;
   try { u = new URL(String(raw)); } catch { return false; }
@@ -20,14 +30,33 @@ function isSafeFetchUrl(raw) {
     const a = +m[1], b = +m[2];
     if (a === 10 || a === 127 || (a === 169 && b === 254) || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168)) return false;
   }
-  const allow = Deno.env.get('FILE_URL_ALLOWED_HOSTS');
-  if (allow) {
-    const hosts = allow.split(',').map((h) => h.trim().toLowerCase()).filter(Boolean);
-    if (!hosts.some((h) => host === h || host.endsWith('.' + h))) return false;
-  }
+  if (!FILE_URL_ALLOWED_HOSTS.some((h) => host === h || host.endsWith('.' + h))) return false;
   return true;
 }
 // <<<END SHARED HELPER: isSafeFetchUrl>>>
+
+// Fetch that re-validates every redirect hop against isSafeFetchUrl. With the
+// default redirect:'follow' the guard only checks the FIRST URL, so an
+// allowlisted host that 3xx-redirects to an internal/metadata IP would still be
+// fetched (SSRF). Returns null if a hop resolves to a disallowed host.
+// Mirrors importProvidersCsv.
+async function safeFetchFollow(initialUrl) {
+  let response;
+  let nextUrl = initialUrl;
+  for (let hop = 0; hop < 4; hop++) {
+    response = await fetch(nextUrl, { redirect: 'manual' });
+    if (response.status >= 300 && response.status < 400) {
+      const location = response.headers.get('location');
+      if (!location) break;
+      const resolved = new URL(location, nextUrl).toString();
+      if (!isSafeFetchUrl(resolved)) return null;
+      nextUrl = resolved;
+      continue;
+    }
+    break;
+  }
+  return response;
+}
 
 Deno.serve(async (req) => {
   try {
@@ -37,6 +66,7 @@ Deno.serve(async (req) => {
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    if (isDeactivatedUser(user)) return DEACTIVATED_USER_RESPONSE();
 
     const { 
       pdf_url, 
@@ -57,12 +87,31 @@ Deno.serve(async (req) => {
     // surfacing it in their scope — and the pdf_url-keyed update branch below
     // could clobber an index belonging to a scope they can't access. Mirror
     // searchPDFs' patient-scope check for both the target and the existing row.
-    const isAdmin = user.role === 'admin';
+    const isSuperAdmin = user.account_type === 'super_admin';
+    const isAgencyScopedAdmin =
+      user.account_type === 'agency_admin'
+      || (user.role === 'admin' && !!user.agency_name && !isSuperAdmin);
+    const isPlatformAdmin = isSuperAdmin || (user.role === 'admin' && !user.agency_name);
     const assertPatientAccess = async (pid) => {
-      if (!pid || isAdmin) return true;
-      const [p] = await base44.asServiceRole.entities.Patient.filter({ id: pid }).catch(() => []);
-      return Boolean(p) && (p.created_by === user.email
-        || (Array.isArray(p.assigned_nurses) && p.assigned_nurses.includes(user.email)));
+      if (!pid) return true;
+      const [p] = await base44.asServiceRole.entities.Patient.filter({ id: pid }, undefined, 5000).catch(() => []);
+      if (!p) return false;
+      if (isPlatformAdmin) return true;
+      if (p.created_by === user.email
+        || (Array.isArray(p.assigned_nurses) && p.assigned_nurses.includes(user.email))) {
+        return true;
+      }
+      if (isAgencyScopedAdmin && user.agency_name) {
+        const agencyUsers = await base44.asServiceRole.entities.User.list('-created_date', 5000).catch(() => []);
+        const agencyEmails = new Set(
+          (agencyUsers || [])
+            .filter((u) => u.agency_name === user.agency_name && u.email)
+            .map((u) => u.email),
+        );
+        return !!(p.created_by && agencyEmails.has(p.created_by))
+          || (Array.isArray(p.assigned_nurses) && p.assigned_nurses.some((e) => agencyEmails.has(e)));
+      }
+      return false;
     };
     if (!(await assertPatientAccess(patient_id))) {
       return Response.json({ error: 'Forbidden' }, { status: 403 });
@@ -71,8 +120,11 @@ Deno.serve(async (req) => {
     if (!isSafeFetchUrl(pdf_url)) {
       return Response.json({ error: 'Invalid or disallowed pdf_url' }, { status: 400 });
     }
-    // Fetch PDF
-    const response = await fetch(pdf_url);
+    // Fetch PDF (re-validating any redirect hop)
+    const response = await safeFetchFollow(pdf_url);
+    if (!response) {
+      return Response.json({ error: 'Redirect to a disallowed host blocked' }, { status: 400 });
+    }
     if (!response.ok) {
       throw new Error('Failed to fetch PDF');
     }
@@ -113,7 +165,7 @@ Deno.serve(async (req) => {
     // Create or update index
     const existingIndex = await base44.asServiceRole.entities.PDFIndex.filter({
       pdf_url
-    });
+    }, undefined, 5000);
 
     const indexData = {
       pdf_url,
@@ -167,7 +219,7 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error('PDF indexing error:', error);
     return Response.json({ 
-      error: error.message || 'Failed to index PDF' 
+      error: 'Failed to index PDF' 
     }, { status: 500 });
   }
 });

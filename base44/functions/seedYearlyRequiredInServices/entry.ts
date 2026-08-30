@@ -1,5 +1,14 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
+// <<<BEGIN SHARED HELPER: requireActiveUser — generated, edit base44/_shared/backendHelpers.mjs>>>
+const isDeactivatedUser = (u) => !!u && u.is_active === false;
+const DEACTIVATED_USER_RESPONSE = () => Response.json(
+  { error: 'Unauthorized - account is deactivated' },
+  { status: 403 },
+);
+// <<<END SHARED HELPER: requireActiveUser>>>
+
+
 // ───────────────────────────────────────────────────────────────────────────
 // Seed the full set of YEARLY REQUIRED IN-SERVICES for Home Health and Hospice
 // staff and nurses. Each in-service is created as a published TrainingCourse
@@ -1517,6 +1526,7 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
+    if (isDeactivatedUser(user)) return DEACTIVATED_USER_RESPONSE();
     if (!isAdminUser(user)) {
       return Response.json({ error: 'Unauthorized' }, { status: 403 });
     }
@@ -1597,6 +1607,8 @@ Deno.serve(async (req) => {
             course_id: course.id,
             title: module.title,
             type: 'lesson',
+            module_type: 'ongoing',
+            category: ['compliance', 'clinical', 'safety', 'documentation', 'onboarding'].includes(sample.category) ? sample.category : 'compliance',
             content_json,
             order_index: moduleIndex,
             estimated_minutes: Math.max(10, Math.round((sample.estimated_minutes || 30) / sample.modules.length)),
@@ -1717,6 +1729,7 @@ Deno.serve(async (req) => {
       reused_plans: reusedPlans,
     });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error('seedYearlyRequiredInServices failed:', error);
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
 });

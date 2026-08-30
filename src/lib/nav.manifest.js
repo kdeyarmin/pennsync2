@@ -15,16 +15,9 @@
  *  adminOnly        – hide from nurses (visible to facility admins + super admin)
  *  superAdminOnly   – platform-level page: hide from facility admins too
  *                     (visible to the super admin only). Implies adminOnly.
- *  access           – staff-discipline gate for NON-admin users (admins always
- *                     see everything). One of:
- *                       "general" (default, omitted) – everyone, incl. office staff
- *                       "patient"  – needs patient access: nurse + social worker +
- *                                    spiritual care (hidden from office staff)
- *                       "nursing"  – nursing tools: nurse only (hidden from office
- *                                    staff, social worker, spiritual care)
- *                     See lib/roles.js (ACCESS / canAccessLevel). Orthogonal to
- *                     adminOnly — an adminOnly page needs no access level since
- *                     only admins (who pass every access level) ever reach it.
+ *  access           – staff-discipline gate for non-admin users: "general"
+ *                     (default), "patient" (patient records), or "nursing"
+ *                     (nursing-only tools). Admins always pass.
  *  breadcrumbParent – page key of the logical parent (builds the crumb chain)
  *  keywords         – extra search terms for the command palette
  *  badge            – runtime badge key resolved in Layout: "messages" | "sms" | "notifications" | "timeOffApprovals"
@@ -35,15 +28,31 @@
 
 import {
   Home, Users, FileText, ClipboardList, Shield, GraduationCap,
-  BarChart3, Settings, Brain, Target, Bell, BookOpen, WifiOff,
+  BarChart3, Settings, Brain, Bell, BookOpen,
   Mail, BookUser, Video, HelpCircle, AlertTriangle,
   Phone, Send, Heart, Database, Lock, Award,
-  Clipboard, Filter, Globe,
-  Monitor, PieChart, Radio, Search, TrendingUp, Upload, UserCheck, Zap, Pen, CalendarDays, ShieldAlert, ShieldCheck
+  Clipboard, ClipboardCheck, FileSearch, Filter, Globe,
+  Monitor, PieChart, Radio, Search, Target, TrendingUp, Upload, UserCheck, Zap, Pen, CalendarDays, ShieldAlert, ShieldCheck
 } from "lucide-react";
-
-import { PAGE_NAMES, REDIRECTS } from "@/routes";
 import { canAccessLevel } from "@/lib/roles";
+
+// NOTE: PAGE_NAMES and REDIRECTS are NOT imported here to avoid a circular
+// dependency (nav.manifest → routes → nav.manifest). Instead, the helpers below
+// accept them as parameters (passed by callers who already have routes loaded),
+// or derive a lazy set on first use from import.meta.glob so the manifest can
+// still guard against unrouted pages.
+
+// Lazy-resolved route set: populated the first time it is needed so the import
+// evaluation order doesn't matter. Uses the same glob pattern as routes.jsx.
+let _routedPages = null;
+function getRoutedPages() {
+  if (_routedPages) return _routedPages;
+  const pageModules = import.meta.glob('../pages/*.jsx', { eager: false });
+  _routedPages = new Set(
+    Object.keys(pageModules).map(k => k.replace('../pages/', '').replace('.jsx', ''))
+  );
+  return _routedPages;
+}
 
 /**
  * The manifest.  Order within the same category determines sidebar order.
@@ -112,6 +121,9 @@ export const NAV_MANIFEST = [
     keywords: ["duplicate", "merge", "deduplicate"],
   },
   {
+    // Care Plans hub (list + drag-and-drop builder tab). Ported back from the
+    // live PENNSync app; the Builder and Automatic pages below are its
+    // non-sidebar children.
     page: "CarePlanManagement",
     label: "Care Plans",
     icon: Target,
@@ -199,6 +211,33 @@ export const NAV_MANIFEST = [
     keywords: ["referral", "intake", "admission", "office"],
   },
   {
+    // Coder/QA follow-up worklist: what each processed referral still needs
+    // from the provider (CMS compliance + PDGM reimbursement) and the
+    // printable provider information-request form.
+    page: "ReferralFollowUp",
+    label: "Referral Follow-Up",
+    icon: ClipboardCheck,
+    category: "Office",
+    adminOnly: true,
+    breadcrumbParent: "ReferralIntake",
+    keywords: ["referral", "follow up", "provider", "request", "compliance", "pdgm", "reimbursement", "coder", "qa"],
+  },
+  {
+    // ADR / audit response workspace: analyze the contractor's ADR or audit
+    // letter into a CMS-grounded documentation checklist, verify the assembled
+    // response packet page by page, and generate the submission-ready packet
+    // (cover page, table of contents, page numbers, red key-item frames).
+    // Office/back-office workflow — admin-only, like ReferralIntake.
+    page: "ADRCenter",
+    label: "ADR & Audit Response",
+    navLabel: "ADR / Audits",
+    icon: FileSearch,
+    category: "Office",
+    adminOnly: true,
+    breadcrumbParent: null,
+    keywords: ["adr", "additional documentation request", "audit", "medicare audit", "mac", "tpe", "rcd", "upic", "smrc", "cert", "rac", "medical review", "denial", "packet", "audit letter"],
+  },
+  {
     // Admin-only incident review queue — staff report on /Incidents, admins
     // triage and resolve here. Lives in the back-office Office section.
     page: "IncidentReview",
@@ -266,8 +305,6 @@ export const NAV_MANIFEST = [
     icon: Filter,
     category: null,
     adminOnly: false,
-    // Clinical screening over patient referral data — keep it off the non-clinical
-    // office-staff surface (its parent ReferralIntake is admin-only anyway).
     access: "patient",
     breadcrumbParent: "ReferralIntake",
     keywords: ["referral", "triage", "priority"],
@@ -674,6 +711,19 @@ export const NAV_MANIFEST = [
     breadcrumbParent: "ReportsAnalytics",
     keywords: ["predictive", "analytics", "ai", "forecast"],
   },
+  {
+    // Admin-only documentation-impact / ROI comparison: how stronger documentation
+    // moves the PDGM case-mix weight + estimated reimbursement (before vs after).
+    // Financial figures are gated to admins via FinancialGate — nurses never see
+    // dollars. Reached via Admin Console / palette (category: null).
+    page: "DocumentationImpact",
+    label: "Documentation Impact",
+    icon: TrendingUp,
+    category: null,
+    adminOnly: true,
+    breadcrumbParent: "ReportsAnalytics",
+    keywords: ["documentation impact", "roi", "value", "reimbursement", "pdgm", "case mix", "revenue uplift", "before after"],
+  },
 
   // ─── Compliance Center (Admin Analytics) ─────────────────────────────────────
   {
@@ -684,6 +734,16 @@ export const NAV_MANIFEST = [
     adminOnly: true,
     breadcrumbParent: null,
     keywords: ["compliance", "audit", "quality", "metrics"],
+  },
+  {
+    page: "FacilityDocumentationRules",
+    label: "Facility Documentation Rules",
+    navLabel: "Facility Doc Rules",
+    icon: ClipboardCheck,
+    category: "Administration",
+    adminOnly: true,
+    breadcrumbParent: "ComplianceCenter",
+    keywords: ["facility rules", "documentation requirements", "state survey", "oxygen spo2", "diabetic blood sugar", "wound measurements", "conditional documentation"],
   },
 
   // ─── System / Admin Config ───────────────────────────────────────────────────
@@ -765,6 +825,16 @@ export const NAV_MANIFEST = [
     badge: "timeOffApprovals",
   },
   {
+    page: "Timesheets",
+    label: "Timesheets",
+    icon: ClipboardList,
+    category: "Tools",
+    adminOnly: false,
+    breadcrumbParent: null,
+    keywords: ["timesheet", "timesheets", "payroll", "hours", "points", "pay period", "pay", "wages", "accountant", "mileage", "reimbursement"],
+    badge: "timesheetApprovals",
+  },
+  {
     // All users can view the on-call schedule; only admins can enter/edit it
     // (enforced in-page and by OnCallShift RLS write rules).
     page: "OnCallSchedule",
@@ -775,15 +845,6 @@ export const NAV_MANIFEST = [
     adminOnly: false,
     breadcrumbParent: null,
     keywords: ["on call", "on-call", "call schedule", "coverage", "holiday", "overnight", "rotation"],
-  },
-  {
-    page: "OfflineMode",
-    label: "Offline Mode",
-    icon: WifiOff,
-    category: "Tools",
-    adminOnly: false,
-    breadcrumbParent: null,
-    keywords: ["offline", "sync", "cache"],
   },
   {
     page: "Help",
@@ -830,19 +891,16 @@ export const NAV_MAP = Object.fromEntries(NAV_MANIFEST.map(e => [e.page, e]));
  * page and it becomes navigable; unroute it and it drops out of nav automatically.
  */
 /** True if navigating to this page renders something (direct route or redirect). */
-export function isLinkablePage(page) {
-  const routed = new Set(PAGE_NAMES);
-  const redirected = new Set(REDIRECTS.map(r => r.from.replace(/^\//, "")));
-  return routed.has(page) || redirected.has(page);
+export function isLinkablePage(page, routedSet, redirectedSet) {
+  const routed = routedSet ?? getRoutedPages();
+  if (routed.has(page)) return true;
+  if (redirectedSet) return redirectedSet.has(page);
+  return false;
 }
 
 /**
  * Build sidebar navCategories array for non-admin users.
  * Dynamic badge values are injected by Layout after this call.
- *
- * `user` filters by staff discipline (see lib/roles.js canAccessLevel): a page
- * tagged access:"patient"/"nursing" is dropped for staff roles that lack it, so
- * office staff never see Patients/OASIS, etc. Admins pass every access level.
  */
 export function buildNavCategories(manifest, user = null) {
   const categoryOrder = [
@@ -850,11 +908,11 @@ export function buildNavCategories(manifest, user = null) {
     "Learning & Resources", "Tools",
   ];
   const map = {};
-  const routed = new Set(PAGE_NAMES);
+  const routed = getRoutedPages();
   for (const entry of manifest) {
     if (!entry.category || entry.adminOnly) continue;
     if (!routed.has(entry.page)) continue;  // never link to an unrouted page
-    if (!canAccessLevel(user, entry.access)) continue;  // staff-discipline gate
+    if (!canAccessLevel(user, entry.access)) continue;
     if (!map[entry.category]) map[entry.category] = [];
     map[entry.category].push({
       name: entry.navLabel ?? entry.label,
@@ -883,7 +941,7 @@ export function buildAdminItems(manifest, isSuperAdmin = false) {
   // surface — see the Administration block in NAV_MANIFEST.
   const categoryOrder = ["Office", "Administration"];
   const map = {};
-  const routed = new Set(PAGE_NAMES);
+  const routed = getRoutedPages();
   for (const entry of manifest) {
     if (!entry.category || !entry.adminOnly) continue;
     if (entry.superAdminOnly && !isSuperAdmin) continue;  // platform-only pages
@@ -924,9 +982,10 @@ export function buildBreadcrumbs(pageName, navMap = NAV_MAP) {
   // Build crumb objects — ancestors are links (but only when they actually
   // resolve to a page, so a crumb never dead-ends on PageNotFound); the last
   // crumb is always plain text.
+  const routed = getRoutedPages();
   return trail.map((entry, i, arr) => ({
     label: entry.label,
-    page: i < arr.length - 1 && isLinkablePage(entry.page) ? entry.page : undefined,
+    page: i < arr.length - 1 && isLinkablePage(entry.page, routed) ? entry.page : undefined,
   }));
 }
 
@@ -937,31 +996,65 @@ export function buildBreadcrumbs(pageName, navMap = NAV_MAP) {
  * avoid duplicate entries for the same destination.
  */
 export function buildPaletteEntries(manifest, isAdmin, isSuperAdmin = false, user = null) {
-  const routed = new Set(PAGE_NAMES);
+  const routed = getRoutedPages();
   return manifest.filter(e => {
     if (!routed.has(e.page)) return false;
     if (e.superAdminOnly && !isSuperAdmin) return false;  // platform-only pages
     if (e.adminOnly && !isAdmin) return false;
-    // Staff-discipline gate so ⌘K can't jump a non-nurse into a clinical page.
     if (!isAdmin && !canAccessLevel(user, e.access)) return false;
     return true;
   });
 }
 
 /**
- * Whether a page should be REACHABLE for a given role view + staff discipline.
- * Used by the route guard so a facility admin (or nurse) can't open a higher-tier
- * page by URL, and a non-nurse can't open a clinical page by URL.
- * `roleView` is one of: 'super_admin' | 'facility_admin' | 'nurse'. Pass the full
- * `user` to also enforce the staff-discipline `access` gate (admins pass all).
+ * Whether a page should be reachable for a given admin role view and staff
+ * discipline. Used by tests and route-level guards to mirror nav filtering.
  */
 export function isPageAllowedForRole(pageName, roleView, user = null) {
   const entry = NAV_MAP[pageName];
-  if (!entry) return true; // unknown/derived pages aren't gated here
+  if (!entry) return true;
   if (entry.superAdminOnly) return roleView === "super_admin";
   if (entry.adminOnly) return roleView === "super_admin" || roleView === "facility_admin";
-  // Non-admin staff-discipline gate (patient / nursing pages).
   return canAccessLevel(user, entry.access);
+}
+
+/**
+ * The sidebar item that should appear "active" while viewing `pageName`.
+ *
+ * Sub/detail pages carry `category: null` (so they stay out of the sidebar) but
+ * declare a `breadcrumbParent`. Walking up that chain to the nearest entry that
+ * IS a sidebar item (category != null) lets a detail page keep its parent
+ * section highlighted — e.g. viewing PatientDetails highlights "Patients",
+ * AgencyAnalytics highlights "Reports & Analytics", UserGuides highlights "Help".
+ * Without this, navigating into any sub-page leaves the nav with no active
+ * indicator and the user loses their place. Cycle-safe.
+ *
+ * Returns the page key to highlight, or null if the page resolves to no sidebar
+ * section.
+ */
+export function navActivePage(pageName, navMap = NAV_MAP) {
+  let cursor = navMap[pageName];
+  const visited = new Set();
+  while (cursor && !visited.has(cursor.page)) {
+    if (cursor.category) return cursor.page;
+    visited.add(cursor.page);
+    cursor = cursor.breadcrumbParent ? navMap[cursor.breadcrumbParent] : null;
+  }
+  return null;
+}
+
+/**
+ * Whether the sidebar / mobile / bottom-nav item for `candidatePage` should
+ * render in its active state while the user is on `currentPageName`. True for an
+ * exact match (so non-sidebar shortcuts like the bottom-nav "Notes" still light
+ * on their own page) OR when `candidatePage` is the nearest sidebar ancestor of
+ * the current sub-page (see navActivePage). Because each page has a single
+ * ancestor chain, at most one sidebar item per section ever matches.
+ */
+export function isNavItemActive(currentPageName, candidatePage, navMap = NAV_MAP) {
+  if (!candidatePage) return false;
+  if (candidatePage === currentPageName) return true;
+  return navActivePage(currentPageName, navMap) === candidatePage;
 }
 
 /**

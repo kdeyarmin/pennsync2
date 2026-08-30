@@ -1,9 +1,13 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { Sparkles, BarChart3 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
+import { isCallerAgencyScoped } from "@/lib/agencyScope";
+import { agencyQueryKey } from '@/lib/agencyRoster';
+import AccessDeniedState from "@/components/ui/AccessDeniedState";
 import { createPageUrl } from "@/utils";
+import { Button } from "@/components/ui/button";
 import PageContainer from "@/components/ui/PageContainer";
 import PageHeader from "@/components/ui/PageHeader";
 import ManagerSkillGapSummary from "@/components/training/ManagerSkillGapSummary";
@@ -14,7 +18,21 @@ const isManager = (user) => user?.role === "admin" || user?.account_type === "ag
 
 export default function ManagerSkillGapDashboard() {
   const { data: currentUser } = useQuery({ queryKey: ["currentUser"], queryFn: () => base44.auth.me() });
-  const { data: users = [] } = useQuery({ queryKey: ["skill-gap-users"], queryFn: () => base44.entities.User.list('-created_date', 500), initialData: [] });
+  // Manager/admin-only: per-nurse skill-gap rankings are management data.
+  // This is the MANAGER skill-gap dashboard — supervisors/managers (isManager)
+  // see it too, not just admins. Gating on isAdminView alone locked the
+  // intended audience out. isManager already includes the admin tiers.
+  const canViewManagement = isManager(currentUser);
+  const { data: users = [] } = useQuery({
+    queryKey: ["skill-gap-users", agencyQueryKey(currentUser)],
+    queryFn: async () => {
+      const _rows = await base44.entities.User.list('-created_date', 500);
+      const { filterUsersByCallerAgency } = await import('@/lib/agencyScope');
+      return filterUsersByCallerAgency(_rows, currentUser);
+    },
+    initialData: [],
+    enabled: canViewManagement && !!currentUser,
+  });
   const { data: assignments = [] } = useQuery({ queryKey: ["skill-gap-assignments"], queryFn: () => base44.entities.TrainingAssignment.list('-created_date', 1000), initialData: [] });
   const { data: attempts = [] } = useQuery({ queryKey: ["skill-gap-attempts"], queryFn: () => base44.entities.TrainingAttempt.list('-submitted_at', 1000), initialData: [] });
   const { data: courses = [] } = useQuery({ queryKey: ["skill-gap-courses"], queryFn: () => base44.entities.TrainingCourse.list('-updated_date', 500), initialData: [] });
@@ -22,9 +40,12 @@ export default function ManagerSkillGapDashboard() {
   const teamMembers = useMemo(() => {
     if (!currentUser) return [];
     if (currentUser.account_type === "super_admin") return users.filter((user) => user.email && user.role !== "admin");
+    if (currentUser.account_type === "agency_admin" && !currentUser.agency_name) return [];
+    const agency = String(currentUser.agency_name || "").trim();
+    const isAgencyScoped = isCallerAgencyScoped(currentUser);
     return users.filter((user) => {
       if (!user.email || user.role === "admin") return false;
-      if (currentUser.account_type === "agency_admin" && currentUser.agency_name) return user.agency_name === currentUser.agency_name;
+      if (isAgencyScoped) return user.agency_name === agency;
       if (currentUser.department && user.department === currentUser.department) return true;
       if (currentUser.location && user.location === currentUser.location) return true;
       if (currentUser.business_line && user.business_line === currentUser.business_line) return true;
@@ -56,14 +77,15 @@ export default function ManagerSkillGapDashboard() {
       areaEntry.courses.add(attempt.course_id);
       if (attempt.pass_fail_result === "failed" || attempt.passed === false) areaEntry.failed += 1;
       (attempt.answers_json || []).forEach((answer) => {
+        const missKey = `${category}__${answer.prompt}`;
+        const missEntry = missedMap.get(missKey) || { category, prompt: answer.prompt, missCount: 0, seen: 0 };
+        // Count every occurrence of the question so missRate = misses / times-seen.
+        missEntry.seen += 1;
         if (answer.correct === false || (answer.points_earned ?? 0) < (answer.points_possible ?? 1)) {
-          const missKey = `${category}__${answer.prompt}`;
-          const missEntry = missedMap.get(missKey) || { category, prompt: answer.prompt, missCount: 0, seen: 0 };
           missEntry.missCount += 1;
-          missEntry.seen += 1;
-          missedMap.set(missKey, missEntry);
           if (!areaEntry.topIssue) areaEntry.topIssue = answer.prompt;
         }
+        missedMap.set(missKey, missEntry);
       });
       areaMap.set(category, areaEntry);
     });
@@ -71,11 +93,23 @@ export default function ManagerSkillGapDashboard() {
     const people = [...peopleMap.values()].map((person) => ({ ...person, averageScore: Math.round(person.scores.reduce((sum, score) => sum + score, 0) / Math.max(person.scores.length, 1)) })).filter((person) => person.averageScore < 80 || person.failedAttempts > 0).sort((a, b) => a.averageScore - b.averageScore);
     stats.followUpCount = people.length;
     const areas = [...areaMap.values()].map((area) => ({ name: area.name, averageScore: Math.round(area.scores.reduce((sum, score) => sum + score, 0) / Math.max(area.scores.length, 1)), failureRate: Math.round((area.failed / Math.max(area.attemptCount, 1)) * 100), attemptCount: area.attemptCount, courseCount: area.courses.size, topIssue: area.topIssue })).sort((a, b) => a.averageScore - b.averageScore);
-    const missedTopics = [...missedMap.values()].map((topic) => ({ ...topic, missRate: Math.min(100, Math.round((topic.missCount / Math.max(topic.seen, 1)) * 100)) })).sort((a, b) => b.missCount - a.missCount).slice(0, 10);
+    const missedTopics = [...missedMap.values()].filter((topic) => topic.missCount > 0).map((topic) => ({ ...topic, missRate: Math.min(100, Math.round((topic.missCount / Math.max(topic.seen, 1)) * 100)) })).sort((a, b) => b.missCount - a.missCount).slice(0, 10);
     return { stats, areas, people, missedTopics, assignmentCount: teamAssignments.length };
   }, [teamMembers, assignments, attempts, courses]);
 
   if (currentUser && !isManager(currentUser)) return <div className="max-w-3xl mx-auto p-6 text-slate-600">This dashboard is available to managers, supervisors, and admins only.</div>;
+
+  if (currentUser && !canViewManagement) {
+    return (
+      <PageContainer>
+        <AccessDeniedState
+          title="Access restricted"
+          description="The Skill Gap Dashboard is available to managers and administrators only."
+          className="py-24"
+        />
+      </PageContainer>
+    );
+  }
 
   return (
     <PageContainer>
@@ -87,9 +121,9 @@ export default function ManagerSkillGapDashboard() {
         favoritePage="ManagerSkillGapDashboard"
         actions={
           <Link to={createPageUrl('AIComplianceInServices')}>
-            <button className="inline-flex items-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+            <Button variant="outline">
               <Sparkles className="w-4 h-4 mr-2" /> Open AI Compliance In-Services
-            </button>
+            </Button>
           </Link>
         }
       />

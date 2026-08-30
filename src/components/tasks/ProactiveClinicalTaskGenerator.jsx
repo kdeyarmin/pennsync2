@@ -48,6 +48,15 @@ export default function ProactiveClinicalTaskGenerator({
   const [dismissedTasks, setDismissedTasks] = useState(() => new Set());
   const [creatingTasks, setCreatingTasks] = useState(false);
 
+  // Clear sticky AI task suggestions when the chart switches patients — otherwise
+  // Approve can write Patient A's suggestions onto Patient B.
+  React.useEffect(() => {
+    setSuggestedTasks([]);
+    setExpandedTasks(new Set());
+    setDismissedTasks(new Set());
+    setAnalyzing(false);
+  }, [patientId]);
+
   const handleAnalyze = React.useCallback(async () => {
     setAnalyzing(true);
     try {
@@ -117,8 +126,13 @@ export default function ProactiveClinicalTaskGenerator({
 
   const handleApproveAll = async () => {
     setCreatingTasks(true);
+    // Create only the tasks the user still sees (exclude dismissed ones). A task
+    // dismissed just before clicking still lingers in suggestedTasks during the
+    // 300ms removal delay, so iterating suggestedTasks would re-create it and
+    // over-count against the button's "Approve All (N)" label.
+    const tasksToCreate = suggestedTasks.filter(task => !dismissedTasks.has(task));
     try {
-      for (const task of suggestedTasks) {
+      for (const task of tasksToCreate) {
         await base44.entities.Task.create({
           patient_id: patientId,
           title: task.title,
@@ -132,12 +146,13 @@ export default function ProactiveClinicalTaskGenerator({
           ai_reason: task.clinical_rationale,
           status: 'pending'
         });
+
+        setSuggestedTasks(prev => prev.filter(t => t !== task));
       }
 
-      setSuggestedTasks([]);
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       onTasksCreated?.();
-      toast.success(`Successfully created ${suggestedTasks.length} tasks!`);
+      toast.success(`Successfully created ${tasksToCreate.length} tasks!`);
     } catch (error) {
       console.error('Failed to create tasks:', error);
       toast.error('Some tasks failed to create. Please try again.');
@@ -300,7 +315,7 @@ export default function ProactiveClinicalTaskGenerator({
                       <Button
                         size="sm"
                         onClick={() => handleApproveTask(task)}
-                        className="flex-1 bg-green-600 hover:bg-green-700"
+                        className="flex-1"
                       >
                         <CheckCircle2 className="w-3 h-3 mr-1" />
                         Approve

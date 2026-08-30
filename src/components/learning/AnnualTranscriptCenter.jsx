@@ -1,15 +1,17 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { Award, Printer, Search } from "lucide-react";
 import { base44 } from "@/api/base44Client";
-import { generateTrainingCertificate } from "@/functions/generateTrainingCertificate";
+import { createCertificateBlobUrl } from "@/components/learning/certificatePdf";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import LoadingState from "@/components/ui/LoadingState";
 import { HideWhenEmbedded } from "@/components/ui/embeddedPage";
+import { formatLocalDate } from "@/lib/dateLocal";
 
-const formatDate = (value) => value ? new Date(value).toLocaleDateString() : "—";
+const formatDate = (value) => formatLocalDate(value) || "—";
 
 export default function AnnualTranscriptCenter() {
   const currentYear = new Date().getFullYear();
@@ -30,24 +32,20 @@ export default function AnnualTranscriptCenter() {
     ? certificates.filter(c => c.course_title?.toLowerCase().includes(searchQuery.toLowerCase()))
     : certificates;
 
-  const createBlobUrl = async (certificate) => {
-    const response = await generateTrainingCertificate({
-      moduleName: certificate.course_title,
-      completionDate: certificate.completion_date || certificate.issued_at,
-      score: certificate.score
-    });
-    const blob = new Blob([response.data], { type: 'application/pdf' });
-    return window.URL.createObjectURL(blob);
-  };
-
   const printCertificate = async (certificate) => {
-    const url = await createBlobUrl(certificate);
+    const url = await createCertificateBlobUrl(certificate);
     const printWindow = window.open(url, '_blank');
-    setTimeout(() => printWindow?.print(), 600);
+    // Popup blockers and installed-app webviews (iOS standalone/WKWebView)
+    // return null — surface a hint instead of failing silently.
+    if (!printWindow) {
+      toast.error('Unable to open the certificate. Please allow pop-ups, or use Download instead.');
+      return;
+    }
+    setTimeout(() => printWindow.print(), 600);
   };
 
   const downloadCertificate = async (certificate) => {
-    const url = await createBlobUrl(certificate);
+    const url = await createCertificateBlobUrl(certificate);
     const anchor = document.createElement('a');
     anchor.href = url;
     anchor.download = `${certificate.course_title.replace(/\s+/g, '_')}_annual_certificate.pdf`;
@@ -58,9 +56,9 @@ export default function AnnualTranscriptCenter() {
   return (
     <div className="max-w-5xl mx-auto space-y-6">
       <HideWhenEmbedded>
-        <div className="rounded-3xl bg-gradient-to-r from-slate-900 to-indigo-700 text-white p-6 shadow-xl">
+        <div className="page-header-gradient">
           <h1 className="text-2xl sm:text-3xl font-bold mb-2">Annual Education Transcript</h1>
-          <p className="text-indigo-100">All completed annual mandatory education and certificates for {currentYear}.</p>
+          <p className="relative text-navy-100">All completed annual mandatory education and certificates for {currentYear}.</p>
         </div>
       </HideWhenEmbedded>
 

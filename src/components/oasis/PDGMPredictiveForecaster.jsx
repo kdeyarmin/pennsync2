@@ -34,8 +34,9 @@ export default function PDGMPredictiveForecaster({ pdgmData, analysisResults, cu
   const { data: agencySettings } = useQuery({
     queryKey: ['agencySettings'],
     queryFn: async () => {
-      const result = await base44.entities.AgencySettings.list();
-      return result[0] || null;
+      const me = await base44.auth.me().catch(() => null);
+      const { fetchCallerAgencySettings } = await import("@/lib/agencySettings");
+      return fetchCallerAgencySettings(me?.agency_name);
     }
   });
 
@@ -46,7 +47,7 @@ export default function PDGMPredictiveForecaster({ pdgmData, analysisResults, cu
 
     try {
       const result = await invokeLLM({
-        model: "claude_opus_4_8",
+        model: "automatic",
         prompt: `You are a PDGM financial forecasting expert. Generate predictive reimbursement scenarios based on potential documentation improvements.
 
 CURRENT OASIS DATA:
@@ -219,7 +220,7 @@ Return JSON:
 
       // Get AI analysis of the grouping changes
       const analysis = await invokeLLM({
-        model: "claude_opus_4_8",
+        model: "automatic",
         prompt: `Analyze how these functional score changes impact PDGM grouping and payment.
 
 ORIGINAL SCORES:
@@ -389,7 +390,6 @@ Return JSON:
                   initSimulationScores();
                 }
               }}
-              className={simulationMode ? "bg-orange-600 hover:bg-orange-700" : ""}
             >
               <Sliders className="w-4 h-4 mr-2" />
               {simulationMode ? "Exit" : "Simulate"} Changes
@@ -461,7 +461,7 @@ Return JSON:
             <Button
               onClick={runSimulation}
               disabled={isSimulating || !simulatedScores}
-              className="w-full bg-orange-600 hover:bg-orange-700"
+              className="w-full"
             >
               {isSimulating ? (
                 <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Calculating Impact...</>

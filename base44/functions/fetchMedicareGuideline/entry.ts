@@ -1,12 +1,31 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
+// <<<BEGIN SHARED HELPER: requireActiveUser — generated, edit base44/_shared/backendHelpers.mjs>>>
+const isDeactivatedUser = (u) => !!u && u.is_active === false;
+const DEACTIVATED_USER_RESPONSE = () => Response.json(
+  { error: 'Unauthorized - account is deactivated' },
+  { status: 403 },
+);
+// <<<END SHARED HELPER: requireActiveUser>>>
+
+// <<<BEGIN SHARED HELPER: isAdminLike — generated, edit base44/_shared/backendHelpers.mjs>>>
+const isAdminLike = (u) => !!u && (
+  u.role === 'admin' || u.account_type === 'agency_admin' ||
+  u.account_type === 'super_admin'
+);
+// <<<END SHARED HELPER: isAdminLike>>>
+
+
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     
-    // Verify admin access
-    const user = await base44.auth.me();
-    if (!user || user.role !== 'admin') {
+    // Verify admin access (an unauthenticated session must get a 401, not a
+    // 500 from an uncaught auth.me() rejection)
+    const user = await base44.auth.me().catch(() => null);
+    if (isDeactivatedUser(user)) return DEACTIVATED_USER_RESPONSE();
+    if (!user || !isAdminLike(user)) {
       return Response.json({ error: 'Unauthorized - Admin access required' }, { status: 403 });
     }
 
@@ -14,6 +33,21 @@ Deno.serve(async (req) => {
 
     if (!url) {
       return Response.json({ error: 'URL is required' }, { status: 400 });
+    }
+
+    // Validate the URL: must be a public https guideline page. Rejecting
+    // non-https / internal hosts stops a typo or crafted value from having the
+    // proxy fetch an internal/metadata address and storing its content as a
+    // "Medicare guideline".
+    let parsedUrl;
+    try { parsedUrl = new URL(String(url)); } catch { parsedUrl = null; }
+    const host = parsedUrl?.hostname?.toLowerCase() || '';
+    const isInternalHost = ['localhost', '0.0.0.0', '127.0.0.1', '::1', '169.254.169.254'].includes(host)
+      || host.endsWith('.internal') || host.endsWith('.local')
+      || /^(10|127)\./.test(host) || /^169\.254\./.test(host) || /^192\.168\./.test(host)
+      || /^172\.(1[6-9]|2\d|3[01])\./.test(host);
+    if (!parsedUrl || parsedUrl.protocol !== 'https:' || isInternalHost) {
+      return Response.json({ error: 'A public https URL is required' }, { status: 400 });
     }
 
     // Fetch the webpage content
@@ -30,7 +64,9 @@ Deno.serve(async (req) => {
     });
 
     if (!fetchResult.ok) {
-      return Response.json({ error: 'Failed to fetch content from URL' }, { status: 500 });
+      // Client-supplied URL that couldn't be fetched is an upstream/gateway
+      // condition, not a server fault — return 502 so monitoring isn't polluted.
+      return Response.json({ error: 'Failed to fetch content from URL' }, { status: 502 });
     }
 
     const websiteData = await fetchResult.json();
@@ -58,7 +94,7 @@ Extract and return JSON with:
 }`;
 
     const analysis = await base44.integrations.Core.InvokeLLM({
-      model: "claude_opus_4_8",
+      model: "automatic",
       prompt: analysisPrompt,
       response_json_schema: {
         type: "object",
@@ -81,7 +117,7 @@ Extract and return JSON with:
     ].filter((k, i, arr) => arr.indexOf(k) === i); // Remove duplicates
 
     // Check if guideline with this URL already exists
-    const existing = await base44.asServiceRole.entities.MedicareGuideline.filter({ url: url });
+    const existing = await base44.asServiceRole.entities.MedicareGuideline.filter({ url: url }, undefined, 5000);
     
     const guidelineData = {
       title: analysis.title,
@@ -121,7 +157,7 @@ Extract and return JSON with:
   } catch (error) {
     console.error('Error fetching Medicare guideline:', error);
     return Response.json({ 
-      error: error.message,
+      error: 'Internal server error',
       details: 'Failed to fetch and process Medicare guideline'
     }, { status: 500 });
   }

@@ -1,5 +1,14 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
+import { useAgencyScopedQuery } from '@/hooks/useAgencyScopedQuery';
+import { useScopedPatients } from '@/hooks/useScopedPatients';
+import { isAdminView } from "@/lib/roles";
+import { submitIncidentReport } from "@/functions/submitIncidentReport";
+import { transitionIncident } from "@/functions/updateIncident";
+import {
+  canTransitionIncidentStatus,
+  incidentNeedsCorrectiveAction,
+} from "@/components/incident/incidentLifecycle";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import EmptyState from "@/components/ui/empty-state";
@@ -35,9 +44,39 @@ import {
   Calendar as CalendarIcon
 } from "lucide-react";
 import { toast } from "sonner";
-import { format, parseISO, subMonths } from "date-fns";
+import { format, subMonths } from "date-fns";
+import { parseLocalDate, formatLocalDate } from "@/lib/dateLocal";
 import PageContainer from "@/components/ui/PageContainer";
 import PageHeader from "@/components/ui/PageHeader";
+import { isSafeExternalUrl, openExternalUrl } from "@/components/utils/security";
+
+const STATUS_OPTIONS = [
+  { value: "reported", label: "Reported" },
+  { value: "under_review", label: "Under Review" },
+  { value: "corrective_action", label: "Corrective Action" },
+  { value: "resolved", label: "Resolved" },
+];
+
+/**
+ * Only offer transitions this dropdown can actually complete. It sends a bare
+ * to_status, so it cannot satisfy the corrective-action requirement -- offering
+ * "Resolved" on a high-severity or state-reportable incident with no plan on
+ * file guarantees a 400. Those go through the CAP-aware review queue instead.
+ * Backward moves are excluded because the lifecycle graph rejects them.
+ */
+function allowedStatusOptions(incident) {
+  const from = incident.status || "reported";
+  return STATUS_OPTIONS.filter((option) => {
+    if (option.value === from) return true;
+    if (!canTransitionIncidentStatus(from, option.value)) return false;
+    if (
+      option.value === "resolved"
+      && incidentNeedsCorrectiveAction(incident)
+      && !String(incident.corrective_action_plan || "").trim()
+    ) return false;
+    return true;
+  });
+}
 
 export default function IncidentReportingModule() {
   const [showReportDialog, setShowReportDialog] = useState(false);
@@ -63,78 +102,98 @@ export default function IncidentReportingModule() {
     queryFn: () => base44.auth.me(),
   });
 
-  const { data: myPatients = [] } = useQuery({
-    // Key must include the email the queryFn filters by, otherwise a session
-    // user change keeps serving the previous nurse's cached patient list.
-    queryKey: ['myPatients', currentUser?.email],
-    queryFn: async () => {
-      const allPatients = await base44.entities.Patient.list('-updated_date', 2000);
-      return allPatients.filter(p => p.assigned_nurses?.includes(currentUser?.email));
-    },
-    enabled: !!currentUser,
-    initialData: [],
+  // Narrowing to the caller's own charts happens in `select`, so the fetched
+  // roster stays identical to every other 2000-row consumer and shares its
+  // cache entry. The email no longer needs to be in the key: `select` runs per
+  // render against whoever is signed in now, rather than being baked into a
+  // cached result that a session change would keep serving.
+  // useCallback, not an inline arrow: React Query memoizes `select` by
+  // reference, so a fresh arrow each render re-filters all 2000 rows every render.
+  const selectMine = useCallback(
+    (rows) => rows.filter(p => p.assigned_nurses?.includes(currentUser?.email)),
+    [currentUser?.email],
+  );
+
+  const { data: myPatients = [] } = useScopedPatients({
+    sort: '-updated_date',
+    limit: 2000,
+    select: selectMine,
   });
 
-  const { data: incidents = [], _isLoading } = useQuery({
+  const { data: incidents = [], _isLoading } = useAgencyScopedQuery({
     queryKey: ['incidents'],
-    queryFn: () => base44.entities.Incident.list('-created_date', 200),
+    fetch: () => base44.entities.Incident.list('-created_date', 5000),
     initialData: [],
   });
 
-  const { data: patients = [] } = useQuery({
-    queryKey: ['allPatients'],
-    queryFn: () => base44.entities.Patient.list('-updated_date', 2000),
-    initialData: [],
-  });
+  const { data: patients = [] } = useScopedPatients({ sort: '-updated_date', limit: 2000 });
 
   const createIncidentMutation = useMutation({
     mutationFn: async (incidentData) => {
-      const incident = await base44.entities.Incident.create(incidentData);
-      
-      // Send automated alerts to clinical managers
-      const managers = await base44.entities.User.filter({ role: 'admin' });
-      const patient = patients.find(p => p.id === incidentData.patient_id);
-      
-      if (managers.length > 0 && incidentData.severity === 'high') {
-        await Promise.all(
-          managers.map(manager =>
-            base44.integrations.Core.SendEmail({
-              to: manager.email,
-              subject: `🚨 High Severity Incident Reported - ${incidentData.incident_type}`,
-              body: `A high severity incident has been reported:
-
-Patient: ${patient?.first_name} ${patient?.last_name}
-Incident Type: ${incidentData.incident_type}
-Date: ${incidentData.incident_date} at ${incidentData.incident_time}
-Reported By: ${currentUser?.full_name}
-
-Details: ${incidentData.report}
-
-Please review this incident in the Incident Reporting Dashboard.`
-            })
-          )
-        );
-      }
-      
-      return incident;
+      // Route through the service-role backend: it creates the incident AND (for
+      // high severity) looks up admins and notifies them server-side. A client
+      // User.filter is blocked by RLS for non-admin reporters, so the manager
+      // alert never fired for nurses when done here.
+      const highSeverity = incidentData.severity === 'high';
+      const res = await submitIncidentReport({
+        patient_id: incidentData.patient_id,
+        patient_name: incidentData.patient_name,
+        incident_type: incidentData.incident_type,
+        incident_name: incidentData.incident_name,
+        incident_date: incidentData.incident_date,
+        incident_time: incidentData.incident_time,
+        severity: incidentData.severity,
+        details: incidentData.details,
+        report: incidentData.report,
+        photo_urls: incidentData.photo_urls,
+        physician_notified: incidentData.physician_notified,
+        // Send what the reporter actually checked — omitting it left the stored
+        // compliance flag derived from severity alone, contradicting the form.
+        office_notified: incidentData.office_notified,
+        immediate_alert: highSeverity,
+      });
+      const data = res?.data || res || {};
+      return { incident: data.incident, managersNotified: highSeverity };
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ['incidents'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-incidents'] });
+      queryClient.invalidateQueries({ queryKey: ['my-incidents'] });
+      queryClient.invalidateQueries({ queryKey: ['incidentsForKPI'] });
+      queryClient.invalidateQueries({ queryKey: ['all-incidents'] });
       setShowReportDialog(false);
       resetForm();
-      toast.success("Incident reported successfully. Clinical managers have been notified.");
+      // Only claim managers were notified when the alert actually went out.
+      toast.success(
+        result?.managersNotified
+          ? "Incident reported successfully. Clinical managers have been notified."
+          : "Incident reported successfully."
+      );
     },
     onError: () => {
       toast.error("Failed to submit incident report");
     }
   });
 
+  // This dropdown set `status` directly, which skipped the lifecycle graph and
+  // the corrective-action requirement entirely. Route it through the function
+  // so an invalid or unaccompanied transition is refused server-side.
   const updateIncidentMutation = useMutation({
-    mutationFn: ({ id, updates }) => base44.entities.Incident.update(id, updates),
+    mutationFn: ({ id, updates }) => {
+      // Fail here rather than sending to_status: undefined and surfacing the
+      // server's generic 400 to a user who picked a status.
+      if (!updates?.status) throw new Error('No status selected for this incident.');
+      return transitionIncident({ incidentId: id, toStatus: updates.status });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['incidents'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-incidents'] });
+      queryClient.invalidateQueries({ queryKey: ['my-incidents'] });
+      queryClient.invalidateQueries({ queryKey: ['incidentsForKPI'] });
+      queryClient.invalidateQueries({ queryKey: ['all-incidents'] });
       toast.success("Incident status updated");
     },
+    onError: (e) => toast.error(e?.message || "Couldn't update the incident status"),
   });
 
   const handlePhotoUpload = async (e) => {
@@ -235,9 +294,9 @@ Please review this incident in the Incident Reporting Dashboard.`
   // Calculate statistics
   const oneMonthAgo = subMonths(new Date(), 1);
   const last30Days = incidents.filter(i => {
-    if (!i.incident_date) return false; // nullable field — don't parseISO(undefined)
-    const incidentDate = parseISO(i.incident_date);
-    return !isNaN(incidentDate) && incidentDate >= oneMonthAgo;
+    if (!i.incident_date) return false;
+    const incidentDate = parseLocalDate(i.incident_date);
+    return incidentDate && incidentDate >= oneMonthAgo;
   });
 
   const byType = incidents.reduce((acc, inc) => {
@@ -259,19 +318,20 @@ Please review this incident in the Incident Reporting Dashboard.`
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'reported': return 'bg-amber-500';
-      case 'under_review': return 'bg-blue-500';
-      case 'resolved': return 'bg-emerald-500';
-      default: return 'bg-slate-500';
+      case 'reported': return 'bg-amber-100 text-amber-800 border border-amber-200';
+      case 'under_review': return 'bg-blue-100 text-blue-800 border border-blue-200';
+      case 'corrective_action': return 'bg-purple-100 text-purple-800 border border-purple-200';
+      case 'resolved': return 'bg-emerald-100 text-emerald-800 border border-emerald-200';
+      default: return 'bg-slate-100 text-slate-800 border border-slate-200';
     }
   };
 
   const getSeverityColor = (severity) => {
     switch (severity) {
-      case 'high': return 'bg-red-600 text-white';
-      case 'medium': return 'bg-orange-500 text-white';
-      case 'low': return 'bg-amber-500 text-white';
-      default: return 'bg-slate-500 text-white';
+      case 'high': return 'bg-red-100 text-red-800 border border-red-200';
+      case 'medium': return 'bg-orange-100 text-orange-800 border border-orange-200';
+      case 'low': return 'bg-amber-100 text-amber-800 border border-amber-200';
+      default: return 'bg-slate-100 text-slate-800 border border-slate-200';
     }
   };
 
@@ -477,7 +537,7 @@ Please review this incident in the Incident Reporting Dashboard.`
                     </div>
                     {uploadedPhotos.length > 0 && (
                       <div className="mt-3 grid grid-cols-3 gap-2">
-                        {uploadedPhotos.map((url, idx) => (
+                        {uploadedPhotos.filter((url) => isSafeExternalUrl(url) || (typeof url === 'string' && url.startsWith('blob:'))).map((url, idx) => (
                           <div key={idx} className="relative group">
                             <img src={url} alt={`Upload ${idx + 1}`} className="w-full h-24 object-cover rounded-lg" />
                             <button
@@ -582,7 +642,7 @@ Please review this incident in the Incident Reporting Dashboard.`
       </Card>
 
       {/* State Reportable Events — admin follow-up folder */}
-      {currentUser?.role === 'admin' && (
+      {isAdminView(currentUser) && (
         <Card className="mb-6 border-red-200">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -614,7 +674,7 @@ Please review this incident in the Incident Reporting Dashboard.`
                         <div className="flex items-center gap-4 mt-2 text-xs text-slate-500 flex-wrap">
                           <span className="flex items-center gap-1">
                             <CalendarIcon className="w-3 h-3" />
-                            {incident.incident_date ? format(parseISO(incident.incident_date), 'MMM d, yyyy') : '—'}
+                            {incident.incident_date ? (formatLocalDate(incident.incident_date, { month: 'short', day: 'numeric', year: 'numeric' }) || '—') : '—'}
                             {incident.incident_time ? ` at ${incident.incident_time}` : ''}
                           </span>
                           <span>Reported by: {incident.created_by}</span>
@@ -622,12 +682,12 @@ Please review this incident in the Incident Reporting Dashboard.`
                             <span className="text-emerald-700">Admins alerted</span>
                           )}
                         </div>
-                        {incident.state_reportable_pdf_url && (
+                        {incident.state_reportable_pdf_url && isSafeExternalUrl(incident.state_reportable_pdf_url) && (
                           <a
                             href={incident.state_reportable_pdf_url}
                             target="_blank"
-                            rel="noreferrer"
-                            className="inline-flex items-center gap-1 mt-2 text-sm text-blue-600 underline"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 mt-2 text-sm text-blue-600 underline hover:text-blue-700"
                           >
                             <FileText className="w-4 h-4" /> View PDF report
                           </a>
@@ -642,9 +702,9 @@ Please review this incident in the Incident Reporting Dashboard.`
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="reported">Reported</SelectItem>
-                            <SelectItem value="under_review">Under Review</SelectItem>
-                            <SelectItem value="resolved">Resolved</SelectItem>
+                            {allowedStatusOptions(incident).map((option) => (
+                              <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                       )}
@@ -684,25 +744,25 @@ Please review this incident in the Incident Reporting Dashboard.`
                     <div className="flex items-center gap-4 mt-2 text-xs text-slate-500">
                       <span className="flex items-center gap-1">
                         <CalendarIcon className="w-3 h-3" />
-                        {incident.incident_date ? format(parseISO(incident.incident_date), 'MMM d, yyyy') : '—'} at {incident.incident_time || '—'}
+                        {incident.incident_date ? (formatLocalDate(incident.incident_date, { month: 'short', day: 'numeric', year: 'numeric' }) || '—') : '—'} at {incident.incident_time || '—'}
                       </span>
                       <span>Reported by: {incident.created_by}</span>
                     </div>
                     {incident.photo_urls?.length > 0 && (
                       <div className="mt-3 flex gap-2">
-                        {incident.photo_urls.map((url, idx) => (
+                        {incident.photo_urls.filter((url) => isSafeExternalUrl(url)).map((url, idx) => (
                           <img
                             key={idx}
                             src={url}
                             alt={`Incident photo ${idx + 1}`}
                             className="w-20 h-20 object-cover rounded-lg cursor-pointer hover:opacity-80"
-                            onClick={() => window.open(url, '_blank')}
+                            onClick={() => openExternalUrl(url)}
                           />
                         ))}
                       </div>
                     )}
                   </div>
-                  {currentUser?.role === 'admin' && incident.status !== 'resolved' && (
+                  {isAdminView(currentUser) && incident.status !== 'resolved' && (
                     <Select
                       value={incident.status}
                       onValueChange={(newStatus) => updateIncidentMutation.mutate({
@@ -714,9 +774,9 @@ Please review this incident in the Incident Reporting Dashboard.`
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="reported">Reported</SelectItem>
-                        <SelectItem value="under_review">Under Review</SelectItem>
-                        <SelectItem value="resolved">Resolved</SelectItem>
+                        {allowedStatusOptions(incident).map((option) => (
+                          <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   )}

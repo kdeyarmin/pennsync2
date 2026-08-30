@@ -1,5 +1,7 @@
 import { useState, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
+import { agencyQueryKey } from '@/lib/agencyRoster';
+import { isAdminView } from "@/lib/roles";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -44,6 +46,25 @@ import { format, subDays } from "date-fns";
 import PerformanceMetricsCard from "../components/analytics/PerformanceMetricsCard";
 import UserPerformanceTable from "../components/analytics/UserPerformanceTable";
 
+/**
+ * Build a "rows within [startDate, endDate] for this user" filter.
+ *
+ * The bounds are computed ONCE per selector rather than inside the per-row
+ * predicate, where `new Date(startDate + 'T00:00:00')` and its endDate twin were
+ * rebuilt for every row — 20,000 throwaway Dates per 10,000-row pass, on each of
+ * three queries. Local-midnight parsing is preserved, so a date-only bound is
+ * still compared on the local calendar day rather than in UTC.
+ */
+function rangeSelector(startDate, endDate, selectedUser, dateOf, emailOf) {
+  const from = new Date(`${startDate}T00:00:00`);
+  const to = new Date(`${endDate}T23:59:59.999`);
+  return (data) => data.filter((row) => {
+    const at = new Date(dateOf(row));
+    if (!(at >= from && at <= to)) return false;
+    return selectedUser === 'all' || emailOf(row) === selectedUser;
+  });
+}
+
 export default function AnalyticsDashboard() {
   const [dateRange, setDateRange] = useState("30");
   const [selectedUser, setSelectedUser] = useState("all");
@@ -55,14 +76,34 @@ export default function AnalyticsDashboard() {
     queryFn: () => base44.auth.me(),
   });
 
-  const isAdmin = currentUser?.role === 'admin';
+  const isAdmin = isAdminView(currentUser);
 
   // Fetch all users for admin
   const { data: allUsers = [] } = useQuery({
-    queryKey: ['allUsers'],
-    queryFn: () => base44.entities.User.list(),
+    queryKey: ['allUsers', 10000, agencyQueryKey(currentUser)],
+    queryFn: async () => {
+      const _rows = await base44.entities.User.list('-created_date', 10000);
+      const { filterUsersByCallerAgency } = await import('@/lib/agencyScope');
+      return filterUsersByCallerAgency(_rows, currentUser);
+    },
     enabled: isAdmin,
   });
+
+  // Memoized so the reference is stable between renders: React Query compares
+  // `select` by identity, so an inline arrow re-filters all 10,000 rows on every
+  // render. Three of these ran per render before.
+  const selectNoteConversions = useMemo(
+    () => rangeSelector(startDate, endDate, selectedUser, (nc) => nc.created_date, (nc) => nc.nurse_email),
+    [startDate, endDate, selectedUser],
+  );
+  const selectComplianceAudits = useMemo(
+    () => rangeSelector(startDate, endDate, selectedUser, (ca) => ca.audit_date || ca.created_date, (ca) => ca.nurse_email),
+    [startDate, endDate, selectedUser],
+  );
+  const selectUserActivities = useMemo(
+    () => rangeSelector(startDate, endDate, selectedUser, (ua) => ua.created_date, (ua) => ua.user_email),
+    [startDate, endDate, selectedUser],
+  );
 
   // Fetch note conversions
   const { data: noteConversions = [] } = useQuery({
@@ -70,65 +111,51 @@ export default function AnalyticsDashboard() {
     // Without a limit Base44 returns only the 50 newest rows, so any selected date
     // range older than those 50 showed zero/partial data and skewed the averages.
     queryFn: () => base44.entities.NoteConversion.list('-created_date', 10000),
-    select: (data) => data.filter(nc => {
-      const ncDate = new Date(nc.created_date);
-      const inDateRange = ncDate >= new Date(startDate) && ncDate <= new Date(endDate + 'T23:59:59.999');
-      const userMatch = selectedUser === 'all' || nc.nurse_email === selectedUser;
-      return inDateRange && userMatch;
-    }),
+    select: selectNoteConversions,
   });
 
   // Fetch compliance audits
   const { data: complianceAudits = [] } = useQuery({
     queryKey: ['complianceAudits', selectedUser, startDate, endDate],
     queryFn: () => base44.entities.ComplianceAudit.list('-audit_date', 10000),
-    select: (data) => data.filter(ca => {
-      const caDate = new Date(ca.audit_date || ca.created_date);
-      const inDateRange = caDate >= new Date(startDate) && caDate <= new Date(endDate + 'T23:59:59.999');
-      const userMatch = selectedUser === 'all' || ca.nurse_email === selectedUser;
-      return inDateRange && userMatch;
-    }),
+    select: selectComplianceAudits,
   });
 
   // Fetch user activities
   const { data: userActivities = [] } = useQuery({
     queryKey: ['userActivities', selectedUser, startDate, endDate],
     queryFn: () => base44.entities.UserActivity.list('-created_date', 10000),
-    select: (data) => data.filter(ua => {
-      const uaDate = new Date(ua.created_date);
-      const inDateRange = uaDate >= new Date(startDate) && uaDate <= new Date(endDate + 'T23:59:59.999');
-      const userMatch = selectedUser === 'all' || ua.user_email === selectedUser;
-      return inDateRange && userMatch;
-    }),
+    select: selectUserActivities,
   });
+
+  // Average only rows that actually carry the metric — treating a missing
+  // value as 0 halved the averages whenever legacy rows lacked the field.
+  const avgOf = (rows, pick) => {
+    const vals = rows.map(pick).filter((v) => Number.isFinite(v));
+    return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : 0;
+  };
 
   // Calculate key metrics
   const metrics = useMemo(() => {
     // Documentation time metrics
-    const avgDocTime = noteConversions.length > 0
-      ? noteConversions.reduce((sum, nc) => sum + (nc.conversion_time_ms || 0), 0) / noteConversions.length / 1000 / 60
-      : 0;
+    const avgDocTime = avgOf(noteConversions, (nc) => nc.conversion_time_ms) / 1000 / 60;
 
     // Compliance score metrics
-    const avgComplianceScore = complianceAudits.length > 0
-      ? complianceAudits.reduce((sum, ca) => sum + (ca.compliance_score || 0), 0) / complianceAudits.length
-      : 0;
+    const avgComplianceScore = avgOf(complianceAudits, (ca) => ca.compliance_score);
 
     // AI utilization
     const aiActions = userActivities.filter(ua => 
       ['note_enhanced', 'note_ai_generated', 'template_generated'].includes(ua.action)
     );
-    const totalActions = userActivities.filter(ua => 
-      ['visit_document', 'note_enhanced', 'note_ai_generated'].includes(ua.action)
+    const totalActions = userActivities.filter(ua =>
+      ['visit_document', 'note_enhanced', 'note_ai_generated', 'template_generated'].includes(ua.action)
     );
     const aiUtilizationRate = totalActions.length > 0 
       ? (aiActions.length / totalActions.length) * 100 
       : 0;
 
     // Quality metrics
-    const avgQualityScore = noteConversions.length > 0
-      ? noteConversions.reduce((sum, nc) => sum + (nc.quality_score || 0), 0) / noteConversions.length
-      : 0;
+    const avgQualityScore = avgOf(noteConversions, (nc) => nc.quality_score);
 
     // Compliance improvement metrics - safely handle undefined fields
     const conversionsWithCompliance = noteConversions.filter(nc => 
@@ -183,8 +210,8 @@ export default function AnalyticsDashboard() {
   // Prepare trend data
   const trendData = useMemo(() => {
     const days = {};
-    const start = new Date(startDate);
-    const end = new Date(endDate);
+    const start = new Date(startDate + 'T00:00:00');
+    const end = new Date(endDate + 'T00:00:00');
     
     for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
       const dateKey = format(d, 'yyyy-MM-dd');
@@ -217,7 +244,7 @@ export default function AnalyticsDashboard() {
         if (['note_enhanced', 'note_ai_generated', 'template_generated'].includes(ua.action)) {
           days[dateKey].aiUsage++;
         }
-        if (['visit_document', 'note_enhanced', 'note_ai_generated'].includes(ua.action)) {
+        if (['visit_document', 'note_enhanced', 'note_ai_generated', 'template_generated'].includes(ua.action)) {
           days[dateKey].totalActions++;
         }
       }
@@ -278,7 +305,7 @@ export default function AnalyticsDashboard() {
         if (['note_enhanced', 'note_ai_generated', 'template_generated'].includes(ua.action)) {
           userStats[ua.user_email].aiUsageCount++;
         }
-        if (['visit_document', 'note_enhanced', 'note_ai_generated'].includes(ua.action)) {
+        if (['visit_document', 'note_enhanced', 'note_ai_generated', 'template_generated'].includes(ua.action)) {
           userStats[ua.user_email].totalActions++;
         }
       }
@@ -432,7 +459,7 @@ export default function AnalyticsDashboard() {
         favoritePage="AnalyticsDashboard"
         actions={
           <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-            <Button onClick={handleExportPDF} className="bg-blue-600 hover:bg-blue-700 min-h-[44px] w-full sm:w-auto">
+            <Button onClick={handleExportPDF} className="min-h-[44px] w-full sm:w-auto">
               <Download className="w-4 h-4 mr-2" />
               <span className="hidden sm:inline">Export PDF</span>
               <span className="sm:hidden">PDF</span>
@@ -504,6 +531,7 @@ export default function AnalyticsDashboard() {
           change={metrics.timeChange}
           icon={Clock}
           color="blue"
+          invertTrend
         />
         <PerformanceMetricsCard
           title="Quality Score"

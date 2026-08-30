@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
+import { isWithinLastDays, toLocalISODate } from "@/lib/dateLocal";
 import { useAICall } from "@/hooks/useAICall";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,7 +21,6 @@ import { toast } from 'sonner';
 export default function InterdisciplinaryTeamCoordinator({ 
   patientId,
   patientData,
-  carePlans,
   recentVisits,
   incidents,
   alerts,
@@ -38,23 +38,15 @@ export default function InterdisciplinaryTeamCoordinator({
       const complexityIndicators = {
         diagnoses_count: [patientData.primary_diagnosis, ...(patientData.secondary_diagnoses || [])].filter(Boolean).length,
         medications_count: patientData.current_medications?.length || 0,
-        active_care_plans: carePlans?.filter(cp => cp.status === 'active').length || 0,
-        recent_incidents: incidents?.filter(i => {
-          const incidentDate = new Date(i.incident_date);
-          const daysSince = (new Date() - incidentDate) / (1000 * 60 * 60 * 24);
-          return daysSince <= 30;
-        }).length || 0,
+        recent_incidents: incidents?.filter(i => isWithinLastDays(i.incident_date, 30)).length || 0,
         active_alerts: alerts?.length || 0,
-        recent_hospitalizations: incidents?.filter(i => {
-          if (i.incident_type !== 'hospitalized') return false;
-          const incidentDate = new Date(i.incident_date);
-          const daysSince = (new Date() - incidentDate) / (1000 * 60 * 60 * 24);
-          return daysSince <= 30;
-        }).length || 0
+        recent_hospitalizations: incidents?.filter(i =>
+          i.incident_type === 'hospitalized' && isWithinLastDays(i.incident_date, 30)
+        ).length || 0
       };
 
       const result = await ai.run({
-        model: "claude_opus_4_8",
+        model: "automatic",
         prompt: `You are a care coordination expert. Analyze this patient's profile to determine if an interdisciplinary team (IDT) meeting is recommended.
 
 PATIENT PROFILE:
@@ -66,7 +58,6 @@ PATIENT PROFILE:
 COMPLEXITY INDICATORS:
 - Total Diagnoses: ${complexityIndicators.diagnoses_count}
 - Active Medications: ${complexityIndicators.medications_count}
-- Active Care Plans: ${complexityIndicators.active_care_plans}
 - Recent Incidents (30d): ${complexityIndicators.recent_incidents}
 - Active Clinical Alerts: ${complexityIndicators.active_alerts}
 - Recent Hospitalizations (30d): ${complexityIndicators.recent_hospitalizations}
@@ -125,7 +116,7 @@ Return recommendation with:
       setRecommendation({ error: error.message });
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps -- AI hook object is intentionally omitted; its run() is stable, and including it would re-fire the call every render
-  }, [patientData, carePlans, incidents, alerts, recentVisits]);
+  }, [patientData, incidents, alerts, recentVisits]);
 
   useEffect(() => {
     if (autoAnalyze && patientData) {
@@ -149,7 +140,7 @@ Return recommendation with:
         recommended_actions: recommendation.suggested_agenda || [],
         team_meeting_suggested: true,
         meeting_attendees: recommendation.suggested_attendees?.map(a => a.role) || [],
-        due_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+        due_date: toLocalISODate(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000))
       });
 
       queryClient.invalidateQueries({ queryKey: ['careCoordinationAlerts'] });

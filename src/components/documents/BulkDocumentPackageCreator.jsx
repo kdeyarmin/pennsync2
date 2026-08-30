@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { base44 } from '@/api/base44Client';
+import { useScopedPatients } from '@/hooks/useScopedPatients';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -17,18 +18,17 @@ export default function BulkDocumentPackageCreator() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const queryClient = useQueryClient();
 
-  const { data: patients = [], isLoading: patientsLoading } = useQuery({
-    queryKey: ['patients'],
-    queryFn: async () => {
-      const results = await base44.entities.Patient.list('-updated_date', 100);
-      return results;
-    },
+  const { data: patients = [], isLoading: patientsLoading } = useScopedPatients({
+    sort: '-updated_date',
+    limit: 100,
   });
 
   const { data: templates = [], isLoading: templatesLoading } = useQuery({
     queryKey: ['documentTemplates'],
     queryFn: async () => {
-      const results = await base44.entities.DocumentTemplate.filter({ is_active: true });
+      // DocumentTemplate has no `is_active` field, so filtering on it returns
+      // nothing — list all templates (there is no active/inactive concept).
+      const results = await base44.entities.DocumentTemplate.list('-created_date', 200);
       return results;
     },
   });
@@ -67,7 +67,7 @@ export default function BulkDocumentPackageCreator() {
 
     try {
       setIsSubmitting(true);
-      await base44.asServiceRole.functions.invoke('bulkCreateDocumentPackages', {
+      await base44.functions.invoke('bulkCreateDocumentPackages', {
         patient_ids: selectedPatients,
         template_ids: selectedTemplates,
         due_date: dueDate,
@@ -171,7 +171,7 @@ export default function BulkDocumentPackageCreator() {
                       className="mt-1"
                     />
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm">{template.name}</p>
+                      <p className="font-medium text-sm">{template.name || template.template_name}</p>
                       <p className="text-xs text-slate-600 truncate">{template.description}</p>
                     </div>
                   </label>

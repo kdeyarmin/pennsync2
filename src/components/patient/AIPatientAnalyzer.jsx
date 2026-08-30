@@ -7,8 +7,10 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Brain, AlertTriangle, Target, TrendingUp, Loader2, Sparkles, ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from 'sonner';
+import { formatAge } from "@/lib/age";
+import { isWithinLastDays } from "@/lib/dateLocal";
 
-export default function AIPatientAnalyzer({ patient, visits, carePlans, incidents }) {
+export default function AIPatientAnalyzer({ patient, visits, incidents }) {
   const ai = useAICall();
   const [analysis, setAnalysis] = useState(null);
   const [expandedSections, setExpandedSections] = useState({
@@ -24,23 +26,23 @@ export default function AIPatientAnalyzer({ patient, visits, carePlans, incident
   const runAnalysis = async () => {
     try {
       // Prepare comprehensive patient data
-      const recentVisits = (visits || []).slice(0, 10);
-      const activeCarePlans = (carePlans || []).filter(cp => cp.status === 'active');
       const recentIncidents = (incidents || []).slice(0, 5);
+      // Actual count of visits within the last 30 days, so the prompt's
+      // "(Last 30 days)" label matches the number (not just the 10 most recent).
+      const visitsLast30Days = (visits || []).filter(v => isWithinLastDays(v.visit_date, 30)).length;
 
       const prompt = `Analyze this home health patient's comprehensive medical record and provide clinical insights:
 
 PATIENT PROFILE:
 - Name: ${patient.first_name} ${patient.last_name}
-- Age: ${patient.date_of_birth ? Math.floor((new Date() - new Date(patient.date_of_birth)) / 31557600000) : 'Unknown'}
+- Age: ${formatAge(patient.date_of_birth)}
 - Primary Diagnosis: ${patient.primary_diagnosis || 'Not specified'}
 - Secondary Diagnoses: ${patient.secondary_diagnoses?.join(', ') || 'None'}
 - Current Medications: ${patient.current_medications?.map(m => `${m.name} ${m.dosage}`).join(', ') || 'None documented'}
 - Allergies: ${patient.allergies || 'NKDA'}
 
 RECENT CLINICAL DATA:
-- Total Visits (Last 30 days): ${recentVisits.length}
-- Active Care Plans: ${activeCarePlans.length}
+- Total Visits (Last 30 days): ${visitsLast30Days}
 - Recent Incidents: ${recentIncidents.length}
 ${recentIncidents.length > 0 ? `- Incident Types: ${recentIncidents.map(i => i.incident_type).join(', ')}` : ''}
 
@@ -66,7 +68,7 @@ Provide a comprehensive clinical analysis with:
 Format as JSON with clear, actionable clinical insights.`;
 
       const result = await ai.run({
-        model: "claude_opus_4_8",
+        model: "automatic",
         prompt,
         response_json_schema: {
           type: "object",

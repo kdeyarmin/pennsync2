@@ -40,25 +40,50 @@ must not be able to write directly; writes go through backend functions.
 
 ## 3. Backend env secrets to set
 
+Text/voice/video/fax credentials are configured in-app (IntegrationSecret via
+Administration → Super Admin), the server-side file-fetch SSRF allowlist is
+hardcoded in code (always-on), and the `onUserSignup` re-fetch/email-match guard
+is always active. The dashboard-env secret list is therefore just:
+
 | Secret | Purpose | If unset |
 |---|---|---|
-| `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` | SMS/voice + webhook verification (X-Twilio-Signature) + fax | all Twilio features fail / webhooks rejected (fail-closed) |
-| `TWILIO_FAX_NUMBER`, `TWILIO_API_KEY`, `TWILIO_API_SECRET` | Fax + telehealth video | those features fail |
-| `TWILIO_WEBHOOK_URL` | Exact URL for Twilio signature check behind a proxy (SMS/voice + fax) | falls back to `req.url` |
-| **`INTERNAL_FN_SECRET`** | Activates the `issueCertificate` lockdown (only the training system/admin may issue) | **lockdown inactive — set it at launch** |
-| **`FILE_URL_ALLOWED_HOSTS`** | Restrict server-side file fetches to your storage host(s) — fully closes SSRF incl. DNS-rebinding | only IP/scheme literals blocked |
-| `SIGNUP_WEBHOOK_SECRET` (optional) | Locks `onUserSignup` to the trusted trigger | re-fetch/email-match guard still applies |
+| **`SIGNATURE_HMAC_SECRET`** | Keys the e-signature integrity MAC (forgery-resistant tamper-evidence) | unkeyed sha256 — detects corruption, not forgery — **set it at launch** |
+| `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `HEYGEN_API_KEY` | AI feature gates (transcription / SOAP notes / fax cover pages / training videos) | those features show a "not configured" notice |
 
 All `VITE_*` vars are public by design — never put secrets there.
 
-## 4. Scheduled / internal functions — confirm cron-only invocation
+## 4. Scheduled / internal functions — require shared scheduler auth
 
-These run privileged `asServiceRole` work with **no `auth.me()`** (correct only
-if the platform restricts who can invoke function endpoints — **confirm**):
-`processScheduledFaxes`, `sendExpirationNotifications`,
-`sendPersonnelExpirationNotifications`, `monitorComplianceRisks`,
-`scheduledGuidelineSync`, `autoApproveInvitedUser`, `deduplicatePatients`,
-`dispatchScheduledSms`.
+Base44's backend-function model answers the old open question here: deployed
+`Deno.serve` functions get plain HTTP endpoints for webhooks/external
+integrations, and the platform does **not** automatically block unauthenticated
+POSTs. A cron/internal function must therefore NOT rely on a gate like
+`if (user && !isAdmin) return 403`, because an unauthenticated caller can reach
+the endpoint and fall through to privileged `asServiceRole` work.
+
+The repo's scheduled/internal function family now uses one shared fail-closed
+gate:
+
+- **Admin session** may invoke the function manually.
+- **Unattended scheduler/internal caller** must send
+  `x-internal-secret: <INTERNAL_FN_SECRET>`.
+- If `INTERNAL_FN_SECRET` is unset, the function returns **500** rather than
+  running open.
+
+Apply that shared gate to the whole cron family, including:
+`autoApproveInvitedUser`, `autoEndDutyDay`, `autoEnrollAnnualPlans`,
+`autoRetryFailedFaxes`, `checkAdrDeadlines`, `checkExpiredInvitations`,
+`checkPendingSignatureRequests`, `checkStaleFollowUpRequests`,
+`computeOutcomeMeasures`, `dispatchScheduledSignatureReminders`,
+`dispatchScheduledSms`, `monitorComplianceRisks`, `pollFaxStatuses`,
+`processAnnualEducationRenewals`, `processInboundFaxes`,
+`processScheduledFaxes`, `processScheduledFaxesByPriority`,
+`processTrainingRenewals`, `redriveFailedSms`, `scheduledGuidelineSync`,
+`sendAutomatedSignatureReminders`, `sendCredentialRenewalReminders`,
+`sendDocumentReminderEmails`, `sendExpirationNotifications`,
+`sendPersonnelExpirationNotifications`, `sendRenewalReminders`,
+`sendTrainingNotifications`, `syncFaxStatuses`, `syncTrainingVideoStatuses`,
+`triggerCorrectiveActionPlan`.
 
 - Enable **only one** scheduled-fax processor (`processScheduledFaxes` **or**
   `processScheduledFaxesByPriority`) — both running double-sends.
@@ -107,9 +132,9 @@ if the platform restricts who can invoke function endpoints — **confirm**):
 5. Webhook smoke tests (good/bad signatures) per §5.
 6. Confirm audit rows (`UserActivity`/`SecurityLog`) carry **no PHI** (bodies,
    full numbers).
-7. With `INTERNAL_FN_SECRET` set, a direct `issueCertificate` call from a
-   non-admin is rejected; legitimate completion via `gradeTrainingAttempt` still
-   issues a certificate.
+7. A direct `issueCertificate` call from a non-admin with no passing
+   `TrainingAttempt` is rejected (attempts are admin/service-role-write only);
+   legitimate completion via `gradeTrainingAttempt` still issues a certificate.
 
 ## 8. Tracked follow-ups (code, post-launch)
 
@@ -119,3 +144,39 @@ if the platform restricts who can invoke function endpoints — **confirm**):
   (`src/components/medication/drugInteractions.js`) — expand over time; it does
   not replace a full interaction database.
 - Medication reconciliation: consider a richer per-decision reconciled-med model.
+
+## 9. Residual risks that cannot be closed in this repo alone
+
+### Hosted RLS / tenant isolation
+Entity `rls` blocks in `base44/entities/*.jsonc` are **declarations** for the
+Base44 dashboard. Client role checks and query filters are UX only. Prove
+enforcement with the executable worksheet `docs/HOSTED-RLS-PROOF.md` (and
+checklist §7 / `docs/RLS-LAUNCH-RUNBOOK.md` §5) against the **hosted** app —
+raw network responses, including cross-tenant probes when multi-agency, and
+relation-based "by patient access" rules the repo DSL cannot express
+(`docs/RLS-REMEDIATION-SPEC-2026-06-19.md`). LR-01 evidence packets remain the
+release gate; CI cannot mark isolation proven.
+
+### True compare-and-swap (CAS)
+Reminder/fax/SMS/badge claim tokens (`claimed_by` / `*_claim_token` + re-read)
+are best-effort. The entity store has no atomic conditional update / version
+column, so overlapping writes can still lose. Platform ask and acceptance
+criteria: `docs/PLATFORM-CAS.md`. In-repo merge-retry
+(`submitSignerSignature`, `appendPatientNoteHistory`) remains required for
+array fields.
+
+### Login CSRF nonce (platform remainder)
+In-app hardening (`src/lib/accessTokenTrust.js`, `src/lib/app-params.js`,
+`SignInScreen`): planted `auth_state` on hosted-login return; never overwrite
+an existing session from an empty/untrusted referrer; **logged-out**
+empty/untrusted `?access_token=` handoffs are stashed as
+`base44_pending_access_token` until the user explicitly Continues or Declines
+(closes silent logged-out login CSRF). **Still open for zero-click email
+handoffs:** Base44 must issue a state/nonce on every return URL so legitimate
+magic links can auto-accept without a confirm click.
+
+### SMS consent
+Outbound patient texts (`sendSms` / `scheduleSms` / dispatcher / redrive) now
+**require `consent_status === 'opted_in'`**. `unknown` is no longer sufficient.
+Admin `sendTestSms` still only blocks `opted_out` so provisioned-line smoke
+tests work.

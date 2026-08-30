@@ -6,10 +6,6 @@
       "type": "string",
       "description": "Reference to Patient entity"
     },
-    "client_request_id": {
-      "type": "string",
-      "description": "Client-generated idempotency key for offline-queued creates. Used by OfflineManager to dedupe before re-creating a visit whose prior create may have succeeded but not been confirmed."
-    },
     "visit_date": {
       "type": "string",
       "format": "date"
@@ -35,9 +31,11 @@
         "scheduled",
         "in_progress",
         "completed",
+        "pending_review",
         "cancelled"
       ],
-      "default": "scheduled"
+      "default": "scheduled",
+      "description": "Visit status. 'pending_review' = an offline-captured note whose AI grounding pass is deferred until reconnect (see grounding_pending)."
     },
     "start_time": {
       "type": "string",
@@ -88,23 +86,6 @@
         }
       }
     },
-    "skilled_intervention_documented": {
-      "type": "boolean",
-      "description": "Whether skilled nursing intervention was clearly documented"
-    },
-    "homebound_justification": {
-      "type": "string",
-      "description": "Required documentation of homebound status for Medicare compliance"
-    },
-    "homebound_status_verified": {
-      "type": "boolean",
-      "default": false,
-      "description": "Whether homebound status meets Medicare criteria"
-    },
-    "checklist_progress": {
-      "type": "object",
-      "description": "Tracking of completed checklist items for diagnosis-specific assessment"
-    },
     "family_update_sent": {
       "type": "boolean",
       "description": "Whether family update was sent",
@@ -126,16 +107,105 @@
       },
       "description": "AI-generated tags for searchability and trend analysis"
     },
+    "telehealth_room_id": {
+      "type": "string",
+      "description": "Twilio room ID for telehealth visits"
+    },
+    "telehealth_room_name": {
+      "type": "string",
+      "description": "Twilio room name"
+    },
+    "telehealth_call_duration": {
+      "type": "number",
+      "description": "Call duration in seconds"
+    },
+    "telehealth_summary": {
+      "type": "string",
+      "description": "Post-call summary"
+    },
+    "telehealth_shared_files": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      },
+      "description": "Files shared during telehealth call"
+    },
+    "telehealth_recording_url": {
+      "type": "string",
+      "description": "URL to call recording if enabled"
+    },
+    "is_sample": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this is sample data visible to all users"
+    },
+    "client_request_id": {
+      "type": "string",
+      "description": "Offline idempotency key (queue id) used to dedupe visits created from the offline sync queue"
+    },
     "compliance_score": {
       "type": "number",
-      "description": "Medicare compliance score 0-100"
+      "description": "0-100 documentation coverage/compliance score computed from the visit note"
     },
     "compliance_issues": {
       "type": "array",
       "items": {
         "type": "string"
       },
-      "description": "List of identified compliance issues"
+      "description": "List of compliance issue descriptions derived from chart findings"
+    },
+    "homebound_status_verified": {
+      "type": "boolean",
+      "description": "Whether homebound status was documented/verified in the visit note"
+    },
+    "skilled_intervention_documented": {
+      "type": "boolean",
+      "description": "Whether a skilled intervention/need was documented in the visit note"
+    },
+    "homebound_justification": {
+      "type": "string",
+      "description": "Evidence text justifying the patient's homebound status"
+    },
+    "documentation_source": {
+      "type": "string",
+      "enum": [
+        "smart_note",
+        "audio",
+        "manual"
+      ],
+      "default": "smart_note",
+      "description": "How this visit note was captured: 'smart_note' (typed/dictated in the Smart Note Assistant), 'audio' (transcribed from a recording, then grounded against the transcript), or 'manual'. Provenance for the compliance audit trail."
+    },
+    "grounding_pending": {
+      "type": "boolean",
+      "default": false,
+      "description": "True when the note was saved offline and the AI grounding (fact-check) pass was deferred until reconnect. The deterministic value-guard still ran, but live grounding had not — so the record carries this audit-trail signal until a later online re-save clears it. Surfaced as a pending-verification state in compliance reporting."
+    },
+    "ai_process_claimed_by": {
+      "type": "string",
+      "description": "Claim token for processCompletedVisit idempotency. Set before LLM work and re-read before writing the narrative so concurrent double-submits cannot both overwrite nurse_notes."
+    },
+    "ai_processed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When processCompletedVisit finished AI narrative/task generation for this visit"
+    },
+    "supply_usage_claimed_by": {
+      "type": "string",
+      "description": "Claim token for analyzeVisitForSupplyUsage idempotency. Set before LLM extraction and inventory writes so concurrent runs cannot double-decrement SupplyItem stock or create duplicate SupplyUsageLog rows."
+    },
+    "events_extract_claimed_by": {
+      "type": "string",
+      "description": "Claim token for extractClinicalEvents idempotency. Set before LLM extraction and ClinicalEvent/Task/PatientAlert writes so concurrent runs cannot create duplicate clinical events from the same visit note."
+    },
+    "events_extracted_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When extractClinicalEvents finished creating ClinicalEvent rows for this visit"
+    },
+    "followup_tasks_claimed_by": {
+      "type": "string",
+      "description": "Claim token for generateFollowUpTasks idempotency. Set before LLM extraction and Task.create so concurrent runs cannot create duplicate follow-up tasks for the same visit."
     }
   },
   "required": [
@@ -153,6 +223,9 @@
           "user_condition": {
             "role": "admin"
           }
+        },
+        {
+          "is_sample": true
         }
       ]
     },

@@ -37,7 +37,9 @@ export const INCIDENT_TYPES = [
 // themselves, state-reportable.
 const TYPE_TO_STATE_CATEGORY = {
   hospitalized: "Transfer or admission to hospital because of injury or accident",
-  abuse_suspected: "Patient Neglect",
+  // Abuse and neglect are DISTINCT PA reportable categories — auto-suggesting
+  // "Patient Neglect" miscategorized abuse complaints in the official record.
+  abuse_suspected: "Complaint of patient abuse - confirmed or not",
   death: "Death due to injury, suicide, or unusual circumstances",
   infection_suspected: "Health Department Reportable Diseases",
 };
@@ -46,9 +48,4 @@ const TYPE_TO_STATE_CATEGORY = {
 // or null if the type is not inherently state-reportable.
 export function getStateReportableCategory(incidentType) {
   return TYPE_TO_STATE_CATEGORY[incidentType] || null;
-}
-
-// True when a general incident type should trigger the state-reportable pathway.
-export function isStateReportableType(incidentType) {
-  return !!TYPE_TO_STATE_CATEGORY[incidentType];
 }

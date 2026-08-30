@@ -16,11 +16,14 @@ import { formatPhoneDisplay, last10 } from "@/components/voice/phoneUtils";
 import PhoneTopBar from "@/components/phone/PhoneTopBar";
 import ContactAvatar from "@/components/phone/ContactAvatar";
 import { PhoneEmptyState } from "@/components/phone/PhoneFrame";
+import { isSafeExternalUrl } from "@/components/utils/security";
 
 const MODE_LABEL = {
   masked_bridge: "Incoming",
-  off_duty_transfer: "Off-duty transfer",
+  office_transfer: "Transferred to office",
+  voicemail: "Voicemail",
   outbound_clicktocall: "Outgoing",
+  unresolved: "Unresolved",
 };
 
 // Post-call disposition options the nurse can tag a call with.
@@ -46,7 +49,7 @@ function isMissed(call) {
 }
 
 function CallTypeIcon({ call }) {
-  if (call.call_mode === "off_duty_transfer") return <PhoneForwarded className="h-3.5 w-3.5 text-navy-600" />;
+  if (call.call_mode === "office_transfer") return <PhoneForwarded className="h-3.5 w-3.5 text-navy-600" />;
   if (call.direction === "outbound") return <PhoneOutgoing className="h-3.5 w-3.5 text-slate-500" />;
   if (isMissed(call)) return <PhoneMissed className="h-3.5 w-3.5 text-red-500" />;
   return <PhoneIncoming className="h-3.5 w-3.5 text-green-600" />;
@@ -181,7 +184,7 @@ export default function CallHistoryList() {
                       </Button>
                     </div>
                   </div>
-                  {call.has_voicemail && call.voicemail_url && (
+                  {call.has_voicemail && call.voicemail_url && isSafeExternalUrl(call.voicemail_url) && (
                     <audio controls preload="none" src={call.voicemail_url} className="mb-2 h-8 w-[calc(100%-1.5rem)] px-3" />
                   )}
                   {call.voicemail_transcription && (

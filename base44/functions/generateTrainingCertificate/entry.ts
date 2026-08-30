@@ -1,11 +1,21 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
-import { jsPDF } from 'npm:jspdf';
+import { jsPDF } from 'npm:jspdf@2.5.2';
+
+// <<<BEGIN SHARED HELPER: requireActiveUser — generated, edit base44/_shared/backendHelpers.mjs>>>
+const isDeactivatedUser = (u) => !!u && u.is_active === false;
+const DEACTIVATED_USER_RESPONSE = () => Response.json(
+  { error: 'Unauthorized - account is deactivated' },
+  { status: 403 },
+);
+// <<<END SHARED HELPER: requireActiveUser>>>
+
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
-
+    if (isDeactivatedUser(user)) return DEACTIVATED_USER_RESPONSE();
+    
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -52,16 +62,23 @@ Deno.serve(async (req) => {
         completionDate = comp.completion_date || null;
         score = typeof comp.score_percentage === 'number' ? comp.score_percentage : null;
         moduleName = comp.course_title || requestedModule;
-      } else if (recordId) {
-        // A specific record was requested but none of the caller's records match
-        // it — refuse rather than mint against an id they don't own.
+      } else if (recordId || moduleId || requestedModule) {
+        // An identifier was requested (record/certificate id, course id, or
+        // module NAME) but none of the caller's owned certificates or completed
+        // assignments match it — refuse rather than mint a certificate for
+        // training this account never completed. Owning *some* record (the gate
+        // above) is not the same as completing the *requested* module: without
+        // this, a nurse who finished "Handwashing Basics" could POST
+        // moduleName:"Advanced Wound Care" with any completion date/score and
+        // print an official completion certificate for it.
         return Response.json({ error: 'Training record not found for this account.' }, { status: 403 });
       }
     }
 
-    // Fall back to the request only for display fields we could not derive (the
-    // legacy caller that passes just moduleName); ownership is already established
-    // by the non-empty owned-record check above.
+    // Fill in only display fields we could not derive from the matched record
+    // (e.g. a matched certificate row missing course_title). Ownership of the
+    // requested module is established above — an unmatched identifier already
+    // returned 403, so the body can no longer name an unearned module here.
     moduleName = moduleName || requestedModule;
     completionDate = completionDate || body.completionDate || body.completion_date || null;
     if (score === null && typeof body.score === 'number') score = body.score;
@@ -89,13 +106,15 @@ Deno.serve(async (req) => {
 
     // Fetch and add logo
     try {
-      const logoUrl = 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ee80d98929370f9e8f2932/52cac091f_20170AA9-BB95-4BA4-B4E7-793615312CC4.png';
-      const logoResponse = await fetch(logoUrl);
-      const logoBlob = await logoResponse.blob();
-      const logoArrayBuffer = await logoBlob.arrayBuffer();
-      const logoBase64 = btoa(String.fromCharCode(...new Uint8Array(logoArrayBuffer)));
-      const logoDataUrl = `data:image/png;base64,${logoBase64}`;
-      doc.addImage(logoDataUrl, 'PNG', 128.5, 25, 40, 40);
+      const logoUrl = 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ee80d98929370f9e8f2932/02eed9872_pennsynclogoupdated.png';
+      if (logoUrl) {
+        const logoResponse = await fetch(logoUrl);
+        const logoBlob = await logoResponse.blob();
+        const logoArrayBuffer = await logoBlob.arrayBuffer();
+        const logoBase64 = btoa(String.fromCharCode(...new Uint8Array(logoArrayBuffer)));
+        const logoDataUrl = `data:image/png;base64,${logoBase64}`;
+        doc.addImage(logoDataUrl, 'PNG', 128.5, 25, 40, 40);
+      }
     } catch (error) {
       console.error('Logo fetch failed:', error);
     }
@@ -164,7 +183,7 @@ Deno.serve(async (req) => {
 
     doc.setFontSize(9);
     doc.setTextColor(107, 114, 128);
-    doc.text('Penn Sync Training Platform', 85, 182, { align: 'center' });
+    doc.text('PennSync Training Platform', 85, 182, { align: 'center' });
     doc.text('Certificate ID: ' + Date.now().toString(36).toUpperCase(), 212, 182, { align: 'center' });
 
     // Footer
@@ -172,7 +191,7 @@ Deno.serve(async (req) => {
     doc.rect(0, 195, 297, 15, 'F');
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(8);
-    doc.text('Penn Sync - AI-Powered Healthcare Training & Documentation', 148.5, 203, { align: 'center' });
+    doc.text('PennSync - AI-Powered Healthcare Training & Documentation', 148.5, 203, { align: 'center' });
 
     const pdfBytes = doc.output('arraybuffer');
 
@@ -185,6 +204,6 @@ Deno.serve(async (req) => {
     });
   } catch (error) {
     console.error('Error generating certificate:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
 });

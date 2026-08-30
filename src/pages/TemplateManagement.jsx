@@ -1,6 +1,6 @@
 import { lazy, Suspense, useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,7 +10,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2, Plus, Edit2, Trash2, FileText, FileType } from 'lucide-react';
 import PageContainer from '@/components/ui/PageContainer';
 import PageHeader from '@/components/ui/PageHeader';
-import { isSuperAdmin } from '@/lib/superAdmin';
+import EmptyState from '@/components/ui/empty-state';
+import { isAdminView } from '@/lib/roles';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 
 const PDFTemplateLibrary = lazy(() => import('@/components/hub-tabs/PDFTemplateLibrary'));
 
@@ -26,6 +28,7 @@ const tabLoader = (
 
 export default function TemplateManagement() {
   const queryClient = useQueryClient();
+  const confirm = useConfirm();
   const [showForm, setShowForm] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState(null);
   const [formData, setFormData] = useState({
@@ -39,7 +42,7 @@ export default function TemplateManagement() {
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
   });
-  const isAdmin = currentUser?.role === 'admin' || isSuperAdmin(currentUser);
+  const isAdmin = isAdminView(currentUser);
   // The document-template CRUD tab is admin-only; the PDF Templates tab stays
   // open to everyone (the retired /PDFTemplateLibrary route was non-admin), so
   // non-admins land on — and are limited to — the PDF tab.
@@ -111,6 +114,9 @@ export default function TemplateManagement() {
 
     saveMutation.mutate({
       ...formData,
+      // DocumentTemplate requires `template_name` (the form binds to `name`);
+      // write both so the create/update isn't rejected by schema validation.
+      template_name: formData.name,
       placeholders,
     });
   };
@@ -118,7 +124,7 @@ export default function TemplateManagement() {
   const handleEdit = (template) => {
     setEditingTemplate(template);
     setFormData({
-      name: template.name,
+      name: template.name || template.template_name || '',
       description: template.description,
       category: template.category,
       content: template.content,
@@ -255,7 +261,16 @@ export default function TemplateManagement() {
                 <Button
                   size="sm"
                   variant="destructive"
-                  onClick={() => deleteMutation.mutate(template.id)}
+                  onClick={async () => {
+                    if (await confirm({
+                      title: 'Delete template?',
+                      description: `This permanently removes "${template.name}". This cannot be undone.`,
+                      confirmText: 'Delete',
+                      destructive: true,
+                    })) {
+                      deleteMutation.mutate(template.id);
+                    }
+                  }}
                   disabled={deleteMutation.isPending}
                 >
                   <Trash2 className="w-4 h-4" />
@@ -267,9 +282,7 @@ export default function TemplateManagement() {
       </div>
 
       {templates.length === 0 && !showForm && (
-        <Card className="p-8 text-center text-slate-500">
-          No templates yet. Create one to get started.
-        </Card>
+        <EmptyState icon={FileText} title="No templates yet." description="Create one to get started." />
       )}
             </>
           )}

@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { AlertCircle, CheckCircle, XCircle, RotateCcw } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import { toast } from 'sonner';
 
 export default function ScenarioPlayer({ scenario, attemptId, onComplete }) {
   const [currentNodeId, setCurrentNodeId] = useState('node-start');
@@ -48,7 +49,15 @@ export default function ScenarioPlayer({ scenario, attemptId, onComplete }) {
         setCurrentNodeId(choice.nextNodeId);
         setShowFeedback(false);
       }, 2000);
-    } else if (!choice.isCorrect) {
+    } else if (choice.isCorrect) {
+      // A correct choice with no branch ends the scenario. Advance to the
+      // terminal sentinel so the Finish button becomes reachable instead of
+      // leaving showFeedback=true forever (which hides both choices and Finish).
+      setTimeout(() => {
+        setCurrentNodeId('node-end');
+        setShowFeedback(false);
+      }, 2000);
+    } else {
       setTimeout(() => {
         setShowFeedback(false);
       }, 3000);
@@ -65,11 +74,6 @@ export default function ScenarioPlayer({ scenario, attemptId, onComplete }) {
     const correctDecisions = distinct.filter(d => d.isCorrect).length;
     const scorePercentage = distinct.length > 0 ? Math.round((correctDecisions / distinct.length) * 100) : 0;
     const hasPassed = scorePercentage >= scenario.passingScore;
-
-    setScore(scorePercentage);
-    setPassed(hasPassed);
-    setResultCounts({ correct: correctDecisions, total: distinct.length });
-    setScenarioComplete(true);
 
     // Save attempt
     try {
@@ -90,9 +94,15 @@ export default function ScenarioPlayer({ scenario, attemptId, onComplete }) {
         time_spent_minutes: timeSpentMinutes
       });
 
+      setScore(scorePercentage);
+      setPassed(hasPassed);
+      setResultCounts({ correct: correctDecisions, total: distinct.length });
+      setScenarioComplete(true);
+
       if (onComplete) onComplete({ score: scorePercentage, passed: hasPassed });
     } catch (error) {
       console.error('Failed to save scenario attempt:', error);
+      toast.error('Failed to save your scenario results. Please try finishing the scenario again.');
     }
   };
 
@@ -221,7 +231,7 @@ export default function ScenarioPlayer({ scenario, attemptId, onComplete }) {
           {isTerminal && !showFeedback && (
             <Button
               onClick={handleFinishScenario}
-              className="w-full bg-green-600 hover:bg-green-700"
+              className="w-full"
             >
               Finish Scenario
             </Button>

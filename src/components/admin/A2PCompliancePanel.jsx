@@ -38,14 +38,15 @@ export default function A2PCompliancePanel() {
   const { data: currentUser } = useQuery({ queryKey: ["currentUser"], queryFn: () => base44.auth.me() });
   const isAdmin = isAdminLike(currentUser);
 
-  const { data: settingsArr = [] } = useQuery({
-    queryKey: ["agency-settings"],
-    queryFn: () => base44.entities.AgencySettings.list("-created_date", 1),
-    enabled: isAdmin,
+  const { data: settings = null } = useQuery({
+    queryKey: ["agencySettings", currentUser?.agency_name || null],
+    queryFn: async () => {
+      const { fetchCallerAgencySettings } = await import("@/lib/agencySettings");
+      return fetchCallerAgencySettings(currentUser?.agency_name);
+    },
+    enabled: isAdmin && !!currentUser,
     refetchOnWindowFocus: false,
-    initialData: [],
   });
-  const settings = settingsArr[0];
 
   const [form, setForm] = useState({
     a2p_10dlc_status: "not_registered",
@@ -64,12 +65,18 @@ export default function A2PCompliancePanel() {
   }, [settings]);
 
   const save = useMutation({
-    mutationFn: () =>
-      settings?.id
-        ? base44.entities.AgencySettings.update(settings.id, form)
-        : base44.entities.AgencySettings.create(form),
+    mutationFn: () => {
+      const agencyKey = String(currentUser?.agency_name || "").trim();
+      const payload = {
+        ...form,
+        ...(agencyKey ? { agency_code: agencyKey, office_name: agencyKey } : {}),
+      };
+      return settings?.id
+        ? base44.entities.AgencySettings.update(settings.id, payload)
+        : base44.entities.AgencySettings.create(payload);
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["agency-settings"] });
+      queryClient.invalidateQueries({ queryKey: ["agencySettings"] });
       toast.success("A2P 10DLC registration saved");
     },
     onError: (err) => toast.error(err?.message || "Failed to save A2P settings"),

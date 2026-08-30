@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
+import { agencyQueryKey } from '@/lib/agencyRoster';
 import { appParams } from "@/lib/app-params";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -18,7 +19,7 @@ import { toast } from "sonner";
 import { maskPhone, formatPhoneDisplay, normalizeE164 } from "@/components/voice/phoneUtils";
 import {
   evaluateAgencyConfig, summarize, WEBHOOK_FUNCTIONS, functionUrlBase,
-} from "@/components/admin/twilioSetup";
+} from "@/components/admin/telnyxSetup";
 import { isAdminLike } from "@/lib/superAdmin";
 import CallingHoursPanel from "@/components/admin/CallingHoursPanel";
 import NumberPoolPanel from "@/components/admin/NumberPoolPanel";
@@ -74,26 +75,32 @@ export default function PhoneProvisioningPanel() {
   const isAdmin = isAdminLike(currentUser);
 
   const { data: users = [] } = useQuery({
-    queryKey: ["phone-users"],
-    queryFn: () => base44.entities.User.list("full_name", 200),
+    queryKey: ["phone-users", agencyQueryKey(currentUser)],
+    queryFn: async () => {
+      const _rows = await base44.entities.User.list("full_name", 200);
+      const { filterUsersByCallerAgency } = await import('@/lib/agencyScope');
+      return filterUsersByCallerAgency(_rows, currentUser);
+    },
     enabled: isAdmin,
     initialData: [],
   });
 
-  const { data: settingsArr = [] } = useQuery({
-    queryKey: ["agency-settings"],
-    queryFn: () => base44.entities.AgencySettings.list("-created_date", 1),
-    enabled: isAdmin,
+  const { data: settings = null } = useQuery({
+    queryKey: ["agencySettings", currentUser?.agency_name || null],
+    queryFn: async () => {
+      const { fetchCallerAgencySettings } = await import("@/lib/agencySettings");
+      return fetchCallerAgencySettings(currentUser?.agency_name);
+    },
+    enabled: isAdmin && !!currentUser,
     // Don't refetch on window focus: it would re-run the form-init effect below
     // and overwrite the admin's unsaved edits.
     refetchOnWindowFocus: false,
-    initialData: [],
   });
-  const settings = settingsArr[0];
 
   const [agency, setAgency] = useState({
     main_office_number_e164: "",
     office_fax_number_e164: "",
+    outbound_fax_number_e164: "",
     default_off_duty_template: "",
     sms_messaging_enabled: true,
     sms_quick_replies: [],
@@ -110,6 +117,7 @@ export default function PhoneProvisioningPanel() {
       setAgency({
         main_office_number_e164: settings.main_office_number_e164 || "",
         office_fax_number_e164: settings.office_fax_number_e164 || "",
+        outbound_fax_number_e164: settings.outbound_fax_number_e164 || "",
         default_off_duty_template: settings.default_off_duty_template || "",
         sms_messaging_enabled: settings.sms_messaging_enabled ?? true,
         sms_quick_replies: Array.isArray(settings.sms_quick_replies) ? settings.sms_quick_replies : [],
@@ -126,19 +134,46 @@ export default function PhoneProvisioningPanel() {
     mutationFn: () => {
       // Coerce the monthly cap to a positive number or null ("no cap").
       const capNum = Number(agency.monthly_sms_cap);
+      const agencyKey = String(currentUser?.agency_name || "").trim();
       const payload = {
         ...agency,
+        // Store the office numbers in strict E.164 — sendFax/sendBatchFax use
+        // the fax number verbatim as the Telnyx `from`, and the voice webhook
+        // routes off the main office number, so formatting must not be saved.
+        main_office_number_e164: agency.main_office_number_e164
+          ? normalizeE164(agency.main_office_number_e164) || agency.main_office_number_e164
+          : "",
+        office_fax_number_e164: agency.office_fax_number_e164
+          ? normalizeE164(agency.office_fax_number_e164) || agency.office_fax_number_e164
+          : "",
+        outbound_fax_number_e164: agency.outbound_fax_number_e164
+          ? normalizeE164(agency.outbound_fax_number_e164) || agency.outbound_fax_number_e164
+          : "",
         monthly_sms_cap: Number.isFinite(capNum) && capNum > 0 ? capNum : null,
+        ...(agencyKey ? { agency_code: agencyKey, office_name: agencyKey } : {}),
       };
       return settings?.id
         ? base44.entities.AgencySettings.update(settings.id, payload)
         : base44.entities.AgencySettings.create(payload);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["agency-settings"] });
+      queryClient.invalidateQueries({ queryKey: ["agencySettings"] });
       toast.success("Agency phone settings saved");
     },
     onError: (err) => toast.error(err?.message || "Failed to save settings"),
+  });
+
+  // Provision fax capacity on the office fax number: points the number's Telnyx
+  // connection at the Programmable Fax connection so it can actually send and
+  // receive faxes (works for numbers bought in-app or ported/bought elsewhere).
+  const provisionFax = useMutation({
+    mutationFn: (e164) =>
+      base44.functions.invoke("searchPurchaseTelnyxNumbers", { action: "provision_fax", e164 }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["agencySettings"] });
+      toast.success("Fax capacity provisioned — the number is wired to your Telnyx fax connection.");
+    },
+    onError: (err) => toast.error(err?.message || "Failed to provision fax capacity"),
   });
 
   const provision = useMutation({
@@ -215,7 +250,7 @@ export default function PhoneProvisioningPanel() {
   return (
     <div className="space-y-6">
       {/* Setup & Health — readiness checklist + live connection test */}
-      <Card id="twilio-health" className="scroll-mt-24">
+      <Card id="telnyx-health" className="scroll-mt-24">
         <CardHeader>
           <CardTitle className="flex items-center justify-between gap-2">
             <span className="flex items-center gap-2">
@@ -316,8 +351,8 @@ export default function PhoneProvisioningPanel() {
         </CardContent>
       </Card>
 
-      {/* Webhook endpoints to register in Twilio */}
-      <Card id="twilio-webhooks" className="scroll-mt-24">
+      {/* Webhook endpoints to register in Telnyx */}
+      <Card id="telnyx-webhooks" className="scroll-mt-24">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Webhook className="w-5 h-5 text-indigo-600" />
@@ -354,16 +389,17 @@ export default function PhoneProvisioningPanel() {
           <Alert className="bg-slate-50 border-slate-200">
             <Info className="w-4 h-4 text-slate-600" />
             <AlertDescription className="text-slate-700 text-xs">
-              <strong>Webhooks failing signature checks?</strong> Set the function secret{" "}
-              <code className="bg-white border border-slate-200 rounded px-1">TELNYX_WEBHOOK_DEBUG=1</code>{" "}
-              in the Base44 dashboard to log which signature header names Telnyx sends and whether each verifies
-              (header <em>names</em> only — never secret values). Check the function logs, then turn it off.
+              <strong>Webhooks failing signature checks?</strong> Confirm the <strong>public key</strong> in{" "}
+              Admin › Telnyx matches the one on your Telnyx portal's webhook settings — inbound events are
+              rejected fail-closed when it is missing or stale, which silently drops delivery receipts,
+              patient replies and STOP opt-outs. Telnyx credentials are read from that panel only; setting
+              them as Base44 dashboard environment variables has no effect.
             </AlertDescription>
           </Alert>
         </CardContent>
       </Card>
 
-      <Card id="twilio-settings" className="scroll-mt-24">
+      <Card id="telnyx-settings" className="scroll-mt-24">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Phone className="w-5 h-5 text-indigo-600" />
@@ -371,8 +407,7 @@ export default function PhoneProvisioningPanel() {
           </CardTitle>
           <CardDescription>
             Main office number, off-duty defaults, templates, and voicemail. The Telnyx API key is
-            set in the Telnyx Credentials card above (or via TELNYX_API_KEY in the dashboard env) —
-            not here.
+            set in the Telnyx Credentials card above — not here.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -383,19 +418,67 @@ export default function PhoneProvisioningPanel() {
                 placeholder="+17244650440"
                 value={agency.main_office_number_e164}
                 onChange={(e) => setAgency((a) => ({ ...a, main_office_number_e164: e.target.value }))}
-                className="mt-1"
+                className={`mt-1 ${invalidNumber(agency.main_office_number_e164) ? "border-red-400 focus-visible:ring-red-400" : ""}`}
+                aria-invalid={invalidNumber(agency.main_office_number_e164)}
               />
+              {invalidNumber(agency.main_office_number_e164) && (
+                <p className="text-[11px] text-red-600 mt-0.5">Enter a valid phone number (e.g. +17244650440).</p>
+              )}
               <p className="text-xs text-slate-500 mt-1">Off-duty / unanswered calls roll here; texts reference it.</p>
             </div>
             <div>
-              <Label className="text-sm font-medium">Shared office fax number (E.164)</Label>
+              <Label className="text-sm font-medium">Office fax machine (E.164)</Label>
               <Input
-                placeholder="+17244650441"
+                placeholder="+17244650444"
                 value={agency.office_fax_number_e164}
                 onChange={(e) => setAgency((a) => ({ ...a, office_fax_number_e164: e.target.value }))}
-                className="mt-1"
+                className={`mt-1 ${invalidNumber(agency.office_fax_number_e164) ? "border-red-400 focus-visible:ring-red-400" : ""}`}
+                aria-invalid={invalidNumber(agency.office_fax_number_e164)}
               />
-              <p className="text-xs text-slate-500 mt-1">Every user faxes from this one number, so replies go to the office.</p>
+              {invalidNumber(agency.office_fax_number_e164) && (
+                <p className="text-[11px] text-red-600 mt-0.5">Enter a valid fax number (e.g. +17244650444).</p>
+              )}
+              <p className="text-xs text-slate-500 mt-1">
+                The office's physical fax line. Recipients see this number on every outbound fax (cover
+                sheet + caller-id name), so <strong>replies go straight to the office</strong> — it doesn't
+                need to be a Telnyx number, and the app never handles its inbound faxes.
+              </p>
+            </div>
+            <div className="md:col-span-2">
+              <Label className="text-sm font-medium">Outbound fax line — blind Telnyx number (E.164)</Label>
+              <div className="flex gap-2 mt-1">
+                <Input
+                  placeholder="+17244650441"
+                  value={agency.outbound_fax_number_e164}
+                  onChange={(e) => setAgency((a) => ({ ...a, outbound_fax_number_e164: e.target.value }))}
+                  className={`sm:max-w-xs ${invalidNumber(agency.outbound_fax_number_e164) ? "border-red-400 focus-visible:ring-red-400" : ""}`}
+                  aria-invalid={invalidNumber(agency.outbound_fax_number_e164)}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="flex-shrink-0"
+                  title="Wire this number to your Telnyx fax connection so it can transmit faxes"
+                  disabled={
+                    provisionFax.isPending ||
+                    !agency.outbound_fax_number_e164 ||
+                    !normalizeE164(agency.outbound_fax_number_e164)
+                  }
+                  onClick={() => provisionFax.mutate(normalizeE164(agency.outbound_fax_number_e164))}
+                >
+                  {provisionFax.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Wand2 className="w-4 h-4 mr-2" />}
+                  Provision fax
+                </Button>
+              </div>
+              {invalidNumber(agency.outbound_fax_number_e164) && (
+                <p className="text-[11px] text-red-600 mt-0.5">Enter a valid fax number (e.g. +17244650441).</p>
+              )}
+              <p className="text-xs text-slate-500 mt-1">
+                The single Telnyx number all faxes <em>transmit</em> from, masked as the office fax above —
+                recipients are never asked to reply to it, and any stray fax dialed to it is passed straight
+                through to the office machine. Buy one in the Number Pool ("Office fax line" purpose) or{" "}
+                <strong>Provision fax</strong> to wire a number you already own to your Telnyx fax connection.
+              </p>
             </div>
           </div>
 
@@ -528,7 +611,16 @@ export default function PhoneProvisioningPanel() {
             )}
           </div>
           <div className="flex justify-end">
-            <Button onClick={() => saveAgency.mutate()} disabled={saveAgency.isPending} className="bg-indigo-600 hover:bg-indigo-700">
+            <Button
+              onClick={() => saveAgency.mutate()}
+              disabled={
+                saveAgency.isPending ||
+                invalidNumber(agency.main_office_number_e164) ||
+                invalidNumber(agency.office_fax_number_e164) ||
+                invalidNumber(agency.outbound_fax_number_e164)
+              }
+              className="bg-indigo-600 hover:bg-indigo-700"
+            >
               <Save className="w-4 h-4 mr-2" />
               Save Agency Settings
             </Button>
@@ -542,7 +634,7 @@ export default function PhoneProvisioningPanel() {
       {/* Easy provisioning: a pool of numbers assignable in one click */}
       <NumberPoolPanel />
 
-      <Card id="twilio-nurses" className="scroll-mt-24">
+      <Card id="telnyx-nurses" className="scroll-mt-24">
         <CardHeader>
           <CardTitle className="flex items-center justify-between gap-2 flex-wrap">
             <span className="flex items-center gap-2">
@@ -568,7 +660,8 @@ export default function PhoneProvisioningPanel() {
           <CardDescription>
             Each user gets their own number for voice + SMS. Click <strong>Auto-assign</strong> to hand
             every user without one the next available number from the pool — or set them individually
-            below. (Fax is shared: everyone sends from the single office fax number.)
+            below. (Fax is shared: everything transmits from the single outbound fax line, presented as
+            the office fax number.)
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">

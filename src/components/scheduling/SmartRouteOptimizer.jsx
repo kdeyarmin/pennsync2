@@ -4,6 +4,7 @@ import { useState } from "react";
 // guard. Prefer it over a raw invokeLLM at component call sites (see the hook's
 // docs); use invokeLLM only in loops/utilities where a hook can't run.
 import { useAICall } from "@/hooks/useAICall";
+import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -57,7 +58,7 @@ export default function SmartRouteOptimizer({
       });
 
       const result = await ai.run({
-        model: "claude_opus_4_8",
+        model: "automatic",
         prompt: `You are a healthcare route optimization AI. Optimize this nurse's daily visit schedule for maximum efficiency while respecting clinical priorities.
 
 VISITS TO SCHEDULE:
@@ -131,6 +132,35 @@ Return JSON:
       if (!result || !Array.isArray(result.optimized_order) || result.optimized_order.length === 0) {
         toast.error("The optimizer returned an unusable result — please try again.");
         return;
+      }
+
+      // Only write back ids the model was actually given: a hallucinated or
+      // stale visit_id is schema-valid and would otherwise rewrite an
+      // unrelated patient's visit_time.
+      const allowedIds = new Set((visits || []).map(v => v.id));
+      const updates = result.optimized_order.filter(
+        v => allowedIds.has(v.visit_id) && v.suggested_time
+      );
+      if (updates.length === 0) {
+        toast.error("The optimizer returned an unusable result — please try again.");
+        return;
+      }
+
+      // Persist the optimized visit_time for each visit — otherwise nothing
+      // is actually saved and callers telling the user their schedule "has
+      // been updated" would be lying. allSettled, not all: a single rejected
+      // update used to abort before the UI updated, leaving the day silently
+      // half-reordered with no indication of which visits had moved.
+      const outcomes = await Promise.allSettled(
+        updates.map(v =>
+          base44.entities.Visit.update(v.visit_id, { visit_time: v.suggested_time })
+        )
+      );
+      const failed = outcomes.filter(o => o.status === 'rejected').length;
+      if (failed > 0) {
+        toast.warning(
+          `${updates.length - failed} of ${updates.length} visits rescheduled — ${failed} could not be saved.`
+        );
       }
 
       setOptimizedRoute(result);

@@ -1,28 +1,70 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 import { jsPDF } from 'npm:jspdf@4.0.0';
 
+// <<<BEGIN SHARED HELPER: requireActiveUser — generated, edit base44/_shared/backendHelpers.mjs>>>
+const isDeactivatedUser = (u) => !!u && u.is_active === false;
+const DEACTIVATED_USER_RESPONSE = () => Response.json(
+  { error: 'Unauthorized - account is deactivated' },
+  { status: 403 },
+);
+// <<<END SHARED HELPER: requireActiveUser>>>
+
+// <<<BEGIN SHARED HELPER: requireAgencyAdminAgency — generated, edit base44/_shared/backendHelpers.mjs>>>
+function agencyAdminMissingAgencyResponse(user) {
+  if (user && user.account_type === 'agency_admin' && !String(user.agency_name || '').trim()) {
+    return Response.json({ error: 'Forbidden: agency_name is required.' }, { status: 403 });
+  }
+  return null;
+}
+// <<<END SHARED HELPER: requireAgencyAdminAgency>>>
+
+
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
-
+    if (isDeactivatedUser(user)) return DEACTIVATED_USER_RESPONSE();
+    
+    {
+      const _agencyAdminGate = agencyAdminMissingAgencyResponse(user);
+      if (_agencyAdminGate) return _agencyAdminGate;
+    }
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const { employeeId, certificateIds } = await req.json();
 
-    // Only admins can generate packets for others
-    if (employeeId !== user.email && user.account_type !== 'agency_admin' && user.account_type !== 'super_admin') {
+    // Require the id up front: an undefined employeeId is dropped by the SDK's
+    // filter, so the User/certificate queries below would run unscoped.
+    if (!employeeId || typeof employeeId !== 'string') {
+      return Response.json({ error: 'employeeId is required' }, { status: 400 });
+    }
+
+    // Only admins can generate packets for others (role:admin or admin account types).
+    const isAdminLike = user.role === 'admin'
+      || user.account_type === 'agency_admin'
+      || user.account_type === 'super_admin';
+    if (employeeId !== user.email && !isAdminLike) {
       return Response.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     // Get employee
-    const employees = await base44.asServiceRole.entities.User.filter({ email: employeeId });
+    const employees = await base44.asServiceRole.entities.User.filter({ email: employeeId }, undefined, 5000);
     if (!employees || employees.length === 0) {
       return Response.json({ error: 'Employee not found' }, { status: 404 });
     }
     const employee = employees[0];
+
+    // Agency admins are scoped to their OWN agency (mirrors generateAndCacheCertificatePacket):
+    // without this an agency_admin could pass another agency's employeeId and pull
+    // that tenant's certificate packet. Fail closed when caller lacks agency_name.
+    if (user.account_type !== 'super_admin' && user.agency_name && (user.account_type === 'agency_admin' || user.role === 'admin')) {
+      if (!user.agency_name || employee.agency_name !== user.agency_name) {
+        return Response.json({ error: 'Forbidden' }, { status: 403 });
+      }
+    }
 
     // Get certificates
     let query = { user_id: employeeId, revoked: false };
@@ -32,7 +74,8 @@ Deno.serve(async (req) => {
 
     const certificates = await base44.asServiceRole.entities.TrainingCertificate.filter(
       query,
-      '-issued_at'
+      '-issued_at',
+      5000,
     );
 
     // Create main PDF with cover sheet
@@ -118,6 +161,6 @@ Deno.serve(async (req) => {
 
   } catch (error) {
     console.error('Certificate packet generation failed:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
 });

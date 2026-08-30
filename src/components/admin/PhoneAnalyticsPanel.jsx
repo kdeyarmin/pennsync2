@@ -1,11 +1,14 @@
 import { useMemo, useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { agencyQueryKey } from '@/lib/agencyRoster';
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { BarChart3, MessageSquare, PhoneCall, ShieldCheck, Users, Download } from "lucide-react";
 import { summarizePhoneActivity, formatDuration } from "@/components/admin/phoneAnalytics";
+import { isAdminLike } from "@/lib/superAdmin";
 import { toCsv, exportTimestamp } from "@/components/admin/csvExport";
+import { downloadCsv } from "@/lib/downloadCsv";
 import { toast } from "sonner";
 
 // PHI-conscious export columns: metadata only — never the SMS body or media.
@@ -34,23 +37,6 @@ const CALL_COLUMNS = [
   { key: "has_voicemail", label: "Voicemail", format: (v) => (v ? "yes" : "") },
 ];
 
-/** Trigger a client-side CSV file download (browser only). */
-function downloadCsv(filename, csv) {
-  try {
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-  } catch {
-    toast.error("Couldn't generate the export");
-  }
-}
-
 const WINDOWS = [
   { label: "7 days", days: 7 },
   { label: "30 days", days: 30 },
@@ -77,17 +63,17 @@ export default function PhoneAnalyticsPanel() {
   const [windowDays, setWindowDays] = useState(30);
 
   const { data: currentUser } = useQuery({ queryKey: ["currentUser"], queryFn: () => base44.auth.me() });
-  const isAdmin = currentUser?.role === "admin";
+  const isAdmin = isAdminLike(currentUser);
 
   const { data: smsMessages = [] } = useQuery({
     queryKey: ["analytics-sms"],
-    queryFn: () => base44.entities.SmsMessage.list("-created_date", 1000),
+    queryFn: () => base44.entities.SmsMessage.list("-created_date", 5000),
     enabled: isAdmin,
     initialData: [],
   });
   const { data: callLogs = [] } = useQuery({
     queryKey: ["analytics-calls"],
-    queryFn: () => base44.entities.CallLog.list("-created_date", 1000),
+    queryFn: () => base44.entities.CallLog.list("-created_date", 5000),
     enabled: isAdmin,
     initialData: [],
   });
@@ -98,8 +84,12 @@ export default function PhoneAnalyticsPanel() {
     initialData: [],
   });
   const { data: users = [] } = useQuery({
-    queryKey: ["analytics-users"],
-    queryFn: () => base44.entities.User.list("full_name", 1000),
+    queryKey: ["analytics-users", agencyQueryKey(currentUser)],
+    queryFn: async () => {
+      const _rows = await base44.entities.User.list("full_name", 1000);
+      const { filterUsersByCallerAgency } = await import('@/lib/agencyScope');
+      return filterUsersByCallerAgency(_rows, currentUser);
+    },
     enabled: isAdmin,
     initialData: [],
   });
@@ -120,8 +110,9 @@ export default function PhoneAnalyticsPanel() {
       return Number.isNaN(t) ? true : t >= cutoff;
     });
   };
-  const exportSms = () => downloadCsv(`sms-export_${exportTimestamp()}.csv`, toCsv(SMS_COLUMNS, inWindow(smsMessages)));
-  const exportCalls = () => downloadCsv(`calls-export_${exportTimestamp()}.csv`, toCsv(CALL_COLUMNS, inWindow(callLogs)));
+  const onExportError = () => toast.error("Couldn't generate the export");
+  const exportSms = () => downloadCsv(`sms-export_${exportTimestamp()}.csv`, toCsv(SMS_COLUMNS, inWindow(smsMessages)), { onError: onExportError });
+  const exportCalls = () => downloadCsv(`calls-export_${exportTimestamp()}.csv`, toCsv(CALL_COLUMNS, inWindow(callLogs)), { onError: onExportError });
 
   if (!isAdmin) return null;
 
@@ -181,8 +172,7 @@ export default function PhoneAnalyticsPanel() {
             <Stat label="Completed" value={stats.calls.completed} />
             <Stat label="Missed" value={stats.calls.missed} sub={`${stats.calls.missedRate}% of calls`} />
             <Stat label="Avg duration" value={formatDuration(stats.calls.avgDurationSec)} />
-            <Stat label="After-hours transfers" value={stats.calls.afterHoursTransfers} sub={`${stats.calls.autoTransferRate}% of inbound auto-handled`} />
-            <Stat label="Off-duty transfers" value={stats.calls.offDutyTransfers} />
+            <Stat label="Office transfers" value={stats.calls.officeTransfers} sub={`${stats.calls.autoTransferRate}% of inbound auto-handled`} />
           </div>
         </div>
 

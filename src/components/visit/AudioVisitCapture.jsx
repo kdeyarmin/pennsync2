@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
+import { useScopedPatients } from "@/hooks/useScopedPatients";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -16,21 +17,7 @@ import { logActivity, ActivityActions } from "../utils/activityLogger";
 import { todayEastern } from "../utils/timezone";
 import { toast } from "sonner";
 import { validateFileUpload } from "@/components/utils/security";
-
-const HOME_HEALTH_VISIT_TYPES = [
-  { value: "routine_visit", label: "Routine SN Visit" },
-  { value: "admission", label: "Start of Care (SOC)" },
-  { value: "recertification", label: "Recertification" },
-  { value: "discharge", label: "Discharge" },
-  { value: "prn", label: "PRN Visit" },
-];
-const HOSPICE_VISIT_TYPES = [
-  { value: "routine_visit", label: "Routine Hospice Visit" },
-  { value: "admission", label: "Hospice Admission" },
-  { value: "recertification", label: "Recertification" },
-  { value: "discharge", label: "Discharge / Revocation" },
-  { value: "prn", label: "After-Hours / Crisis Visit" },
-];
+import { HOME_HEALTH_VISIT_TYPES, HOSPICE_VISIT_TYPES } from "@/components/visit/visitTypes";
 
 /**
  * AudioVisitCapture — the "Visit Scribe" choice in the Clinical Notes hub.
@@ -47,13 +34,9 @@ export default function AudioVisitCapture({ currentUser, visitId = null }) {
   const [uploadedAudio, setUploadedAudio] = useState(null);
   const [_transcription, setTranscription] = useState(null);
   const [roughNote, setRoughNote] = useState("");
-  // Monotonic id bumped on each new transcription — used to re-mount the reviewer
-  // so two different recordings that happen to be the same length still reset its
-  // compliance state (a length-based key would not).
   const [noteSeq, setNoteSeq] = useState(0);
   const [activeTab, setActiveTab] = useState("record");
 
-  // Visit context + chart-save state (parity with the Smart Note flow).
   const [patientId, setPatientId] = useState("");
   const [visitType, setVisitType] = useState("routine_visit");
   const [vitals, setVitals] = useState({});
@@ -63,36 +46,22 @@ export default function AudioVisitCapture({ currentUser, visitId = null }) {
   const [saved, setSaved] = useState(false);
   const [copied, setCopied] = useState(false);
   const [signatureImage, setSignatureImage] = useState(null);
-  // Visit binding (?visitId): COMPLETE an existing scheduled visit rather than
-  // create a duplicate. Cleared once saved or when the patient changes away.
   const [existingVisitId, setExistingVisitId] = useState(null);
   const boundPatientRef = useRef(null);
   const visitDate = todayEastern();
 
-  // Mirror SmartNoteAssistant's query exactly: both flows share the ["patients"]
-  // react-query cache, so they must resolve to the same data (a different filter
-  // or limit under the same key would serve whichever loaded first).
-  const { data: patients = [] } = useQuery({
-    queryKey: ["patients"],
-    queryFn: async () => {
-      try {
-        return await base44.entities.Patient.filter({ status: "active" }, "first_name", 200);
-      } catch {
-        return [];
-      }
-    },
-    initialData: [],
+  const { data: patients = [] } = useScopedPatients({
+    status: "active",
+    sort: "first_name",
+    limit: 200,
   });
   const patient = patients.find(p => p.id === patientId);
-  // Full record for the selected patient (the list query may omit large fields).
   const { data: patientDetail } = useQuery({
     queryKey: ["patientDetail", patientId],
     queryFn: () => base44.entities.Patient.get(patientId),
     enabled: !!patientId,
   });
 
-  // Visit binding: when deep-linked with ?visitId, load it and pre-select its
-  // patient + visit type so saving completes that visit instead of duplicating it.
   const { data: boundVisit } = useQuery({
     queryKey: ["visit", visitId],
     queryFn: () => base44.entities.Visit.get(visitId),
@@ -106,50 +75,47 @@ export default function AudioVisitCapture({ currentUser, visitId = null }) {
     if (boundVisit.visit_type) setVisitType(boundVisit.visit_type);
   }, [boundVisit]);
 
-  // A new patient must start a fresh visit — clear the prior save target (so a
-  // re-save can't update the previous patient's visit) and the per-visit vitals
-  // and signature (so one patient's readings/signature never land on another's
-  // chart). The transcribed note itself is intentionally kept: the audio is often
-  // captured before the patient is picked. Keep the ?visitId binding only while the
-  // selected patient still matches the bound visit's.
   useEffect(() => {
     setSavedVisitId(null);
     setSavedAuditId(null);
     setSaved(false);
     setVitals({});
     setSignatureImage(null);
-    if (patientId !== boundPatientRef.current) setExistingVisitId(null);
+    setExistingVisitId(patientId === boundPatientRef.current && boundVisit?.patient_id === patientId ? boundVisit.id : null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- boundVisit intentionally omitted; this should only reset state on a patient switch, not on every boundVisit refetch
   }, [patientId]);
 
   const careScope = patient?.care_type || currentUser?.care_scope;
   const serviceLine = careScope === "hospice" ? "hospice" : "home_health";
   const visitTypes = careScope === "hospice" ? HOSPICE_VISIT_TYPES : HOME_HEALTH_VISIT_TYPES;
 
-  // Process audio file (both recorded and uploaded)
   const processAudioMutation = useMutation({
     mutationFn: async (audioFile) => {
+      if (!patientId) throw new Error('Patient is required to generate a note from audio');
       const uploadResult = await base44.integrations.Core.UploadFile({ file: audioFile });
       const result = await base44.functions.invoke('generateNoteFromRecording', {
         audio_url: uploadResult.file_url,
+        patient_id: patientId,
+        visit_type: visitType || 'routine_visit',
+        diagnosis: patient?.primary_diagnosis || undefined,
       });
-      return result;
+      const body = result?.data ?? result;
+      if (body?.error) throw new Error(body.error);
+      return body;
     },
     onSuccess: (data) => {
-      // functions.invoke returns the full axios response; this function's body
-      // additionally nests its payload under `data`, so peel two layers. The
-      // field is `generatedNote` (not `rough_note`).
-      const body = data?.data || data;
-      const payload = body?.data || body;
-      setTranscription(payload.transcription || "");
-      setRoughNote(payload.generatedNote || payload.transcription || "");
-      // A new transcription is a new note — clear any prior save so the reviewer
-      // creates a fresh visit rather than updating the last one, and bump the
-      // re-mount key so its review state resets even for an equal-length note.
+      const payload = data?.data || data;
+      const transcription = payload.transcription || "";
+      setTranscription(transcription);
+      setRoughNote(transcription || payload.generatedNote || "");
       setSavedVisitId(null);
       setSavedAuditId(null);
-      setSaved(false);
+        setSaved(false);
       setNoteSeq(n => n + 1);
       logActivity(ActivityActions.NOTE_AI_GENERATED, { page: 'ClinicalDocumentation', source: 'audio_recording' });
+    },
+    onError: (err) => {
+      toast.error(err?.message || 'Failed to generate note from recording');
     },
   });
 
@@ -161,8 +127,6 @@ export default function AudioVisitCapture({ currentUser, visitId = null }) {
   const handleFileUpload = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    // The accept="audio/*" attribute is only a UI hint (trivially bypassed by
-    // renaming a file); validate type + size before uploading.
     const check = validateFileUpload(file, {
       maxSize: 100 * 1024 * 1024,
       allowedTypes: ['audio/webm', 'audio/wav', 'audio/mp3', 'audio/mpeg', 'audio/mp4', 'audio/x-m4a', 'audio/ogg'],
@@ -187,25 +151,28 @@ export default function AudioVisitCapture({ currentUser, visitId = null }) {
       let result = api.result;
       if (api.dirty) {
         result = await api.recheck();
-        if (!result) { setSaving(false); return; } // fact-check failed → reviewer shows the fix panel
+        if (!result) { setSaving(false); return; }
       }
       const out = await persistVisitNote({
         result, patientId, visitDate, visitType, roughNote, vitals,
         currentUser, patientDiagnosis: patientDetail?.primary_diagnosis || patient?.primary_diagnosis || "",
         savedVisitId, savedAuditId, existingVisitId,
+        source: "audio",
       });
       if (out) {
         if (out.mode === 'create') {
           setSavedVisitId(out.visitId);
-          // Bound visit is now the same-session target; re-saves update it.
           setExistingVisitId(null);
+          if (out.auditId) setSavedAuditId(out.auditId);
+        } else if (out.mode === 'update') {
+          setSavedVisitId(out.visitId);
           if (out.auditId) setSavedAuditId(out.auditId);
         }
         setSaved(true);
       }
     } catch (err) {
       console.error("Save to chart error:", err);
-      toast.error("Saving to the chart failed.");
+      toast.error(err?.code === "OFFLINE_SAVE_BLOCKED" ? err.message : "Saving to the chart failed.");
     } finally {
       setSaving(false);
     }
@@ -230,7 +197,6 @@ export default function AudioVisitCapture({ currentUser, visitId = null }) {
 
   return (
     <div className="space-y-4">
-      {/* Visit setup — patient, visit type, and structured vitals saved to the chart. */}
       <Card className="modern-card">
         <CardContent className="p-4 space-y-4">
           <div>
@@ -270,7 +236,6 @@ export default function AudioVisitCapture({ currentUser, visitId = null }) {
           <TabsTrigger value="upload">Upload Audio</TabsTrigger>
         </TabsList>
 
-        {/* Record Tab */}
         <TabsContent value="record" className="space-y-4">
           <Card className="modern-card">
             <CardHeader>
@@ -292,7 +257,6 @@ export default function AudioVisitCapture({ currentUser, visitId = null }) {
           </Card>
         </TabsContent>
 
-        {/* Upload Tab */}
         <TabsContent value="upload" className="space-y-4">
           <Card className="modern-card">
             <CardHeader>
@@ -326,7 +290,6 @@ export default function AudioVisitCapture({ currentUser, visitId = null }) {
         </TabsContent>
       </Tabs>
 
-      {/* Processing Status */}
       {isProcessing && (
         <Alert className="bg-blue-50 border-blue-200">
           <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
@@ -334,7 +297,6 @@ export default function AudioVisitCapture({ currentUser, visitId = null }) {
         </Alert>
       )}
 
-      {/* Error Alert */}
       {processAudioMutation.isError && (
         <Alert variant="destructive">
           <AlertDescription>
@@ -343,7 +305,6 @@ export default function AudioVisitCapture({ currentUser, visitId = null }) {
         </Alert>
       )}
 
-      {/* Rough Note Section */}
       {hasRoughNote && (
         <Card className="modern-card">
           <CardHeader>
@@ -358,15 +319,8 @@ export default function AudioVisitCapture({ currentUser, visitId = null }) {
         </Card>
       )}
 
-      {/* Review, enhance & save to the chart — shared constrained-scribe pipeline.
-          Keyed so a new transcription / patient / visit type re-initializes it. */}
       {hasRoughNote && (
         <ConstrainedNoteReviewer
-          // Re-mount only on a genuinely new note (noteSeq) or a visit-type change
-          // that alters the required elements — NOT on patientId, so selecting the
-          // patient last (to enable saving) doesn't discard the generated note.
-          // The reviewer consumes patient/priorNote as live props for its chart
-          // cross-check, so it still reflects the chosen patient without remounting.
           key={`${visitType}|${noteSeq}`}
           roughNote={roughNote}
           serviceLine={serviceLine}
@@ -401,7 +355,7 @@ export default function AudioVisitCapture({ currentUser, visitId = null }) {
               onSave={() => handleSave(api)}
               saving={saving}
               saved={saved && !api.dirty}
-              saveDisabled={saving || !!(api.fixRequired && !api.fixRequired.offlinePending) || !patientId || api.chartRisk?.hasUnacknowledgedCritical}
+              saveDisabled={saving || !!api.fixRequired || !patientId || api.chartRisk?.hasUnacknowledgedCritical}
             />
           )}
         />

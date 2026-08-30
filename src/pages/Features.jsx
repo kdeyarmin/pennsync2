@@ -32,13 +32,17 @@ import {
   BookOpen,
   CheckCircle2,
   Lightbulb,
-  WifiOff,
   Edit,
   Grid3x3
 } from "lucide-react";
 import PageContainer from "@/components/ui/PageContainer";
 import PageHeader from "@/components/ui/PageHeader";
 import { toast } from 'sonner';
+import {
+  IMPLEMENTED_FEATURE_IMPROVEMENT_ROADMAP,
+  getFeatureEnhancementSuggestions,
+  summarizeImprovementRoadmap
+} from '@/lib/featureImprovementRoadmap';
 
 export default function FeaturesPage() {
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -129,15 +133,6 @@ export default function FeaturesPage() {
           impact: "critical",
           details: "Combines compliance checking and quality analysis into one streamlined interface. Identifies missing Medicare elements, vague language, weak flow, and generic descriptions all in one place",
           howToUse: "Type your rough note and watch AI suggestions appear automatically. Review compliance gaps and quality improvements in tabs, then click 'Fix All' to apply everything at once."
-        },
-        {
-          name: "Offline Documentation Mode",
-          icon: WifiOff,
-          description: "Document visits without internet connection and auto-sync when back online",
-          timeSaved: "Eliminates connectivity delays",
-          impact: "high",
-          details: "Works completely offline for patient visits, stores data locally, automatic sync when connection restored",
-          howToUse: "Navigate to Offline Mode, select patient, document visit offline. Data syncs automatically when you're back online."
         },
         {
           name: "AI-Powered Voice Dictation",
@@ -486,24 +481,6 @@ export default function FeaturesPage() {
       color: "pink",
       items: [
         {
-          name: "Care Plan Auto-Generation",
-          icon: Target,
-          description: "AI generates evidence-based care plans based on diagnosis and patient data",
-          timeSaved: "8-12 min/admission",
-          impact: "critical",
-          details: "Problem, goal, intervention generation, measurable outcomes, evidence-based",
-          howToUse: "Navigate to patient, click 'Generate Care Plan', review and create suggested plans."
-        },
-        {
-          name: "Automatic Care Plan Triggers",
-          icon: Layers,
-          description: "Admin-configured automatic care plan creation based on diagnosis or medication",
-          timeSaved: "8-12 min/admission",
-          impact: "critical",
-          details: "Standardized evidence-based care, ensures consistency across agency",
-          howToUse: "Admins: Configure triggers in Automatic Care Plans. Staff: Plans auto-generate on admission."
-        },
-        {
           name: "Incident Reporting",
           icon: AlertTriangle,
           description: "Guided incident reporting with AI-generated comprehensive reports",
@@ -545,7 +522,7 @@ export default function FeaturesPage() {
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Penn Sync Features Guide</title>
+  <title>PennSync Features Guide</title>
   <style>
     body { font-family: Arial, sans-serif; padding: 40px; color: #333; line-height: 1.6; }
     h1 { color: #264491; text-align: center; border-bottom: 3px solid #264491; padding-bottom: 10px; }
@@ -574,13 +551,12 @@ export default function FeaturesPage() {
 </head>
 <body>
   <div class="logo-header">
-    <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ee80d98929370f9e8f2932/52cac091f_20170AA9-BB95-4BA4-B4E7-793615312CC4.png" alt="Penn Sync Logo" />
   </div>
-  <h1>Penn Sync Features Guide</h1>
+  <h1>PennSync Features Guide</h1>
   <p class="header-info">AI-Powered Home Health Documentation & OASIS Analytics<br>Generated: ${new Date().toLocaleDateString()}</p>
   
   <div class="impact-summary">
-    <h2 style="color: white; margin-top: 0;">The Penn Sync Impact</h2>
+    <h2 style="color: white; margin-top: 0;">The PennSync Impact</h2>
     <p style="opacity: 0.95; font-size: 16px; margin-bottom: 20px;">Revolutionizing home health documentation with AI-powered efficiency</p>
     <div class="impact-stat">
       <div class="impact-stat-value">20+</div>
@@ -623,7 +599,7 @@ export default function FeaturesPage() {
   `).join('')}
 
   <div class="footer">
-    <p><strong>© Penn Sync - AI-Powered Home Health Documentation</strong></p>
+    <p><strong>© PennSync by CareMetric - AI-Powered Home Health Documentation</strong></p>
     <p>For support, contact your administrator</p>
     <p style="font-size: 12px; margin-top: 10px;">This guide reflects the current system capabilities as of ${new Date().toLocaleDateString()}</p>
   </div>
@@ -657,7 +633,7 @@ export default function FeaturesPage() {
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Penn Sync User Manual</title>
+  <title>PennSync User Manual</title>
   <style>
     body { font-family: Arial, sans-serif; padding: 40px; color: #333; line-height: 1.6; }
     h1 { color: #264491; text-align: center; border-bottom: 3px solid #264491; padding-bottom: 10px; page-break-after: avoid; }
@@ -689,9 +665,8 @@ export default function FeaturesPage() {
 </head>
 <body>
   <div class="logo-header">
-    <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ee80d98929370f9e8f2932/52cac091f_20170AA9-BB95-4BA4-B4E7-793615312CC4.png" alt="Penn Sync Logo" />
   </div>
-  <h1>Penn Sync User Manual</h1>
+  <h1>PennSync User Manual</h1>
   <p class="header-info">Complete Guide for Nurses and Administrators<br>Generated: ${new Date().toLocaleDateString()}</p>
   
   <div class="toc">
@@ -723,7 +698,7 @@ export default function FeaturesPage() {
     
     <h3>1.1 Logging In</h3>
     <div class="step">
-      <span class="step-number">1</span>Navigate to the Penn Sync login page
+      <span class="step-number">1</span>Navigate to the PennSync login page
     </div>
     <div class="step">
       <span class="step-number">2</span>Enter your email address and password
@@ -905,7 +880,7 @@ export default function FeaturesPage() {
 
   <div class="section">
     <h2>4. Patient Care Management</h2>
-    <p><span class="role-badge nurse-badge">NURSE</span>Managing patient records, care plans, and tasks</p>
+    <p><span class="role-badge nurse-badge">NURSE</span>Managing patient records and tasks</p>
 
     <h3>4.1 Viewing Patient Records</h3>
     <div class="step">
@@ -918,21 +893,7 @@ export default function FeaturesPage() {
       <span class="step-number">3</span>Click patient name to view details
     </div>
 
-    <h3>4.2 Care Plan Management</h3>
-    <div class="step">
-      <span class="step-number">1</span>On patient details page, scroll to <strong>"Care Plans"</strong> section
-    </div>
-    <div class="step">
-      <span class="step-number">2</span>View active care plans with goals and interventions
-    </div>
-    <div class="step">
-      <span class="step-number">3</span>Click <strong>"Update Progress"</strong> to document goal achievement
-    </div>
-    <div class="step">
-      <span class="step-number">4</span>Mark goals as "Met", "In Progress", or "Not Met"
-    </div>
-
-    <h3>4.3 Task Management</h3>
+    <h3>4.2 Task Management</h3>
     <div class="step">
       <span class="step-number">1</span>View your assigned tasks on the Dashboard
     </div>
@@ -1258,7 +1219,7 @@ export default function FeaturesPage() {
     <p><strong>Training Questions:</strong> Reach out to your clinical supervisor</p>
     <p><strong>Feature Requests:</strong> Submit through your administrator</p>
     <br>
-    <p style="font-size: 12px;">© Penn Sync - AI-Powered Home Health Documentation</p>
+    <p style="font-size: 12px;">© PennSync by CareMetric - AI-Powered Home Health Documentation</p>
     <p style="font-size: 12px;">User Manual Version 1.0 - ${new Date().toLocaleDateString()}</p>
   </div>
 </body>
@@ -1297,6 +1258,9 @@ export default function FeaturesPage() {
     ? features 
     : features.filter(cat => cat.category.toLowerCase().includes(selectedCategory.toLowerCase()));
 
+  const improvementSummary = summarizeImprovementRoadmap();
+  const roadmapFeatureTargetCount = improvementSummary.uniqueFeatureTargets.size;
+
   // Soft, ringed icon-chip tints (the same premium chip language as StatCard),
   // keyed by the category's named color.
   const getCategoryColor = (color) => {
@@ -1328,8 +1292,8 @@ export default function FeaturesPage() {
     <PageContainer>
       <PageHeader
         icon={Zap}
-        eyebrow="PennSync"
-        title="Penn Sync Features"
+        eyebrow="PennSync by CareMetric"
+        title="PennSync Features"
         description="AI-powered home health documentation, OASIS analytics, and clinical decision support"
         favoritePage="Features"
         actions={
@@ -1397,6 +1361,90 @@ export default function FeaturesPage() {
           </Card>
         </div>
 
+
+      {/* Research-Backed Enhancement Roadmap */}
+      <Card className="mb-4 sm:mb-6 md:mb-8 border-navy-100 bg-gradient-to-br from-white via-navy-50/40 to-gold-50/50">
+        <CardHeader className="p-4 sm:p-6">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+            <div>
+              <Badge variant="info" className="mb-2">Research-backed roadmap</Badge>
+              <CardTitle className="text-xl sm:text-2xl text-slate-900">Top 25 end-user improvement implementation plan</CardTitle>
+              <p className="mt-2 max-w-3xl text-sm text-slate-600">
+                This implementation plan turns the comprehensive app audit into 25 tracked, user-facing enhancement initiatives with owners, target workflows, acceptance criteria, and launch signals across clinician workflow, OASIS/PDGM quality, AI trust, mobile reliability, patient self-service, analytics, and administration.
+              </p>
+            </div>
+            <div className="grid grid-cols-3 gap-2 text-center lg:min-w-[320px]">
+              <div className="rounded-xl bg-white/80 p-3 ring-1 ring-slate-200">
+                <p className="text-2xl font-bold text-navy-700">{improvementSummary.totalInitiatives}</p>
+                <p className="text-xs text-slate-500">initiatives</p>
+              </div>
+              <div className="rounded-xl bg-white/80 p-3 ring-1 ring-slate-200">
+                <p className="text-2xl font-bold text-gold-700">{improvementSummary.totalEnhancements}</p>
+                <p className="text-xs text-slate-500">enhancements</p>
+              </div>
+              <div className="rounded-xl bg-white/80 p-3 ring-1 ring-slate-200">
+                <p className="text-2xl font-bold text-emerald-700">{roadmapFeatureTargetCount}</p>
+                <p className="text-xs text-slate-500">workflow targets</p>
+              </div>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
+          <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+            {IMPLEMENTED_FEATURE_IMPROVEMENT_ROADMAP.map((item) => (
+              <div key={item.id} className="rounded-xl border border-slate-200 bg-white/85 p-4 shadow-sm">
+                <div className="mb-2 flex flex-wrap items-center gap-2">
+                  <Badge variant={getImpactBadge(item.tier)} className="capitalize">{item.tier}</Badge>
+                  <span className="text-xs font-medium uppercase tracking-wide text-slate-500">{item.source}</span>
+                </div>
+                <h3 className="font-semibold text-slate-900">{item.pillar}</h3>
+                <p className="mt-1 text-sm text-slate-600">{item.why}</p>
+                <div className="mt-3 grid gap-2 text-xs text-slate-600 sm:grid-cols-2">
+                  <div className="rounded-lg bg-slate-50 p-2 ring-1 ring-slate-100">
+                    <span className="font-semibold text-slate-800">Phase:</span> {item.phase}
+                  </div>
+                  <div className="rounded-lg bg-slate-50 p-2 ring-1 ring-slate-100">
+                    <span className="font-semibold text-slate-800">Users:</span> {item.primaryUsers.join(', ')}
+                  </div>
+                </div>
+                <ul className="mt-3 space-y-2">
+                  {item.enhancements.slice(0, 2).map((enhancement) => (
+                    <li key={enhancement} className="flex gap-2 text-sm text-slate-700">
+                      <CheckCircle2 className="mt-0.5 h-4 w-4 flex-shrink-0 text-emerald-600" />
+                      <span>{enhancement}</span>
+                    </li>
+                  ))}
+                </ul>
+                <div className="mt-3 rounded-lg border border-emerald-100 bg-emerald-50/70 p-3">
+                  <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-emerald-800">Acceptance criteria</p>
+                  <ul className="space-y-1">
+                    {item.acceptanceCriteria.map((criterion) => (
+                      <li key={criterion} className="flex gap-2 text-xs text-emerald-900">
+                        <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-emerald-600" />
+                        <span>{criterion}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="mt-3 rounded-lg border border-blue-100 bg-blue-50/70 p-3">
+                  <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-blue-800">Launch signals</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {item.launchSignals.map((signal) => (
+                      <Badge key={signal} variant="info" className="text-[11px]">{signal}</Badge>
+                    ))}
+                  </div>
+                </div>
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  {item.featureTargets.map((target) => (
+                    <Badge key={target} variant="secondary" className="text-[11px]">{target}</Badge>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Category Filter */}
       <div className="mb-4 sm:mb-6 md:mb-8">
         <div className="flex flex-wrap gap-2 justify-center">
@@ -1440,6 +1488,8 @@ export default function FeaturesPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                 {category.items.map((feature) => {
                   const FeatureIcon = feature.icon;
+                  const upgradeSuggestions = getFeatureEnhancementSuggestions(feature.name, category.category);
+                  const topUpgrade = upgradeSuggestions[0];
                   return (
                     <Card key={feature.name} className="hover:shadow-lg transition-all duration-200">
                       <CardHeader className="p-3 sm:p-4 md:p-6 pb-2 sm:pb-3">
@@ -1469,6 +1519,18 @@ export default function FeaturesPage() {
                           <p className="text-xs font-semibold text-blue-800 mb-1">How to Use:</p>
                           <p className="text-xs text-blue-700">{feature.howToUse}</p>
                         </div>
+
+                        {topUpgrade && (
+                          <div className="p-2 bg-gold-50 rounded-lg border border-gold-200">
+                            <div className="mb-1 flex items-center justify-between gap-2">
+                              <p className="text-xs font-semibold text-gold-900">Next Best Upgrade:</p>
+                              <Badge variant={getImpactBadge(topUpgrade.tier)} className="text-[10px] capitalize">
+                                {topUpgrade.tier}
+                              </Badge>
+                            </div>
+                            <p className="text-xs text-gold-800">{topUpgrade.enhancement}</p>
+                          </div>
+                        )}
                       </CardContent>
                     </Card>
                   );
@@ -1483,7 +1545,7 @@ export default function FeaturesPage() {
       <div className="mt-6 sm:mt-8 md:mt-12 rounded-xl bg-navy-900 text-white p-4 sm:p-6 md:p-8">
           <div className="text-center">
             <Sparkles className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 text-white opacity-90" />
-            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2 sm:mb-3">The Penn Sync Impact</h2>
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2 sm:mb-3">The PennSync Impact</h2>
             <p className="text-base sm:text-lg md:text-xl text-navy-100 mb-4 sm:mb-6">
               Save over <strong>{Math.round(totalTimeSavedPerYear / 60)} hours per year</strong> per nurse
             </p>

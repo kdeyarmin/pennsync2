@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { Link } from "react-router";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -34,7 +35,8 @@ import {
   Shield
 } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
-import { logSecurityEvent } from "@/components/utils/security";
+import { logSecurityEvent, isSafeExternalUrl } from "@/components/utils/security";
+import { formatLocalDate } from "@/lib/dateLocal";
 import PageContainer from "@/components/ui/PageContainer";
 import PersonnelCredentialForm from "@/components/personnel/PersonnelCredentialForm";
 import PersonnelStatusBadge from "@/components/personnel/PersonnelStatusBadge";
@@ -51,6 +53,7 @@ import {
 import CareScopeSelector from "../components/profile/CareScopeSelector";
 import CareScopeBadge from "../components/profile/CareScopeBadge";
 import DutyStatusCard from "../components/voice/DutyStatusCard";
+import { ALL_ROWS } from '@/lib/queryLimits';
 import { getStaffRole, staffRoleLabel } from "@/lib/roles";
 
 export default function UserSettings() {
@@ -72,6 +75,7 @@ export default function UserSettings() {
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
   });
+  const isNurse = getStaffRole(currentUser) === "nurse";
 
   useEffect(() => {
     if (currentUser) {
@@ -232,7 +236,7 @@ export default function UserSettings() {
         requested_at: new Date().toISOString(),
       }, 'warning');
 
-      const admins = await base44.entities.User.filter({ role: 'admin' }).catch(() => []);
+      const admins = await base44.entities.User.filter({ role: 'admin' }, undefined, ALL_ROWS).catch(() => []);
       await Promise.all((admins || []).map((admin) =>
         base44.functions.invoke('createNotification', {
           user_email: admin.email,
@@ -274,21 +278,18 @@ export default function UserSettings() {
       )}
 
       <Tabs defaultValue="profile" className="space-y-4 sm:space-y-6">
-        <TabsList>
-          <TabsTrigger value="profile"><Heart /> Profile</TabsTrigger>
-          <TabsTrigger value="credentials"><Shield /> Credentials</TabsTrigger>
-          <TabsTrigger value="ai-behavior"><Brain /> AI</TabsTrigger>
-          <TabsTrigger value="features"><Sparkles /> Features</TabsTrigger>
-          <TabsTrigger value="documentation"><FileText /> Docs</TabsTrigger>
+        <TabsList className="flex w-full">
+          <TabsTrigger value="profile" className="flex-1 gap-1.5"><Heart className="w-3.5 h-3.5" /> Profile</TabsTrigger>
+          <TabsTrigger value="credentials" className="flex-1 gap-1.5"><Shield className="w-3.5 h-3.5" /> Credentials</TabsTrigger>
+          <TabsTrigger value="ai-behavior" className="flex-1 gap-1.5"><Brain className="w-3.5 h-3.5" /> AI</TabsTrigger>
+          <TabsTrigger value="features" className="flex-1 gap-1.5"><Sparkles className="w-3.5 h-3.5" /> Features</TabsTrigger>
+          <TabsTrigger value="documentation" className="flex-1 gap-1.5"><FileText className="w-3.5 h-3.5" /> Docs</TabsTrigger>
         </TabsList>
 
         {/* Profile / Role Tab */}
         <TabsContent value="profile" className="space-y-6">
           <DutyStatusCard />
 
-          {/* Staff role / discipline — read-only. It's assigned by an administrator
-              (at registration / in User Management) and drives which navigation and
-              tools are available (see lib/roles.js). */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -341,7 +342,7 @@ export default function UserSettings() {
               </div>
               <div>
                 <Label htmlFor="credential_type" className="text-sm font-medium">
-                  Credential Type{getStaffRole(currentUser) === "nurse" ? " *" : " (optional)"}
+                  Credential Type{isNurse ? " *" : " (optional)"}
                 </Label>
                 <Select
                   value={profileData.credential_type}
@@ -377,8 +378,7 @@ export default function UserSettings() {
             </CardContent>
           </Card>
 
-          {/* Care scope + service-line compliance only apply to nurses. */}
-          {getStaffRole(currentUser) === "nurse" && (
+          {isNurse && (
           <>
           <Card>
             <CardHeader>
@@ -477,10 +477,14 @@ export default function UserSettings() {
                     <CardTitle>{editingCredential ? 'Update Credential' : 'Add License, Certification, or Insurance'}</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <PersonnelCredentialForm 
-                      currentUser={currentUser} 
-                      existingItem={editingCredential} 
-                      onDone={() => { setShowCredentialForm(false); setEditingCredential(null); }} 
+                    {/* Keyed on the target credential — see PersonnelFile.jsx:
+                        Edit sets editingCredential while the form is already
+                        open, and the form only seeds its fields on mount. */}
+                    <PersonnelCredentialForm
+                      key={editingCredential?.id || 'new'}
+                      currentUser={currentUser}
+                      existingItem={editingCredential}
+                      onDone={() => { setShowCredentialForm(false); setEditingCredential(null); }}
                     />
                   </CardContent>
                 </Card>
@@ -504,7 +508,7 @@ export default function UserSettings() {
                             <PersonnelStatusBadge status={item.status} />
                           </div>
                           <p className="text-sm text-slate-600">
-                            {item.item_type} • Expires {new Date(item.expiration_date).toLocaleDateString()}
+                            {item.item_type} • Expires {formatLocalDate(item.expiration_date)}
                           </p>
                           {item.issuing_organization && (
                             <p className="text-sm text-slate-500">{item.issuing_organization}</p>
@@ -512,8 +516,8 @@ export default function UserSettings() {
                           {item.credential_number && (
                             <p className="text-sm text-slate-500">#{item.credential_number}</p>
                           )}
-                          {item.uploaded_file_url && (
-                            <a href={item.uploaded_file_url} target="_blank" rel="noreferrer" className="text-sm text-indigo-600 underline hover:text-indigo-700 mt-2 inline-block">
+                          {item.uploaded_file_url && isSafeExternalUrl(item.uploaded_file_url) && (
+                            <a href={item.uploaded_file_url} target="_blank" rel="noopener noreferrer" className="text-sm text-indigo-600 underline hover:text-indigo-700 mt-2 inline-block">
                               View Document
                             </a>
                           )}
@@ -807,10 +811,19 @@ export default function UserSettings() {
         </AlertDescription>
       </Alert>
 
+      {/* Legal */}
+      <p className="mt-6 text-sm text-slate-500">
+        Review how PennSync collects, uses, and retains your data in the{' '}
+        <Link to="/privacy" className="font-medium text-navy-600 underline-offset-2 hover:underline">
+          Privacy Policy
+        </Link>
+        .
+      </p>
+
       {/* Delete Account Section - Danger Zone */}
       <div className="mt-8 pt-8 border-t-2 border-red-300">
         <div className="mb-4">
-          <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+          <h2 className="text-xl font-semibold text-slate-900 flex items-center gap-2">
             <AlertTriangle className="w-5 h-5 text-red-600" />
             Danger Zone
           </h2>
@@ -845,7 +858,7 @@ export default function UserSettings() {
                     </p>
                   </div>
                   <p className="text-sm text-slate-700">
-                    You are about to request deletion of your PENNSync account. This action:
+                    You are about to request deletion of your PennSync by CareMetric account. This action:
                   </p>
                   <ul className="text-sm text-slate-700 space-y-1 ml-4 list-disc">
                     <li>Notifies your administrators to process the deletion</li>

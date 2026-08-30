@@ -32,12 +32,17 @@ import {
 import { toast } from "sonner";
 import ReactQuill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css";
+import { sanitizeHtml, isSafeExternalUrl } from "@/components/utils/security";
+
+const isSafePreviewUrl = (url) =>
+  typeof url === "string" && (url.startsWith("blob:") || isSafeExternalUrl(url));
 
 export default function VisualPDFTemplateEditor({ 
   templateElements = [], 
   onElementsChange,
   pdfUrl
 }) {
+  const safePdfUrl = isSafePreviewUrl(pdfUrl) ? pdfUrl : null;
   // Track selection by id and derive the live element from templateElements, so the
   // properties panel always edits current state. Storing a full element snapshot let
   // sequential edits spread from a stale copy and clobber the previous edit.
@@ -193,7 +198,7 @@ export default function VisualPDFTemplateEditor({
                 onDragOver={handleDragOver}
                 onDrop={handleDrop}
                 style={{
-                  backgroundImage: pdfUrl ? `url(${pdfUrl})` : 'none',
+                  backgroundImage: safePdfUrl ? `url(${safePdfUrl})` : 'none',
                   backgroundSize: 'contain',
                   backgroundRepeat: 'no-repeat',
                   backgroundPosition: 'center'
@@ -275,6 +280,7 @@ export default function VisualPDFTemplateEditor({
         <TabsContent value="properties" className="space-y-4">
           {selectedElement ? (
             <ElementPropertiesPanel
+              key={selectedElement.id}
               element={selectedElement}
               allElements={templateElements}
               onUpdate={(updates) => handleUpdateElement(selectedElement.id, updates)}
@@ -366,12 +372,18 @@ export default function VisualPDFTemplateEditor({
 }
 
 function ElementPropertiesPanel({ element, allElements, onUpdate, onDelete, onDuplicate, _onMove }) {
-  const [richTextValue, setRichTextValue] = useState(element.properties.defaultValue || '');
+  const [richTextValue, setRichTextValue] = useState(() =>
+    sanitizeHtml(element.properties.defaultValue || '')
+  );
 
   const handleRichTextChange = (value) => {
-    setRichTextValue(value);
+    // Quill's HTML export is vulnerable to XSS via unsanitized embeds
+    // (GHSA-v3m3-f69x-jf25); no patched quill release exists, so sanitize the
+    // exported HTML with DOMPurify before it enters app state / storage.
+    const sanitized = sanitizeHtml(value);
+    setRichTextValue(sanitized);
     onUpdate({
-      properties: { ...element.properties, defaultValue: value }
+      properties: { ...element.properties, defaultValue: sanitized }
     });
   };
 

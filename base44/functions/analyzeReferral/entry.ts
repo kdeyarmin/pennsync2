@@ -1,5 +1,14 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
+// <<<BEGIN SHARED HELPER: requireActiveUser — generated, edit base44/_shared/backendHelpers.mjs>>>
+const isDeactivatedUser = (u) => !!u && u.is_active === false;
+const DEACTIVATED_USER_RESPONSE = () => Response.json(
+  { error: 'Unauthorized - account is deactivated' },
+  { status: 403 },
+);
+// <<<END SHARED HELPER: requireActiveUser>>>
+
+
 // Tolerant JSON extractor: we ask for strict JSON in-prompt instead of passing
 // response_json_schema, because the provider rejects deeply-nested object
 // schemas that lack an explicit `required` array at every level.
@@ -27,6 +36,7 @@ Deno.serve(async (req) => {
     try {
         const base44 = createClientFromRequest(req);
         const user = await base44.auth.me();
+        if (isDeactivatedUser(user)) return DEACTIVATED_USER_RESPONSE();
 
         if (!user) {
             return Response.json({ error: 'Unauthorized' }, { status: 401 });
@@ -54,7 +64,7 @@ Deno.serve(async (req) => {
     } catch (error) {
         console.error('Referral analysis error:', error);
         return Response.json({ 
-            error: error.message,
+            error: 'Internal server error',
             success: false
         }, { status: 500 });
     }
@@ -64,7 +74,7 @@ async function analyzePriority(base44, params) {
     const { extractedData, analysisResults } = params;
 
     const priorityAnalysis = await base44.integrations.Core.InvokeLLM({
-        model: "claude_opus_4_8",
+        model: "automatic",
         prompt: `You are a clinical triage AI specializing in home health referral prioritization with advanced Natural Language Processing (NLP) capabilities.
 
 Analyze this referral and determine the urgency/priority level based on:
@@ -102,7 +112,7 @@ async function generateTasks(base44, params) {
     const { referralData, priorityAnalysis } = params;
 
     const tasks = await base44.integrations.Core.InvokeLLM({
-        model: "claude_opus_4_8",
+        model: "automatic",
         prompt: `You are an expert home health intake coordinator. Based on the referral data and priority analysis, generate actionable tasks for office and clinical staff.
 
 REFERRAL DATA:
@@ -140,7 +150,7 @@ async function matchPatient(base44, params) {
     const { extractedData, existingPatients } = params;
 
     const matchAnalysis = await base44.integrations.Core.InvokeLLM({
-        model: "claude_opus_4_8",
+        model: "automatic",
         prompt: `You are an expert patient matching system for healthcare records with advanced fuzzy matching capabilities.
 
 Analyze the referral data and compare it against existing patients to find the best match.

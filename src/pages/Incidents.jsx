@@ -1,4 +1,6 @@
 import { base44 } from "@/api/base44Client";
+import { useAgencyScopedQuery } from '@/hooks/useAgencyScopedQuery';
+import { useScopedPatients, activeAndNotArchived } from "@/hooks/useScopedPatients";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -15,23 +17,28 @@ export default function Incidents() {
     queryFn: () => base44.auth.me(),
   });
 
-  const { data: patients = [] } = useQuery({
-    queryKey: ["incident-patients"],
-    queryFn: async () => {
-      const allPatients = await base44.entities.Patient.list("-updated_date", 500);
-      return allPatients.filter((patient) => !patient.is_archived && patient.status === "active");
-    },
-    initialData: [],
+  // `select` rather than a filter inside the queryFn, so the shared cache entry
+  // keeps the full scoped roster and each consumer narrows its own view of it.
+  const { data: patients = [] } = useScopedPatients({
+    sort: "-updated_date",
+    limit: 500,
+    select: activeAndNotArchived,
   });
 
-  const { data: incidents = [] } = useQuery({
+  // Fetch a full page before agency post-filter — a small limit let foreign-
+  // agency rows fill the window and hide this agency's recent reports.
+  const { data: incidents = [] } = useAgencyScopedQuery({
     queryKey: ["my-incidents"],
-    queryFn: () => base44.entities.Incident.list("-created_date", 10),
+    fetch: () => base44.entities.Incident.list("-created_date", 5000),
     initialData: [],
   });
 
   const handleSubmitted = () => {
     queryClient.invalidateQueries({ queryKey: ["my-incidents"] });
+    queryClient.invalidateQueries({ queryKey: ["incidents"] });
+    queryClient.invalidateQueries({ queryKey: ["admin-incidents"] });
+    queryClient.invalidateQueries({ queryKey: ["incidentsForKPI"] });
+    queryClient.invalidateQueries({ queryKey: ["all-incidents"] });
     queryClient.invalidateQueries({ queryKey: ["notifications"] });
   };
 

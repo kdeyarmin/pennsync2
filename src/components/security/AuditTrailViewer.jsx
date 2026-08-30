@@ -28,8 +28,6 @@ import {
   Download,
   Calendar,
   User,
-  AlertTriangle,
-  Info,
   Lock,
   UnlockKeyhole,
   Database,
@@ -39,6 +37,15 @@ import {
 } from "lucide-react";
 import { formatEastern } from "../utils/timezone";
 import { toCsvRows } from "@/components/admin/csvExport";
+import { getSeverityBadge } from "@/components/security/auditSeverityBadge";
+import { isAdminView } from "@/lib/roles";
+
+// UserActivity has no top-level `severity` field — auditLogger stores it inside
+// the free-form `details` object (as `severity`), and anomaly SecurityLogs store
+// it as `details.anomaly_severity`. Read it from wherever it actually lives,
+// falling back to 'info' so filtering, counting and display stay consistent.
+const getLogSeverity = (log) =>
+  log?.severity ?? log?.details?.severity ?? log?.details?.anomaly_severity ?? 'info';
 
 export default function AuditTrailViewer({ filterType = "all" }) {
   const [searchTerm, setSearchTerm] = useState("");
@@ -53,7 +60,7 @@ export default function AuditTrailViewer({ filterType = "all" }) {
     queryFn: () => base44.auth.me(),
   });
 
-  const isAdmin = currentUser?.role === 'admin';
+  const isAdmin = isAdminView(currentUser);
 
   const { data: auditLogs = [], isLoading } = useQuery({
     queryKey: ['auditLogs'],
@@ -62,7 +69,7 @@ export default function AuditTrailViewer({ filterType = "all" }) {
   });
 
   const { data: securityLogs = [] } = useQuery({
-    queryKey: ['securityLogs'],
+    queryKey: ['securityLogs', '-timestamp', 500],
     queryFn: () => base44.entities.SecurityLog.list('-timestamp', 500),
     enabled: isAdmin,
   });
@@ -88,7 +95,7 @@ export default function AuditTrailViewer({ filterType = "all" }) {
          user_email: log.user_email,
          user_name: log.user_email?.split('@')[0],
          details: log.details,
-         severity: 'critical'
+         severity: getLogSeverity(log)
        }))]
     : auditLogs;
 
@@ -110,7 +117,7 @@ export default function AuditTrailViewer({ filterType = "all" }) {
     const matchesAction = actionFilter === 'all' || log.action === actionFilter;
     const matchesEntity = entityFilter === 'all' || log.entity_type === entityFilter;
     const matchesUser = userFilter === 'all' || log.user_email === userFilter;
-    const matchesSeverity = severityFilter === 'all' || log.severity === severityFilter;
+    const matchesSeverity = severityFilter === 'all' || getLogSeverity(log) === severityFilter;
     
     const logDate = new Date(log.created_date || log.timestamp);
     const daysAgo = parseInt(dateFilter);
@@ -130,7 +137,7 @@ export default function AuditTrailViewer({ filterType = "all" }) {
         log.action || '',
         log.entity_type || '',
         log.entity_id || '',
-        log.severity || 'info',
+        getLogSeverity(log),
         log.ip_address || '',
         JSON.stringify(log.details || {})
       ])
@@ -142,21 +149,6 @@ export default function AuditTrailViewer({ filterType = "all" }) {
     a.href = url;
     a.download = `audit_log_${filterType}_${new Date().toISOString()}.csv`;
     a.click();
-  };
-
-  const getSeverityBadge = (severity) => {
-    const config = {
-      critical: { color: 'bg-red-600 text-white', icon: AlertTriangle },
-      warning: { color: 'bg-yellow-600 text-white', icon: AlertTriangle },
-      info: { color: 'bg-blue-600 text-white', icon: Info },
-    };
-    const { color, icon: Icon } = config[severity] || config.info;
-    return (
-      <Badge className={color}>
-        <Icon className="w-3 h-3 mr-1" />
-        {severity || 'info'}
-      </Badge>
-    );
   };
 
   const getActionIcon = (action) => {
@@ -192,14 +184,14 @@ export default function AuditTrailViewer({ filterType = "all" }) {
     );
   }
 
-  const criticalCount = sortedLogs.filter(l => l.severity === 'critical').length;
+  const criticalCount = sortedLogs.filter(l => getLogSeverity(l) === 'critical').length;
   const securityEventsCount = sortedLogs.filter(l => 
     securityActions.some(action => l.action?.toLowerCase().includes(action.toLowerCase()))
   ).length;
 
   return (
-    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
-      <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
         <div className="min-w-0 flex-1">
           <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-slate-900 mb-1 truncate">
             {filterType === 'security' ? 'Security Events Log' : 'Complete Audit Trail'}
@@ -403,7 +395,7 @@ export default function AuditTrailViewer({ filterType = "all" }) {
                           )}
                         </TableCell>
                         <TableCell className="hidden lg:table-cell">
-                          {getSeverityBadge(log.severity)}
+                          {getSeverityBadge(getLogSeverity(log))}
                         </TableCell>
                         <TableCell className="text-xs hidden xl:table-cell">
                           {log.ip_address && (

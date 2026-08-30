@@ -1,3 +1,4 @@
+import { parseLocalDate, toLocalISODate } from "@/lib/dateLocal";
 /**
  * Centralized Statistics Calculator
  * Ensures consistent stat calculations across all dashboards, reports, and analytics
@@ -15,11 +16,22 @@ export const calculateStats = (data) => {
     dateRange = 30 // default 30 days
   } = data;
 
-  // Calculate date ranges
+  // Calculate date ranges. The window starts at LOCAL midnight `dateRange` days
+  // back: date-only fields (visit_date, incident_date, audit_date) carry no
+  // time-of-day, so anchoring the boundary at "this time of day N days ago"
+  // dropped the oldest day's records from every "in range" count.
   const today = new Date();
   const startDate = new Date(today);
   startDate.setDate(today.getDate() - dateRange);
-  const startDateString = startDate.toISOString().split('T')[0];
+  startDate.setHours(0, 0, 0, 0);
+  const startDateString = toLocalISODate(startDate);
+  // Date-only fields parse at UTC midnight through `new Date(...)`, which is the
+  // previous LOCAL day west of UTC — comparing that against a local boundary
+  // mis-buckets a day's worth of records at each edge of the window.
+  const onOrAfterStart = (value) => {
+    const d = parseLocalDate(value);
+    return d != null && d >= startDate;
+  };
 
   // ====================
   // VISIT STATISTICS
@@ -30,17 +42,13 @@ export const calculateStats = (data) => {
   const cancelledVisits = visits.filter(v => v.status === 'cancelled').length;
   const inProgressVisits = visits.filter(v => v.status === 'in_progress').length;
   
-  const visitsInDateRange = visits.filter(v => {
-    if (!v.visit_date && !v.created_date) return false;
-    const visitDate = new Date(v.visit_date || v.created_date);
-    return visitDate >= startDate;
-  }).length;
+  const visitsInDateRange = visits.filter(v =>
+    onOrAfterStart(v.visit_date || v.created_date)
+  ).length;
 
-  const completedVisitsInRange = visits.filter(v => {
-    if (!v.visit_date && !v.created_date) return false;
-    const visitDate = new Date(v.visit_date || v.created_date);
-    return visitDate >= startDate && v.status === 'completed';
-  }).length;
+  const completedVisitsInRange = visits.filter(v =>
+    v.status === 'completed' && onOrAfterStart(v.visit_date || v.created_date)
+  ).length;
 
   const completionRate = totalVisits > 0 
     ? Math.round((completedVisits / totalVisits) * 100) 
@@ -52,11 +60,9 @@ export const calculateStats = (data) => {
   // Note enhancements = times the "enhance note" button was clicked and AI generated a note
   const totalNoteConversions = noteConversions.length;
   
-  const noteConversionsInRange = noteConversions.filter(nc => {
-    if (!nc.created_date) return false;
-    const conversionDate = new Date(nc.created_date);
-    return conversionDate >= startDate;
-  }).length;
+  const noteConversionsInRange = noteConversions.filter(nc =>
+    onOrAfterStart(nc.created_date)
+  ).length;
 
   // ====================
   // TIME SAVINGS CALCULATIONS
@@ -94,11 +100,7 @@ export const calculateStats = (data) => {
   // INCIDENT STATISTICS
   // ====================
   const totalIncidents = incidents.length;
-  const incidentsInRange = incidents.filter(i => {
-    if (!i.incident_date) return false;
-    const incidentDate = new Date(i.incident_date);
-    return incidentDate >= startDate;
-  }).length;
+  const incidentsInRange = incidents.filter(i => onOrAfterStart(i.incident_date)).length;
   
   const falls = incidents.filter(i => i.incident_type === 'fall').length;
   const hospitalizations = incidents.filter(i => i.incident_type === 'hospitalized').length;
@@ -107,10 +109,9 @@ export const calculateStats = (data) => {
   // ====================
   // COMPLIANCE STATISTICS
   // ====================
-  const auditsInRange = complianceAudits.filter(a => {
-    const auditDate = new Date(a.audit_date || a.created_date);
-    return auditDate >= startDate;
-  });
+  const auditsInRange = complianceAudits.filter(a =>
+    onOrAfterStart(a.audit_date || a.created_date)
+  );
 
   const avgComplianceScore = auditsInRange.length > 0
     ? Math.round(auditsInRange.reduce((sum, a) => sum + (a.compliance_score || 0), 0) / auditsInRange.length)
@@ -220,9 +221,12 @@ export const calculateStats = (data) => {
 export const calculateNurseStats = (nurseEmail, data) => {
   const { visits = [], noteConversions = [], dateRange = 30 } = data;
 
+  // Same local-midnight window as calculateStats, so a "30 day" nurse card and a
+  // "30 day" agency card cover the identical span.
   const today = new Date();
   const startDate = new Date(today);
   startDate.setDate(today.getDate() - dateRange);
+  startDate.setHours(0, 0, 0, 0);
 
   const nurseVisits = visits.filter(v => v.created_by === nurseEmail);
   const nurseConversions = noteConversions.filter(nc => nc.nurse_email === nurseEmail);
@@ -231,13 +235,16 @@ export const calculateNurseStats = (nurseEmail, data) => {
   const totalConversions = nurseConversions.length;
 
   const conversionsInRange = nurseConversions.filter(nc => {
-    if (!nc.created_date) return false;
-    const conversionDate = new Date(nc.created_date);
-    return conversionDate >= startDate;
+    const d = parseLocalDate(nc.created_date);
+    return d != null && d >= startDate;
   }).length;
 
   const timeSavedMinutes = totalConversions * 20;
-  const timeSavedHours = Math.round(timeSavedMinutes / 60);
+  const timeSavedHours = Math.floor(timeSavedMinutes / 60);
+  // Range-scoped time saved (matches dateRange), for cards labeled e.g. "30 days".
+  // The all-time fields above are kept as-is (AgencyAnalytics reads them all-time).
+  const timeSavedMinutesInRange = conversionsInRange * 20;
+  const timeSavedHoursInRange = Math.floor(timeSavedMinutesInRange / 60);
 
   return {
     totalVisits: nurseVisits.length,
@@ -247,15 +254,11 @@ export const calculateNurseStats = (nurseEmail, data) => {
     noteConversionsInRange: conversionsInRange,
     timeSavedMinutes,
     timeSavedHours,
-    timeSavedDisplay: timeSavedHours > 0 ? `${timeSavedHours}h ${timeSavedMinutes % 60}m` : `${timeSavedMinutes}m`
+    timeSavedDisplay: timeSavedHours > 0 ? `${timeSavedHours}h ${timeSavedMinutes % 60}m` : `${timeSavedMinutes}m`,
+    timeSavedMinutesInRange,
+    timeSavedHoursInRange,
+    timeSavedDisplayInRange: timeSavedHoursInRange > 0 ? `${timeSavedHoursInRange}h ${timeSavedMinutesInRange % 60}m` : `${timeSavedMinutesInRange}m`
   };
-};
-
-/**
- * Format number with commas
- */
-export const formatNumber = (num) => {
-  return num.toLocaleString();
 };
 
 /**
@@ -263,12 +266,4 @@ export const formatNumber = (num) => {
  */
 export const formatCurrency = (amount) => {
   return `$${amount.toLocaleString()}`;
-};
-
-/**
- * Calculate percentage
- */
-export const calculatePercentage = (part, total) => {
-  if (total === 0) return 0;
-  return Math.round((part / total) * 100);
 };

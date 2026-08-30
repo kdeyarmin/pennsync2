@@ -1,9 +1,18 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
+// <<<BEGIN SHARED HELPER: requireActiveUser — generated, edit base44/_shared/backendHelpers.mjs>>>
+const isDeactivatedUser = (u) => !!u && u.is_active === false;
+const DEACTIVATED_USER_RESPONSE = () => Response.json(
+  { error: 'Unauthorized - account is deactivated' },
+  { status: 403 },
+);
+// <<<END SHARED HELPER: requireActiveUser>>>
+
+
 /**
  * Unified Clinical Data Analysis Function
- * Handles: event extraction, event analysis, trend analysis, and care plan generation
- * Replaces: extractClinicalEvents, analyzeClinicalEvents, analyzeClinicalTrends, generateCarePlanSuggestions
+ * Handles: event extraction, event analysis, and trend analysis
+ * Replaces: extractClinicalEvents, analyzeClinicalEvents, analyzeClinicalTrends
  */
 
 // Tolerant JSON extractor: we ask for strict JSON in-prompt instead of passing
@@ -23,10 +32,45 @@ function parseLLMJson(raw) {
   }
 }
 
+/** Explicit patient access — Patient RLS treats role:admin as platform-wide. */
+async function assertPatientAccess(base44, user, patient) {
+  if (!patient) return Response.json({ error: 'Patient not found' }, { status: 404 });
+  const isSuperAdmin = user.account_type === 'super_admin';
+  const isAgencyScopedAdmin =
+    user.account_type === 'agency_admin'
+    || (user.role === 'admin' && !!user.agency_name && !isSuperAdmin);
+  const isPlatformAdmin = isSuperAdmin || (user.role === 'admin' && !user.agency_name);
+  const isAssigned = Array.isArray(patient.assigned_nurses)
+    && patient.assigned_nurses.includes(user.email);
+  if (!isPlatformAdmin && !isAgencyScopedAdmin && patient.created_by !== user.email && !isAssigned) {
+    return Response.json({ error: 'Forbidden' }, { status: 403 });
+  }
+  if (isAgencyScopedAdmin) {
+    if (!user.agency_name) {
+      return Response.json({ error: 'Forbidden' }, { status: 403 });
+    }
+    const agencyUsers = await base44.asServiceRole.entities.User
+      .list('-created_date', 5000).catch(() => []);
+    const agencyEmails = new Set(
+      (agencyUsers || [])
+        .filter((u) => u.agency_name === user.agency_name && u.email)
+        .map((u) => u.email),
+    );
+    const inAgency = (patient.created_by && agencyEmails.has(patient.created_by))
+      || (Array.isArray(patient.assigned_nurses)
+        && patient.assigned_nurses.some((e) => agencyEmails.has(e)));
+    if (!inAgency) {
+      return Response.json({ error: 'Forbidden' }, { status: 403 });
+    }
+  }
+  return null;
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
+    if (isDeactivatedUser(user)) return DEACTIVATED_USER_RESPONSE();
 
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
@@ -39,7 +83,7 @@ Deno.serve(async (req) => {
         const { noteText, patientId } = params;
 
         const eventsResponse = await base44.asServiceRole.integrations.Core.InvokeLLM({
-          model: "claude_opus_4_8",
+          model: "automatic",
           prompt: `Analyze this clinical note and extract ALL significant clinical events with high accuracy.
 
 Clinical Note:
@@ -86,9 +130,6 @@ Return ONLY valid JSON, no prose or code fences, with this shape:
       case 'analyze_trends':
         return await analyzeTrends(base44, params);
 
-      case 'generate_care_plans':
-        return await generateCarePlans(base44, params);
-
       case 'full_clinical_analysis':
         // Complete clinical analysis with all components
         return await fullClinicalAnalysis(base44, params);
@@ -99,88 +140,14 @@ Return ONLY valid JSON, no prose or code fences, with this shape:
   } catch (error) {
     console.error('Clinical data analysis error:', error);
     return Response.json({
-      error: error.message,
+      error: 'Internal server error',
       success: false
     }, { status: 500 });
   }
 });
 
-async function extractEvents(base44, params) {
-  const { visit_id, patient_id, nurse_notes, visit_date } = params;
-
-  if (!visit_id || !patient_id || !nurse_notes) {
-    return Response.json({ error: 'Missing required fields' }, { status: 400 });
-  }
-
-  const rawResult = await base44.integrations.Core.InvokeLLM({
-    model: "claude_opus_4_8",
-    prompt: `Extract ALL significant clinical events from this nursing note. Be thorough.
-
-Visit Note:
-${nurse_notes}
-
-Extract: medication changes, appointments, hospitalizations, falls, wounds, labs, symptoms, vital changes, cognitive/functional changes, pain, infections, procedures, therapy changes, DME, and other significant events.
-
-For each event provide: event_type, event_title, event_description, structured_data, severity, requires_followup, followup_notes, source_text (exact quote), source_section, extraction_confidence (0-100).
-
-event_type must be one of: medication_change, medication_started, medication_stopped, physician_appointment, hospitalization, er_visit, fall, wound_new, wound_change, lab_result, symptom_new, symptom_resolved, vital_change, cognitive_change, functional_change, pain_change, infection, surgery, therapy_change, dme_ordered, other.
-severity must be one of: low, medium, high, critical.
-
-Return ONLY valid JSON, no prose or code fences, with this shape:
-{"events":[{"event_type":"","event_title":"","event_description":"","structured_data":{},"severity":"low|medium|high|critical","requires_followup":false,"followup_notes":"","source_text":"","source_section":"","extraction_confidence":0}]}`
-  });
-  const parsed = parseLLMJson(rawResult) || {};
-
-  // Allowed ClinicalEvent enums; coerce any AI value outside these sets to a
-  // safe default so ClinicalEvent.create won't reject the record.
-  const ALLOWED_EVENT_TYPES = new Set([
-    'medication_change', 'medication_started', 'medication_stopped',
-    'physician_appointment', 'hospitalization', 'er_visit', 'fall',
-    'wound_new', 'wound_change', 'lab_result', 'symptom_new',
-    'symptom_resolved', 'vital_change', 'cognitive_change',
-    'functional_change', 'pain_change', 'infection', 'surgery',
-    'therapy_change', 'dme_ordered', 'other'
-  ]);
-  const ALLOWED_SEVERITIES = new Set(['low', 'medium', 'high', 'critical']);
-
-  // Save extracted events
-  const savedEvents = [];
-  for (const event of parsed.events || []) {
-    // Coerce out-of-enum AI values to safe defaults before persisting
-    event.event_type = ALLOWED_EVENT_TYPES.has(event.event_type) ? event.event_type : 'other';
-    event.severity = ALLOWED_SEVERITIES.has(event.severity) ? event.severity : 'medium';
-
-    let text_anchor_start = null;
-    let text_anchor_end = null;
-
-    if (event.source_text && nurse_notes) {
-      const index = nurse_notes.indexOf(event.source_text.trim());
-      if (index !== -1) {
-        text_anchor_start = index;
-        text_anchor_end = index + event.source_text.length;
-      }
-    }
-
-    const eventData = {
-      patient_id,
-      visit_id,
-      event_date: visit_date,
-      ...event,
-      text_anchor_start,
-      text_anchor_end,
-      verified: false
-    };
-
-    const savedEvent = await base44.asServiceRole.entities.ClinicalEvent.create(eventData);
-    savedEvents.push(savedEvent);
-  }
-
-  return Response.json({
-    success: true,
-    events_extracted: savedEvents.length,
-    events: savedEvents
-  });
-}
+// Persisting ClinicalEvent rows belongs in extractClinicalEvents (claim +
+// access gates). The extract_events action above is read-only LLM analysis.
 
 async function analyzeEvents(base44, params) {
   const { patient_id } = params;
@@ -189,10 +156,17 @@ async function analyzeEvents(base44, params) {
     return Response.json({ error: 'Missing patient_id' }, { status: 400 });
   }
 
-  const events = await base44.entities.ClinicalEvent.filter({
+  const user = await base44.auth.me().catch(() => null);
+  if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+  const [patient] = await base44.asServiceRole.entities.Patient
+    .filter({ id: patient_id }, '', 1).catch(() => []);
+  const denied = await assertPatientAccess(base44, user, patient);
+  if (denied) return denied;
+
+  const events = await base44.asServiceRole.entities.ClinicalEvent.filter({
     patient_id,
     verified: false
-  }, '-event_date');
+  }, '-event_date', 5000);
 
   if (events.length === 0) {
     return Response.json({
@@ -201,9 +175,6 @@ async function analyzeEvents(base44, params) {
       message: 'No unverified events to analyze'
     });
   }
-
-  const patients = await base44.entities.Patient.filter({ id: patient_id });
-  const patient = patients[0];
 
   const eventsContext = events.map(e => ({
     id: e.id,
@@ -217,7 +188,7 @@ async function analyzeEvents(base44, params) {
   }));
 
   const result = await base44.integrations.Core.InvokeLLM({
-    model: "claude_opus_4_8",
+    model: "automatic",
     prompt: `Analyze these clinical events for a patient and identify potential issues:
 
 Patient: ${patient?.first_name} ${patient?.last_name}
@@ -256,16 +227,17 @@ async function analyzeTrends(base44, params) {
     return Response.json({ error: 'Missing patient_id' }, { status: 400 });
   }
 
-  const [patients, visits, clinicalEvents] = await Promise.all([
-    base44.entities.Patient.filter({ id: patient_id }),
-    base44.entities.Visit.filter({ patient_id }, '-visit_date', 100),
-    base44.entities.ClinicalEvent.filter({ patient_id }, '-event_date', 100)
-  ]);
+  const user = await base44.auth.me().catch(() => null);
+  if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+  const [patient] = await base44.asServiceRole.entities.Patient
+    .filter({ id: patient_id }, '', 1).catch(() => []);
+  const denied = await assertPatientAccess(base44, user, patient);
+  if (denied) return denied;
 
-  const patient = patients[0];
-  if (!patient) {
-    return Response.json({ error: 'Patient not found' }, { status: 404 });
-  }
+  const [visits, clinicalEvents] = await Promise.all([
+    base44.asServiceRole.entities.Visit.filter({ patient_id }, '-visit_date', 100),
+    base44.asServiceRole.entities.ClinicalEvent.filter({ patient_id }, '-event_date', 100)
+  ]);
 
   const vitalsHistory = visits
     .filter(v => v.vital_signs)
@@ -276,7 +248,7 @@ async function analyzeTrends(base44, params) {
   const labEvents = clinicalEvents.filter(e => e.event_type?.includes('lab'));
 
   const result = await base44.integrations.Core.InvokeLLM({
-    model: "claude_opus_4_8",
+    model: "automatic",
     prompt: `Analyze this patient's clinical data over time and identify significant trends, patterns, and risks.
 
 PATIENT: ${patient.first_name} ${patient.last_name}
@@ -332,85 +304,21 @@ Return ONLY valid JSON, no prose or code fences, with this shape:
   });
 }
 
-async function generateCarePlans(base44, params) {
-  const { patient_id } = params;
-
-  if (!patient_id) {
-    return Response.json({ error: 'Missing patient_id' }, { status: 400 });
-  }
-
-  const [patients, clinicalEvents, existingCarePlans, visits, incidents] = await Promise.all([
-    base44.entities.Patient.filter({ id: patient_id }),
-    base44.entities.ClinicalEvent.filter({ patient_id }, '-event_date', 50),
-    base44.entities.CarePlan.filter({ patient_id }),
-    base44.entities.Visit.filter({ patient_id }, '-visit_date', 10),
-    base44.entities.Incident.filter({ patient_id }, '-incident_date', 10)
-  ]);
-
-  const patient = patients[0];
-  if (!patient) {
-    return Response.json({ error: 'Patient not found' }, { status: 404 });
-  }
-
-  const result = await base44.integrations.Core.InvokeLLM({
-    model: "claude_opus_4_8",
-    prompt: `Generate comprehensive care plan suggestions for this home health patient.
-
-PATIENT: ${patient.first_name} ${patient.last_name}, Age: ${patient.date_of_birth ? new Date().getFullYear() - new Date(patient.date_of_birth).getFullYear() : 'Unknown'}
-Primary Diagnosis: ${patient.primary_diagnosis}
-Secondary Diagnoses: ${patient.secondary_diagnoses?.join(', ') || 'None'}
-Medications: ${patient.current_medications?.map(m => `${m.name} ${m.dosage || ''}`).join(', ')}
-
-RECENT CLINICAL EVENTS: ${JSON.stringify(clinicalEvents.slice(0, 20), null, 2)}
-RECENT VISITS: ${JSON.stringify(visits.slice(0, 5), null, 2)}
-INCIDENTS: ${JSON.stringify(incidents, null, 2)}
-EXISTING CARE PLANS: ${existingCarePlans.map(cp => cp.problem).join(', ') || 'None'}
-
-Generate care plan suggestions addressing:
-1. Unaddressed clinical needs
-2. Risk factors requiring prevention
-3. Medication management
-4. Functional improvement opportunities
-5. Safety concerns
-6. Patient education needs
-7. Chronic disease management
-
-For each: problem (NANDA-I), measurable goal, 3-5 interventions, expected outcomes, baseline measurement, frequency, priority, rationale, medicare considerations, target_days.
-
-Only suggest NEW care plans not already covered.
-
-Return ONLY valid JSON, no prose or code fences, with this shape:
-{"suggestions":[{"problem":"","goal":"","interventions":[""],"expected_outcomes":"","baseline_measurement":"","frequency":"","priority":"","rationale":"","medicare_considerations":"","target_days":0}],"overall_assessment":"","critical_gaps_identified":[""]}`
-  });
-  const parsed = parseLLMJson(result) || {};
-
-  return Response.json({
-    success: true,
-    patient_name: `${patient.first_name} ${patient.last_name}`,
-    suggestions: parsed?.suggestions || [],
-    overall_assessment: parsed?.overall_assessment || '',
-    critical_gaps_identified: parsed?.critical_gaps_identified || []
-  });
-}
-
 async function fullClinicalAnalysis(base44, params) {
   const { patient_id } = params;
 
   // Run all analyses in parallel
-  const [trendsResult, carePlansResult, eventsResult] = await Promise.all([
+  const [trendsResult, eventsResult] = await Promise.all([
     analyzeTrends(base44, { patient_id }),
-    generateCarePlans(base44, { patient_id }),
     analyzeEvents(base44, { patient_id })
   ]);
 
   const trendsData = await trendsResult.json();
-  const carePlansData = await carePlansResult.json();
   const eventsData = await eventsResult.json();
 
   return Response.json({
     success: true,
     trends: trendsData,
-    care_plan_suggestions: carePlansData,
     event_analysis: eventsData
   });
 }

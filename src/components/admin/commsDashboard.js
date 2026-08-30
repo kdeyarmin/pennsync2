@@ -44,7 +44,7 @@ function lastSevenDayKeys(now) {
 }
 
 /**
- * @param {{messages?: object[], calls?: object[], faxes?: object[]}} input
+ * @param {{messages?: Record<string, any>[], calls?: Record<string, any>[], faxes?: Record<string, any>[]}} input
  * @param {Date} now
  */
 export function summarizeComms({ messages = [], calls = [], faxes = [] } = {}, now = new Date()) {
@@ -55,8 +55,8 @@ export function summarizeComms({ messages = [], calls = [], faxes = [] } = {}, n
   // ---- SMS ----
   const smsOutbound = msgs.filter((m) => m.direction === 'outbound');
   const smsInbound = msgs.filter((m) => m.direction === 'inbound');
-  const smsDelivered = msgs.filter((m) => m.status === 'delivered');
-  const smsFailed = msgs.filter((m) => m.status === 'failed');
+  const smsDelivered = smsOutbound.filter((m) => m.status === 'delivered');
+  const smsFailed = smsOutbound.filter((m) => m.status === 'failed');
   const sms = {
     total: msgs.length,
     inbound: smsInbound.length,

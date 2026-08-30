@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, RefreshCw, TrendingUp, BookOpen, CheckCircle2, AlertTriangle } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { severitySolidClass } from "@/lib/severityStyles";
+import AICaveat from "@/components/ui/AICaveat";
 
 export default function AIPathwayUpdater({ pathway, onPathwayUpdated }) {
   const ai = useAICall();
@@ -53,7 +55,7 @@ Also indicate:
 Return ONLY valid JSON.`;
 
       const response = await ai.run({
-        model: "claude_opus_4_8",
+        model: "automatic",
         prompt,
         add_context_from_internet: true,
         response_json_schema: {
@@ -131,16 +133,6 @@ Return ONLY valid JSON.`;
     } catch (err) {
       console.error("Failed to apply recommendation:", err);
       setError(err.message);
-    }
-  };
-
-  const getPriorityColor = (priority) => {
-    switch (priority) {
-      case 'critical': return 'bg-red-600 text-white';
-      case 'high': return 'bg-orange-500 text-white';
-      case 'medium': return 'bg-yellow-500 text-white';
-      case 'low': return 'bg-blue-500 text-white';
-      default: return 'bg-slate-500 text-white';
     }
   };
 
@@ -227,6 +219,7 @@ Return ONLY valid JSON.`;
                   <CheckCircle2 className="w-4 h-4 text-green-600" />
                   Recommendations ({recommendations.recommendations.length})
                 </h4>
+                <AICaveat label="AI-suggested — review clinically before applying" />
                 <ScrollArea className="max-h-96">
                   <div className="space-y-3">
                     {recommendations.recommendations.map((rec, idx) => (
@@ -234,7 +227,7 @@ Return ONLY valid JSON.`;
                         <CardContent className="p-3 space-y-2">
                           <div className="flex items-start justify-between">
                             <div className="flex-1">
-                              <Badge className={getPriorityColor(rec.priority)} size="sm">
+                              <Badge className={severitySolidClass(rec.priority)} size="sm">
                                 {rec.priority}
                               </Badge>
                               <p className="text-xs text-slate-500 mt-1">{rec.category}</p>
@@ -258,7 +251,7 @@ Return ONLY valid JSON.`;
                             <Button
                               onClick={() => applyRecommendation(rec)}
                               size="sm"
-                              className="w-full bg-green-600 hover:bg-green-700 mt-2"
+                              className="w-full mt-2"
                             >
                               Apply This Update
                             </Button>

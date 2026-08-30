@@ -138,7 +138,7 @@ export default function RealTimeDictationScribe({ currentUser }) {
     recognition.onend = () => {
       // Auto-restart if still supposed to be listening
       if (recognitionRef.current && recognitionRef.current._shouldBeListening) {
-        try { recognition.start(); } catch {}
+        try { recognition.start(); } catch { /* no-op */ }
       } else {
         setIsListening(false);
       }
@@ -150,7 +150,7 @@ export default function RealTimeDictationScribe({ currentUser }) {
     return () => {
       if (recognitionRef.current) {
         recognitionRef.current._shouldBeListening = false;
-        try { recognitionRef.current.stop(); } catch {}
+        try { recognitionRef.current.stop(); } catch { /* no-op */ }
       }
     };
   }, []);
@@ -206,7 +206,7 @@ IMPORTANT RULES:
 Return only the structured clinical note, no preamble.`;
 
     try {
-      const result = await invokeLLM({ prompt, model: "claude_opus_4_8" });
+      const result = await invokeLLM({ prompt, model: "automatic" });
       setStructuredNote(result);
     } catch {
       setError("Failed to structure note. Please try again.");
@@ -352,7 +352,7 @@ Return only the structured clinical note, no preamble.`;
           <Button
             onClick={structureNote}
             disabled={isStructuring}
-            className="bg-gradient-to-r from-navy-600 to-indigo-600 text-white gap-2 px-8 py-3 text-base shadow-md hover:shadow-lg"
+            className="gap-2"
             size="lg"
           >
             {isStructuring ? (

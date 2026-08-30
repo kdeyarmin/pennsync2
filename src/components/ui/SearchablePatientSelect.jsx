@@ -4,7 +4,6 @@ import { Check, ChevronsUpDown, Clock, Star, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Command,
-  CommandEmpty,
   CommandGroup,
   CommandInput,
   CommandItem,
@@ -61,18 +60,31 @@ export default function SearchablePatientSelect({
     setLocalPatients(patientArray);
   }, [patients]);
 
-  // Load current user and their preferences
+  // Load current user and their preferences. Favorites live on User.favorited_patients
+  // (sidebar + alerts read that field); localStorage is a fast cache / offline fallback.
   useEffect(() => {
     const loadUserPreferences = async () => {
       try {
         const user = await base44.auth.me();
         const userEmail = user?.email || 'default';
         setCurrentUserEmail(userEmail);
-        
+
         const recent = JSON.parse(localStorage.getItem(`recentPatients_${userEmail}`) || '[]');
-        const favorited = JSON.parse(localStorage.getItem(`favoritedPatients_${userEmail}`) || '[]');
         setRecentPatients(recent);
-        setFavoritedPatients(favorited);
+
+        const fromUser = (user?.favorited_patients || [])
+          .map((fav) => (typeof fav === 'string' ? fav : fav?.id))
+          .filter(Boolean);
+        const fromLocal = JSON.parse(localStorage.getItem(`favoritedPatients_${userEmail}`) || '[]');
+        // Prefer the persisted User field; merge any local-only stars so we don't
+        // silently drop favorites that never got written to the profile.
+        const merged = [...new Set([...fromUser, ...fromLocal])];
+        setFavoritedPatients(merged);
+        if (fromLocal.length > 0 && fromUser.length === 0) {
+          // One-time migration: promote localStorage favorites onto the user profile
+          // so the sidebar / alerts dashboard can see them.
+          base44.auth.updateMe({ favorited_patients: merged }).catch(() => {});
+        }
       } catch (error) {
         console.error('Error loading patient preferences:', error);
       }
@@ -94,10 +106,11 @@ export default function SearchablePatientSelect({
     ].slice(0, 5);
     
     setRecentPatients(updatedRecent);
-    try { localStorage.setItem(`recentPatients_${currentUserEmail}`, JSON.stringify(updatedRecent)); } catch {}
+    try { localStorage.setItem(`recentPatients_${currentUserEmail}`, JSON.stringify(updatedRecent)); } catch { /* no-op */ }
   };
 
-  // Toggle favorite
+  // Toggle favorite — persist to User.favorited_patients (and local cache) so the
+  // sidebar Favorites rail and PatientAlertsDashboard can read the same list.
   const toggleFavorite = (patientId, e) => {
     e.stopPropagation();
     if (!currentUserEmail) return;
@@ -109,7 +122,10 @@ export default function SearchablePatientSelect({
       : [...favoritedPatients, patientId];
     
     setFavoritedPatients(updatedFavorites);
-    try { localStorage.setItem(`favoritedPatients_${currentUserEmail}`, JSON.stringify(updatedFavorites)); } catch {}
+    try { localStorage.setItem(`favoritedPatients_${currentUserEmail}`, JSON.stringify(updatedFavorites)); } catch { /* no-op */ }
+    base44.auth.updateMe({ favorited_patients: updatedFavorites }).catch((err) => {
+      toast.error(err?.message || 'Could not save favorite');
+    });
   };
 
   // Create new patient
@@ -121,9 +137,6 @@ export default function SearchablePatientSelect({
       const created = await base44.entities.Patient.create(newPatient);
       setLocalPatients((current) => [created, ...current]);
       queryClient.invalidateQueries({ queryKey: ['patients'] });
-      queryClient.invalidateQueries({ queryKey: ['patients-list'] });
-      queryClient.invalidateQueries({ queryKey: ['patients-for-select'] });
-      queryClient.invalidateQueries({ queryKey: ['patients-for-signatures'] });
       handleSelect(created.id);
       setCreateDialogOpen(false);
       setNewPatient({ first_name: "", last_name: "" });
@@ -165,15 +178,22 @@ export default function SearchablePatientSelect({
       return aName.localeCompare(bName);
     });
 
-    const favorites = filtered.filter(p => favoritedPatients.includes(p.id));
-    const recentIds = new Set(recentPatients);
-    const recent = filtered
-      .filter(p => recentIds.has(p.id) && !favoritedPatients.includes(p.id))
-      .slice(0, 3);
-    
     const favoriteIds = new Set(favoritedPatients);
-    const all = filtered.filter(p => 
-      !favoriteIds.has(p.id) && !recentIds.has(p.id)
+    const favorites = filtered.filter(p => favoriteIds.has(p.id));
+
+    // Order Recent by most-recently-used (recentPatients is prepended on select),
+    // not alphabetically, and cap at 3.
+    const recent = recentPatients
+      .map(id => filtered.find(p => p.id === id))
+      .filter(p => p && !favoriteIds.has(p.id))
+      .slice(0, 3);
+
+    // Only exclude the recents actually shown above from "All Patients" —
+    // excluding every recent id would drop a 4th/5th recent patient from both
+    // groups, hiding them from the picker entirely.
+    const shownRecentIds = new Set(recent.map(p => p.id));
+    const all = filtered.filter(p =>
+      !favoriteIds.has(p.id) && !shownRecentIds.has(p.id)
     );
 
     return {
@@ -221,26 +241,27 @@ export default function SearchablePatientSelect({
             className="border-b-0"
           />
           <CommandList className="max-h-[400px]">
+            {/* Plain divs, not CommandEmpty: with shouldFilter={false} cmdk sets
+                its filtered count to the number of registered items, and the
+                "Add new patient" item below is always registered — so a
+                CommandEmpty here could never render and the user saw a blank
+                list instead of these messages. */}
             {localPatients.length === 0 ? (
-              <CommandEmpty>
-                <div className="py-6 text-center">
-                  <p className="text-sm text-muted-foreground mb-3">No patients available. (Loaded: {localPatients.length})</p>
-                  <Button 
-                    onClick={openCreateDialog}
-                    size="sm"
-                    className="gap-2"
-                  >
-                    <Plus className="h-4 w-4" />
-                    Create New Patient
-                  </Button>
-                </div>
-              </CommandEmpty>
+              <div className="py-6 text-center">
+                <p className="text-sm text-muted-foreground mb-3">No patients available. (Loaded: {localPatients.length})</p>
+                <Button
+                  onClick={openCreateDialog}
+                  size="sm"
+                  className="gap-2"
+                >
+                  <Plus className="h-4 w-4" />
+                  Create New Patient
+                </Button>
+              </div>
             ) : favoritesList.length === 0 && recentList.length === 0 && allPatientsList.length === 0 ? (
-              <CommandEmpty>
-                <div className="py-6 text-center">
-                  <p className="text-sm text-muted-foreground mb-3">No patients match your search.</p>
-                </div>
-              </CommandEmpty>
+              <div className="py-6 text-center">
+                <p className="text-sm text-muted-foreground mb-3">No patients match your search.</p>
+              </div>
             ) : null}
             
             {favoritesList.length > 0 && (

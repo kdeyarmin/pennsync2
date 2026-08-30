@@ -23,21 +23,16 @@ localStorage.)
 
 ## 2. Telnyx — text / voice / video / fax
 
-Two ways to supply Telnyx config. **Env takes precedence over in-app.** Pick one path
-per value; don't split a single value across both.
+All Telnyx config is set **in-app** — the `TELNYX_*` / `FUNCTIONS_BASE_URL`
+dashboard-env override path was retired.
 
 ### Step 2a — set the credentials
-**Option A (recommended): in-app.** Administration → Super Admin → Telnyx
-(`TelnyxSecretPanel`). Stored backend-only as an `IntegrationSecret` (provider
-`telnyx`). Set: API key (`KEY…`), Ed25519 **public** key, Messaging Profile id, Voice
-(Call Control) connection id, Fax connection id, Fax number (E.164).
-
-**Option B: dashboard env** (overrides in-app):
-`TELNYX_API_KEY`, `TELNYX_PUBLIC_KEY`, `TELNYX_MESSAGING_PROFILE_ID`,
-`TELNYX_VOICE_CONNECTION_ID` (or legacy `TELNYX_CONNECTION_ID`),
-`TELNYX_FAX_CONNECTION_ID`, `TELNYX_FAX_NUMBER`, and `FUNCTIONS_BASE_URL`
-(e.g. `https://<app>/functions`) so outbound sends/calls auto-attach the status
-webhook URL.
+Administration → Super Admin → Telnyx (`TelnyxSecretPanel`). Stored backend-only
+as an `IntegrationSecret` (provider `telnyx`). Set: API key (`KEY…`), Ed25519
+**public** key, Messaging Profile id, Voice (Call Control) connection id, Fax
+connection id. The office fax number and main office number live on
+`AgencySettings` (Admin → Super Admin). Outbound sends/calls derive the status
+webhook URL from their own request URL — no `FUNCTIONS_BASE_URL` needed.
 
 **Verify (read-only, no traffic):** run `testTelnyxConnection` (live `/v2/whoami`
 probe + readiness report) and/or `getTelnyxSecretStatus`. Both should report the keys
@@ -55,8 +50,8 @@ the URL+body).
 
 ### Step 2c — confirm signature verification (fail-closed)
 `handleTelnyxStatusWebhook` verifies the `telnyx-signature-ed25519` header against
-`TELNYX_PUBLIC_KEY` and enforces a fresh-timestamp window. **The public key MUST be set
-or all inbound webhooks are rejected 401.**
+the in-app Ed25519 public key and enforces a fresh-timestamp window. **The public key
+MUST be set or all inbound webhooks are rejected 401.**
 
 **Verify:**
 - Valid Telnyx-signed event → `200`.
@@ -69,20 +64,27 @@ or all inbound webhooks are rejected 401.**
 
 ## 3. Backend security secrets
 
-Set in the dashboard env (function secrets). Each fails closed or degrades safely when
-unset, but several should be set **at launch**:
+Set in the dashboard env (function secrets). There are two. The rest of the old
+secret surface is structural now: the file-fetch SSRF allowlist is hardcoded in
+code (always-on, fail-closed on the app's own storage hosts), the `onUserSignup`
+re-fetch/email-match guard is always active (`SIGNUP_WEBHOOK_SECRET` retired),
+debug logging is compiled out (`FUNCTIONS_DEBUG` retired), and certificate
+issuance is protected structurally: `issueCertificate` only trusts a passing
+`TrainingAttempt` row, which is written exclusively server-side by
+`gradeTrainingAttempt` (entity RLS allows admin writes only).
 
 | Secret | Set at launch? | Effect if unset |
 |---|---|---|
-| `INTERNAL_FN_SECRET` | **Yes** | `issueCertificate` lockdown inactive → training certificates are **forgeable**. Required for the §4-RLS attestation lock to mean anything. |
 | `SIGNATURE_HMAC_SECRET` | **Yes** | Signature integrity MAC falls back to **unkeyed sha256** — detects corruption, **not** forgery. Set it so e-signature tamper-evidence is forgery-resistant. |
-| `FILE_URL_ALLOWED_HOSTS` | **Yes** | Server-side file fetches (`processPatientFileUpdate`, PDF fns) only block IP/scheme literals; set to your storage host(s) to fully close SSRF + DNS-rebinding. |
-| `FILE_URL_STRICT` | recommended | `=true` makes the allowlist mandatory (fail-closed). **Set `FILE_URL_ALLOWED_HOSTS` first**, or all external fetches are rejected. |
-| `SIGNUP_WEBHOOK_SECRET` | optional | Locks `onUserSignup` to the trusted trigger; without it the re-fetch/email-match guard still applies. |
-| `FUNCTIONS_DEBUG` | leave **off** | `=1` enables verbose backend logs; keep off in prod to stay quiet and PHI-free. |
+| `INTERNAL_FN_SECRET` | **Yes** | Every scheduled/internal function (the ~30-function cron family: fax queues, SMS dispatch, renewal reminders, outcome measures, …) authorizes with `x-internal-secret: <INTERNAL_FN_SECRET>` OR an admin session, and **fails closed with a 500 when the secret is unset** and the caller isn't an admin — so unattended cron firings all fail until it is set. See `docs/LEARNING_CENTER_SCHEDULED_JOBS.md` for the registration steps (the platform trigger must send the header). |
 
-**Verify `INTERNAL_FN_SECRET`:** a direct `issueCertificate` call from a non-admin is
-rejected; a legitimate completion via `gradeTrainingAttempt` still issues a certificate.
+**Verify scheduled-function auth:** an unauthenticated POST to a cron function
+(e.g. `processScheduledFaxes`) without the header → `401/500`; with
+`x-internal-secret` set correctly → `200`.
+
+**Verify certificate issuance:** a direct `issueCertificate` call from a non-admin
+with no passing attempt is rejected; a legitimate completion via
+`gradeTrainingAttempt` still issues a certificate.
 
 ---
 
@@ -99,6 +101,9 @@ of the app is unaffected.
 
 (Telehealth video tokens and outbound fax use the Telnyx config from §2, not these.)
 
+These three plus the §3 `SIGNATURE_HMAC_SECRET` are the **complete** backend
+secret list (four total) — nothing else is read from the dashboard env.
+
 **Verify:** with a key set, the corresponding feature runs; with it unset, it shows the
 not-configured notice rather than erroring.
 
@@ -113,7 +118,8 @@ platform restricts who can invoke function endpoints (**confirm that**).
 |---|---|---|
 | `processScheduledFaxes` **XOR** `processScheduledFaxesByPriority` | one of them, e.g. every 5 min | **Enable only ONE** — both running double-sends faxes. |
 | `dispatchScheduledSms` | one schedule, e.g. every 5 min | `pending→sending` claim is best-effort, not atomic — overlapping runs double-send a queued text. One schedule only. |
-| `sendAutomatedSignatureReminders` **+** `scheduleSignatureReminders` | per your reminder policy | Idempotency now guards on `last_reminder_sent_at` (schema field exists), so a tick won't re-email every run. |
+| `sendAutomatedSignatureReminders` | per your reminder policy | Idempotency now guards on `last_reminder_sent_at` (schema field exists), so a tick won't re-email every run. |
+| `dispatchScheduledSignatureReminders` | one schedule, e.g. every 15 min | Delivers `ScheduledSignatureReminder` rows queued by `scheduleSignatureReminders` (which is caller-invoked, not a cron). Claim + re-read guards overlapping runs; recipients are re-derived from the document's pending signers at send time. |
 | `sendExpirationNotifications` | daily | Document/credential expirations. |
 | `sendPersonnelExpirationNotifications` | daily | Personnel credential expirations. |
 | `monitorComplianceRisks` | daily/periodic | Compliance risk monitor. |

@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { createPageUrl } from "@/utils";
@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input";
 import {
   Search, ArrowRight, Users, GraduationCap, Stethoscope,
-  ShieldCheck, BarChart3, Database, Settings, LayoutGrid,
+  ShieldCheck, BarChart3, Database, Settings, LayoutGrid, ClipboardList,
 } from "lucide-react";
 import { NAV_MAP, isLinkablePage } from "@/lib/nav.manifest";
 import { isSuperAdminView } from "@/lib/roles";
@@ -46,6 +46,15 @@ const GROUPS = [
     ],
   },
   {
+    title: "Intake & Referrals",
+    description: "Take in new referrals, triage them, and start admissions.",
+    icon: ClipboardList,
+    color: "text-rose-600 bg-rose-50",
+    pages: [
+      "ReferralIntake", "ReferralTriage",
+    ],
+  },
+  {
     title: "Clinical Oversight",
     description: "Pathways, clinical insights, and OASIS audit & analytics.",
     icon: Stethoscope,
@@ -69,7 +78,7 @@ const GROUPS = [
     icon: BarChart3,
     color: "text-navy-600 bg-navy-50",
     pages: [
-      "ReportsAnalytics", "AgencyAnalytics", "PredictiveAnalytics",
+      "ReportsAnalytics", "AgencyAnalytics", "PredictiveAnalytics", "DocumentationImpact",
     ],
   },
   {

@@ -16,29 +16,53 @@
 //     pattern?: RegExp,                      // optional stronger presence test
 //     question,                              // asked when the element is missing
 //     notDocumentedPhrase,                   // non-critical fallback line
-//     standardNegative?: { prompt, phrase }  // confirm-only conventional negative
+//     negationSensitive?: boolean,           // negated mentions are NOT evidence
+//                                            // ("not homebound", "no wound care
+//                                            // performed", "was not documented")
+//     standardNegative?: { prompt, phrase }, // confirm-only conventional negative
+//     hint?,                                 // one-line "what a good answer covers"
+//     examples?: string[]                    // compliant sample answers (UI expander)
 //   }
+//
+// `hint`/`examples` are optional documentation aids surfaced under the question in
+// the reviewer. They are NEVER injected into the note (the scribe only re-voices the
+// nurse's own words) — they just coach the nurse toward specific, denial-proof
+// answers. A wired MedicareComplianceRule may supply richer examples (see
+// ruleLibrary.js); the static ones below are the offline default.
 
-export const SERVICE_LINES = ["home_health", "hospice"];
 export const VISIT_TYPES = ["routine_visit", "admission", "recertification", "discharge", "prn"];
 
 // ── Element library (composed per visit type below) ────────────────────────
 const E = {
   homebound: {
     label: "Homebound status",
-    copReference: "42 CFR 484.55(c)",
+    // Confined-to-home eligibility is 42 CFR 409.42(a); 484.55(c) is the
+    // comprehensive-assessment content list and does not contain homebound.
+    copReference: "42 CFR 409.42(a)",
+    negationSensitive: true,
     keywords: ["homebound", "unable to leave", "taxing effort", "confined to home", "leaving home requires", "considerable effort"],
     pattern: /homebound|unable to leave|taxing effort|confined to (?:home|residence)|leaving (?:the )?home requires/i,
     question: "Why is the patient homebound? What makes leaving home require a considerable and taxing effort?",
     notDocumentedPhrase: "Homebound status was not documented this visit.",
+    hint: "Name the medical reason AND why leaving home is a taxing effort (e.g. needs assistance/assistive device, severe dyspnea/weakness, fall risk). 'Patient is homebound' alone is a denial risk.",
+    examples: [
+      "Patient is homebound due to severe exertional dyspnea; requires a rolling walker and the assistance of one person to ambulate, and tolerates only a few steps before resting.",
+      "Homebound secondary to recent CVA with left-sided weakness; unable to leave home without two-person assist and supervision, making any outing a considerable and taxing effort.",
+    ],
   },
   skilled_need: {
     label: "Skilled need / justification",
     copReference: "42 CFR 484.75",
+    negationSensitive: true,
     keywords: ["skilled", "wound care", "medication management", "teaching", "assessment of", "observation and assessment", "skilled observation"],
     pattern: /skilled (?:need|nursing|assessment|service|intervention|observation)|requires the skill|wound care|medication management|observation and assessment/i,
     question: "What skilled nursing service required your professional skill this visit?",
     notDocumentedPhrase: "Skilled need was not documented this visit.",
+    hint: "State the specific skilled service that needed a nurse's judgment (assessment/observation, wound care, med management/teaching, catheter/injection). A task an aide could do is not a skilled need.",
+    examples: [
+      "Skilled assessment of cardiopulmonary status with lung auscultation and edema check; observation and assessment of an unstable CHF patient for signs of decompensation.",
+      "Skilled wound care: cleansed and measured the stage 3 sacral ulcer and applied an ordered hydrocolloid dressing using sterile technique.",
+    ],
   },
   vitals: {
     label: "Vital signs",
@@ -63,12 +87,18 @@ const E = {
     pattern: /educat|taught|instruct|reinforced|teaching|teach[- ]?back|verbali[sz]ed understanding/i,
     question: "What patient/caregiver education did you provide, and how was understanding confirmed?",
     notDocumentedPhrase: "Patient/caregiver education was not documented this visit.",
+    hint: "Name the topic taught AND how you confirmed understanding (teach-back, return demonstration, verbalized understanding).",
+    examples: [
+      "Educated patient and daughter on low-sodium diet and daily weight monitoring; patient verbalized understanding and correctly described which foods to avoid (teach-back).",
+      "Instructed caregiver on sterile dressing-change technique; caregiver gave a return demonstration without prompting.",
+    ],
   },
   care_plan_progress: {
     label: "Progress toward care-plan goals",
     copReference: "42 CFR 484.60",
     keywords: ["goal", "progress", "plan of care", "improving", "toward goal"],
-    pattern: /goal|progress|plan of care|improving|toward/i,
+    // No bare "toward": "ambulated toward the bathroom" is not goal progress.
+    pattern: /goal|progress|plan of care|improving|toward(?:s)? (?:the )?goal/i,
     question: "What progress toward the plan-of-care goals did you observe?",
     notDocumentedPhrase: "Progress toward care-plan goals was not documented this visit.",
   },
@@ -171,10 +201,21 @@ const E = {
   discharge_reason: {
     label: "Reason for discharge",
     copReference: "42 CFR 484.50",
-    keywords: ["discharge", "goals met", "transfer", "no longer", "reason for discharge"],
-    pattern: /discharge|goals met|transfer|no longer (?:homebound|skilled)/i,
+    // Deliberately narrow: this is a CRITICAL gate, and the bare words
+    // "discharge"/"transfer" false-passed on wound drainage ("no discharge or
+    // drainage noted") and mobility notes ("transferred to wheelchair") —
+    // silencing the hard-block on a discharge note that never states its reason.
+    keywords: ["reason for discharge", "discharged", "discharge plan", "discharge criteria", "goals met", "revocation", "no longer homebound", "no longer skilled", "no longer eligible"],
+    // "transfer to" is limited to CARE destinations — "transferred to
+    // wheelchair/bed" is a mobility note, not a discharge reason.
+    pattern: /reason for discharge|\bdischarged\b|discharg(?:e|ing)\s+(?:plan|planning|instructions|criteria|date|today|home|from|to\b)|goals (?:have been |were )?met|revocation|revoked|no longer (?:homebound|skilled|eligible)|transfer(?:red|ring)? to (?:the )?(?:hospital|inpatient|outpatient|facility|snf|skilled nursing|hospice|assisted living|another agency|er\b|emergency)/i,
     question: "What is the reason for discharge (goals met, transfer, no longer eligible)?",
     notDocumentedPhrase: "Reason for discharge was not documented this visit.",
+    hint: "Say WHY care is ending — goals met, transfer to another level of care, no longer homebound/eligible, or patient/family request. A discharge date alone is not a reason.",
+    examples: [
+      "Discharged from home health with all care-plan goals met: the sacral wound is fully granulated and the patient independently performs her own dressing changes, so skilled nursing is no longer required.",
+      "Discharge secondary to transfer — patient admitted to the hospital on 3/12 for an acute CHF exacerbation; the physician was notified and agency services are ending.",
+    ],
   },
   goals_met: {
     label: "Goals met / unmet",
@@ -203,10 +244,17 @@ const E = {
   visit_reason: {
     label: "Reason for unscheduled visit",
     copReference: "42 CFR 484.75",
-    keywords: ["reason for visit", "called", "complaint of", "prn", "unscheduled"],
-    pattern: /reason for (?:the )?visit|called|prn|unscheduled/i,
+    // Bare "prn" false-passed this CRITICAL gate on any PRN medication line
+    // ("administered PRN oxycodone"); require visit-reason context.
+    keywords: ["reason for visit", "complaint of", "prn visit", "unscheduled", "after-hours", "crisis visit", "requested visit"],
+    pattern: /reason for (?:the |this )?visit|complaint of|prn (?:visit|call)|after[- ]hours (?:visit|call)|crisis visit|unscheduled|(?:patient|family|caregiver|office|agency|md|physician) (?:called|requested)|called (?:to request|for|regarding|due to)|visit (?:made|requested|prompted) (?:due to|for|because)/i,
     question: "What was the reason for this unscheduled / PRN visit?",
     notDocumentedPhrase: "Reason for the unscheduled visit was not documented.",
+    hint: "Name what prompted the visit — who called and when, and the symptom or change in condition that made an extra visit necessary.",
+    examples: [
+      "PRN visit made at the daughter's request after the patient reported new shortness of breath and a 4 lb weight gain over two days.",
+      "After-hours visit prompted by an on-call report of uncontrolled pain rated 9/10 despite the scheduled medication regimen.",
+    ],
   },
   physician_notification: {
     label: "Physician notification",
@@ -220,18 +268,35 @@ const E = {
   terminal_prognosis: {
     label: "Terminal prognosis (≤6 months)",
     copReference: "42 CFR 418.22",
-    keywords: ["terminal", "prognosis", "six months", "6 months", "life expectancy", "decline", "end of life"],
-    pattern: /terminal|prognosis|(?:six|6) months|life expectancy|end[- ]of[- ]life/i,
+    // Bare "6 months"/"decline" false-passed this CRITICAL gate on unrelated
+    // text ("has had the sacral wound for 6 months", "patient declined a
+    // shower"); require prognosis context around the timeframe.
+    keywords: ["terminal", "prognosis", "life expectancy", "end of life", "months or less", "continued decline", "continues to decline", "hospice appropriate"],
+    pattern: /terminal|prognosis|life expectancy|end[- ]of[- ]life|(?:six|6)[- ]months? or less|months or less|continue[ds]? to decline|continued decline|hospice[- ]appropriate/i,
     question: "What supports the continued terminal prognosis of six months or less?",
     notDocumentedPhrase: "Terminal prognosis was not documented this visit.",
+    hint: "Cite objective decline supporting ≤6-month prognosis: measurable changes (weight loss, PPS/FAST score, intake), increasing symptom burden, or functional decline since last visit.",
+    examples: [
+      "Continued decline supports a terminal prognosis: PPS dropped from 50% to 40%, 8 lb weight loss this month, and increasing time spent bedbound.",
+      "End-stage dementia at FAST 7c with recurrent aspiration, minimal oral intake, and a third infection this quarter — consistent with a prognosis of six months or less.",
+    ],
   },
   comfort_skilled_need: {
     label: "Comfort-focused skilled need",
-    copReference: "42 CFR 418.76",
+    // Hospice nursing core services are 42 CFR 418.64(b); 418.76 is the
+    // hospice AIDE and homemaker services CoP — the wrong citation for a
+    // nursing skilled-need finding.
+    copReference: "42 CFR 418.64(b)",
+    negationSensitive: true,
     keywords: ["comfort", "symptom management", "pain", "dyspnea", "nausea", "palliative"],
     pattern: /comfort|symptom management|dyspnea|nausea|palliat/i,
     question: "What comfort-focused skilled need did this visit address?",
     notDocumentedPhrase: "Comfort-focused skilled need was not documented this visit.",
+    hint: "Describe the skilled comfort-focused service: symptom assessment and management (pain, dyspnea, nausea, agitation), medication titration, or skilled teaching of the caregiver on comfort care.",
+    examples: [
+      "Skilled assessment of uncontrolled pain (7/10); titrated the ordered morphine per the comfort plan and reassessed for effect and side effects.",
+      "Assessed worsening dyspnea and managed with repositioning, oxygen titration, and caregiver teaching on as-needed lorazepam for air hunger.",
+    ],
   },
   symptom_management: {
     label: "Symptom management",

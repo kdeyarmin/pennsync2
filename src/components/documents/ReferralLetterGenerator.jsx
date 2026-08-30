@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { FileText, Sparkles } from "lucide-react";
+import { Loader2, FileText, Sparkles } from "lucide-react";
 import { todayEastern } from "../utils/timezone";
 import SmartNotesContextPanel from "./SmartNotesContextPanel";
 import DocumentDraftManager from "./DocumentDraftManager";
@@ -24,7 +24,7 @@ export default function ReferralLetterGenerator({ patientId, patient }) {
   const [additionalContext, setAdditionalContext] = useState("");
 
   const { data: visits = [] } = useQuery({
-    queryKey: ['patientVisits', patientId],
+    queryKey: ['patientVisits', patientId, 5],
     queryFn: () => base44.entities.Visit.filter({ patient_id: patientId }, '-visit_date', 5),
     enabled: !!patientId,
     initialData: [],
@@ -40,7 +40,7 @@ export default function ReferralLetterGenerator({ patientId, patient }) {
       const recentVisit = visits[0];
       
       const result = await ai.run({
-        model: "claude_opus_4_8",
+        model: "automatic",
         prompt: `Generate a professional medical referral letter.
 
 FROM:
@@ -212,7 +212,7 @@ Keep the tone professional and concise. Include all relevant clinical informatio
               className="w-full bg-indigo-600 hover:bg-indigo-700"
             >
               {ai.loading ? (
-                <><div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2" /> Generating...</>
+                <><Loader2 className="w-5 h-5 animate-spin mr-2" /> Generating...</>
               ) : (
                 <><Sparkles className="w-5 h-5 mr-2" /> Generate Referral Letter</>
               )}

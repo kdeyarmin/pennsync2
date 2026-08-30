@@ -1,5 +1,14 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
+// <<<BEGIN SHARED HELPER: requireActiveUser — generated, edit base44/_shared/backendHelpers.mjs>>>
+const isDeactivatedUser = (u) => !!u && u.is_active === false;
+const DEACTIVATED_USER_RESPONSE = () => Response.json(
+  { error: 'Unauthorized - account is deactivated' },
+  { status: 403 },
+);
+// <<<END SHARED HELPER: requireActiveUser>>>
+
+
 const isAdminUser = (user) => user?.role === 'admin' || user?.account_type === 'agency_admin' || user?.account_type === 'super_admin';
 
 // Tolerant JSON extractor: the model is asked (in-prompt) to return strict JSON,
@@ -98,11 +107,16 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
+    if (isDeactivatedUser(user)) return DEACTIVATED_USER_RESPONSE();
     if (!isAdminUser(user)) {
       return Response.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
-    const { limit = 10 } = await req.json();
+    // Default limit=1: each course requires a full LLM generation (~15-30s),
+    // so processing many courses in a single invocation would exceed the
+    // platform's 120s execution timeout. The admin calls this repeatedly to
+    // work through the backlog, or passes an explicit limit for small batches.
+    const { limit = 1 } = await req.json();
     const courses = await base44.asServiceRole.entities.TrainingCourse.list('-updated_date', limit);
     const targets = courses.filter((course) => ['in_service', 'annual_mandatory'].includes(course.training_type));
     const results = [];
@@ -115,8 +129,10 @@ Deno.serve(async (req) => {
       // every nested object), which this rich lesson/quiz shape can't satisfy.
       let generated;
       try {
+        // Default model is sufficient for generating structured training content
+        // and avoids the 120s timeout that claude_opus_4_8 hits on the rich
+        // lesson/quiz prompt. Saves credits too.
         const raw = await base44.asServiceRole.integrations.Core.InvokeLLM({
-          model: "claude_opus_4_8",
           prompt: `You create practical healthcare in-service training. Return ONLY valid JSON, no prose or code fences.\n\n${buildPrompt(course)}`
         });
         generated = parseLLMJson(raw);
@@ -133,6 +149,54 @@ Deno.serve(async (req) => {
 
       const existingModules = await base44.asServiceRole.entities.TrainingModule.filter({ course_id: course.id }, 'order_index', 100);
       const existingQuestions = await base44.asServiceRole.entities.TrainingQuestion.filter({ course_id: course.id }, 'order_index', 200);
+
+      // Create-then-swap: build ALL new modules/questions first, and only delete
+      // the originals once every create has succeeded. If a create throws mid-way,
+      // roll back the partially-created new rows and keep the original content —
+      // the course is never left with deleted-but-not-recreated content.
+      const createdModuleIds = [];
+      const createdQuestionIds = [];
+      try {
+        for (const [index, module] of (generated.modules || []).entries()) {
+          const createdModule = await base44.asServiceRole.entities.TrainingModule.create({
+            course_id: course.id,
+            title: module.title || `Module ${index + 1}`,
+            type: module.type || 'lesson',
+            category: course.category || 'compliance',
+            content_json: module.content || {},
+            order_index: index,
+            estimated_minutes: Math.max(5, Math.floor((course.estimated_minutes || 30) / Math.max((generated.modules || []).length, 1))),
+            is_required: true,
+          });
+          createdModuleIds.push(createdModule.id);
+        }
+
+        for (const [index, question] of (generated.questions || []).entries()) {
+          const createdQuestion = await base44.asServiceRole.entities.TrainingQuestion.create({
+            course_id: course.id,
+            type: question.type || 'mcq',
+            prompt: question.prompt || `Question ${index + 1}`,
+            options_json: question.options || [],
+            correct_answer_json: { answer: question.correct_answer },
+            rationale: question.rationale || '',
+            rubric: question.rubric || '',
+            difficulty: question.difficulty || 'medium',
+            order_index: index,
+            points: 1,
+            active: true,
+          });
+          createdQuestionIds.push(createdQuestion.id);
+        }
+      } catch (createErr) {
+        // Roll back the new content so the original modules/questions remain the
+        // course's only content, then surface the failure to the per-course catch.
+        await Promise.all(createdModuleIds.map((id) => base44.asServiceRole.entities.TrainingModule.delete(id).catch(() => {})));
+        await Promise.all(createdQuestionIds.map((id) => base44.asServiceRole.entities.TrainingQuestion.delete(id).catch(() => {})));
+        throw createErr;
+      }
+
+      // All new content is durably written — now remove the originals and commit
+      // the course metadata.
       await Promise.all(existingModules.map((item) => base44.asServiceRole.entities.TrainingModule.delete(item.id)));
       await Promise.all(existingQuestions.map((item) => base44.asServiceRole.entities.TrainingQuestion.delete(item.id)));
 
@@ -146,34 +210,6 @@ Deno.serve(async (req) => {
         include_case_scenarios: true,
         include_key_takeaways: true,
       });
-
-      for (const [index, module] of (generated.modules || []).entries()) {
-        await base44.asServiceRole.entities.TrainingModule.create({
-          course_id: course.id,
-          title: module.title || `Module ${index + 1}`,
-          type: module.type || 'lesson',
-          content_json: module.content || {},
-          order_index: index,
-          estimated_minutes: Math.max(5, Math.floor((course.estimated_minutes || 30) / Math.max((generated.modules || []).length, 1))),
-          is_required: true,
-        });
-      }
-
-      for (const [index, question] of (generated.questions || []).entries()) {
-        await base44.asServiceRole.entities.TrainingQuestion.create({
-          course_id: course.id,
-          type: question.type || 'mcq',
-          prompt: question.prompt || `Question ${index + 1}`,
-          options_json: question.options || [],
-          correct_answer_json: { answer: question.correct_answer },
-          rationale: question.rationale || '',
-          rubric: question.rubric || '',
-          difficulty: question.difficulty || 'medium',
-          order_index: index,
-          points: 1,
-          active: true,
-        });
-      }
 
       await base44.asServiceRole.entities.TrainingAuditLog.create({
         actor_id: user.email,
@@ -195,6 +231,7 @@ Deno.serve(async (req) => {
 
     return Response.json({ success: true, rebuilt: results });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error('rebuildExistingInServices failed:', error);
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
 });

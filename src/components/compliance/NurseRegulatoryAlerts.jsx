@@ -13,9 +13,11 @@ import {
   ChevronUp,
   Calendar
 } from "lucide-react";
-import { format, differenceInDays } from "date-fns";
-import { Link } from "react-router-dom";
+import { differenceInDays } from "date-fns";
+import { Link } from "react-router";
 import { createPageUrl } from "@/utils";
+import { formatEastern } from "@/components/utils/timezone";
+import { ALL_ROWS } from '@/lib/queryLimits';
 
 export default function NurseRegulatoryAlerts({ nurseEmail, compact = false }) {
   const [expanded, setExpanded] = useState(!compact);
@@ -30,7 +32,7 @@ export default function NurseRegulatoryAlerts({ nurseEmail, compact = false }) {
     queryKey: ['implementedRegUpdates'],
     queryFn: () => base44.entities.RegulatoryUpdate.filter({ 
       status: { $in: ['approved', 'implemented'] }
-    }, '-effective_date'),
+    }, '-effective_date', ALL_ROWS),
   });
 
   // Filter to recent and unacknowledged updates
@@ -42,7 +44,7 @@ export default function NurseRegulatoryAlerts({ nurseEmail, compact = false }) {
   const handleAcknowledge = (updateId) => {
     const newAcknowledged = [...acknowledgedUpdates, updateId];
     setAcknowledgedUpdates(newAcknowledged);
-    try { localStorage.setItem(`acknowledged_updates_${nurseEmail}`, JSON.stringify(newAcknowledged)); } catch {}
+    try { localStorage.setItem(`acknowledged_updates_${nurseEmail}`, JSON.stringify(newAcknowledged)); } catch { /* no-op */ }
   };
 
   const getImpactColor = (level) => {
@@ -65,7 +67,7 @@ export default function NurseRegulatoryAlerts({ nurseEmail, compact = false }) {
         <AlertDescription className="text-indigo-900">
           <span className="font-semibold">{relevantUpdates.length} New Regulation Update(s)</span>
           <span className="ml-2">requiring your attention.</span>
-          <Link to={createPageUrl("ComplianceCenter")} className="ml-2 text-indigo-700 underline">
+          <Link to={createPageUrl("ComplianceCenter")} className="ml-2 text-indigo-700 underline hover:text-indigo-800">
             Review Now →
           </Link>
         </AlertDescription>
@@ -156,7 +158,7 @@ export default function NurseRegulatoryAlerts({ nurseEmail, compact = false }) {
 
                     <div className="flex items-center gap-2 mt-2 text-xs text-slate-500">
                       <Calendar className="w-3 h-3" />
-                      Effective: {update.effective_date ? format(new Date(update.effective_date), 'MMM d, yyyy') : 'Now'}
+                      Effective: {update.effective_date ? formatEastern(update.effective_date, 'MMM d, yyyy') : 'Now'}
                     </div>
                   </div>
                 </div>

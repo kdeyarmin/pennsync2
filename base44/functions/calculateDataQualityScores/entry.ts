@@ -1,11 +1,18 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
+// <<<BEGIN SHARED HELPER: requireActiveUser — generated, edit base44/_shared/backendHelpers.mjs>>>
+const isDeactivatedUser = (u) => !!u && u.is_active === false;
+const DEACTIVATED_USER_RESPONSE = () => Response.json(
+  { error: 'Unauthorized - account is deactivated' },
+  { status: 403 },
+);
+// <<<END SHARED HELPER: requireActiveUser>>>
+
+
 // <<<BEGIN SHARED HELPER: isAdminLike — generated, edit base44/_shared/backendHelpers.mjs>>>
-const SUPER_ADMIN_EMAIL = ((typeof Deno !== 'undefined' && Deno.env.get('SUPER_ADMIN_EMAIL')) || '').trim().toLowerCase();
-const sameEmail = (a, b) => String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase();
 const isAdminLike = (u) => !!u && (
   u.role === 'admin' || u.account_type === 'agency_admin' ||
-  u.account_type === 'super_admin' || (SUPER_ADMIN_EMAIL !== '' && sameEmail(u.email, SUPER_ADMIN_EMAIL))
+  u.account_type === 'super_admin'
 );
 // <<<END SHARED HELPER: isAdminLike>>>
 
@@ -13,17 +20,35 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
+    if (isDeactivatedUser(user)) return DEACTIVATED_USER_RESPONSE();
 
     if (!isAdminLike(user)) {
       return Response.json({ error: 'Unauthorized - Admin access required' }, { status: 403 });
     }
 
-    // Recalculate quality scores for all entities
-    const [patients, users, visits] = await Promise.all([
-      base44.asServiceRole.entities.Patient.filter({ status: 'active' }),
-      base44.asServiceRole.entities.User.list('-created_date', 500),
-      base44.asServiceRole.entities.Visit.filter({ status: 'completed' }, '-visit_date', 200),
+    // Recalculate quality scores. Scope to the caller's agency so an
+    // agency_admin cannot rewrite completeness fields on every tenant.
+    let [patients, users, visits] = await Promise.all([
+      base44.asServiceRole.entities.Patient.filter({ status: 'active' }, '-created_date', 5000),
+      base44.asServiceRole.entities.User.list('-created_date', 5000),
+      base44.asServiceRole.entities.Visit.filter({ status: 'completed' }, '-visit_date', 5000),
     ]);
+
+    if (user.account_type === 'agency_admin' && !user.agency_name) {
+      return Response.json({ error: 'Forbidden: agency_name is required.' }, { status: 403 });
+    }
+    if (user.account_type !== 'super_admin' && user.agency_name) {
+      users = (Array.isArray(users) ? users : []).filter((u) =>
+        u.account_type === 'super_admin' || u.agency_name === user.agency_name
+      );
+      const agencyEmails = new Set(users.map((u) => u?.email).filter(Boolean));
+      patients = (Array.isArray(patients) ? patients : []).filter((p) =>
+        (p.created_by && agencyEmails.has(p.created_by))
+        || (Array.isArray(p.assigned_nurses) && p.assigned_nurses.some((e) => agencyEmails.has(e)))
+      );
+      const patientIds = new Set(patients.map((p) => p.id));
+      visits = (Array.isArray(visits) ? visits : []).filter((v) => patientIds.has(v.patient_id));
+    }
 
     let updated = 0;
 
@@ -79,6 +104,6 @@ Deno.serve(async (req) => {
 
   } catch (error) {
     console.error('Quality score calculation error:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
 });

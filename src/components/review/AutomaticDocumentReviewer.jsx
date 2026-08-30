@@ -26,9 +26,15 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { toast } from 'sonner';
+import { formatAge } from "@/lib/age";
+import { ALL_ROWS, PATIENT_HISTORY_ROWS } from '@/lib/queryLimits';
 
 export default function AutomaticDocumentReviewer({
-  noteContent,
+  noteContent: noteContentProp,
+  // The only call site passes the text as `documentContent`, so `noteContent`
+  // was undefined: the auto-review guard never passed and the component
+  // returned null, making the whole review silently dead. Accept both names.
+  documentContent,
   visitType,
   diagnosis,
   patientData,
@@ -39,13 +45,18 @@ export default function AutomaticDocumentReviewer({
   onReviewComplete,
   onApplySuggestion
 }) {
-  const ai = useAICall();
+  const noteContent = noteContentProp ?? documentContent;
+  // Auto-fired analyses are background work in the app-wide AI budget, so
+  // several such cards on one page queue instead of hitting the provider at
+  // once. A run the user CLICKED passes interactive priority per call and
+  // takes the reserved slot instead of queueing behind that background work.
+  const ai = useAICall({ priority: 'background' });
   const [reviewResults, setReviewResults] = useState(null);
   const queryClient = useQueryClient();
 
   const { data: medicareRules = [] } = useQuery({
     queryKey: ['medicareComplianceRules'],
-    queryFn: () => base44.entities.MedicareComplianceRule.list(),
+    queryFn: () => base44.entities.MedicareComplianceRule.list(undefined, ALL_ROWS),
     initialData: [],
   });
 
@@ -54,7 +65,7 @@ export default function AutomaticDocumentReviewer({
     queryFn: () => base44.auth.me(),
   });
 
-  const performReview = useCallback(async () => {
+  const performReview = useCallback(async ({ interactive = false } = {}) => {
     if (!noteContent || noteContent.length < 50) {
       toast.error('Note is too short for comprehensive review');
       return;
@@ -71,7 +82,7 @@ export default function AutomaticDocumentReviewer({
       );
 
       const result = await ai.run({
-        model: "claude_opus_4_8",
+        model: "automatic",
         prompt: `You are an expert Medicare home health compliance auditor and clinical documentation specialist for Pennsylvania home health agencies. Perform a comprehensive review of this clinical note.
 
 CLINICAL NOTE TO REVIEW:
@@ -80,7 +91,7 @@ ${noteContent}
 VISIT CONTEXT:
 - Visit Type: ${visitType || 'Unknown'}
 - Primary Diagnosis: ${diagnosis || 'Not specified'}
-- Patient Age: ${patientData?.date_of_birth ? Math.floor((new Date() - new Date(patientData.date_of_birth)) / 31557600000) : 'Unknown'}
+- Patient Age: ${formatAge(patientData?.date_of_birth)}
 - Vital Signs: ${vitalSigns ? JSON.stringify(vitalSigns) : 'Not documented'}
 
 MEDICARE COMPLIANCE REQUIREMENTS (42 CFR 484):
@@ -217,12 +228,29 @@ Return detailed JSON analysis.`,
             recommended_training: { type: "array", items: { type: "string" } }
           }
         }
-      });
+      }, { priority: interactive ? 'interactive' : 'background' });
 
       setReviewResults(result);
 
+      // Guard against duplicating recommendations when the same visit is reviewed
+      // again (the "Run Review Again" button and autoReview both re-invoke this):
+      // if we've already recorded recommendations for this visit from this
+      // reviewer, don't insert a second set.
+      let alreadyRecorded = false;
+      if (visitId) {
+        try {
+          const existing = await base44.entities.TrainingRecommendation.filter({
+            visit_id: visitId,
+            source: 'automatic_document_review'
+          }, undefined, PATIENT_HISTORY_ROWS);
+          alreadyRecorded = existing?.length > 0;
+        } catch (error) {
+          console.error('Error checking existing training recommendations:', error);
+        }
+      }
+
       // If note is exemplary, flag it for training
-      if (result.is_exemplary && result.overall_score >= 90) {
+      if (result.is_exemplary && result.overall_score >= 90 && !alreadyRecorded) {
         try {
           // Could create a training module or flag for review
           await base44.entities.TrainingRecommendation.create({
@@ -246,7 +274,7 @@ Return detailed JSON analysis.`,
       }
 
       // Track issues for training recommendations
-      if (result.recommended_training?.length > 0) {
+      if (result.recommended_training?.length > 0 && !alreadyRecorded) {
         for (const training of result.recommended_training) {
           try {
             await base44.entities.TrainingRecommendation.create({
@@ -321,7 +349,7 @@ Return detailed JSON analysis.`,
           <p className="text-sm text-slate-600 mb-4">
             Comprehensive AI review of clinical documentation for Medicare compliance, accuracy, and quality.
           </p>
-          <Button onClick={performReview} className="w-full bg-navy-600 hover:bg-navy-700">
+          <Button onClick={() => performReview({ interactive: true })} className="w-full bg-navy-600 hover:bg-navy-700">
             <Sparkles className="w-4 h-4 mr-2" />
             Start Comprehensive Review
           </Button>
@@ -580,7 +608,7 @@ Return detailed JSON analysis.`,
         size="sm"
         onClick={() => {
           setReviewResults(null);
-          performReview();
+          performReview({ interactive: true });
         }}
         className="w-full"
       >

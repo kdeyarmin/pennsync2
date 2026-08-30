@@ -1,10 +1,19 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
+// <<<BEGIN SHARED HELPER: requireActiveUser — generated, edit base44/_shared/backendHelpers.mjs>>>
+const isDeactivatedUser = (u) => !!u && u.is_active === false;
+const DEACTIVATED_USER_RESPONSE = () => Response.json(
+  { error: 'Unauthorized - account is deactivated' },
+  { status: 403 },
+);
+// <<<END SHARED HELPER: requireActiveUser>>>
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    if (isDeactivatedUser(user)) return DEACTIVATED_USER_RESPONSE();
 
     const { fax_log_id, analysis_type = 'full' } = await req.json();
 
@@ -13,15 +22,35 @@ Deno.serve(async (req) => {
     }
 
     // Fetch the fax log
-    const faxLog = await base44.asServiceRole.entities.FaxLog.filter({ id: fax_log_id });
+    const faxLog = await base44.asServiceRole.entities.FaxLog.filter({ id: fax_log_id }, undefined, 5000);
     if (!faxLog || faxLog.length === 0) {
       return Response.json({ error: 'Fax not found' }, { status: 404 });
     }
 
     const fax = faxLog[0];
     // Ownership: only the sender (or an admin) may analyze a fax's PHI content.
-    if (fax.sent_by && fax.sent_by !== user.email && user.role !== 'admin') {
+    // Fail CLOSED on a missing sender: a legacy/system fax with no sent_by must
+    // not be readable by any authenticated user who guesses its id — treat an
+    // unknown owner as not-this-caller and require admin.
+    const isSuperAdmin = user.account_type === 'super_admin';
+    const isAgencyScopedAdmin =
+      user.account_type === 'agency_admin'
+      || (user.role === 'admin' && !!user.agency_name && !isSuperAdmin);
+    const isPlatformAdmin = isSuperAdmin || (user.role === 'admin' && !user.agency_name);
+    if (!isPlatformAdmin && !isAgencyScopedAdmin && fax.sent_by !== user.email) {
       return Response.json({ error: 'Forbidden' }, { status: 403 });
+    }
+    // Agency-scoped admins may only analyze faxes sent by staff in their agency.
+    if (isAgencyScopedAdmin) {
+      if (!user.agency_name || !fax.sent_by) {
+        return Response.json({ error: 'Forbidden' }, { status: 403 });
+      }
+      const senders = await base44.asServiceRole.entities.User
+        .filter({ email: fax.sent_by }, undefined, 5)
+        .catch(() => []);
+      if (!senders?.[0] || senders[0].agency_name !== user.agency_name) {
+        return Response.json({ error: 'Forbidden' }, { status: 403 });
+      }
     }
     const ocrText = fax.ocr_text || '';
 
@@ -77,7 +106,7 @@ Return JSON: {
 }`;
 
       const summaryResult = await base44.asServiceRole.integrations.Core.InvokeLLM({
-        model: "claude_sonnet_4_6",
+        model: "automatic",
         prompt: summaryPrompt,
         response_json_schema: {
           type: "object",
@@ -91,15 +120,15 @@ Return JSON: {
         }
       });
 
-      summary = summaryResult;
+      summary = summaryResult || null;
 
       // Check for alerts based on urgency
-      if (summaryResult.urgency === 'critical' || summaryResult.urgency === 'high') {
+      if (summaryResult?.urgency === 'critical' || summaryResult?.urgency === 'high') {
         alerts.push({
           type: 'urgency',
           severity: summaryResult.urgency,
-          message: `High priority fax requires attention: ${summaryResult.topic}`,
-          action_required: summaryResult.action_items?.length > 0
+          message: `High priority fax requires attention: ${summaryResult.topic || 'unspecified topic'}`,
+          action_required: Array.isArray(summaryResult.action_items) && summaryResult.action_items.length > 0
         });
       }
     }
@@ -122,7 +151,7 @@ Return JSON: {
 }`;
 
       const replyResult = await base44.asServiceRole.integrations.Core.InvokeLLM({
-        model: "claude_sonnet_4_6",
+        model: "automatic",
         prompt: replyPrompt,
         response_json_schema: {
           type: "object",
@@ -159,7 +188,7 @@ Return JSON: {
 }`;
 
       const contactResult = await base44.asServiceRole.integrations.Core.InvokeLLM({
-        model: "claude_sonnet_4_6",
+        model: "automatic",
         prompt: contactPrompt,
         response_json_schema: {
           type: "object",
@@ -222,6 +251,6 @@ Return JSON: {
 
   } catch (error) {
     console.error('Fax content analysis error:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
 });

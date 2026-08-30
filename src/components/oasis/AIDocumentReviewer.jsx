@@ -14,13 +14,18 @@ import {
   AlertOctagon,
   Shield
 } from "lucide-react";
+import { severityBadgeClass } from "@/lib/severityStyles";
 
 export default function AIDocumentReviewer({ oasisData, autoReview = true }) {
-  const ai = useAICall();
+  // Auto-fired analyses are background work in the app-wide AI budget, so
+  // several such cards on one page queue instead of hitting the provider at
+  // once. A run the user CLICKED passes interactive priority per call and
+  // takes the reserved slot instead of queueing behind that background work.
+  const ai = useAICall({ priority: 'background' });
   const [reviewResults, setReviewResults] = useState(null);
   const [error, setError] = useState(null);
 
-  const performAIReview = useCallback(async () => {
+  const performAIReview = useCallback(async ({ interactive = false } = {}) => {
     setError(null);
 
     try {
@@ -57,7 +62,7 @@ Perform a comprehensive review and identify:
 Provide actionable, specific feedback for each issue found.`;
 
       const response = await ai.run({
-        model: "claude_opus_4_8",
+        model: "automatic",
         prompt,
         response_json_schema: {
           type: "object",
@@ -135,7 +140,7 @@ Provide actionable, specific feedback for each issue found.`;
             summary: { type: "string" }
           }
         }
-      });
+      }, { priority: interactive ? 'interactive' : 'background' });
 
       setReviewResults(response);
     } catch (err) {
@@ -150,16 +155,6 @@ Provide actionable, specific feedback for each issue found.`;
       performAIReview();
     }
   }, [oasisData, autoReview, reviewResults, performAIReview]);
-
-  const getSeverityColor = (severity) => {
-    const colors = {
-      critical: "bg-red-100 text-red-800 border-red-300",
-      high: "bg-orange-100 text-orange-800 border-orange-300",
-      medium: "bg-yellow-100 text-yellow-800 border-yellow-300",
-      low: "bg-blue-100 text-blue-800 border-blue-300"
-    };
-    return colors[severity] || colors.medium;
-  };
 
   const getComplianceStatusColor = (status) => {
     const colors = {
@@ -209,7 +204,7 @@ Provide actionable, specific feedback for each issue found.`;
             <p className="text-slate-600 mb-4">
               Get AI-powered analysis of this OASIS document for errors and compliance issues
             </p>
-            <Button onClick={performAIReview} className="bg-navy-600 hover:bg-navy-700">
+            <Button onClick={() => performAIReview({ interactive: true })} className="bg-navy-600 hover:bg-navy-700">
               <FileSearch className="w-4 h-4 mr-2" />
               Start AI Review
             </Button>
@@ -302,7 +297,7 @@ Provide actionable, specific feedback for each issue found.`;
                 </CardHeader>
                 <CardContent className="space-y-3">
                   {reviewResults.compliance_issues.map((issue, idx) => (
-                    <div key={idx} className={`p-3 rounded border ${getSeverityColor(issue.severity)}`}>
+                    <div key={idx} className={`p-3 rounded border ${severityBadgeClass(issue.severity)}`}>
                       <div className="flex items-start justify-between gap-2 mb-2">
                         <p className="font-semibold">{issue.regulation}</p>
                         <Badge variant="outline" className="text-xs">
@@ -414,7 +409,7 @@ Provide actionable, specific feedback for each issue found.`;
             )}
 
             <div className="flex justify-end pt-4 border-t">
-              <Button onClick={performAIReview} variant="outline" size="sm">
+              <Button onClick={() => performAIReview({ interactive: true })} variant="outline" size="sm">
                 <FileSearch className="w-4 h-4 mr-2" />
                 Re-run Review
               </Button>

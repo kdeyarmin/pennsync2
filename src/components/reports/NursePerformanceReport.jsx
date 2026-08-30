@@ -1,4 +1,5 @@
 import { base44 } from "@/api/base44Client";
+import { agencyQueryKey } from '@/lib/agencyRoster';
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,6 +11,10 @@ import { exportToPDF } from "../utils/pdfExporter";
 import { format } from "date-fns";
 
 export default function NursePerformanceReport({ dateRange }) {
+  const { data: currentUser } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me(),
+  });
   // Base44 caps un-limited list() at 50 rows; these per-nurse aggregates need the
   // full set or counts/averages are wrong and nurses go missing from the report.
   const { data: noteConversions = [] } = useQuery({
@@ -25,8 +30,13 @@ export default function NursePerformanceReport({ dateRange }) {
   });
 
   const { data: users = [] } = useQuery({
-    queryKey: ['allUsers'],
-    queryFn: () => base44.entities.User.list('-created_date', 5000),
+    queryKey: ['allUsers', 5000, agencyQueryKey(currentUser)],
+    queryFn: async () => {
+      const _rows = await base44.entities.User.list('-created_date', 5000);
+      const { filterUsersByCallerAgency } = await import('@/lib/agencyScope');
+      return filterUsersByCallerAgency(_rows, currentUser);
+    },
+    enabled: !!currentUser,
     initialData: [],
   });
 
@@ -34,12 +44,12 @@ export default function NursePerformanceReport({ dateRange }) {
 
   const filteredVisits = noteConversions.filter(nc => {
     const date = new Date(nc.created_date);
-    return date >= new Date(dateRange.start) && date <= new Date(dateRange.end + 'T23:59:59.999');
+    return date >= new Date(dateRange.start + 'T00:00:00') && date <= new Date(dateRange.end + 'T23:59:59.999');
   });
 
   const filteredAudits = complianceAudits.filter(a => {
     const date = new Date(a.audit_date);
-    return date >= new Date(dateRange.start) && date <= new Date(dateRange.end + 'T23:59:59.999');
+    return date >= new Date(dateRange.start + 'T00:00:00') && date <= new Date(dateRange.end + 'T23:59:59.999');
   });
 
   // Calculate performance metrics per nurse (visits = enhancements)
@@ -69,7 +79,7 @@ export default function NursePerformanceReport({ dateRange }) {
     exportToPDF({
       filename: `nurse-performance-report-${format(new Date(), 'yyyy-MM-dd')}.pdf`,
       title: 'Nurse Performance Report',
-      subtitle: `Period: ${format(new Date(dateRange.start), 'MMM d, yyyy')} - ${format(new Date(dateRange.end + 'T23:59:59.999'), 'MMM d, yyyy')}`,
+      subtitle: `Period: ${format(new Date(dateRange.start + 'T00:00:00'), 'MMM d, yyyy')} - ${format(new Date(dateRange.end + 'T23:59:59.999'), 'MMM d, yyyy')}`,
       content: [
         { type: 'heading', text: 'Performance Metrics' },
         { type: 'table', data: nurseMetrics, columns: [
@@ -97,10 +107,10 @@ export default function NursePerformanceReport({ dateRange }) {
         <div>
           <h3 className="text-xl font-semibold text-slate-900">Nurse Performance Analysis</h3>
           <p className="text-sm text-slate-600">
-            {format(new Date(dateRange.start), 'MMM d, yyyy')} - {format(new Date(dateRange.end + 'T23:59:59.999'), 'MMM d, yyyy')}
+            {format(new Date(dateRange.start + 'T00:00:00'), 'MMM d, yyyy')} - {format(new Date(dateRange.end + 'T23:59:59.999'), 'MMM d, yyyy')}
           </p>
         </div>
-        <Button onClick={handleExport} className="bg-orange-600 hover:bg-orange-700">
+        <Button onClick={handleExport} >
           <Download className="w-4 h-4 mr-2" />
           Export PDF
         </Button>

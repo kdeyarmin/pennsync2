@@ -28,7 +28,9 @@ export const DEFAULT_PDGM_RATES = {
   // CY2026 national labor-related share. The wage index adjusts ONLY this portion
   // of the base payment; the non-labor remainder is unadjusted (mirrors the backend
   // PDGM_LABOR_SHARE_2026 — kept in sync by pdgmRatesParity.test.js).
-  laborShare: 0.7676,
+  // 0.749 per the VERIFIED value in docs/pdgm-cy2026.md (was 0.7676, which
+  // contradicted the repo's own verified table).
+  laborShare: 0.749,
   clinicalGroupWeights: {
     MMTA_Surgical_Aftercare:  { community_early: 0.9234, community_late: 0.8512, institutional_early: 1.1456, institutional_late: 1.0534 },
     MMTA_Cardiac_Circulatory: { community_early: 0.9456, community_late: 0.8698, institutional_early: 1.0876, institutional_late: 1.0006 },
@@ -48,7 +50,18 @@ export const DEFAULT_PDGM_RATES = {
     // prefix to it if they choose.
     MMTA_Skin_Non_Surgical:   { community_early: 1.0123, community_late: 0.9313, institutional_early: 1.1623, institutional_late: 1.0693 },
   },
-  // Functional-impairment point thresholds (Low ≤ low; Medium < high; else High).
+  // Functional-impairment point thresholds, keyed by admission-source × timing
+  // bucket (community/institutional × early/late) — the SAME shape the backend
+  // calculatePDGM uses (FUNCTIONAL_THRESHOLDS), parity-locked by
+  // pdgmRatesParity.test.js. Each entry is { low, high }: points >= high → High,
+  // points >= low → Medium, else Low (see computeFunctionalLevelHighShape below
+  // and calculateFunctionalLevel in base44/functions/calculatePDGM/entry.ts).
+  //
+  // NOTE: this is intentionally a DIFFERENT shape from the one
+  // pdgmGrouper.groupPeriod() consumes (clinical-group-keyed { low, medium }).
+  // The two PDGM models are independent — do NOT pass DEFAULT_PDGM_RATES into
+  // groupPeriod(), and do not rename `high`→`medium` here (it would break backend
+  // parity and the revenue estimator).
   functionalThresholds: {
     community_early:     { low: 9,  high: 18 },
     community_late:      { low: 8,  high: 16 },
@@ -76,6 +89,13 @@ export const DEFAULT_PDGM_RATES = {
 // edit/add/remove any of these on the PDGM Rate Settings page.
 export const DEFAULT_ICD10_CLINICAL_GROUPS = {
   G: "MMTA_Neuro_Rehab",
+  // Cerebrovascular disease block (I60–I69): stroke, hemorrhage, and post-stroke
+  // sequelae (e.g. I61 intracerebral hemorrhage, I69 sequelae) are Neuro/Stroke
+  // Rehab, not Cardiac. A bare "I" chapter entry previously sent everything
+  // except the two explicit I63/I64 codes to Cardiac — disagreeing with the
+  // intake preview (which groups all "I6*" as Neuro) and understating the
+  // Neuro case-mix. Longest-prefix wins, so I50/I10/I25 stay Cardiac.
+  I6: "MMTA_Neuro_Rehab",
   I63: "MMTA_Neuro_Rehab",
   I64: "MMTA_Neuro_Rehab",
   I: "MMTA_Cardiac_Circulatory",
@@ -104,6 +124,33 @@ export const DEFAULT_ICD10_CLINICAL_GROUPS = {
 };
 
 /**
+ * Live revenue-estimator functional level from points + a { low, high } threshold
+ * set (the calculatePDGM / DEFAULT_PDGM_RATES shape).
+ *
+ * Boundary contract (pinned by tests; mirrors entry.ts calculateFunctionalLevel):
+ *   - points >= high  → "high"
+ *   - points >= low   → "medium"   (so points == low is medium)
+ *   - otherwise       → "low"
+ *
+ * This is intentionally NOT the same operator as pdgmGrouper.computeFunctionalLevel,
+ * which uses a { low, medium } shape and treats points <= low as "low". The grouper
+ * is the table-driven CMS reference (currently unwired); this helper is the live
+ * estimate path. Do not "reconcile" the operators without loading official CMS
+ * Table 9 cut-points — the threshold *values* and shapes differ by design.
+ *
+ * @param {number} points
+ * @param {{ low?: number, high?: number } | null | undefined} thresholds
+ * @returns {'low'|'medium'|'high'|null}
+ */
+export function computeFunctionalLevelHighShape(points, thresholds) {
+  if (!thresholds || typeof points !== "number" || !Number.isFinite(points)) return null;
+  if (typeof thresholds.low !== "number" || typeof thresholds.high !== "number") return null;
+  if (points >= thresholds.high) return "high";
+  if (points >= thresholds.low) return "medium";
+  return "low";
+}
+
+/**
  * Effective ICD-10 → clinical-group map. Unlike the numeric rate tables (which
  * merge value-by-value), this is REPLACE-when-present so an admin can add, edit,
  * AND remove prefixes: once a custom map is saved it's used verbatim; an empty/
@@ -126,9 +173,10 @@ export function deepMergeNumbers(base, over) {
   if (!over || typeof over !== "object") return out;
   for (const key of Object.keys(over)) {
     const ov = over[key];
+    const baseVal = base?.[key];
     if (ov && typeof ov === "object" && !Array.isArray(ov)) {
-      out[key] = deepMergeNumbers(base?.[key] || {}, ov);
-    } else if (typeof ov === "number" && Number.isFinite(ov)) {
+      out[key] = deepMergeNumbers(baseVal || {}, ov);
+    } else if (typeof ov === "number" && Number.isFinite(ov) && !(baseVal && typeof baseVal === "object")) {
       out[key] = ov;
     }
   }

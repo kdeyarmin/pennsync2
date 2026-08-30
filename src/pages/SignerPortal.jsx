@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router';
 import { validateSignerToken } from '@/functions/validateSignerToken';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { AlertCircle, Lock, CheckCircle2 } from 'lucide-react';
+import { AlertCircle, Lock, CheckCircle2, Loader2 } from 'lucide-react';
 import SignerPackageViewer from '@/components/signer/SignerPackageViewer';
+import { formatLocalDate } from '@/lib/dateLocal';
 
 export default function SignerPortal() {
   const [searchParams] = useSearchParams();
@@ -18,6 +19,10 @@ export default function SignerPortal() {
   const validateToken = useCallback(async () => {
     try {
       setIsLoading(true);
+      setIsValid(false);
+      setPackageData(null);
+      setError(null);
+      setIsComplete(false);
       const response = await validateSignerToken({ token });
       // functions.invoke returns the full axios response (interceptResponses:false);
       // the body is under .data. Reading response.valid directly always failed
@@ -31,7 +36,7 @@ export default function SignerPortal() {
         setError(result.error || 'Invalid or expired access link.');
       }
     } catch (err) {
-      setError(err.message || 'Failed to validate access link.');
+      setError(err.response?.data?.error || err.message || 'Failed to validate access link.');
     } finally {
       setIsLoading(false);
     }
@@ -51,6 +56,9 @@ export default function SignerPortal() {
 
   useEffect(() => {
     if (!token) {
+      setIsValid(false);
+      setPackageData(null);
+      setIsComplete(false);
       setError('No access token provided. Please use the link from your email.');
       setIsLoading(false);
       return;
@@ -62,7 +70,7 @@ export default function SignerPortal() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4" role="status">
-        <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin"></div>
+        <Loader2 className="w-8 h-8 animate-spin text-navy-600" aria-hidden="true" />
         <span className="sr-only">Validating access…</span>
       </div>
     );
@@ -145,7 +153,7 @@ export default function SignerPortal() {
             <p className="text-sm text-slate-700 mt-2">
               You have been invited to review and sign documents. Please complete all required signatures by{' '}
               <span className="font-medium">
-                {new Date(packageData.dueDate).toLocaleDateString()}
+                {formatLocalDate(packageData.dueDate) || packageData.dueDate}
               </span>
               .
             </p>

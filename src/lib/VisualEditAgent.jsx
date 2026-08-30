@@ -1,5 +1,68 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { twMerge } from 'tailwind-merge'
+import { appParams } from '@/lib/app-params';
+
+/**
+ * Origins permitted to drive the visual-edit agent.
+ *
+ * The message listener below accepted ANY origin (its `event.origin` check was
+ * commented out) while this component mounts unconditionally in production. So
+ * any page that framed the app could send `toggle-visual-edit-mode`, and the
+ * next click would post the selected element back — including
+ * `content: element.innerText`, which on a patient chart is PHI. Gating inbound
+ * messages breaks that chain at the first step.
+ *
+ * Allowed: the app's own origin, and the configured Base44 platform origin
+ * (the editor that legitimately embeds this app). VITE_VISUAL_EDIT_ORIGINS —
+ * comma-separated — covers an editor hosted somewhere else.
+ */
+function allowedEditorOrigins() {
+	const origins = new Set();
+	if (typeof window !== 'undefined' && window.location?.origin) {
+		origins.add(window.location.origin);
+	}
+	const addOrigin = (value) => {
+		if (!value) return;
+		try {
+			origins.add(new URL(value).origin);
+		} catch {
+			// Malformed configured URL — skip rather than widen the allowlist.
+		}
+	};
+	addOrigin(appParams?.serverUrl);
+	String(import.meta.env.VITE_VISUAL_EDIT_ORIGINS || '')
+		.split(',')
+		.map((o) => o.trim())
+		.filter(Boolean)
+		.forEach(addOrigin);
+	return origins;
+}
+
+/**
+ * Post to configured editor origins only. Prefer explicit allowlisted parents
+ * over `*` so a hostile framer cannot observe element payloads. When the only
+ * known origin is the app itself (unit tests / top-level), fall back to `*`.
+ * Dynamic / chart content is never included — that is PHI on patient pages.
+ */
+function postToEditors(data) {
+	const payload = { ...data };
+	// Never include DOM text: the redaction previously keyed off a manually
+	// supplied `data-dynamic-content` marker that production patient/chart
+	// components never set, so selecting an element could leak PHI (names,
+	// note text) to the parent editor origin. The editor identifies elements
+	// by source file/line metadata, which is already in the payload.
+	if ('content' in payload) {
+		payload.content = '';
+	}
+	const origins = [...allowedEditorOrigins()].filter((o) => o !== window.location.origin);
+	if (origins.length === 0) {
+		window.parent.postMessage(payload, '*');
+		return;
+	}
+	for (const origin of origins) {
+		window.parent.postMessage(payload, origin);
+	}
+}
 
 export default function VisualEditAgent() {
 	// this functions job is to receive first a message from the parent window, to set or unset visual edits mode. 
@@ -10,6 +73,10 @@ export default function VisualEditAgent() {
 	// State and refs
 	const [isVisualEditMode, setIsVisualEditMode] = useState(false);
 	const isVisualEditModeRef = useRef(false);
+	// Resolved once: the allowlist depends only on build config and the current
+	// origin, and the message handler must not rebuild it on every event.
+	const allowedOriginsRef = useRef(null);
+	if (allowedOriginsRef.current === null) allowedOriginsRef.current = allowedEditorOrigins();
 	const [isPopoverDragging, setIsPopoverDragging] = useState(false);
 	const isPopoverDraggingRef = useRef(false);
 	const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -121,7 +188,6 @@ export default function VisualEditAgent() {
 
 		// Prefer data-source-location, fallback to data-visual-selector-id  
 		const selectorId = element.dataset.sourceLocation || element.dataset.visualSelectorId;
-		const useSourceLocation = !!element.dataset.sourceLocation;
 
 		// Skip if this element is already selected
 		if (selectedElementIdRef.current === selectorId) {
@@ -130,7 +196,7 @@ export default function VisualEditAgent() {
 		}
 
 		// Find all elements with the same ID
-		const elements = findElementsById(selectorId, useSourceLocation);
+		const elements = findElementsById(selectorId);
 
 		// Clear previous hover overlays
 		clearHoverOverlays();
@@ -156,38 +222,48 @@ export default function VisualEditAgent() {
 	const handleElementClick = useCallback((e) => {
 		if (!isVisualEditModeRef.current) return;
 
-		// Close dropdowns when clicking anywhere in iframe if a dropdown is open
-		if (isDropdownOpenRef.current) {
-			e.preventDefault();
-			e.stopPropagation();
-			e.stopImmediatePropagation();
+		if (!(e.target instanceof Element)) return;
 
-			// Send message to parent to close all dropdowns
-			window.parent.postMessage({
-				type: 'close-dropdowns'
-			}, '*');
-			return;
-		}
-
-		// Prevent clicking on SVG path elements
+		// Prevent clicking on SVG path elements. Let the parent interactive
+		// element receive the event so icons inside links/buttons still work.
 		if (e.target.tagName.toLowerCase() === 'path') {
 			return;
 		}
 
-		// Prevent default behavior immediately when in visual edit mode
-		e.preventDefault();
-		e.stopPropagation();
-		e.stopImmediatePropagation();
-
-		// Support both data-source-location and data-visual-selector-id
+		// Support both data-source-location and data-visual-selector-id. The
+		// Base44 preview can run this agent in an iframe while users are trying to
+		// exercise normal navigation. Only consume clicks that actually target a
+		// selectable visual-edit element; otherwise links/buttons must keep their
+		// native React handlers.
 		const element = e.target.closest('[data-source-location], [data-visual-selector-id]');
 		if (!element) {
 			return;
 		}
 
+		// Preview navigation must win over visual selection for interactive
+		// controls. Base44's source-location instrumentation can annotate the
+		// <a>/<button> itself, so without this guard every sidebar Link is selected
+		// by the editor agent instead of navigating. Non-interactive annotated
+		// wrappers remain selectable for visual editing.
+		if (e.target.closest('a[href], button, [role="button"], input, select, textarea, label')) {
+			return;
+		}
+
+		// Close dropdowns when clicking anywhere in iframe if a dropdown is open
+		if (isDropdownOpenRef.current) {
+			postToEditors({ type: 'close-dropdowns' });
+			return;
+		}
+
+		// Prevent default behavior only after we know this is a visual-edit
+		// selection click. This avoids a capture-phase dead zone for unannotated
+		// links/buttons in Base44 preview.
+		e.preventDefault();
+		e.stopPropagation();
+		e.stopImmediatePropagation();
+
 		// Prefer data-source-location, fallback to data-visual-selector-id
 		const visualSelectorId = element.dataset.sourceLocation || element.dataset.visualSelectorId;
-		const useSourceLocation = !!element.dataset.sourceLocation;
 
 		// Clear any existing selected overlays
 		selectedOverlaysRef.current.forEach(overlay => {
@@ -198,7 +274,7 @@ export default function VisualEditAgent() {
 		selectedOverlaysRef.current = [];
 
 		// Find all elements with the same ID
-		const elements = findElementsById(visualSelectorId, useSourceLocation);
+		const elements = findElementsById(visualSelectorId);
 
 		// Create selected overlays for all matching elements
 		elements.forEach(el => {
@@ -226,7 +302,9 @@ export default function VisualEditAgent() {
 			centerY: rect.top + rect.height / 2
 		};
 
-		// Send message to parent window with element info including position
+		// Send message to parent window with element info including position.
+		// Dynamic chart content is redacted by postToEditors — never ship PHI
+		// innerText to an arbitrary parent frame.
 		const elementData = {
 			type: 'element-selected',
 			tagName: element.tagName,
@@ -239,7 +317,7 @@ export default function VisualEditAgent() {
 			filename: element.dataset.filename, // Keep for backward compatibility
 			position: elementPosition // Add position data for popover
 		};
-		window.parent.postMessage(elementData, '*');
+		postToEditors(elementData);
 	}, [findElementsById, createOverlay, positionOverlay, clearHoverOverlays]);
 
 	// Unselect the current element
@@ -401,25 +479,31 @@ export default function VisualEditAgent() {
 						centerY: rect.top + rect.height / 2
 					};
 
-					window.parent.postMessage({
+					postToEditors({
 						type: 'element-position-update',
 						position: elementPosition,
 						isInViewport: isInViewport,
 						visualSelectorId: selectedElementIdRef.current
-					}, '*');
+					});
 				}
 			}
 		};
 
 		const handleMessage = (event) => {
-			// Check origin if desired
-			//if (event.origin !== 'parent-origin') return;
+			// Only the app itself or a configured editor origin may drive the agent
+			// (see allowedEditorOrigins above). Without this any framing page could
+			// enable edit mode and harvest the element payloads posted back.
+			if (!allowedOriginsRef.current.has(event.origin)) return;
 
 			const message = event.data;
 
 			switch (message.type) {
 				case 'toggle-visual-edit-mode':
-					toggleVisualEditMode(message.data.enabled);
+					// Ignore malformed messages. A stray preview/host postMessage should not
+					// leave the app in a capture-phase mode that swallows navigation clicks.
+					if (typeof message.data?.enabled === 'boolean') {
+						toggleVisualEditMode(message.data.enabled);
+					}
 					break;
 
 				case 'update-classes':
@@ -485,12 +569,12 @@ export default function VisualEditAgent() {
 								centerY: rect.top + rect.height / 2
 							};
 
-							window.parent.postMessage({
+							postToEditors({
 								type: 'element-position-update',
 								position: elementPosition,
 								isInViewport: isInViewport,
 								visualSelectorId: selectedElementIdRef.current
-							}, '*');
+							});
 						}
 					}
 					break;
@@ -531,7 +615,7 @@ export default function VisualEditAgent() {
 		document.addEventListener('scroll', handleScroll, true); // Also listen on document
 
 		// Send ready message to parent
-		window.parent.postMessage({ type: 'visual-edit-agent-ready' }, '*');
+		postToEditors({ type: 'visual-edit-agent-ready' });
 
 		return () => {
 			window.removeEventListener('message', handleMessage);

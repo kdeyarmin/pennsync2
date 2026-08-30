@@ -3,7 +3,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Archive, CheckCircle2, Copy, Send, Sparkles, Loader2, BarChart3, Shield } from "lucide-react";
 import { configNotReadyMessage } from "@/lib/aiFeatureError";
 import { base44 } from "@/api/base44Client";
-import { generateTrainingCourse } from "@/functions/generateTrainingCourse";
+import { agencyQueryKey } from '@/lib/agencyRoster';
+import { generateTrainingCourseStepwise } from "@/functions/generateTrainingCourse";
 import { assignInService } from "@/functions/assignInService";
 import { assignAnnualLearningPlan } from "@/functions/assignAnnualLearningPlan";
 import { duplicateInService } from "@/functions/duplicateInService";
@@ -24,8 +25,9 @@ import AnnualLearningPlanPanel from "@/components/training/AnnualLearningPlanPan
 import TrainingAttachmentManager from "@/components/training/TrainingAttachmentManager";
 import AccessDeniedState from "@/components/ui/AccessDeniedState";
 import { HideWhenEmbedded } from "@/components/ui/embeddedPage";
+import { parseLocalDate, startOfLocalDay, formatLocalDate, isPastLocalDueDate } from "@/lib/dateLocal";
 
-const formatDate = (value) => value ? new Date(value).toLocaleDateString() : "—";
+const formatDate = (value) => formatLocalDate(value) || "—";
 
 export default function AnnualMandatoryEducationHub() {
   const queryClient = useQueryClient();
@@ -54,6 +56,8 @@ export default function AnnualMandatoryEducationHub() {
   });
   const [manualDraft, setManualDraft] = useState({ title: "", description: "", category: "compliance", business_line_scope: "all", passing_score: 80 });
   const [generating, setGenerating] = useState(false);
+  const [generateProgress, setGenerateProgress] = useState(null);
+  const [generateError, setGenerateError] = useState("");
   const [seeding, setSeeding] = useState(false);
   const [seedResult, setSeedResult] = useState(null);
   const [enrollingAll, setEnrollingAll] = useState(false);
@@ -72,26 +76,44 @@ export default function AnnualMandatoryEducationHub() {
 
   const { data: currentUser } = useQuery({ queryKey: ["currentUser"], queryFn: () => base44.auth.me() });
   const isAdminUser = currentUser?.role === 'admin' || currentUser?.account_type === 'agency_admin' || currentUser?.account_type === 'super_admin';
-  const { data: users = [] } = useQuery({ queryKey: ["annual-users"], queryFn: () => base44.entities.User.list('-created_date', 500), initialData: [] });
+  const { data: users = [] } = useQuery({ queryKey: ["annual-users", agencyQueryKey(currentUser)], queryFn: async () => {
+      const _rows = await base44.entities.User.list('-created_date', 500);
+      const { filterUsersByCallerAgency } = await import('@/lib/agencyScope');
+      return filterUsersByCallerAgency(_rows, currentUser);
+    },
+    enabled: !!currentUser,
+    initialData: [],
+  });
   const { data: courses = [] } = useQuery({ queryKey: ["annual-courses"], queryFn: () => base44.entities.TrainingCourse.list('-updated_date', 500), initialData: [] });
   const { data: assignments = [] } = useQuery({ queryKey: ["annual-assignments"], queryFn: () => base44.entities.TrainingAssignment.list('-created_date', 1000), initialData: [] });
   const { data: certificates = [] } = useQuery({ queryKey: ["annual-certificates"], queryFn: () => base44.entities.TrainingCertificate.list('-issued_at', 500), initialData: [] });
-  const { data: plans = [] } = useQuery({ queryKey: ["annual-plans"], queryFn: () => base44.entities.LearningPlan.list('-created_date', 200), initialData: [] });
+  const { data: plans = [] } = useQuery({
+    queryKey: ["annual-plans", "-created_date", 200],
+    queryFn: () => base44.entities.LearningPlan.list('-created_date', 200),
+    initialData: [],
+  });
 
   const annualCourses = useMemo(() => courses.filter((course) => course.training_type === 'annual_mandatory' || course.annual_cycle_year === year), [courses, year]);
   const annualAssignments = useMemo(() => assignments.filter((assignment) => assignment.annual_cycle_year === year), [assignments, year]);
   const _annualCertificates = useMemo(() => certificates.filter((certificate) => certificate.annual_cycle_year === year), [certificates, year]);
   const dueSoon = annualAssignments.filter((assignment) => {
-    if (!assignment.due_date || assignment.status === 'completed' || assignment.status === 'overdue') return false;
-    const daysUntilDue = (new Date(assignment.due_date) - new Date()) / (1000 * 60 * 60 * 24);
+    if (!assignment.due_date || assignment.status === 'completed' || assignment.pass_fail_result === 'passed') return false;
+    if (assignment.status === 'overdue' || isPastLocalDueDate(assignment.due_date)) return false;
+    const dueDay = startOfLocalDay(parseLocalDate(assignment.due_date));
+    const today = startOfLocalDay(new Date());
+    if (!dueDay || !today) return false;
+    const daysUntilDue = Math.round((dueDay.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
     return daysUntilDue >= 0 && daysUntilDue <= 7;
   }).length;
   const averageScore = Math.round((annualAssignments.filter((assignment) => typeof assignment.score_percentage === 'number').reduce((sum, assignment) => sum + assignment.score_percentage, 0) / Math.max(annualAssignments.filter((assignment) => typeof assignment.score_percentage === 'number').length, 1)) || 0);
   const stats = {
     totalAssigned: annualAssignments.length,
     dueSoon,
-    overdue: annualAssignments.filter((assignment) => assignment.status === 'overdue').length,
-    completed: annualAssignments.filter((assignment) => assignment.status === 'completed').length,
+    overdue: annualAssignments.filter((assignment) => {
+      if (assignment.status === 'completed' || assignment.pass_fail_result === 'passed') return false;
+      return assignment.status === 'overdue' || isPastLocalDueDate(assignment.due_date);
+    }).length,
+    completed: annualAssignments.filter((assignment) => assignment.status === 'completed' || assignment.pass_fail_result === 'passed').length,
     passed: annualAssignments.filter((assignment) => assignment.pass_fail_result === 'passed').length,
     failed: annualAssignments.filter((assignment) => assignment.pass_fail_result === 'failed').length,
     averageScore,
@@ -141,11 +163,24 @@ export default function AnnualMandatoryEducationHub() {
 
   const generateAnnualModule = async () => {
     setGenerating(true);
+    setGenerateError("");
     try {
-      await generateTrainingCourse({ ...generator, training_type: 'annual_mandatory', annual_cycle_year: year, status: 'draft' });
+      await generateTrainingCourseStepwise(
+        { ...generator, training_type: 'annual_mandatory', annual_cycle_year: year, status: 'draft' },
+        setGenerateProgress
+      );
       queryClient.invalidateQueries({ queryKey: ["annual-courses"] });
+    } catch (err) {
+      const base = configNotReadyMessage(err) || err?.message || "AI generation failed. Please try again.";
+      setGenerateError(
+        err?.course_id
+          ? `${base} A draft ("${err.course_title || 'Untitled'}") was created with partial content — you can finish or delete it in the course list.`
+          : base
+      );
+      if (err?.course_id) queryClient.invalidateQueries({ queryKey: ["annual-courses"] });
     } finally {
       setGenerating(false);
+      setGenerateProgress(null);
     }
   };
 
@@ -157,6 +192,7 @@ export default function AnnualMandatoryEducationHub() {
       setSeedResult(result?.data || result);
       queryClient.invalidateQueries({ queryKey: ["annual-courses"] });
       queryClient.invalidateQueries({ queryKey: ["annual-plans"] });
+      queryClient.invalidateQueries({ queryKey: ["learning-plans"] });
     } catch (error) {
       setSeedResult({ error: configNotReadyMessage(error) || error?.message || "Failed to create yearly required in-services." });
     } finally {
@@ -171,6 +207,8 @@ export default function AnnualMandatoryEducationHub() {
       const result = await autoEnrollAnnualPlans({ scope: 'all' });
       setEnrollAllResult(result?.data || result);
       queryClient.invalidateQueries({ queryKey: ["annual-assignments"] });
+      queryClient.invalidateQueries({ queryKey: ["my-annual-assignments"] });
+      queryClient.invalidateQueries({ queryKey: ["lc-assignments"] });
     } catch (error) {
       setEnrollAllResult({ error: configNotReadyMessage(error) || error?.message || "Failed to enroll staff." });
     } finally {
@@ -182,12 +220,16 @@ export default function AnnualMandatoryEducationHub() {
     await assignInService({ courseId: selectedCourseId, dueDate, settings: retakeSettings, userEmails: pendingAssignmentPayload?.userEmails || [], filters: pendingAssignmentPayload?.filters || {}, annualCycleYear: year });
     setPendingAssignmentPayload(null);
     queryClient.invalidateQueries({ queryKey: ["annual-assignments"] });
+    queryClient.invalidateQueries({ queryKey: ["my-annual-assignments"] });
+    queryClient.invalidateQueries({ queryKey: ["lc-assignments"] });
   };
 
   const confirmPlanAssignment = async () => {
     await assignAnnualLearningPlan({ planId: selectedPlanId, dueDate, settings: retakeSettings, userEmails: pendingPlanAssignmentPayload?.userEmails || [], filters: pendingPlanAssignmentPayload?.filters || {} });
     setPendingPlanAssignmentPayload(null);
     queryClient.invalidateQueries({ queryKey: ["annual-assignments"] });
+    queryClient.invalidateQueries({ queryKey: ["my-annual-assignments"] });
+    queryClient.invalidateQueries({ queryKey: ["lc-assignments"] });
   };
 
   const updateCourseStatus = async (course, status) => {
@@ -219,9 +261,9 @@ export default function AnnualMandatoryEducationHub() {
   return (
     <div className="space-y-6">
       <HideWhenEmbedded>
-        <div className="rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-800 to-blue-700 text-white p-6 shadow-xl">
+        <div className="page-header-gradient">
           <h1 className="text-3xl font-bold mb-2">Penn Annual Education & Competencies</h1>
-          <p className="text-indigo-100">Build yearly required education bundles for Penn Hospice, Penn Home Health, office staff, and leadership while tracking competency, certificates, and renewal compliance.</p>
+          <p className="relative text-navy-100">Build yearly required education bundles for Penn Hospice, Penn Home Health, office staff, and leadership while tracking competency, certificates, and renewal compliance.</p>
         </div>
       </HideWhenEmbedded>
 
@@ -285,6 +327,17 @@ export default function AnnualMandatoryEducationHub() {
               <Button className="w-full" onClick={generateAnnualModule} disabled={generating || !generator.topic.trim()}>
                 {generating ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Generating...</> : <>Generate annual education module</>}
               </Button>
+              {generating && (
+                <p className="text-sm text-slate-500">
+                  {generateProgress
+                    ? `Step ${generateProgress.step} of ${generateProgress.totalSteps}: ${generateProgress.label}`
+                    : "Starting generation…"}{" "}
+                  This can take a few minutes — keep this page open.
+                </p>
+              )}
+              {generateError && (
+                <p className="text-sm text-red-600">{generateError}</p>
+              )}
             </CardContent>
           </Card>
 
@@ -372,7 +425,10 @@ export default function AnnualMandatoryEducationHub() {
               </Button>
             </CardContent>
           </Card>
-          <AnnualLearningPlanPanel plans={plans} courses={annualCourses} year={year} onRefresh={() => queryClient.invalidateQueries({ queryKey: ['annual-plans'] })} />
+          <AnnualLearningPlanPanel plans={plans} courses={annualCourses} year={year} onRefresh={() => {
+            queryClient.invalidateQueries({ queryKey: ['annual-plans'] });
+            queryClient.invalidateQueries({ queryKey: ['learning-plans'] });
+          }} />
           <div className="grid grid-cols-1 xl:grid-cols-[360px_minmax(0,1fr)] gap-6">
             <Card>
               <CardHeader><CardTitle>Assign annual plan</CardTitle></CardHeader>
@@ -441,10 +497,14 @@ export default function AnnualMandatoryEducationHub() {
                     </div>
                     <div className="flex items-center gap-2">
                       <Badge className={
-                        assignment.status === 'completed' ? 'bg-emerald-100 text-emerald-800' :
-                        assignment.status === 'overdue' ? 'bg-red-100 text-red-800' :
+                        (assignment.status === 'completed' || assignment.pass_fail_result === 'passed') ? 'bg-emerald-100 text-emerald-800' :
+                        (assignment.status === 'overdue' || isPastLocalDueDate(assignment.due_date)) ? 'bg-red-100 text-red-800' :
                         'bg-blue-100 text-blue-800'
-                      }>{assignment.status}</Badge>
+                      }>{
+                        (assignment.status === 'completed' || assignment.pass_fail_result === 'passed') ? 'completed' :
+                        (assignment.status === 'overdue' || isPastLocalDueDate(assignment.due_date)) ? 'overdue' :
+                        assignment.status
+                      }</Badge>
                       <Badge variant="outline">{assignment.score_percentage != null ? `${assignment.score_percentage}%` : '—'}</Badge>
                     </div>
                   </div>

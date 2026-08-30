@@ -22,7 +22,11 @@ export default function ProactiveRescoringEngine({
   autoAnalyze = false,
   onOpportunitiesFound
 }) {
-  const ai = useAICall();
+  // Auto-fired analyses are background work in the app-wide AI budget, so
+  // several such cards on one page queue instead of hitting the provider at
+  // once. A run the user CLICKED passes interactive priority per call and
+  // takes the reserved slot instead of queueing behind that background work.
+  const ai = useAICall({ priority: 'background' });
   const [opportunities, setOpportunities] = useState(null);
   // Keep the parent callback out of analyze's identity so an inline
   // onOpportunitiesFound prop doesn't change the callback every render and
@@ -33,7 +37,7 @@ export default function ProactiveRescoringEngine({
   // per OASIS document rather than on every re-render.
   const autoRanForRef = useRef(null);
 
-  const analyzeRescoringOpportunities = useCallback(async () => {
+  const analyzeRescoringOpportunities = useCallback(async ({ interactive = false } = {}) => {
     if (!oasisData) return;
 
     try {
@@ -64,7 +68,7 @@ For each opportunity, calculate:
 - Audit risk assessment`;
 
       const result = await ai.run({
-        model: "claude_opus_4_8",
+        model: "automatic",
         prompt,
         response_json_schema: {
           type: "object",
@@ -121,7 +125,7 @@ For each opportunity, calculate:
             }
           }
         }
-      });
+      }, { priority: interactive ? 'interactive' : 'background' });
 
       setOpportunities(result);
       if (onFoundRef.current) {
@@ -175,8 +179,7 @@ For each opportunity, calculate:
           </CardTitle>
           {!opportunities && !ai.loading && (
             <Button
-              onClick={analyzeRescoringOpportunities}
-              className="bg-green-600 hover:bg-green-700"
+              onClick={() => analyzeRescoringOpportunities({ interactive: true })}
             >
               <TrendingUp className="w-4 h-4 mr-2" />
               Analyze Opportunities
@@ -367,8 +370,11 @@ For each opportunity, calculate:
               </div>
             )}
 
+            {/* This button stays mounted while the spinner shows, so without the guard a
+                second click fires another expensive model call over the same input. */}
             <Button
-              onClick={analyzeRescoringOpportunities}
+              onClick={() => analyzeRescoringOpportunities({ interactive: true })}
+              disabled={ai.loading}
               variant="outline"
               className="w-full"
             >

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useAICall } from "@/hooks/useAICall";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -34,6 +34,12 @@ export default function PersonalizedEducationGenerator({ patient, carePlans = []
   const [copied, setCopied] = useState(false);
   const [isSending, setIsSending] = useState(false);
 
+  // Clear sticky AI output when the parent chart switches patients.
+  useEffect(() => {
+    setEducationMaterial(null);
+    setCopied(false);
+  }, [patient?.id]);
+
   const generateMaterial = async () => {
     if (!patient) return;
 
@@ -42,7 +48,7 @@ export default function PersonalizedEducationGenerator({ patient, carePlans = []
       const latestVisit = recentVisits[0];
 
       const result = await ai.run({
-        model: "claude_sonnet_4_6",
+        model: "automatic",
         prompt: `You are a patient education specialist creating easy-to-understand health information for home health patients.
 
 PATIENT INFORMATION:
@@ -186,7 +192,7 @@ Return JSON with the complete material:`,
 
       await base44.integrations.Core.SendEmail({
         to: patient.email,
-        from_name: "Penn Sync Care Team",
+        from_name: "PennSync by CareMetric Care Team",
         subject: `Your Personal Health Education Guide - ${educationMaterial.title}`,
         body: fullText
       });

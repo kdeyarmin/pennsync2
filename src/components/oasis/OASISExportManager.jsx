@@ -1,11 +1,13 @@
 import { useState } from "react";
+import { toLocalISODate } from "@/lib/dateLocal";
 import { Button } from "@/components/ui/button";
 import { toCsvRows } from "@/components/admin/csvExport";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 
 import { Download, FileDown, FileSpreadsheet, Loader2, CheckCircle2 } from "lucide-react";
-import { generateOASISReportPDF } from "@/functions/generateOASISReportPDF";
+import { base44 } from "@/api/base44Client";
+import { toast } from "sonner";
 
 export default function OASISExportManager({ 
   analysisResults, 
@@ -167,7 +169,7 @@ export default function OASISExportManager({
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `OASIS_Analysis_${patientName?.replace(/\s+/g, '_') || 'Report'}_${new Date().toISOString().split('T')[0]}.csv`;
+      link.download = `OASIS_Analysis_${patientName?.replace(/\s+/g, '_') || 'Report'}_${toLocalISODate()}.csv`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -177,6 +179,9 @@ export default function OASISExportManager({
       setTimeout(() => setExportSuccess(false), 3000);
     } catch (error) {
       console.error('CSV export error:', error);
+      // The button just reverts to idle on failure, which looks identical to never
+      // having clicked it, so the failure has to be announced.
+      toast.error('Failed to export the CSV. Please try again.');
     }
 
     setIsExporting(false);
@@ -188,15 +193,23 @@ export default function OASISExportManager({
     setExportType('pdf');
 
     try {
-      const response = await generateOASISReportPDF({
-        analysisResults
+      // Fetch the PDF as binary. The axios-based functions.invoke wrapper uses
+      // responseType 'json' and decodes the PDF bytes as UTF-8 text, which
+      // corrupts the binary (replacement characters shift xref offsets).
+      const response = await base44.functions.fetch('generateOASISReportPDF', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ analysisResults })
       });
+      if (!response.ok) {
+        throw new Error(`PDF generation failed (${response.status})`);
+      }
 
-      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const blob = new Blob([await response.arrayBuffer()], { type: 'application/pdf' });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `OASIS_Comprehensive_Report_${patientName?.replace(/\s+/g, '_') || 'Report'}_${new Date().toISOString().split('T')[0]}.pdf`;
+      link.download = `OASIS_Comprehensive_Report_${patientName?.replace(/\s+/g, '_') || 'Report'}_${toLocalISODate()}.pdf`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -206,6 +219,8 @@ export default function OASISExportManager({
       setTimeout(() => setExportSuccess(false), 3000);
     } catch (error) {
       console.error('PDF export error:', error);
+      // Same here: without a toast a failed generation is indistinguishable from idle.
+      toast.error('Failed to generate the PDF report. Please try again.');
     }
 
     setIsExporting(false);

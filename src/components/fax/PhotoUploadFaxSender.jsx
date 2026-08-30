@@ -58,9 +58,21 @@ export default function PhotoUploadFaxSender({ prefilledData }) {
         reader.onloadend = () => resolve(reader.result);
         reader.readAsDataURL(blob);
       });
+      // Load the image to read its natural size and aspect-fit it onto the page
+      // (centered) instead of stretching it to the full A4, which distorts the
+      // faxed document.
+      const img = await new Promise((resolve, reject) => {
+        const el = new Image();
+        el.onload = () => resolve(el);
+        el.onerror = reject;
+        el.src = dataUrl;
+      });
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
-      pdf.addImage(dataUrl, 'JPEG', 0, 0, pageWidth, pageHeight);
+      const ratio = Math.min(pageWidth / img.width, pageHeight / img.height);
+      const w = img.width * ratio;
+      const h = img.height * ratio;
+      pdf.addImage(dataUrl, 'JPEG', (pageWidth - w) / 2, (pageHeight - h) / 2, w, h);
       isFirstPage = false;
     }
     const pdfBlob = pdf.output('blob');
@@ -88,11 +100,13 @@ export default function PhotoUploadFaxSender({ prefilledData }) {
         });
         pdfUrl = merged.data?.merged_pdf_url || pdfUrl;
       }
-      await base44.functions.invoke('sendFax', {
+      const faxRes = await base44.functions.invoke('sendFax', {
         to_number: toNumber,
         file_url: pdfUrl,
         document_name: 'Photo Fax'
       });
+      const faxData = faxRes?.data ?? faxRes;
+      if (faxData?.error) throw new Error(faxData.error);
       toast.success("Fax sent successfully!");
       setUploadedImages([]);
       setToNumber("");
@@ -163,7 +177,7 @@ export default function PhotoUploadFaxSender({ prefilledData }) {
         <Button
           onClick={handleSendFax}
           disabled={uploadedImages.length === 0 || isSending || !toNumber.trim()}
-          className="w-full h-14 rounded-2xl bg-gradient-to-r from-indigo-600 to-navy-600 text-white shadow-lg shadow-indigo-200 hover:from-indigo-700 hover:to-navy-700"
+          className="w-full"
           size="lg"
         >
           {isSending ? <Loader2 className="w-5 h-5 mr-2 animate-spin" /> : <Send className="w-5 h-5 mr-2" />}

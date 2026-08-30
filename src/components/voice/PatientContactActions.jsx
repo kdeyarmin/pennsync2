@@ -45,42 +45,62 @@ export default function PatientContactActions({ patient, currentUser }) {
   });
   const consentStatus = consents[0]?.consent_status || "unknown";
   const optedOut = consentStatus === "opted_out";
+  const canText = consentStatus === "opted_in";
 
-  const { data: settingsArr = [] } = useQuery({
-    queryKey: ["agency-settings"],
-    queryFn: () => base44.entities.AgencySettings.list("-created_date", 1),
+  const { data: agencySettingsRow = null } = useQuery({
+    queryKey: ["agencySettings", currentUser?.agency_name || null],
+    queryFn: async () => {
+      const { fetchCallerAgencySettings } = await import("@/lib/agencySettings");
+      return fetchCallerAgencySettings(currentUser?.agency_name);
+    },
     staleTime: 5 * 60 * 1000,
-    initialData: [],
   });
   // Warn (don't block) when the agency is outside its global calling/texting
   // hours — the send still goes through, but the patient may get an after-hours
   // auto-reply or transfer.
-  const afterHours = !isWithinBusinessHours(new Date(), agencyHoursConfig(settingsArr[0])).open;
-  const quickReplies = getQuickReplies(settingsArr[0]);
-  const templates = getTemplates(settingsArr[0]);
-  const templateContext = buildTemplateContext({ patient, user: currentUser, settings: settingsArr[0] });
+  const afterHours = !isWithinBusinessHours(new Date(), agencyHoursConfig(agencySettingsRow)).open;
+  const quickReplies = getQuickReplies(agencySettingsRow);
+  const templates = getTemplates(agencySettingsRow);
+  const templateContext = buildTemplateContext({ patient, user: currentUser, settings: agencySettingsRow });
   const insertReply = (text) =>
     setDraft((d) => (d.trim() ? `${d.replace(/\s*$/, "")} ${text}` : text));
   const applyTemplate = (body) => setDraft(renderTemplate(body, templateContext));
 
   const sendText = useMutation({
-    mutationFn: (body) => base44.functions.invoke("sendSms", { to_number: patient.phone, body, patient_id: patient.id }),
+    mutationFn: async (body) => {
+      const res = await base44.functions.invoke("sendSms", { to_number: patient.phone, body, patient_id: patient.id });
+      const data = res?.data ?? res;
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
     onSuccess: () => { setDraft(""); setTextOpen(false); toast.success("Text sent"); },
     onError: (err) => toast.error(err?.message || "Failed to send text"),
   });
 
   const startCall = useMutation({
-    mutationFn: () => base44.functions.invoke("startMaskedCall", { patient_id: patient.id }),
+    mutationFn: async () => {
+      const res = await base44.functions.invoke("startMaskedCall", { patient_id: patient.id });
+      const data = res?.data ?? res;
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
     onSuccess: () => toast.success("Connecting… your phone will ring shortly, then we'll dial the patient."),
     onError: (err) => toast.error(err?.message || "Failed to start call"),
   });
 
   const recordConsent = useMutation({
-    mutationFn: (consent_status) =>
-      base44.functions.invoke("recordSmsConsent", {
+    /**
+     * @param {"opted_in" | "opted_out"} consent_status
+     */
+    mutationFn: async (/** @type {"opted_in" | "opted_out"} */ consent_status) => {
+      const res = await base44.functions.invoke("recordSmsConsent", {
         phone_e164: patient.phone, consent_status, patient_id: patient.id, notes: consentNote,
-      }),
-    onSuccess: (_res, consent_status) => {
+      });
+      const data = res?.data ?? res;
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: (_res, /** @type {"opted_in" | "opted_out"} */ consent_status) => {
       queryClient.invalidateQueries({ queryKey: ["patient-consent", e164] });
       toast.success(consent_status === "opted_in" ? "Texting consent recorded" : "Marked opted out");
       setConsentOpen(false);
@@ -97,7 +117,7 @@ export default function PatientContactActions({ patient, currentUser }) {
   const disabled = !!disabledReason;
 
   const TextButton = (
-    <Button variant="outline" className="flex-1" disabled={disabled || optedOut} onClick={() => setTextOpen(true)}>
+    <Button variant="outline" className="flex-1" disabled={disabled || !canText} onClick={() => setTextOpen(true)}>
       <MessageSquare className="w-4 h-4 mr-2" />
       Text
     </Button>
@@ -135,7 +155,15 @@ export default function PatientContactActions({ patient, currentUser }) {
             </AlertDescription>
           </Alert>
         )}
-        {!optedOut && consentStatus === "opted_in" && (
+        {!optedOut && !canText && (
+          <Alert className="bg-amber-50 border-amber-200 py-2">
+            <AlertTriangle className="w-4 h-4 text-amber-600" />
+            <AlertDescription className="text-amber-800 text-xs">
+              No texting consent on file. Record opt-in before sending texts (TCPA). Calling is still allowed.
+            </AlertDescription>
+          </Alert>
+        )}
+        {canText && (
           <Badge className="bg-green-100 text-green-800 text-xs">
             <ShieldCheck className="w-3 h-3 mr-1" /> Texting consent on file
           </Badge>
@@ -206,7 +234,6 @@ export default function PatientContactActions({ patient, currentUser }) {
               Mark opted out
             </Button>
             <Button
-              className="bg-green-600 hover:bg-green-700"
               disabled={recordConsent.isPending}
               onClick={() => recordConsent.mutate("opted_in")}
             >
@@ -227,7 +254,7 @@ export default function PatientContactActions({ patient, currentUser }) {
             <Alert className="bg-amber-50 border-amber-200 py-2">
               <AlertTriangle className="w-4 h-4 text-amber-600" />
               <AlertDescription className="text-amber-800 text-xs">
-                No texting consent is recorded for this patient. Confirm they've agreed to receive texts before sending.
+                No texting consent is recorded for this patient. Close this dialog and record opt-in before sending.
               </AlertDescription>
             </Alert>
           )}
@@ -283,12 +310,12 @@ export default function PatientContactActions({ patient, currentUser }) {
               toNumber={patient?.phone}
               patientId={patient?.id}
               body={draft}
-              disabled={!draft.trim() || sendText.isPending || optedOut}
+              disabled={!draft.trim() || sendText.isPending || !canText}
               onScheduled={() => { setDraft(""); setTextOpen(false); }}
             />
             <Button
               onClick={() => draft.trim() && sendText.mutate(draft.trim())}
-              disabled={!draft.trim() || sendText.isPending}
+              disabled={!draft.trim() || sendText.isPending || !canText}
               className="bg-blue-600 hover:bg-blue-700"
             >
               <Send className="w-4 h-4 mr-2" />

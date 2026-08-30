@@ -1,5 +1,23 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
+// <<<BEGIN SHARED HELPER: requireActiveUser — generated, edit base44/_shared/backendHelpers.mjs>>>
+const isDeactivatedUser = (u) => !!u && u.is_active === false;
+const DEACTIVATED_USER_RESPONSE = () => Response.json(
+  { error: 'Unauthorized - account is deactivated' },
+  { status: 403 },
+);
+// <<<END SHARED HELPER: requireActiveUser>>>
+
+// <<<BEGIN SHARED HELPER: requireAgencyAdminAgency — generated, edit base44/_shared/backendHelpers.mjs>>>
+function agencyAdminMissingAgencyResponse(user) {
+  if (user && user.account_type === 'agency_admin' && !String(user.agency_name || '').trim()) {
+    return Response.json({ error: 'Forbidden: agency_name is required.' }, { status: 403 });
+  }
+  return null;
+}
+// <<<END SHARED HELPER: requireAgencyAdminAgency>>>
+
+
 /**
  * getCommsDashboard — admin-only aggregation for the Communications Dashboard.
  *
@@ -13,14 +31,11 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
  * failure reasons, and timestamps.
  */
 
-const SUPER_ADMIN_EMAIL = ((typeof Deno !== 'undefined' && Deno.env.get('SUPER_ADMIN_EMAIL')) || '').trim().toLowerCase() || null;
-
 const isAdminLike = (u) =>
   !!u &&
   (u.role === 'admin' ||
     u.account_type === 'agency_admin' ||
-    u.account_type === 'super_admin' ||
-    u.email === SUPER_ADMIN_EMAIL);
+    u.account_type === 'super_admin');
 
 const round = (n) => Math.round(n);
 const MISSED_CALL_STATUSES = new Set(['failed', 'no_answer', 'busy', 'canceled', 'cancelled']);
@@ -124,7 +139,12 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
+    if (isDeactivatedUser(user)) return DEACTIVATED_USER_RESPONSE();
 
+    {
+      const _agencyAdminGate = agencyAdminMissingAgencyResponse(user);
+      if (_agencyAdminGate) return _agencyAdminGate;
+    }
     if (!isAdminLike(user)) {
       return Response.json({ error: 'Unauthorized - Admin access required' }, { status: 403 });
     }
@@ -135,8 +155,28 @@ Deno.serve(async (req) => {
       base44.asServiceRole.entities.SmsMessage.list('-created_date', 1000).catch(() => []),
       base44.asServiceRole.entities.CallLog.list('-created_date', 1000).catch(() => []),
       base44.asServiceRole.entities.FaxLog.list('-created_date', 1000).catch(() => []),
-      base44.asServiceRole.entities.User.list('-created_date', 1000).catch(() => []),
+      base44.asServiceRole.entities.User.list('-created_date', 5000).catch(() => []),
     ]);
+
+    // Agency-scoped admins (agency_admin, or role:admin with an agency) only
+    // see comms from staff in their agency (parity with getDashboardData).
+    // Platform-wide: super_admin, or role:admin without agency_name.
+    let agencyEmails = null;
+    const isAgencyScoped = user.account_type !== 'super_admin'
+      && user.agency_name
+      && (user.account_type === 'agency_admin' || user.role === 'admin');
+    if (isAgencyScoped) {
+      agencyEmails = new Set(
+        (users || [])
+          .filter((u) => u.agency_name === user.agency_name && u.email)
+          .map((u) => u.email),
+      );
+    }
+    const inAgency = (row) => {
+      if (!agencyEmails) return true;
+      const owner = row.nurse_email || row.sent_by || row.created_by || row.host_email;
+      return owner && agencyEmails.has(owner);
+    };
 
     const now = new Date();
     const cutoff = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).getTime();
@@ -144,9 +184,9 @@ Deno.serve(async (req) => {
       const t = new Date(row.created_date).getTime();
       return Number.isFinite(t) ? t >= cutoff : true;
     };
-    const recentMessages = (messages || []).filter(inWindow);
-    const recentCalls = (calls || []).filter(inWindow);
-    const recentFaxes = (faxes || []).filter(inWindow);
+    const recentMessages = (messages || []).filter(inWindow).filter(inAgency);
+    const recentCalls = (calls || []).filter(inWindow).filter(inAgency);
+    const recentFaxes = (faxes || []).filter(inWindow).filter(inAgency);
 
     const summary = summarize(recentMessages, recentCalls, recentFaxes, now);
 
@@ -226,6 +266,6 @@ Deno.serve(async (req) => {
     });
   } catch (error) {
     console.error('getCommsDashboard error:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
 });

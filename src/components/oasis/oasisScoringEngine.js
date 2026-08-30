@@ -9,8 +9,14 @@ const RULES = [
     domain: "Fall Prevention",
     triggers: [
       { questionId: "m1910", values: [1, 2], severity: "high" },
-      { questionId: "m1860", values: [2, 3, 4, 5], severity: "high" },  // ambulation impairment
-      { questionId: "m1900", values: [1, 2, 3, 4], severity: "medium" }, // current medication effect
+      // M1860 runs 0–6 (see oasisScales.js); 6 = "Bedfast, unable to ambulate or
+      // be up in a chair". Stopping at 5 meant the most impaired patients — the
+      // ones already at highest fall risk during transfers — produced no
+      // fall-prevention suggestion at all, while chairfast (5) did.
+      { questionId: "m1860", values: [2, 3, 4, 5, 6], severity: "high" },  // ambulation impairment
+      // M1900 Prior Functioning: 1–3 are real impairment levels; 4 = "Unknown"
+      // and must not trigger a fall-risk suggestion.
+      { questionId: "m1900", values: [1, 2, 3], severity: "medium" },
     ],
     reason: (ans) => {
       const risk = ans["m1910"];
@@ -36,7 +42,9 @@ const RULES = [
     domain: "Medication Management",
     triggers: [
       { questionId: "m2001", values: [1, 2], severity: "high" },
-      { questionId: "m2010", values: [1, 2], severity: "high" },
+      // M2010 High-Risk Drug Education: 1 = education COMPLETED (fine);
+      // only 2 = "Education not completed" is a medication-management gap.
+      { questionId: "m2010", values: [2], severity: "high" },
       { questionId: "m2020", values: [1, 2, 3], severity: "medium" },
     ],
     reason: (ans) => {
@@ -77,7 +85,10 @@ const RULES = [
       // oasisQuestions.jsx), so a CHF patient was wrongly flagged for diabetes
       // management. CHF now routes to Cardiovascular Monitoring instead.
       { questionId: "m1020", values: [1], severity: "high" },  // primary diagnosis = Diabetes Mellitus
-      { questionId: "m2020", values: [3], severity: "medium" },
+      // NOTE: do NOT trigger on M2020 (oral-med management). M2020=3 ("unable to
+      // take oral medications") is a medication-adherence signal — already covered
+      // by the Medication Management rule above — and has no bearing on a diabetes
+      // diagnosis, so keying diabetes care off it flagged non-diabetic patients.
     ],
     reason: () => "Diabetes diagnosis requires structured glucose monitoring, foot care, and diet education.",
     interventionIds: ["dm-1", "dm-2", "dm-3", "dm-4"],
@@ -87,8 +98,8 @@ const RULES = [
     domain: "Psychosocial Assessment",
     triggers: [
       { questionId: "m1730", values: [1, 2], severity: "high" },  // depression
-      { questionId: "m1740", values: [1, 2, 3], severity: "medium" },  // anxiety
-      { questionId: "m1700", values: [1, 2, 3], severity: "medium" },  // cognitive function
+      { questionId: "m1740", values: [1, 2, 3, 4], severity: "medium" },  // anxiety (4 = physical aggression, most severe)
+      { questionId: "m1700", values: [1, 2, 3, 4], severity: "medium" },  // cognitive function (4 = totally dependent, most severe)
     ],
     reason: (ans) => {
       if (ans["m1730"] >= 1) return "Positive depression screening. Mental health follow-up and caregiver assessment required.";
@@ -100,8 +111,8 @@ const RULES = [
   {
     domain: "Patient Education",
     triggers: [
-      { questionId: "m1100", values: [1, 2, 3], severity: "medium" },  // living situation
-      { questionId: "m1800", values: [1, 2, 3, 4], severity: "low" },  // grooming
+      { questionId: "m1100", values: [0, 1, 2], severity: "medium" },  // living situation (0 = lives alone, no assistance, highest risk)
+      { questionId: "m1800", values: [1, 2, 3], severity: "low" },  // grooming (max stored value is 3)
     ],
     reason: () => "Patient and caregiver education on disease management and safety protocols is indicated.",
     interventionIds: ["pe-1", "pe-2", "pe-3"],

@@ -17,6 +17,7 @@ import {
   FileText,
   Sparkles
 } from "lucide-react";
+import { ALL_ROWS } from '@/lib/queryLimits';
 
 export default function AIComplianceAssistant({ compact = false, context = null }) {
   const [question, setQuestion] = useState("");
@@ -25,7 +26,7 @@ export default function AIComplianceAssistant({ compact = false, context = null 
 
   const { data: complianceRules = [] } = useQuery({
     queryKey: ['medicareComplianceRules'],
-    queryFn: () => base44.entities.MedicareComplianceRule.list(),
+    queryFn: () => base44.entities.MedicareComplianceRule.list(undefined, ALL_ROWS),
     initialData: [],
   });
 
@@ -52,7 +53,7 @@ export default function AIComplianceAssistant({ compact = false, context = null 
       ).join('\n\n');
 
       const result = await ai.run({
-        model: "claude_opus_4_8",
+        model: "automatic",
         prompt: `You are an expert Medicare compliance advisor for home health agencies, specializing in 42 CFR 484 regulations and Pennsylvania state requirements.
 
 QUESTION: ${questionText}

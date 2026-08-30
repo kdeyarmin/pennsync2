@@ -1,6 +1,10 @@
 import { lazy, Suspense, useState, useMemo, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router";
 import { base44 } from "@/api/base44Client";
+import { agencyQueryKey } from '@/lib/agencyRoster';
+import { isAdminView } from "@/lib/roles";
+import AccessDeniedState from "@/components/ui/AccessDeniedState";
+import { toLocalISODate } from "@/lib/dateLocal";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import EmptyState from "@/components/ui/empty-state";
@@ -21,8 +25,7 @@ import {
   Search,
   Clock,
   MousePointer,
-  Archive,
-  Loader2
+  Archive
 } from "lucide-react";
 import PageContainer from "@/components/ui/PageContainer";
 import EmbeddedPage from "@/components/ui/embeddedPage";
@@ -39,11 +42,7 @@ const UserActivityLog = lazy(() => import("@/components/hub-tabs/UserActivityLog
 // ?tab= deep-link so the retired Activity Log page redirects to the right tab.
 const TAB_KEYS = ["report", "log"];
 
-const tabLoader = (
-  <div className="flex justify-center py-12">
-    <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
-  </div>
-);
+const tabLoader = <LoadingState className="py-12" />;
 
 export default function UserActivityReport() {
   const [timeRange, setTimeRange] = useState("30"); // days
@@ -76,14 +75,25 @@ export default function UserActivityReport() {
   }, [requestedTab, activeTab, setSearchParams]);
 
   // Fetch user activity data
+  // Admin-only: the agency-wide user activity audit trail must not be
+  // browsable by every authenticated user (defense in depth alongside RLS).
+  const { data: currentUser } = useQuery({ queryKey: ['currentUser'], queryFn: () => base44.auth.me() });
+  const isAdmin = isAdminView(currentUser);
+
   const { data: activities = [], isLoading } = useQuery({
     queryKey: ['user-activities-report'],
-    queryFn: () => base44.entities.UserActivity.list('-created_date', 5000)
+    queryFn: () => base44.entities.UserActivity.list('-created_date', 5000),
+    enabled: isAdmin,
   });
 
   const { data: _users = [] } = useQuery({
-    queryKey: ['all-users-report'],
-    queryFn: () => base44.entities.User.list('-created_date', 500)
+    queryKey: ['all-users-report', agencyQueryKey(currentUser)],
+    queryFn: async () => {
+      const _rows = await base44.entities.User.list('-created_date', 500);
+      const { filterUsersByCallerAgency } = await import('@/lib/agencyScope');
+      return filterUsersByCallerAgency(_rows, currentUser);
+    },
+    enabled: isAdmin,
   });
 
   // Filter activities by time range
@@ -246,7 +256,7 @@ export default function UserActivityReport() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `user_activity_report_${new Date().toISOString().split('T')[0]}.csv`;
+      a.download = `user_activity_report_${toLocalISODate()}.csv`;
       a.click();
       window.URL.revokeObjectURL(url);
     } catch (error) {
@@ -320,12 +330,24 @@ export default function UserActivityReport() {
         y += 3;
       });
       
-      doc.save(`user_activity_report_${new Date().toISOString().split('T')[0]}.pdf`);
+      doc.save(`user_activity_report_${toLocalISODate()}.pdf`);
     } catch (error) {
       console.error('PDF export error:', error);
       toast.error('Failed to generate PDF report: ' + error.message);
     }
   };
+
+  if (currentUser && !isAdmin) {
+    return (
+      <PageContainer>
+        <AccessDeniedState
+          title="Access restricted"
+          description="The User Activity Report is available to administrators only."
+          className="py-24"
+        />
+      </PageContainer>
+    );
+  }
 
   return (
     <PageContainer>
@@ -368,6 +390,15 @@ export default function UserActivityReport() {
             Export PDF
           </Button>
         </div>
+
+        {/* The activity fetch is capped at the 5,000 most recent rows. When the cap
+            is hit, totals below are undercounted for long ranges, so disclose it
+            rather than silently reporting wrong numbers on an audit surface. */}
+        {activities.length >= 5000 && (
+          <div className="rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            Showing the most recent 5,000 activities. Totals below may be undercounted for longer ranges — narrow the time range for complete figures.
+          </div>
+        )}
 
         {/* Overall Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -460,22 +491,10 @@ export default function UserActivityReport() {
                       </div>
 
                       <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-3">
-                        <div className="p-3 bg-emerald-50 rounded-lg">
-                          <p className="text-xs text-emerald-600 font-medium">Total Actions</p>
-                          <p className="text-2xl font-bold text-emerald-900">{stat.total_actions}</p>
-                        </div>
-                        <div className="p-3 bg-navy-50 rounded-lg">
-                          <p className="text-xs text-navy-600 font-medium">Logins</p>
-                          <p className="text-2xl font-bold text-navy-900">{stat.logins}</p>
-                        </div>
-                        <div className="p-3 bg-blue-50 rounded-lg">
-                          <p className="text-xs text-blue-600 font-medium">Pages</p>
-                          <p className="text-2xl font-bold text-blue-900">{stat.pages_visited_count}</p>
-                        </div>
-                        <div className="p-3 bg-orange-50 rounded-lg">
-                          <p className="text-xs text-orange-600 font-medium">Entities</p>
-                          <p className="text-2xl font-bold text-orange-900">{stat.entities_interacted_count}</p>
-                        </div>
+                        <StatCard label="Total Actions" value={stat.total_actions} tone="emerald" />
+                        <StatCard label="Logins" value={stat.logins} tone="navy" />
+                        <StatCard label="Pages" value={stat.pages_visited_count} tone="blue" />
+                        <StatCard label="Entities" value={stat.entities_interacted_count} tone="orange" />
                         <div className="p-3 bg-slate-50 rounded-lg">
                           <p className="text-xs text-slate-600 font-medium">Last Active</p>
                           <p className="text-xs font-bold text-slate-900 mt-1">

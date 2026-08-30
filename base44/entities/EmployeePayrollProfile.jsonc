@@ -17,7 +17,7 @@
         "hospice"
       ],
       "default": "home_health",
-      "description": "The company/service line this employee is paid under \u2014 determines their timesheet view and which payroll report they appear on"
+      "description": "The company/service line this employee is paid under — determines their timesheet view and which payroll report they appear on"
     },
     "earns_points": {
       "type": "boolean",

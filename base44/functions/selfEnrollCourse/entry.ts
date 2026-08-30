@@ -1,5 +1,14 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
+// <<<BEGIN SHARED HELPER: requireActiveUser — generated, edit base44/_shared/backendHelpers.mjs>>>
+const isDeactivatedUser = (u) => !!u && u.is_active === false;
+const DEACTIVATED_USER_RESPONSE = () => Response.json(
+  { error: 'Unauthorized - account is deactivated' },
+  { status: 403 },
+);
+// <<<END SHARED HELPER: requireActiveUser>>>
+
+
 // Lets an authenticated user self-enroll in an elective (non-required) published
 // course. Required/mandatory and annual-mandatory compliance training stays
 // admin-assigned, so those are rejected here. Idempotent: an existing, active
@@ -9,6 +18,7 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
+    if (isDeactivatedUser(user)) return DEACTIVATED_USER_RESPONSE();
     if (!user?.email) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -18,7 +28,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'courseId is required' }, { status: 400 });
     }
 
-    const [course] = await base44.asServiceRole.entities.TrainingCourse.filter({ id: courseId });
+    const [course] = await base44.asServiceRole.entities.TrainingCourse.filter({ id: courseId }, undefined, 5000);
     if (!course) {
       return Response.json({ error: 'Course not found' }, { status: 404 });
     }
@@ -55,6 +65,18 @@ Deno.serve(async (req) => {
       return Response.json({ success: true, already_enrolled: true, assignment_id: active.id });
     }
 
+    // Fresh re-check immediately before create — concurrent double-clicks can
+    // still race the filter→create gap (no unique index / CAS).
+    const recheck = await base44.asServiceRole.entities.TrainingAssignment.filter(
+      { course_id: courseId, assigned_to_user_id: user.email },
+      '-created_date',
+      20,
+    ).catch(() => []);
+    const recheckActive = (recheck || []).find((a) => !a.archived_status);
+    if (recheckActive) {
+      return Response.json({ success: true, already_enrolled: true, assignment_id: recheckActive.id });
+    }
+
     const created = await base44.asServiceRole.entities.TrainingAssignment.create({
       course_id: course.id,
       course_title: course.title,
@@ -79,6 +101,26 @@ Deno.serve(async (req) => {
       archived_status: false,
     });
 
+    const afterCreate = await base44.asServiceRole.entities.TrainingAssignment.filter(
+      { course_id: courseId, assigned_to_user_id: user.email },
+      '-created_date',
+      20,
+    ).catch(() => []);
+    const activeAfter = (afterCreate || []).filter((a) => !a.archived_status);
+    if (activeAfter.length > 1) {
+      const keepId = activeAfter
+        .slice()
+        .sort((a, b) => String(a.created_date || '').localeCompare(String(b.created_date || '')))[0]?.id;
+      if (keepId && created?.id && created.id !== keepId) {
+        try {
+          await base44.asServiceRole.entities.TrainingAssignment.delete(created.id);
+        } catch {
+          /* best-effort */
+        }
+        return Response.json({ success: true, already_enrolled: true, assignment_id: keepId });
+      }
+    }
+
     await base44.asServiceRole.entities.TrainingAuditLog.create({
       actor_id: user.email,
       actor_name: user.full_name,
@@ -92,6 +134,7 @@ Deno.serve(async (req) => {
 
     return Response.json({ success: true, already_enrolled: false, assignment_id: created.id });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error('selfEnrollCourse failed:', error);
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
 });

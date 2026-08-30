@@ -1,20 +1,23 @@
 import { useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router";
+import { useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
+import { useScopedPatients } from '@/hooks/useScopedPatients';
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CheckCircle2, AlertTriangle, Loader2, ArrowRight } from "lucide-react";
 import DocumentIngestionUploader from "../documents/DocumentIngestionUploader";
 import SearchablePatientSelect from "../ui/SearchablePatientSelect";
 import { todayEastern } from "@/components/utils/timezone";
+import { checkExtractedPatientMatch } from "./documentPatientMatch";
+import { findDuplicatesForCandidate } from "../patient/patientDuplicateUtils";
+import { referralPatientReadiness, splitPatientName } from "./referralPatientReadiness";
+import { toast } from "sonner";
 
 export default function DocumentToTriageMapper({ onTriageCreated }) {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { data: patients = [] } = useQuery({
-    queryKey: ['patients-for-triage-mapper'],
-    queryFn: () => base44.entities.Patient.list('-created_date', 1000),
-    initialData: [],
-  });
+  const { data: patients = [] } = useScopedPatients({ sort: '-created_date', limit: 1000 });
 
   const [extractedData, setExtractedData] = useState(null);
   const [mapping, setMapping] = useState({
@@ -27,11 +30,27 @@ export default function DocumentToTriageMapper({ onTriageCreated }) {
   const [processing, setProcessing] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
+  // Identity-mismatch gate: writing extracted clinical data onto a chart whose
+  // name/DOB/MRN conflicts with the document requires an explicit confirmation.
+  const [identityConfirmed, setIdentityConfirmed] = useState(false);
+  // Duplicate-chart gate: creating a patient that matches an existing chart
+  // requires explicit confirmation (mirrors PatientForm's duplicate check).
+  const [duplicateWarning, setDuplicateWarning] = useState(null);
+
+  const selectedPatient = mapping.patientId
+    ? patients.find((p) => p.id === mapping.patientId) || null
+    : null;
+  const identityCheck =
+    mapping.updatePatient && selectedPatient && extractedData?.patient
+      ? checkExtractedPatientMatch(extractedData.patient, selectedPatient)
+      : null;
 
   const handleDataExtracted = (data) => {
     setExtractedData(data);
     setError(null);
     setResult(null);
+    setIdentityConfirmed(false);
+    setDuplicateWarning(null);
   };
 
   const handleProcessMapping = async () => {
@@ -41,29 +60,101 @@ export default function DocumentToTriageMapper({ onTriageCreated }) {
     setError(null);
     setResult(null);
 
+    // Nothing to create without a patient name to key the record on — surface it
+    // instead of silently doing nothing (no result, no error, no feedback).
+    if (mapping.createPatient && !extractedData.patient?.last_name) {
+      setError("No patient last name was extracted — select an existing patient or enter the name manually.");
+      setProcessing(false);
+      return;
+    }
+
+    // Identity gate: the document's extracted patient must match the chart it
+    // is about to update. A conflict on name/DOB/MRN blocks the write unless
+    // the operator explicitly confirms they verified the identity.
+    if (mapping.updatePatient && identityCheck?.verdict === "mismatch" && !identityConfirmed) {
+      setError(
+        `The document's patient does not match the selected chart — conflicting ${identityCheck.conflicts.join("; ")}. ` +
+          "Verify you selected the right patient, then tick the confirmation box to proceed.",
+      );
+      setProcessing(false);
+      return;
+    }
+
     try {
       let patientId = mapping.patientId;
 
-      // Create or update patient
-      if (mapping.createPatient && extractedData.patient?.last_name) {
+      // Create or update patient — same readiness gate as triage/intake so we
+      // never mint "Unknown"/"Doe," placeholder charts into the active census.
+      if (mapping.createPatient) {
+        const readiness = referralPatientReadiness({
+          patient_name: extractedData.patient?.full_name
+            || [extractedData.patient?.first_name, extractedData.patient?.last_name].filter(Boolean).join(' '),
+          full_name: extractedData.patient?.full_name,
+          date_of_birth: extractedData.patient?.date_of_birth,
+          medical_record_number: extractedData.patient?.medical_record_number || extractedData.patient?.mrn,
+          phone: extractedData.patient?.phone,
+          address: extractedData.patient?.address,
+        });
+        // Prefer structured first/last when present and well-formed; otherwise
+        // use the readiness splitter (handles "Last, First").
+        const structured = splitPatientName(
+          extractedData.patient?.full_name
+            || [extractedData.patient?.first_name, extractedData.patient?.last_name].filter(Boolean).join(' ')
+        );
+        if (!readiness.ready) {
+          setError(`Cannot create patient chart. Missing: ${readiness.missing.join(', ')}.`);
+          toast.error(`Cannot create patient chart. Missing: ${readiness.missing.join(', ')}.`);
+          setProcessing(false);
+          return;
+        }
         const patientData = {
-          first_name: extractedData.patient.first_name || "Unknown",
-          last_name: extractedData.patient.last_name || "Unknown",
-          date_of_birth: extractedData.patient.date_of_birth || "",
-          medical_record_number: extractedData.patient.medical_record_number || "",
-          phone: extractedData.patient.phone || "",
-          email: extractedData.patient.email || "",
-          address: extractedData.patient.address || "",
+          first_name: readiness.first_name || structured.first_name,
+          last_name: readiness.last_name || structured.last_name,
+          date_of_birth: readiness.identifiers.date_of_birth || "",
+          medical_record_number: readiness.identifiers.medical_record_number || "",
+          phone: readiness.identifiers.phone || "",
+          email: extractedData.patient?.email || "",
+          address: readiness.identifiers.address || "",
           primary_diagnosis: extractedData.clinical?.primary_diagnosis || "",
           secondary_diagnoses: extractedData.clinical?.secondary_diagnoses || [],
-          allergies: extractedData.clinical?.allergies || "NKDA",
+          // Never synthesize a clinical negative: an empty extraction stays
+          // blank. Charting "NKDA" for a patient whose allergies simply were
+          // not extracted is an affirmative safety falsehood.
+          allergies: extractedData.clinical?.allergies || "",
           current_medications: extractedData.clinical?.current_medications || [],
           baseline_vitals: extractedData.vitals || {},
           status: "active"
         };
 
+        // Duplicate gate (mirrors PatientForm): creating a chart that matches
+        // an existing patient needs explicit confirmation — repeated document
+        // uploads were silently minting duplicate charts.
+        if (!duplicateWarning?.confirmed) {
+          const matches = findDuplicatesForCandidate(patientData, patients, { limit: 3 });
+          if (matches.length > 0) {
+            setDuplicateWarning({ matches, confirmed: false });
+            setError(
+              `A possible existing chart matches this patient (${matches
+                .map((m) => `${m.patient?.first_name || ""} ${m.patient?.last_name || ""}`.trim())
+                .filter(Boolean)
+                .join(", ")}). Use "Update Existing Patient" for that chart, or confirm creating a new one.`,
+            );
+            setProcessing(false);
+            return;
+          }
+        }
+
         const newPatient = await base44.entities.Patient.create(patientData);
         patientId = newPatient.id;
+        // Persist the created patient immediately so a retry after a later failure
+        // (e.g. Referral.create below) reuses this record instead of creating a
+        // duplicate patient chart.
+        setMapping((prev) => ({
+          ...prev,
+          createPatient: false,
+          updatePatient: true,
+          patientId: newPatient.id,
+        }));
       } else if (mapping.updatePatient && patientId && extractedData.clinical) {
         await base44.entities.Patient.update(patientId, {
           primary_diagnosis: extractedData.clinical.primary_diagnosis || undefined,
@@ -112,7 +203,6 @@ export default function DocumentToTriageMapper({ onTriageCreated }) {
 
         // Refresh the lists this just changed so a newly created patient appears
         // in the "Update Existing Patient" dropdown and app-wide patient/referral lists.
-        queryClient.invalidateQueries({ queryKey: ['patients-for-triage-mapper'] });
         queryClient.invalidateQueries({ queryKey: ['patients'] });
         queryClient.invalidateQueries({ queryKey: ['referrals'] });
 
@@ -126,6 +216,10 @@ export default function DocumentToTriageMapper({ onTriageCreated }) {
         if (onTriageCreated) {
           onTriageCreated({ patientId, referralId: referral.id, extractedData });
         }
+      } else if ((mapping.createTriage || mapping.createReferral) && !patientId) {
+        // Referral/triage was requested but no patient could be resolved — don't
+        // stop silently with no feedback.
+        setError("No patient record was available to attach the referral to. Select or create a patient first.");
       }
     } catch (err) {
       setError(err.message || "Failed to process document mapping");
@@ -197,9 +291,7 @@ export default function DocumentToTriageMapper({ onTriageCreated }) {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => {
-                    window.location.href = `/patientdetails?id=${result.patientId}`;
-                  }}
+                  onClick={() => navigate(`/PatientDetails?id=${result.patientId}`)}
                 >
                   View Patient <ArrowRight className="w-3 h-3 ml-1" />
                 </Button>
@@ -277,14 +369,44 @@ export default function DocumentToTriageMapper({ onTriageCreated }) {
                 <SearchablePatientSelect
                   patients={patients}
                   value={mapping.patientId}
-                  onValueChange={(patientId) =>
-                    setMapping((prev) => ({ ...prev, patientId }))
-                  }
+                  onValueChange={(patientId) => {
+                    setMapping((prev) => ({ ...prev, patientId }));
+                    setIdentityConfirmed(false);
+                    setError(null);
+                  }}
                   placeholder="Search and select patient..."
                 />
                 {!mapping.patientId && (
                   <p className="text-xs text-amber-600">
                     A patient must be selected before clinical data can be mapped.
+                  </p>
+                )}
+                {identityCheck?.verdict === "mismatch" && (
+                  <div className="p-2 bg-red-50 border border-red-300 rounded space-y-2">
+                    <p className="text-xs font-semibold text-red-900">
+                      ⚠️ The document's patient does not match this chart:
+                    </p>
+                    <ul className="text-xs text-red-800 list-disc pl-4">
+                      {identityCheck.conflicts.map((c, i) => (
+                        <li key={i}>Conflicting {c}</li>
+                      ))}
+                    </ul>
+                    <label className="flex items-start gap-2 text-xs text-red-900">
+                      <input
+                        type="checkbox"
+                        checked={identityConfirmed}
+                        onChange={(e) => setIdentityConfirmed(e.target.checked)}
+                        className="mt-0.5"
+                      />
+                      I verified this document belongs to the selected patient (name change,
+                      chart correction, or extraction error) and take responsibility for this update.
+                    </label>
+                  </div>
+                )}
+                {identityCheck?.verdict === "unverifiable" && (
+                  <p className="text-xs text-amber-600">
+                    The document's patient identity could not be compared to this chart (no
+                    name/DOB extracted) — double-check the selection before proceeding.
                   </p>
                 )}
               </div>
@@ -360,7 +482,22 @@ export default function DocumentToTriageMapper({ onTriageCreated }) {
       {error && (
         <Alert className="border-red-300 bg-red-50">
           <AlertTriangle className="w-4 h-4 text-red-600" />
-          <AlertDescription className="text-red-800">{error}</AlertDescription>
+          <AlertDescription className="text-red-800">
+            {error}
+            {duplicateWarning && !duplicateWarning.confirmed && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="mt-2 block"
+                onClick={() => {
+                  setDuplicateWarning((prev) => ({ ...prev, confirmed: true }));
+                  setError(null);
+                }}
+              >
+                These are different patients — create a new chart anyway
+              </Button>
+            )}
+          </AlertDescription>
         </Alert>
       )}
     </div>

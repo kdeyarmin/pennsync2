@@ -7,7 +7,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { UserPlus, Calendar, Stethoscope } from "lucide-react";
 import { base44 } from "@/api/base44Client";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useScopedPatients } from '@/hooks/useScopedPatients';
+import { toLocalISODate } from "@/lib/dateLocal";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 export default function PatientQuickActions({ onActionComplete }) {
@@ -17,10 +19,7 @@ export default function PatientQuickActions({ onActionComplete }) {
 
   const queryClient = useQueryClient();
 
-  const { data: patients = [] } = useQuery({
-    queryKey: ['patients-quick-action'],
-    queryFn: () => base44.entities.Patient.filter({ status: 'active' }, '-updated_date', 100)
-  });
+  const { data: patients = [] } = useScopedPatients({ status: 'active', sort: '-updated_date', limit: 100 });
 
   // New Patient Form
   const [newPatient, setNewPatient] = useState({
@@ -59,7 +58,7 @@ export default function PatientQuickActions({ onActionComplete }) {
   // New Visit Form
   const [newVisit, setNewVisit] = useState({
     patient_id: '',
-    visit_date: new Date().toISOString().split('T')[0],
+    visit_date: toLocalISODate(),
     visit_type: 'routine_visit',
     status: 'scheduled'
   });
@@ -71,7 +70,7 @@ export default function PatientQuickActions({ onActionComplete }) {
       setShowNewVisit(false);
       setNewVisit({
         patient_id: '',
-        visit_date: new Date().toISOString().split('T')[0],
+        visit_date: toLocalISODate(),
         visit_type: 'routine_visit',
         status: 'scheduled'
       });
@@ -321,13 +320,13 @@ export default function PatientQuickActions({ onActionComplete }) {
               onClick={() => {
                 const patient = patients.find(p => p.id === newDiagnosis.patient_id);
                 if (patient) {
-                  updatePatientDiagnosisMutation.mutate({
-                    id: patient.id,
-                    data: {
-                      primary_diagnosis: newDiagnosis.diagnosis,
-                      clinical_notes: newDiagnosis.notes
-                    }
-                  });
+                  // Only send clinical_notes when the user actually entered some;
+                  // sending '' would wipe the patient's existing chart notes.
+                  const data = { primary_diagnosis: newDiagnosis.diagnosis };
+                  if (newDiagnosis.notes?.trim()) {
+                    data.clinical_notes = newDiagnosis.notes;
+                  }
+                  updatePatientDiagnosisMutation.mutate({ id: patient.id, data });
                 }
               }}
               disabled={!newDiagnosis.patient_id || !newDiagnosis.diagnosis || updatePatientDiagnosisMutation.isPending}

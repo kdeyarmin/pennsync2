@@ -1,9 +1,37 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
-// Operational logs are gated behind FUNCTIONS_DEBUG so they don't run in
-// production by default. console.error/warn remain ungated for visibility.
-const DEBUG = !!Deno.env.get('FUNCTIONS_DEBUG');
-const debugLog = (...args) => { if (DEBUG) console.log(...args); };
+// <<<BEGIN SHARED HELPER: requireActiveUser — generated, edit base44/_shared/backendHelpers.mjs>>>
+const isDeactivatedUser = (u) => !!u && u.is_active === false;
+const DEACTIVATED_USER_RESPONSE = () => Response.json(
+  { error: 'Unauthorized - account is deactivated' },
+  { status: 403 },
+);
+// <<<END SHARED HELPER: requireActiveUser>>>
+
+
+// Operational debug logs are compiled out in production (the FUNCTIONS_DEBUG
+// secret was retired). console.error/warn remain ungated for visibility.
+const debugLog = (..._args) => {};
+
+// SSRF guard: only fetch https URLs on the app's own storage/app hosts, never
+// internal IPs / metadata. Mirrors analyzeDocument/extractClinicalDocument — any
+// function that hands a user-supplied URL to a provider integration must gate it.
+const FILE_URL_ALLOWED_HOSTS = ['qtrypzzcjebvfcihiynt.supabase.co', 'base44.app', 'base44.io'];
+function isSafeFetchUrl(raw) {
+  let u;
+  try { u = new URL(String(raw)); } catch { return false; }
+  if (u.protocol !== 'https:') return false;
+  const host = u.hostname.toLowerCase();
+  if (['localhost', '0.0.0.0', '127.0.0.1', '::1', '169.254.169.254'].includes(host)) return false;
+  if (host.endsWith('.internal') || host.endsWith('.local')) return false;
+  const m = host.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+  if (m) {
+    const a = +m[1], b = +m[2];
+    if (a === 10 || a === 127 || (a === 169 && b === 254) || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168)) return false;
+  }
+  if (!FILE_URL_ALLOWED_HOSTS.some((h) => host === h || host.endsWith('.' + h))) return false;
+  return true;
+}
 
 Deno.serve(async (req) => {
   try {
@@ -13,6 +41,7 @@ Deno.serve(async (req) => {
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    if (isDeactivatedUser(user)) return DEACTIVATED_USER_RESPONSE();
 
     const { audio_url, patient_id, visit_type, diagnosis } = await req.json();
 
@@ -23,13 +52,44 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Fetch patient via the RLS-scoped client (NOT asServiceRole) so the
-    // platform enforces that this caller may access this patient — prevents
-    // generating a note against an arbitrary patient_id (IDOR).
-    const patient = await base44.entities.Patient.get(patient_id);
+    if (!isSafeFetchUrl(audio_url)) {
+      return Response.json({ error: 'audio_url is not an allowed file URL' }, { status: 400 });
+    }
+
+    // Explicit access gate — Patient RLS grants all role:admin charts, so
+    // facility admins with an agency must be scoped (service-role + check).
+    const [patient] = await base44.asServiceRole.entities.Patient
+      .filter({ id: patient_id }, '', 1).catch(() => []);
     if (!patient) {
-      // Patient doesn't exist or the caller isn't authorized for it.
       return Response.json({ error: 'Patient not found' }, { status: 404 });
+    }
+    const isSuperAdmin = user.account_type === 'super_admin';
+    const isAgencyScopedAdmin =
+      user.account_type === 'agency_admin'
+      || (user.role === 'admin' && !!user.agency_name && !isSuperAdmin);
+    const isPlatformAdmin = isSuperAdmin || (user.role === 'admin' && !user.agency_name);
+    const isAssigned = Array.isArray(patient.assigned_nurses)
+      && patient.assigned_nurses.includes(user.email);
+    if (!isPlatformAdmin && !isAgencyScopedAdmin && patient.created_by !== user.email && !isAssigned) {
+      return Response.json({ error: 'Forbidden' }, { status: 403 });
+    }
+    if (isAgencyScopedAdmin) {
+      if (!user.agency_name) {
+        return Response.json({ error: 'Forbidden' }, { status: 403 });
+      }
+      const agencyUsers = await base44.asServiceRole.entities.User
+        .list('-created_date', 5000).catch(() => []);
+      const agencyEmails = new Set(
+        (agencyUsers || [])
+          .filter((u) => u.agency_name === user.agency_name && u.email)
+          .map((u) => u.email),
+      );
+      const inAgency = (patient.created_by && agencyEmails.has(patient.created_by))
+        || (Array.isArray(patient.assigned_nurses)
+          && patient.assigned_nurses.some((e) => agencyEmails.has(e)));
+      if (!inAgency) {
+        return Response.json({ error: 'Forbidden' }, { status: 403 });
+      }
     }
 
     // Step 1: Transcribe audio using AI
@@ -51,9 +111,13 @@ Deno.serve(async (req) => {
 
     // Step 2: Generate structured clinical note
     debugLog('Generating clinical note...');
-    const notePrompt = `Based on the following patient interaction transcription, generate a professional structured clinical note in SOAP format (Subjective, Objective, Assessment, Plan).
+    const notePrompt = `Re-organize ONLY the information in the following visit transcription into a structured clinical note in SOAP format (Subjective, Objective, Assessment, Plan).
 
-Patient Information:
+This output is a DRAFT that a nurse will verify in a fact-checking step before it reaches the chart — it is NOT the final record.
+
+ABSOLUTE RULE: Use ONLY what is explicitly stated in the transcription. Do NOT add, infer, or invent any clinical fact, vital sign, measurement, medication, diagnosis, or finding that is not in the transcript. If a SOAP section has no supporting content in the transcript, write "Not documented in this recording" rather than fabricating it. The patient header below is for labeling only — do not treat it as clinical findings.
+
+Patient Information (label only):
 - Name: ${patient.first_name} ${patient.last_name}
 - DOB: ${patient.date_of_birth || 'N/A'}
 - Primary Diagnosis: ${diagnosis}
@@ -62,16 +126,16 @@ Patient Information:
 Transcription:
 ${transcription}
 
-Generate a comprehensive, Medicare-compliant clinical note that includes:
-1. Subjective: Patient's reported symptoms, concerns, and relevant history
-2. Objective: Vital signs, physical findings, assessment results
-3. Assessment: Clinical impression and diagnosis
-4. Plan: Treatment recommendations, medications, follow-up care
+Organize the stated content into:
+1. Subjective: Patient's reported symptoms, concerns, and history AS STATED
+2. Objective: Vital signs and physical findings AS STATED (do not invent)
+3. Assessment: Clinical impression AS STATED
+4. Plan: Treatment/follow-up AS STATED
 
-Format the note professionally for medical records.`;
+Format professionally. Add nothing that was not said.`;
 
     const noteResponse = await base44.asServiceRole.integrations.Core.InvokeLLM({
-      model: "claude_opus_4_8",
+      model: "automatic",
       prompt: notePrompt,
       add_context_from_internet: false
     });
@@ -101,7 +165,7 @@ Only include clinically appropriate suggestions.`;
     // rejects an array-root response_json_schema (root must be an object), so we
     // avoid the schema entirely here.
     const treatmentResponse = await base44.asServiceRole.integrations.Core.InvokeLLM({
-      model: "claude_opus_4_8",
+      model: "automatic",
       prompt: `${treatmentPrompt}
 
 Return ONLY a valid JSON object, no prose or code fences, of the form:
@@ -144,7 +208,7 @@ Return ONLY a valid JSON object, no prose or code fences, of the form:
     console.error('Error generating note from recording:', error);
     return Response.json({
       success: false,
-      error: error.message
+      error: 'Internal server error'
     }, { status: 500 });
   }
 });

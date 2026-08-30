@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { base44 } from "@/api/base44Client";
-import { useQuery } from "@tanstack/react-query";
+import { useScopedPatients } from '@/hooks/useScopedPatients';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import EmptyState from "@/components/ui/empty-state";
 import { Badge } from "@/components/ui/badge";
@@ -34,10 +33,7 @@ export default function PatientEducation() {
   const [generatedMaterial, setGeneratedMaterial] = useState(null);
   const [teachBackRecords, setTeachBackRecords] = useState([]);
 
-  const { data: patients = [] } = useQuery({
-    queryKey: ['patients'],
-    queryFn: () => base44.entities.Patient.list('-updated_date', 2000),
-  });
+  const { data: patients = [] } = useScopedPatients({ sort: '-updated_date', limit: 2000 });
 
   const selectedPatient = patients.find(p => p.id === selectedPatientId);
 
@@ -92,7 +88,12 @@ export default function PatientEducation() {
         </CardContent>
       </Card>
 
-      <Tabs defaultValue="generate" className="space-y-6">
+      {/* Keyed on the patient: every generator below seeds local state from the
+          patient/diagnosis props (condition, generated material, explanations,
+          in-progress teach-back responses). Without a remount, switching
+          patients kept the previous patient's condition and generated content
+          while the header and the AI prompt named the new one. */}
+      <Tabs key={selectedPatientId || 'no-patient'} defaultValue="generate" className="space-y-6">
         <TabsList className="grid w-full grid-cols-6 lg:w-auto lg:inline-grid">
           <TabsTrigger value="generate" className="gap-2">
             <Brain className="w-4 h-4" />

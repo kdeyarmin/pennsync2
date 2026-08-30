@@ -4,7 +4,8 @@ import { toast } from "sonner";
 import { Archive, BarChart3, CheckCircle2, Copy, PlusCircle, Send, Sparkles, Loader2, AlertCircle, Video } from "lucide-react";
 import { configNotReadyMessage } from "@/lib/aiFeatureError";
 import { base44 } from "@/api/base44Client";
-import { generateTrainingCourse } from "@/functions/generateTrainingCourse";
+import { agencyQueryKey } from '@/lib/agencyRoster';
+import { generateTrainingCourseStepwise } from "@/functions/generateTrainingCourse";
 import { assignInService } from "@/functions/assignInService";
 import { duplicateInService } from "@/functions/duplicateInService";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,8 +21,9 @@ import TemplateLibraryPanel from "@/components/training/TemplateLibraryPanel";
 import AssignmentWizard from "@/components/training/AssignmentWizard";
 import RetakeSettingsPanel from "@/components/training/RetakeSettingsPanel";
 import TrainingAttachmentManager from "@/components/training/TrainingAttachmentManager";
+import { isPastLocalDueDate, parseLocalDate, formatLocalDate, startOfLocalDay } from '@/lib/dateLocal';
 
-const formatDate = (value) => value ? new Date(value).toLocaleDateString() : "—";
+const formatDate = (value) => formatLocalDate(value) || "—";
 
 export default function AIComplianceInServicesHub() {
   const queryClient = useQueryClient();
@@ -61,11 +63,19 @@ export default function AIComplianceInServicesHub() {
   });
   const [pendingAssignmentPayload, setPendingAssignmentPayload] = useState(null);
   const [generating, setGenerating] = useState(false);
+  const [generateProgress, setGenerateProgress] = useState(null);
   const [generateError, setGenerateError] = useState("");
   const [generateSuccess, setGenerateSuccess] = useState(null);
 
   const { data: currentUser } = useQuery({ queryKey: ["currentUser"], queryFn: () => base44.auth.me() });
-  const { data: users = [] } = useQuery({ queryKey: ["learning-users"], queryFn: () => base44.entities.User.list('-created_date', 500), initialData: [] });
+  const { data: users = [] } = useQuery({ queryKey: ["learning-users", agencyQueryKey(currentUser)], queryFn: async () => {
+      const _rows = await base44.entities.User.list('-created_date', 500);
+      const { filterUsersByCallerAgency } = await import('@/lib/agencyScope');
+      return filterUsersByCallerAgency(_rows, currentUser);
+    },
+    enabled: !!currentUser,
+    initialData: [],
+  });
   const { data: courses = [] } = useQuery({ queryKey: ["in-service-courses"], queryFn: () => base44.entities.TrainingCourse.list('-updated_date', 300), initialData: [] });
   const { data: assignments = [] } = useQuery({ queryKey: ["in-service-assignments"], queryFn: () => base44.entities.TrainingAssignment.list('-created_date', 1000), initialData: [] });
   const { data: _certificates = [] } = useQuery({ queryKey: ["in-service-certificates"], queryFn: () => base44.entities.TrainingCertificate.list('-issued_at', 500), initialData: [] });
@@ -76,15 +86,21 @@ export default function AIComplianceInServicesHub() {
   const now = new Date();
   const dueSoonCount = assignments.filter((assignment) => {
     if (!assignment.due_date || ['completed', 'failed', 'locked'].includes(assignment.status)) return false;
-    const diff = Math.ceil((new Date(assignment.due_date) - now) / (1000 * 60 * 60 * 24));
-    return diff >= 0 && diff <= 7;
+    const dueDay = startOfLocalDay(parseLocalDate(assignment.due_date));
+    const today = startOfLocalDay(now);
+    if (!dueDay || !today) return false;
+    const daysUntil = Math.round((dueDay.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    return daysUntil >= 0 && daysUntil <= 7;
   }).length;
   const averageScore = Math.round((assignments.filter((assignment) => typeof assignment.score_percentage === 'number').reduce((sum, assignment) => sum + assignment.score_percentage, 0) / Math.max(assignments.filter((assignment) => typeof assignment.score_percentage === 'number').length, 1)) || 0);
   const reportStats = {
     totalAssigned: assignments.length,
     dueSoon: dueSoonCount,
-    overdue: assignments.filter((assignment) => assignment.status === 'overdue').length,
-    completed: assignments.filter((assignment) => assignment.status === 'completed').length,
+    overdue: assignments.filter((assignment) => {
+      if (assignment.status === 'completed' || assignment.pass_fail_result === 'passed') return false;
+      return assignment.status === 'overdue' || isPastLocalDueDate(assignment.due_date);
+    }).length,
+    completed: assignments.filter((assignment) => assignment.status === 'completed' || assignment.pass_fail_result === 'passed').length,
     passed: assignments.filter((assignment) => assignment.pass_fail_result === 'passed').length,
     failed: assignments.filter((assignment) => assignment.pass_fail_result === 'failed').length,
     averageScore,
@@ -118,13 +134,22 @@ export default function AIComplianceInServicesHub() {
     setGenerateError("");
     setGenerateSuccess(null);
     try {
-      const result = await generateTrainingCourse(generator);
+      const result = await generateTrainingCourseStepwise(generator, setGenerateProgress);
       queryClient.invalidateQueries({ queryKey: ["in-service-courses"] });
-      setGenerateSuccess(result?.data || result);
+      setGenerateSuccess(result);
     } catch (err) {
-      setGenerateError(configNotReadyMessage(err) || err?.message || "AI generation failed. Please try again.");
+      const base = configNotReadyMessage(err) || err?.message || "AI generation failed. Please try again.";
+      // A later phase failed after the draft was created — point the admin at
+      // the partial draft instead of leaving a mystery course in the Library.
+      setGenerateError(
+        err?.course_id
+          ? `${base} A draft ("${err.course_title || 'Untitled'}") was created with partial content — you can finish or delete it in the Library tab.`
+          : base
+      );
+      if (err?.course_id) queryClient.invalidateQueries({ queryKey: ["in-service-courses"] });
     } finally {
       setGenerating(false);
+      setGenerateProgress(null);
     }
   };
 
@@ -213,10 +238,10 @@ export default function AIComplianceInServicesHub() {
   };
 
   return (
-    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto space-y-4 sm:space-y-6">
-      <div className="rounded-2xl sm:rounded-3xl bg-gradient-to-r from-indigo-700 to-navy-700 text-white p-4 sm:p-6 shadow-xl">
+    <div className="mx-auto w-full max-w-7xl space-y-4 sm:space-y-6">
+      <div className="page-header-gradient">
         <h1 className="text-2xl sm:text-3xl font-bold mb-2">AI Compliance In-Services</h1>
-        <p className="text-sm sm:text-base text-indigo-100">AI-powered in-services, competency testing, certificates, learning plan tracking, and compliance reporting inside your current learning center.</p>
+        <p className="relative text-sm sm:text-base text-navy-100">AI-powered in-services, competency testing, certificates, learning plan tracking, and compliance reporting inside your current learning center.</p>
       </div>
 
       <AdminComplianceStats stats={reportStats} />
@@ -366,6 +391,14 @@ export default function AIComplianceInServicesHub() {
                 </Button>
                 <Button variant="outline" onClick={savePromptAsTemplate} disabled={generating} className="min-h-[48px] sm:min-w-[180px]">Save as Template</Button>
               </div>
+              {generating && (
+                <p className="text-sm text-slate-500">
+                  {generateProgress
+                    ? `Step ${generateProgress.step} of ${generateProgress.totalSteps}: ${generateProgress.label}`
+                    : "Starting generation…"}{" "}
+                  This can take a few minutes — keep this page open.
+                </p>
+              )}
               {generateSuccess && (
                 <div className="rounded-xl border-2 border-emerald-300 bg-emerald-50 p-4 space-y-3">
                   <div className="flex items-center gap-2">
@@ -399,7 +432,7 @@ export default function AIComplianceInServicesHub() {
                       <span className="font-medium">AI presenter videos are generating in the background. They will appear on each module when ready.</span>
                     </div>
                   )}
-                  <p className="text-xs text-emerald-600">Relias-style two-pass AI generation with pre-assessment, spaced retention, competency mapping, and regulatory crosswalk.</p>
+                  <p className="text-xs text-emerald-600">Relias-style phased AI generation with pre-assessment, spaced retention, competency mapping, and regulatory crosswalk.</p>
                 </div>
               )}
             </CardContent>
@@ -521,7 +554,7 @@ export default function AIComplianceInServicesHub() {
                   <h3 className="font-semibold text-green-900 text-base sm:text-lg">Assignment Ready</h3>
                   <p className="text-sm text-green-700">Course will be assigned using the current wizard selection and retake settings.</p>
                 </div>
-                <Button disabled={!selectedCourseId || !dueDate} onClick={confirmAssignment} className="bg-green-600 hover:bg-green-700 min-h-[48px] w-full md:w-auto">
+                <Button disabled={!selectedCourseId || !dueDate} onClick={confirmAssignment} className="min-h-[48px] w-full md:w-auto">
                   <Send className="w-4 h-4 mr-2" />
                   Create Assignments
                 </Button>
@@ -554,7 +587,7 @@ export default function AIComplianceInServicesHub() {
 
         <TabsContent value="plans" className="space-y-3 sm:space-y-4">
           {planEnrollments.map((enrollment) => {
-            const overdue = enrollment.status === 'overdue' || (enrollment.due_date && new Date(enrollment.due_date) < now && enrollment.status !== 'completed');
+            const overdue = enrollment.status === 'overdue' || (isPastLocalDueDate(enrollment.due_date, now) && enrollment.status !== 'completed');
             return (
               <Card key={enrollment.id} className="shadow-md">
                 <CardContent className="p-4 sm:p-5 space-y-3">

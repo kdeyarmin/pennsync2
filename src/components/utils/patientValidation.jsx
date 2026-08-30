@@ -1,5 +1,7 @@
 // Validation utilities for patient data
 
+import { calculateAge, parseLocalDate } from '@/lib/dateLocal';
+
 export const SEVERITY = {
   ERROR: 'error',
   WARNING: 'warning',
@@ -17,42 +19,6 @@ export const VALIDATION_ERRORS = {
   INVALID_AGE: 'Patient appears to be over 125 years old'
 };
 
-// Levenshtein edit distance (iterative, two-row) — helper for fuzzyMatch.
-const levenshtein = (a, b) => {
-  const m = a.length;
-  const n = b.length;
-  if (m === 0) return n;
-  if (n === 0) return m;
-  let prev = Array.from({ length: n + 1 }, (_, i) => i);
-  let curr = new Array(n + 1);
-  for (let i = 1; i <= m; i++) {
-    curr[0] = i;
-    for (let j = 1; j <= n; j++) {
-      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
-      curr[j] = Math.min(curr[j - 1] + 1, prev[j] + 1, prev[j - 1] + cost);
-    }
-    [prev, curr] = [curr, prev];
-  }
-  return prev[n];
-};
-
-// Fuzzy string match. Returns { match, type } where type is 'exact' (identical
-// after normalization), 'close' (similarity >= threshold but not identical), or
-// 'none'. Consumed by RealTimeValidator to surface "did you mean an existing
-// value?" warnings — it only warns on type === 'close', so an exact match
-// deliberately produces no warning.
-export const fuzzyMatch = (value, target, threshold = 0.8) => {
-  if (!value || !target) return { match: false, type: 'none' };
-  const a = String(value).trim().toLowerCase();
-  const b = String(target).trim().toLowerCase();
-  if (!a || !b) return { match: false, type: 'none' };
-  if (a === b) return { match: true, type: 'exact' };
-  const similarity = 1 - levenshtein(a, b) / Math.max(a.length, b.length);
-  return similarity >= threshold
-    ? { match: true, type: 'close' }
-    : { match: false, type: 'none' };
-};
-
 // Email validation
 export const validateEmail = (email) => {
   if (!email) return null;
@@ -68,19 +34,25 @@ export const validatePhone = (phone) => {
 };
 
 // Date validation (YYYY-MM-DD format)
+//
+// The shape check is not enough: `new Date('2026-02-31T00:00:00')` does NOT
+// produce Invalid Date — V8 rolls the overflow forward to 2026-03-03. So this
+// validator used to PASS 2/30, 2/31, 4/31, 6/31, 9/31, 11/31 and Feb 29 in a
+// non-leap year, and every downstream reader then silently interpreted the
+// typo as a different calendar day. parseLocalDate rejects those (see the
+// header of src/lib/dateLocal.js), which is what a validator has to do.
 export const validateDate = (dateString) => {
   if (!dateString) return null;
-  
+
   const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
   if (!dateRegex.test(dateString)) {
     return VALIDATION_ERRORS.INVALID_DATE;
   }
-  
-  const date = new Date(dateString + 'T00:00:00');
-  if (isNaN(date.getTime())) {
+
+  if (!parseLocalDate(dateString)) {
     return VALIDATION_ERRORS.INVALID_DATE;
   }
-  
+
   return null;
 };
 
@@ -88,47 +60,34 @@ export const validateDate = (dateString) => {
 export const validateDateOfBirth = (dob) => {
   const error = validateDate(dob);
   if (error) return error;
-  
-  const dobDate = new Date(dob + 'T00:00:00');
+
+  const dobDate = parseLocalDate(dob);
   const today = new Date();
-  
+
   if (dobDate > today) {
     return VALIDATION_ERRORS.FUTURE_DOB;
   }
-  
-  const age = today.getFullYear() - dobDate.getFullYear();
+
+  const age = calculateAge(dobDate, today);
   if (age > 125) {
     return VALIDATION_ERRORS.INVALID_AGE;
   }
-  
+
   return null;
 };
 
 // Cross-field validation: admission before discharge
 export const validateDateOrder = (admissionDate, dischargeDate) => {
-  if (!admissionDate || !dischargeDate) return null;
-  
-  const admission = new Date(admissionDate + 'T00:00:00');
-  const discharge = new Date(dischargeDate + 'T00:00:00');
-  
+  const admission = parseLocalDate(admissionDate);
+  const discharge = parseLocalDate(dischargeDate);
+  // An unparseable side is reported by validateDate on its own field; don't
+  // also emit a misleading ordering error for it.
+  if (!admission || !discharge) return null;
+
   if (admission > discharge) {
     return VALIDATION_ERRORS.INVALID_DATE_ORDER;
   }
-  
-  return null;
-};
 
-// MRN validation
-export const validateMRN = (mrn) => {
-  if (!mrn || !mrn.trim()) return VALIDATION_ERRORS.INVALID_MRN;
-  return null;
-};
-
-// Name validation
-export const validateName = (firstName, lastName) => {
-  if (!firstName?.trim() || !lastName?.trim()) {
-    return VALIDATION_ERRORS.INVALID_NAME;
-  }
   return null;
 };
 
@@ -181,9 +140,8 @@ export const validatePatient = (patient) => {
       });
     } else {
       // Age warning for very young patients
-      const dobDate = new Date(patient.date_of_birth + 'T00:00:00');
-      const age = new Date().getFullYear() - dobDate.getFullYear();
-      if (age < 18) {
+      const age = calculateAge(patient.date_of_birth);
+      if (age != null && age < 18) {
         validationResults.push({
           field: 'date_of_birth',
           message: `Patient is ${age} years old. Is this correct?`,
@@ -267,56 +225,4 @@ export const validatePatient = (patient) => {
   }
   
   return validationResults;
-};
-
-// Comprehensive patient record validation (legacy)
-export const validatePatientRecord = (patient) => {
-  const errors = {};
-  
-  if (patient.email) {
-    const emailError = validateEmail(patient.email);
-    if (emailError) errors.email = emailError;
-  }
-  
-  if (patient.phone) {
-    const phoneError = validatePhone(patient.phone);
-    if (phoneError) errors.phone = phoneError;
-  }
-  
-  if (patient.date_of_birth) {
-    const dobError = validateDateOfBirth(patient.date_of_birth);
-    if (dobError) errors.date_of_birth = dobError;
-  }
-  
-  if (patient.admission_date) {
-    const admitError = validateDate(patient.admission_date);
-    if (admitError) errors.admission_date = admitError;
-  }
-  
-  if (patient.discharge_date) {
-    const dischargeError = validateDate(patient.discharge_date);
-    if (dischargeError) errors.discharge_date = dischargeError;
-  }
-  
-  if (patient.admission_date && patient.discharge_date) {
-    const orderError = validateDateOrder(patient.admission_date, patient.discharge_date);
-    if (orderError) errors.date_order = orderError;
-  }
-  
-  if (patient.emergency_contact_phone) {
-    const emergPhoneError = validatePhone(patient.emergency_contact_phone);
-    if (emergPhoneError) errors.emergency_contact_phone = emergPhoneError;
-  }
-  
-  if (patient.physician_phone) {
-    const physPhoneError = validatePhone(patient.physician_phone);
-    if (physPhoneError) errors.physician_phone = physPhoneError;
-  }
-  
-  if (patient.caregiver_phone) {
-    const carePhoneError = validatePhone(patient.caregiver_phone);
-    if (carePhoneError) errors.caregiver_phone = carePhoneError;
-  }
-  
-  return Object.keys(errors).length === 0 ? null : errors;
 };

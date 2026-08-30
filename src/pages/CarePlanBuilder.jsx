@@ -1,6 +1,7 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { DragDropContext } from "@hello-pangea/dnd";
 import { base44 } from "@/api/base44Client";
+import { useScopedPatients } from '@/hooks/useScopedPatients';
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +16,7 @@ import InterventionLibrary from "@/components/carePlan/InterventionLibrary";
 import CarePlanCanvas from "@/components/carePlan/CarePlanCanvas";
 import InterventionDetailPanel from "@/components/carePlan/InterventionDetailPanel";
 import AICarePlanAnalyzer from "@/components/carePlan/AICarePlanAnalyzer";
+import { PATIENT_HISTORY_ROWS } from '@/lib/queryLimits';
 
 function findLibraryItem(id) {
   for (const cat of INTERVENTIONS_LIBRARY) {
@@ -38,11 +40,7 @@ export default function CarePlanBuilder() {
   const [showAIAnalyzer, setShowAIAnalyzer] = useState(false);
   const [assessmentData, _setAssessmentData] = useState(null);
 
-  const { data: patients = [] } = useQuery({
-    queryKey: ["patients-list"],
-    queryFn: () => base44.entities.Patient.list("-updated_date", 100),
-    initialData: [],
-  });
+  const { data: patients = [] } = useScopedPatients({ sort: '-updated_date', limit: 100 });
 
   const { data: _currentUser } = useQuery({
     queryKey: ["currentUser"],
@@ -55,6 +53,14 @@ export default function CarePlanBuilder() {
   });
 
   const selectedPatient = patients.find(p => p.id === selectedPatientId);
+
+  // Switching patients must not leave prior interventions attached to the new chart.
+  useEffect(() => {
+    setPlanItems([]);
+    setSelectedItem(null);
+    setLinkedPathways({});
+    setSaved(false);
+  }, [selectedPatientId]);
 
   const onDragEnd = useCallback((result) => {
     const { source, destination, draggableId } = result;
@@ -110,7 +116,7 @@ export default function CarePlanBuilder() {
 
     setSaving(true);
     try {
-      const existingPlans = await base44.entities.CarePlan.filter({ patient_id: selectedPatientId });
+      const existingPlans = await base44.entities.CarePlan.filter({ patient_id: selectedPatientId }, undefined, PATIENT_HISTORY_ROWS);
 
       const _interventionsWithPathways = planItems.map(item => ({
         id: item.id,

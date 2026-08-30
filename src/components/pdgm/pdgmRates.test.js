@@ -6,6 +6,7 @@ import {
   deepMergeNumbers,
   DEFAULT_ICD10_CLINICAL_GROUPS,
   effectiveIcdGroups,
+  computeFunctionalLevelHighShape,
 } from "./pdgmRates.js";
 
 test("no override returns the defaults unchanged", () => {
@@ -68,6 +69,22 @@ test("an unknown group can be added without disturbing known ones", () => {
   assert.ok(merged.clinicalGroupWeights.MMTA_Wounds); // defaults intact
 });
 
+test("functionalThresholds use the backend-mirrored { low, high } timing-keyed shape (NOT the grouper's { low, medium })", () => {
+  // Guard against conflating this revenue-estimator table with
+  // pdgmGrouper.groupPeriod()'s clinical-group-keyed { low, medium } shape.
+  // calculatePDGM (entry.ts) reads `.high` as the High cutoff; renaming it to
+  // `medium` would break backend parity and silently corrupt level assignment.
+  const buckets = ["community_early", "community_late", "institutional_early", "institutional_late"];
+  for (const bucket of buckets) {
+    const t = DEFAULT_PDGM_RATES.functionalThresholds[bucket];
+    assert.ok(t, `missing threshold bucket ${bucket}`);
+    assert.equal(typeof t.low, "number", `${bucket}.low must be numeric`);
+    assert.equal(typeof t.high, "number", `${bucket}.high must be numeric`);
+    assert.equal(t.medium, undefined, `${bucket} must NOT carry a 'medium' key (that is the grouper's shape)`);
+    assert.ok(t.high > t.low, `${bucket}: high must exceed low`);
+  }
+});
+
 test("ICD map has no 'S' default (S is the injury chapter, not skin)", () => {
   assert.equal(DEFAULT_ICD10_CLINICAL_GROUPS.S, undefined);
   assert.equal(DEFAULT_ICD10_CLINICAL_GROUPS.L, "MMTA_Wounds"); // skin chapter
@@ -80,4 +97,32 @@ test("effectiveIcdGroups falls back to defaults when empty/unset, else uses the 
   // A saved map is used as-is — supports add/edit AND remove.
   const saved = { I: "MMTA_Cardiac_Circulatory", S: "MMTA_Musculoskeletal" };
   assert.equal(effectiveIcdGroups(saved), saved);
+});
+
+// ── Live-path functional boundary (calculatePDGM shape) ───────────────────────
+// points >= high → high; points >= low → medium (incl. points == low); else low.
+// Distinct from pdgmGrouper.computeFunctionalLevel (points <= low → low).
+
+test("computeFunctionalLevelHighShape: boundary at low is medium (live path)", () => {
+  const t = { low: 9, high: 18 };
+  assert.equal(computeFunctionalLevelHighShape(8, t), "low");
+  assert.equal(computeFunctionalLevelHighShape(9, t), "medium"); // == low
+  assert.equal(computeFunctionalLevelHighShape(17, t), "medium");
+  assert.equal(computeFunctionalLevelHighShape(18, t), "high"); // == high
+  assert.equal(computeFunctionalLevelHighShape(19, t), "high");
+});
+
+test("computeFunctionalLevelHighShape: rejects malformed inputs", () => {
+  assert.equal(computeFunctionalLevelHighShape(5, null), null);
+  assert.equal(computeFunctionalLevelHighShape(5, { low: 9 }), null);
+  assert.equal(computeFunctionalLevelHighShape(NaN, { low: 9, high: 18 }), null);
+  assert.equal(computeFunctionalLevelHighShape("9", { low: 9, high: 18 }), null);
+});
+
+test("computeFunctionalLevelHighShape: default community_early thresholds", () => {
+  const t = DEFAULT_PDGM_RATES.functionalThresholds.community_early;
+  assert.equal(computeFunctionalLevelHighShape(t.low - 1, t), "low");
+  assert.equal(computeFunctionalLevelHighShape(t.low, t), "medium");
+  assert.equal(computeFunctionalLevelHighShape(t.high - 1, t), "medium");
+  assert.equal(computeFunctionalLevelHighShape(t.high, t), "high");
 });

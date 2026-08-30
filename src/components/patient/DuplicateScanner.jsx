@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { useQueryClient, useQuery } from "@tanstack/react-query";
+import { useScopedPatients } from '@/hooks/useScopedPatients';
+import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -21,9 +22,66 @@ import {
 import { toast } from "sonner";
 import {
   similarity,
+  levenshtein,
   normalizeName,
   digitsOnly,
 } from "@/components/patient/patientDuplicateUtils";
+import { mergePatientInto } from "@/components/patient/mergePatients";
+
+// Demographic fields on Patient that count toward "how complete is this chart".
+// Used to pick the survivor of a duplicate group by completeness (not by newest),
+// so a sparse stub created moments ago never wins over an older, fully-documented
+// record.
+// MRN / date_of_birth are weighted separately below. The earlier list scored
+// city/state/zip/insurance_provider/gender, none of which exist on Patient, so
+// they always contributed 0 while the backend's clinical/insurance fields were
+// never counted — the two surfaces could pick different survivors.
+const SURVIVOR_FIELDS = [
+  "first_name", "last_name", "middle_name", "address", "phone", "email",
+  "payor", "emergency_contact_name", "emergency_contact_phone",
+  "physician_name", "physician_phone", "caregiver_name", "caregiver_email",
+  "primary_diagnosis", "secondary_diagnoses", "allergies", "current_medications",
+  "insurance_primary", "insurance_secondary", "admission_date", "care_type",
+  "advance_directives", "functional_status", "assigned_nurses",
+  "enhanced_notes_history", "clinical_notes", "goals_of_care",
+];
+// System / merge-bookkeeping fields never copied when back-filling the survivor.
+const SYSTEM_FIELDS = new Set([
+  "id", "created_date", "updated_date", "created_by", "is_archived",
+  "merged_into_id", "merged_at", "merged_by", "status",
+]);
+
+const nonEmpty = (v) => v != null && v !== "" && !(Array.isArray(v) && v.length === 0);
+// Scoring-only predicate mirroring the backend's isPopulated: an untouched
+// object slot ({} insurance_primary) and a whitespace-only string are not
+// completeness. nonEmpty stays as-is for back-filling.
+const isPopulated = (v) => {
+  if (v == null) return false;
+  if (Array.isArray(v)) return v.length > 0;
+  if (typeof v === "object") return Object.keys(v).length > 0;
+  return String(v).trim() !== "";
+};
+// Strong identifiers are weighted exactly as the backend weights them (MRN 3,
+// DOB 2) — losing those is the worst outcome of picking the wrong survivor.
+const completenessScore = (p) => {
+  if (!p) return 0;
+  let score = 0;
+  if (isPopulated(p.medical_record_number)) score += 3;
+  if (isPopulated(p.date_of_birth)) score += 2;
+  return SURVIVOR_FIELDS.reduce((n, k) => n + (isPopulated(p[k]) ? 1 : 0), score);
+};
+// Prefer an active record, then the most complete one (mirrors the backend
+// deduplicatePatients survivor rule so UI and server merges agree).
+const pickSurvivor = (patients) =>
+  [...patients].sort((a, b) => {
+    // Never let an archived/merged record win as survivor — merging a live chart
+    // into an already-archived record would hide it from every roster.
+    const archived = (a.is_archived ? 1 : 0) - (b.is_archived ? 1 : 0);
+    if (archived !== 0) return archived;
+    const active = (a.status === "active" ? 1 : 0) - (b.status === "active" ? 1 : 0);
+    if (active !== 0) return -active;
+    return completenessScore(b) - completenessScore(a);
+  })[0];
 
 // Composite, per-criterion matching for the destructive advanced scan. Each
 // enabled rule pairs a criterion with a corroborating identifier so a match is
@@ -60,8 +118,19 @@ const evaluateAdvancedMatch = (a, b, opts) => {
     b.date_of_birth &&
     a.date_of_birth === b.date_of_birth
   ) {
+    // Twins/siblings share last name and DOB and differ ONLY in first name —
+    // 'Jayden'/'Kayden' scored 83% similar and were auto-merged here with no
+    // preview. Mirror the POSSIBLE_TWINS predicate in patientDuplicateUtils
+    // (scorePatientPair) so that pattern is excluded while single-edit typos
+    // keeping the first letter ('Jon'/'John') still match.
+    const twinsSuspect =
+      firstA.length >= 3 && firstB.length >= 3 &&
+      firstA !== firstB &&
+      !firstA.includes(firstB) && !firstB.includes(firstA) &&
+      similarity(firstA, firstB) < 85 &&
+      !(levenshtein(firstA, firstB) <= 1 && firstA[0] === firstB[0]);
     const namesMatch = opts.fuzzyNameMatching
-      ? similarity(firstA, firstB) >= 80 && similarity(lastA, lastB) >= 80
+      ? !twinsSuspect && similarity(firstA, firstB) >= 80 && similarity(lastA, lastB) >= 80
       : !!firstA && firstA === firstB && sameLastName;
     if (namesMatch) {
       score += 90;
@@ -117,12 +186,9 @@ export default function DuplicateScanner() {
   });
   const queryClient = useQueryClient();
 
-  // Fetch all patients for advanced scanning
-  const { data: allPatients = [] } = useQuery({
-    queryKey: ['all-patients-scan'],
-    queryFn: () => base44.entities.Patient.list('-created_date', 10000),
-    enabled: scanMode === 'advanced'
-  });
+
+  // Fetch all patients for advanced scanning (agency-scoped for facility admins)
+  const { data: allPatients = [] } = useScopedPatients({ sort: '-created_date', limit: 10000, enabled: scanMode === 'advanced' });
 
   const scanAndRemoveDuplicates = async () => {
     setIsScanning(true);
@@ -139,39 +205,25 @@ export default function DuplicateScanner() {
       } else {
         // Advanced client-side scanning using the shared matching engine.
         const duplicateGroups = [];
-        const updateBatch = [];
-        const BATCH_SIZE = 10;
-        const BATCH_DELAY = 1000; // 1 second between batches
-
-        // Helper to process batches with delay
-        const processBatch = async (batch) => {
-          if (batch.length === 0) return;
-
-          const promises = batch.map(update =>
-            base44.entities.Patient.update(update.id, update.data)
-              .catch(err => console.error(`Failed to update ${update.id}:`, err))
-          );
-
-          await Promise.all(promises);
-
-          // Delay between batches to avoid rate limiting
-          if (batch.length === BATCH_SIZE) {
-            await new Promise(resolve => setTimeout(resolve, BATCH_DELAY));
-          }
-        };
 
         // Phase 1: Identify duplicate groups (no API calls). allPatients is
-        // ordered by -created_date, so the first record in each group (lowest
-        // index) is the most recent and is the one we keep.
+        // ordered by -created_date; grouping is order-independent — the survivor is
+        // chosen by completeness in Phase 2, not by position in the list.
+        // Exclude already-archived/merged records from the scan. A previously
+        // merged duplicate keeps its MRN and would otherwise re-match (MRN=100) on
+        // every rescan — inflating "Records Merged", back-filling the survivor from
+        // stale data, and (via pickSurvivor) potentially being chosen as survivor,
+        // merging a live chart into an archived, roster-invisible record.
+        const scanRoster = allPatients.filter(p => !p.is_archived && p.status !== 'merged');
         const processedIds = new Set();
         const groups = [];
-        for (let i = 0; i < allPatients.length; i++) {
-          const primary = allPatients[i];
+        for (let i = 0; i < scanRoster.length; i++) {
+          const primary = scanRoster[i];
           if (processedIds.has(primary.id)) continue;
 
           const matched = [];
-          for (let j = i + 1; j < allPatients.length; j++) {
-            const candidate = allPatients[j];
+          for (let j = i + 1; j < scanRoster.length; j++) {
+            const candidate = scanRoster[j];
             if (processedIds.has(candidate.id)) continue;
             const { isMatch, score, reasons } = evaluateAdvancedMatch(primary, candidate, advancedOptions);
             if (isMatch) {
@@ -186,70 +238,126 @@ export default function DuplicateScanner() {
           }
         }
 
-        for (const group of groups) {
-          const toKeep = group.primary;
-          const toRemove = group.duplicates.map(d => d.patient);
+        // Phase 2: choose the survivor by completeness and MERGE each duplicate
+        // into it through the shared safe path (mergePatientInto): it reassigns
+        // every patient_id-linked record (visits, OASIS, incidents, documents, …)
+        // to the survivor and soft-archives the duplicate (is_archived + status
+        // 'merged' + merged_into_id) so it leaves the roster and its clinical
+        // history follows the kept chart — instead of the old status-only close,
+        // which orphaned history on a still-visible 'discharged' record.
+        const plans = groups.map(group => {
+          const members = [group.primary, ...group.duplicates.map(d => d.patient)];
+          const survivor = pickSurvivor(members);
+          const scoreById = new Map(group.duplicates.map(d => [d.patient.id, d]));
+          const dupInfos = members
+            .filter(m => m.id !== survivor.id)
+            // Honor "only close inactive duplicates": leave an active duplicate be.
+            .filter(m => !advancedOptions.closeInactiveOnly || m.status !== 'active')
+            .map(m => ({
+              patient: m,
+              score: scoreById.get(m.id)?.score ?? 100,
+              reasons: scoreById.get(m.id)?.reasons ?? ['reselected as duplicate (survivor chosen by completeness)'],
+            }));
+          return { survivor, dupInfos };
+        });
 
-          // Prepare updates for batching
+        const totalToMerge = plans.reduce((n, p) => n + p.dupInfos.length, 0);
+        let processedCount = 0;
+        let failedCount = 0;
+        toast.info(`Merging ${totalToMerge} duplicate record(s) into the most complete chart...`);
+
+        for (const { survivor, dupInfos } of plans) {
+          if (dupInfos.length === 0) continue;
+
+          // Optionally back-fill the survivor's EMPTY demographic slots from the
+          // duplicates (never overwrite a populated field, never touch system
+          // fields). mergePatientInto moves the clinical records regardless.
           if (advancedOptions.autoMergeData) {
-            const mergedData = { ...toKeep };
-            toRemove.forEach(p => {
-              Object.keys(p).forEach(key => {
-                if (!mergedData[key] && p[key] && key !== 'id' && key !== 'created_date') {
-                  mergedData[key] = p[key];
+            const backfill = {};
+            for (const { patient } of dupInfos) {
+              for (const key of Object.keys(patient)) {
+                if (SYSTEM_FIELDS.has(key)) continue;
+                if (!nonEmpty(survivor[key]) && !nonEmpty(backfill[key]) && nonEmpty(patient[key])) {
+                  backfill[key] = patient[key];
                 }
-              });
-            });
-
-            updateBatch.push({ id: toKeep.id, data: mergedData });
+              }
+            }
+            if (Object.keys(backfill).length > 0) {
+              try {
+                await base44.entities.Patient.update(survivor.id, backfill);
+              } catch (err) {
+                console.error(`Survivor back-fill failed for ${survivor.id}:`, err?.message);
+              }
+            }
           }
 
-          // Add duplicate closures to batch
-          toRemove.forEach(dup => {
-            if (!advancedOptions.closeInactiveOnly || dup.status !== 'active') {
-              updateBatch.push({ id: dup.id, data: { status: 'discharged' } });
+          // Report only what actually merged. A thrown mergePatientInto (RLS
+          // denial, archived survivor, failed archive write) leaves the duplicate
+          // live on the roster, so counting it as "removed" told the admin a
+          // record was merged when it still needs attention.
+          const mergedInfos = [];
+          const failedInfos = [];
+          for (const info of dupInfos) {
+            let ok = true;
+            try {
+              await mergePatientInto(survivor.id, info.patient.id, { mergedBy: null });
+            } catch (err) {
+              // Best-effort per duplicate: log and continue so one failure doesn't
+              // abort the whole scan (mergePatientInto is itself best-effort per record).
+              ok = false;
+              console.error(`Merge failed for duplicate ${info.patient.id}:`, err?.message);
             }
-          });
+            if (ok) {
+              mergedInfos.push(info);
+            } else {
+              failedInfos.push(info);
+              failedCount += 1;
+            }
+            // Progress counts attempts so the bar still advances past failures.
+            processedCount += 1;
+            const progress = totalToMerge ? Math.min(100, Math.round((processedCount / totalToMerge) * 100)) : 100;
+            toast.info(`Progress: ${progress}% (${processedCount}/${totalToMerge})`);
+          }
+
+          if (mergedInfos.length === 0 && failedInfos.length === 0) continue;
 
           duplicateGroups.push({
             kept: {
-              name: `${toKeep.first_name} ${toKeep.last_name}`,
-              mrn: toKeep.medical_record_number,
-              id: toKeep.id
+              name: `${survivor.first_name} ${survivor.last_name}`,
+              mrn: survivor.medical_record_number,
+              id: survivor.id
             },
-            removed: group.duplicates.map(d => ({
+            removed: mergedInfos.map(d => ({
               name: `${d.patient.first_name} ${d.patient.last_name}`,
               mrn: d.patient.medical_record_number,
               match_score: Math.min(100, d.score),
               match_reasons: d.reasons
             })),
-            average_match_score: Math.round(
-              group.duplicates.reduce((sum, d) => sum + Math.min(100, d.score), 0) / group.duplicates.length
-            )
+            failed: failedInfos.map(d => ({
+              name: `${d.patient.first_name} ${d.patient.last_name}`,
+              mrn: d.patient.medical_record_number,
+              id: d.patient.id
+            })),
+            average_match_score: mergedInfos.length
+              ? Math.round(mergedInfos.reduce((sum, d) => sum + Math.min(100, d.score), 0) / mergedInfos.length)
+              : 0
           });
         }
 
-        // Phase 2: Process updates in batches
-        toast.info(`Processing ${updateBatch.length} updates in batches...`);
-        for (let i = 0; i < updateBatch.length; i += BATCH_SIZE) {
-          const batch = updateBatch.slice(i, i + BATCH_SIZE);
-          await processBatch(batch);
-          
-          // Update progress
-          const progress = Math.min(100, Math.round(((i + batch.length) / updateBatch.length) * 100));
-          toast.info(`Progress: ${progress}% (${i + batch.length}/${updateBatch.length})`);
-        }
-        
         setResults({
           duplicate_groups_found: duplicateGroups.length,
           patients_removed: duplicateGroups.reduce((sum, g) => sum + g.removed.length, 0),
+          merge_failures: failedCount,
           details: duplicateGroups,
           scan_mode: 'advanced',
           algorithms_used: Object.entries(advancedOptions)
             .filter(([k, v]) => v && k.startsWith('match'))
             .map(([k]) => k.replace('matchBy', ''))
         });
-        
+
+        if (failedCount > 0) {
+          toast.warning(`${failedCount} duplicate record(s) could not be merged and are still active.`);
+        }
         toast.success('Advanced scan complete!');
       }
       
@@ -480,7 +588,12 @@ export default function DuplicateScanner() {
           </>
         ) : (
           <>
-            {(results.patients_removed > 0 || results.patients_to_remove > 0) ? (
+            {/* merge_failures counts too: when every mergePatientInto in an
+                advanced scan fails, patients_removed is 0 and the advanced path
+                never sets patients_to_remove, so this fell through to the
+                "No duplicates found" card — hiding the failed rows and leaving
+                still-active duplicates with no visible way to retry them. */}
+            {(results.patients_removed > 0 || results.patients_to_remove > 0 || results.merge_failures > 0) ? (
               <>
                 {results.dry_run ? (
                   <Alert className="bg-amber-50 border-amber-300">
@@ -499,6 +612,11 @@ export default function DuplicateScanner() {
                       <strong>✅ Deduplication Complete!</strong>
                       <div className="mt-2 text-sm">
                         Found {results.duplicate_groups_found} duplicate group(s) and merged {results.patients_removed} duplicate record(s).
+                        {results.merge_failures > 0 && (
+                          <div className="mt-1 font-semibold text-amber-800">
+                            {results.merge_failures} record(s) could not be merged and are still active — retry or merge them manually.
+                          </div>
+                        )}
                         {results.scan_mode === 'advanced' && (
                           <div className="mt-1 text-xs">
                             <Badge className="bg-navy-600 text-white text-xs mt-1">
@@ -586,6 +704,15 @@ export default function DuplicateScanner() {
                                     )}
                                   </div>
                                 ))}
+                                {detail.failed?.map((failed, fIdx) => (
+                                  <div key={`f-${fIdx}`} className="flex items-center gap-2 text-xs text-amber-800">
+                                    <AlertTriangle className="w-3 h-3 text-amber-600" />
+                                    <span>Merge failed (still active): {failed.name}</span>
+                                    <Badge variant="outline" className="text-xs">
+                                      MRN: {failed.mrn}
+                                    </Badge>
+                                  </div>
+                                ))}
                               </div>
                             </CardContent>
                           </Card>
@@ -599,7 +726,7 @@ export default function DuplicateScanner() {
                   <Button
                     onClick={applyStandardMerge}
                     disabled={isApplying}
-                    className="w-full bg-amber-600 hover:bg-amber-700 text-white"
+                    className="w-full"
                   >
                     {isApplying ? 'Merging…' : `Confirm & merge ${results.patients_to_remove} duplicate(s)`}
                   </Button>

@@ -1,12 +1,15 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { agencyQueryKey } from '@/lib/agencyRoster';
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { FileText, ExternalLink, Send } from "lucide-react";
+import { Loader2, FileText, ExternalLink, Send } from "lucide-react";
 import { format } from "date-fns";
+import { parseLocalDate } from "@/lib/dateLocal";
+import { openExternalUrl } from "@/components/utils/security";
 import {
   Dialog,
   DialogContent,
@@ -18,6 +21,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { toast } from 'sonner';
+import { ALL_ROWS, PATIENT_HISTORY_ROWS } from '@/lib/queryLimits';
 
 export default function ReferralDocumentViewer({ patientId }) {
   const [sendDialogOpen, setSendDialogOpen] = useState(false);
@@ -28,7 +32,7 @@ export default function ReferralDocumentViewer({ patientId }) {
 
   const { data: referrals = [] } = useQuery({
     queryKey: ['patientReferrals', patientId],
-    queryFn: () => base44.entities.Referral.filter({ patient_id: patientId }, '-created_date'),
+    queryFn: () => base44.entities.Referral.filter({ patient_id: patientId }, '-created_date', PATIENT_HISTORY_ROWS),
     initialData: [],
     enabled: !!patientId,
   });
@@ -36,15 +40,20 @@ export default function ReferralDocumentViewer({ patientId }) {
   // Filter to only show processed documents
   const processedReferrals = referrals.filter(r => r.processed_document_url || r.document_url);
 
-  const { data: users = [] } = useQuery({
-    queryKey: ['allUsers'],
-    queryFn: () => base44.entities.User.list(),
-    initialData: [],
-  });
-
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
+  });
+
+  const { data: users = [] } = useQuery({
+    queryKey: ['allUsers', ALL_ROWS, agencyQueryKey(currentUser)],
+    queryFn: async () => {
+      const _rows = await base44.entities.User.list(undefined, ALL_ROWS);
+      const { filterUsersByCallerAgency } = await import('@/lib/agencyScope');
+      return filterUsersByCallerAgency(_rows, currentUser);
+    },
+    initialData: [],
+    enabled: !!currentUser,
   });
 
   const handleSendDocument = async () => {
@@ -56,7 +65,7 @@ export default function ReferralDocumentViewer({ patientId }) {
         patient_id: patientId,
         thread_id: `referral-doc-${selectedReferral.id}`,
         subject: `Referral Document: ${selectedReferral.patient_name || 'Patient'}`,
-        message_text: messageText || `${selectedReferral.documentUrl === selectedReferral.processed_document_url ? 'AI-processed admission packet' : 'Referral document'} for ${selectedReferral.patient_name}.\n\nReferral Date: ${selectedReferral.referral_date ? format(new Date(selectedReferral.referral_date), 'MM/dd/yyyy') : 'N/A'}\nSource: ${selectedReferral.referral_source || 'N/A'}`,
+        message_text: messageText || `${selectedReferral.documentUrl === selectedReferral.processed_document_url ? 'AI-processed admission packet' : 'Referral document'} for ${selectedReferral.patient_name}.\n\nReferral Date: ${selectedReferral.referral_date ? format(parseLocalDate(selectedReferral.referral_date), 'MM/dd/yyyy') : 'N/A'}\nSource: ${selectedReferral.referral_source || 'N/A'}`,
         sender_name: currentUser?.full_name || 'System',
         sender_email: currentUser?.email,
         recipients: [recipientEmail],
@@ -123,7 +132,7 @@ export default function ReferralDocumentViewer({ patientId }) {
                 </div>
                 <div className="space-y-1 text-xs text-slate-600">
                   <p>Source: {referral.referral_source || 'N/A'}</p>
-                  <p>Date: {referral.referral_date ? format(new Date(referral.referral_date), 'MMM d, yyyy') : 'N/A'}</p>
+                  <p>Date: {referral.referral_date ? format(parseLocalDate(referral.referral_date), 'MMM d, yyyy') : 'N/A'}</p>
                   {referral.assigned_to && (
                     <p>Assigned to: {users.find(u => u.email === referral.assigned_to)?.full_name || referral.assigned_to}</p>
                   )}
@@ -135,7 +144,7 @@ export default function ReferralDocumentViewer({ patientId }) {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => window.open(documentUrl, '_blank')}
+                      onClick={() => openExternalUrl(documentUrl)}
                     >
                       <ExternalLink className="w-4 h-4 mr-1" />
                       {isProcessed ? 'View Processed' : 'View'}
@@ -144,7 +153,7 @@ export default function ReferralDocumentViewer({ patientId }) {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => window.open(referral.document_url, '_blank')}
+                        onClick={() => openExternalUrl(referral.document_url)}
                       >
                         Original
                       </Button>
@@ -225,7 +234,7 @@ export default function ReferralDocumentViewer({ patientId }) {
             >
               {isSending ? (
                 <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
                   Sending...
                 </>
               ) : (

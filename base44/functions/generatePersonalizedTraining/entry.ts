@@ -1,5 +1,23 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
+// <<<BEGIN SHARED HELPER: requireActiveUser — generated, edit base44/_shared/backendHelpers.mjs>>>
+const isDeactivatedUser = (u) => !!u && u.is_active === false;
+const DEACTIVATED_USER_RESPONSE = () => Response.json(
+  { error: 'Unauthorized - account is deactivated' },
+  { status: 403 },
+);
+// <<<END SHARED HELPER: requireActiveUser>>>
+
+// <<<BEGIN SHARED HELPER: requireAgencyAdminAgency — generated, edit base44/_shared/backendHelpers.mjs>>>
+function agencyAdminMissingAgencyResponse(user) {
+  if (user && user.account_type === 'agency_admin' && !String(user.agency_name || '').trim()) {
+    return Response.json({ error: 'Forbidden: agency_name is required.' }, { status: 403 });
+  }
+  return null;
+}
+// <<<END SHARED HELPER: requireAgencyAdminAgency>>>
+
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -8,25 +26,42 @@ Deno.serve(async (req) => {
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    if (isDeactivatedUser(user)) return DEACTIVATED_USER_RESPONSE();
 
+    {
+      const _agencyAdminGate = agencyAdminMissingAgencyResponse(user);
+      if (_agencyAdminGate) return _agencyAdminGate;
+    }
     const { skill_gap, nurse_email } = await req.json();
-    // Only admins may build training from another nurse's PHI/performance data.
-    // Mirrors the guard in generatePersonalizedLearningPath; without it any
-    // authenticated user could read another nurse's ComplianceAudit /
-    // TrainingRecommendation / UserActivity via the service-role reads below.
-    if (nurse_email && nurse_email !== user.email && user.role !== 'admin') {
-      return Response.json({ error: 'Forbidden' }, { status: 403 });
+    // Only admin-like callers may build training from another nurse's
+    // PHI/performance data, and only within their agency.
+    if (nurse_email && nurse_email !== user.email) {
+      const isAdminLike = user.role === 'admin'
+        || user.account_type === 'agency_admin'
+        || user.account_type === 'super_admin';
+      if (!isAdminLike) {
+        return Response.json({ error: 'Forbidden' }, { status: 403 });
+      }
+      if (user.account_type !== 'super_admin' && user.agency_name) {
+        const [target] = await base44.asServiceRole.entities.User
+          .filter({ email: nurse_email }, '-created_date', 1).catch(() => []);
+        if (!target?.agency_name || target.agency_name !== user.agency_name) {
+          return Response.json({ error: 'Forbidden' }, { status: 403 });
+        }
+      }
     }
     const targetEmail = nurse_email || user.email;
 
     // Fetch nurse performance data
     const [recommendations, audits, activities] = await Promise.all([
-      base44.asServiceRole.entities.TrainingRecommendation.filter({ 
-        nurse_email: targetEmail,
-        addressed: false 
-      }),
-      base44.asServiceRole.entities.ComplianceAudit.filter({ nurse_email: targetEmail }),
-      base44.asServiceRole.entities.UserActivity.filter({ user_email: targetEmail })
+      // Fetch ALL recommendations (not just addressed:false) so the acceptance
+      // rate below is real — filtering to addressed:false first made
+      // `filter(r => r.addressed)` always empty, pinning the rate at 0%.
+      base44.asServiceRole.entities.TrainingRecommendation.filter({
+        nurse_email: targetEmail
+      }, undefined, 5000),
+      base44.asServiceRole.entities.ComplianceAudit.filter({ nurse_email: targetEmail }, undefined, 5000),
+      base44.asServiceRole.entities.UserActivity.filter({ user_email: targetEmail }, undefined, 5000)
     ]);
 
     // Calculate specific deficits
@@ -78,7 +113,7 @@ Generate a complete training module with the following components:
 Make content specific, practical, and immediately applicable to home health nursing.`;
 
     const trainingContent = await base44.asServiceRole.integrations.Core.InvokeLLM({
-      model: "claude_opus_4_8",
+      model: "automatic",
       prompt: trainingPrompt,
       response_json_schema: {
         type: 'object',
@@ -169,7 +204,7 @@ Make content specific, practical, and immediately applicable to home health nurs
   } catch (error) {
     console.error('Error generating training:', error);
     return Response.json({ 
-      error: error.message,
+      error: 'Internal server error',
     }, { status: 500 });
   }
 });

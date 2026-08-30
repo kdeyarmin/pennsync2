@@ -1,9 +1,12 @@
 import { useEffect, useMemo } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router";
 import { base44 } from "@/api/base44Client";
+import { isCallerAgencyScoped } from "@/lib/agencyScope";
+import { agencyQueryKey } from '@/lib/agencyRoster';
+import { isAdminView } from "@/lib/roles";
 import { useQuery } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BookOpen, Sparkles, TrendingDown, GraduationCap, Loader2, FileText, BarChart3, Clapperboard, ShieldCheck, FileCheck2 } from "lucide-react";
+import { BookOpen, Sparkles, TrendingDown, GraduationCap, FileText, BarChart3, Clapperboard, ShieldCheck, FileCheck2 } from "lucide-react";
 import PageContainer from "@/components/ui/PageContainer";
 import PageHeader from "@/components/ui/PageHeader";
 import EducatorReadinessPanel from "@/components/learning/EducatorReadinessPanel";
@@ -18,6 +21,7 @@ import ManagerSkillGapPeople from "@/components/training/ManagerSkillGapPeople";
 import StaffEducationComplianceReport from "@/components/training/StaffEducationComplianceReport";
 import SMEReviewQueue from "@/components/training/SMEReviewQueue";
 import PolicyAcknowledgmentManager from "@/components/training/PolicyAcknowledgmentManager";
+import LoadingState from "@/components/ui/LoadingState";
 
 const TAB_KEYS = [
   "overview",
@@ -48,11 +52,11 @@ export default function AdminTraining() {
     queryFn: () => base44.auth.me(),
   });
 
-  const hasAccess = !userLoading && currentUser && (currentUser.role === 'admin' || isManager(currentUser));
+  const hasAccess = !userLoading && currentUser && (isAdminView(currentUser) || isManager(currentUser));
   // The compliance report aggregates org-wide staff PII (names, emails, scores,
   // completions). Unlike the team-scoped Skill Gaps tab, it is not limited to a
   // manager's team, so restrict it to admins.
-  const isAdmin = currentUser?.role === 'admin';
+  const isAdmin = isAdminView(currentUser);
   const requestedTab = searchParams.get("tab");
   const adminOnlyTabs = new Set(["video-studio", "compliance-report"]);
   let activeTab = TAB_KEYS.includes(requestedTab) ? requestedTab : "overview";
@@ -69,10 +73,14 @@ export default function AdminTraining() {
   }, [hasAccess, navigate, userLoading]);
 
   const { data: users = [] } = useQuery({
-    queryKey: ["skill-gap-users"],
-    queryFn: () => base44.entities.User.list('-created_date', 500),
+    queryKey: ["skill-gap-users", agencyQueryKey(currentUser)],
+    queryFn: async () => {
+      const _rows = await base44.entities.User.list('-created_date', 500);
+      const { filterUsersByCallerAgency } = await import('@/lib/agencyScope');
+      return filterUsersByCallerAgency(_rows, currentUser);
+    },
     initialData: [],
-    enabled: hasAccess,
+    enabled: hasAccess && !!currentUser,
   });
 
   const { data: assignments = [] } = useQuery({
@@ -99,10 +107,15 @@ export default function AdminTraining() {
   const teamMembers = useMemo(() => {
     if (!currentUser) return [];
     if (currentUser.account_type === "super_admin") return users.filter((user) => user.email && user.role !== "admin");
+    // Facility admins (role:admin + agency_name) and agency_admin must stay
+    // in-agency — do not fall through to department/location across tenants.
+    if (currentUser.account_type === "agency_admin" && !currentUser.agency_name) return [];
+    const agency = String(currentUser.agency_name || "").trim();
+    const isAgencyScoped = isCallerAgencyScoped(currentUser);
     return users.filter((user) => {
       if (!user.email || user.role === "admin") return false;
-      if (currentUser.account_type === "agency_admin" && currentUser.agency_name) 
-        return user.agency_name === currentUser.agency_name;
+      if (isAgencyScoped) return user.agency_name === agency;
+      if (currentUser.account_type === "super_admin") return true;
       if (currentUser.department && user.department === currentUser.department) return true;
       if (currentUser.location && user.location === currentUser.location) return true;
       if (currentUser.business_line && user.business_line === currentUser.business_line) return true;
@@ -148,14 +161,16 @@ export default function AdminTraining() {
       if (attempt.pass_fail_result === "failed" || attempt.passed === false) areaEntry.failed += 1;
 
       (attempt.answers_json || []).forEach((answer) => {
+        const missKey = `${category}__${answer.prompt}`;
+        const missEntry = missedMap.get(missKey) || { category, prompt: answer.prompt, missCount: 0, seen: 0 };
+        // `seen` counts every time the question was answered; `missCount` only the
+        // times it was missed — otherwise missRate is tautologically 100%.
+        missEntry.seen += 1;
         if (answer.correct === false || (answer.points_earned ?? 0) < (answer.points_possible ?? 1)) {
-          const missKey = `${category}__${answer.prompt}`;
-          const missEntry = missedMap.get(missKey) || { category, prompt: answer.prompt, missCount: 0, seen: 0 };
           missEntry.missCount += 1;
-          missEntry.seen += 1;
-          missedMap.set(missKey, missEntry);
           if (!areaEntry.topIssue) areaEntry.topIssue = answer.prompt;
         }
+        missedMap.set(missKey, missEntry);
       });
       areaMap.set(category, areaEntry);
     });
@@ -182,9 +197,10 @@ export default function AdminTraining() {
       .sort((a, b) => a.averageScore - b.averageScore);
 
     const missedTopics = [...missedMap.values()]
-      .map((topic) => ({ 
-        ...topic, 
-        missRate: Math.min(100, Math.round((topic.missCount / Math.max(topic.seen, 1)) * 100)) 
+      .filter((topic) => topic.missCount > 0)
+      .map((topic) => ({
+        ...topic,
+        missRate: Math.min(100, Math.round((topic.missCount / Math.max(topic.seen, 1)) * 100))
       }))
       .sort((a, b) => b.missCount - a.missCount)
       .slice(0, 10);
@@ -195,9 +211,7 @@ export default function AdminTraining() {
   // Auth guards — placed after all hooks to satisfy Rules of Hooks
   if (userLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
-      </div>
+      <LoadingState className="min-h-[400px]" />
     );
   }
 

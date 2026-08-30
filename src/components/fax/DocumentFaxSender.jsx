@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { useQuery } from "@tanstack/react-query";
+import { useAgencyScopedQuery } from '@/hooks/useAgencyScopedQuery';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -19,22 +19,30 @@ import PDFAnnotator from "./PDFAnnotator";
 export default function DocumentFaxSender({ patientId, prefilledData }) {
   const [selectedDocId, setSelectedDocId] = useState("");
   const [toNumber, setToNumber] = useState(prefilledData?.recipient_fax_number || "");
+  const [toName, setToName] = useState("");
 
   React.useEffect(() => {
     if (prefilledData?.recipient_fax_number) setToNumber(prefilledData.recipient_fax_number);
   }, [prefilledData]);
   const [isSending, setIsSending] = useState(false);
   const [signatureDataUrl, setSignatureDataUrl] = useState(null);
-  const [ocrMeta, setOcrMeta] = useState(null);
   const [coverSheetUrl, setCoverSheetUrl] = useState(null);
   const [showAnnotator, setShowAnnotator] = useState(false);
   const [annotatedUrl, setAnnotatedUrl] = useState(null);
 
-  const { data: documents = [] } = useQuery({
-    queryKey: patientId ? ['patient-documents', patientId] : ['documents'],
-    queryFn: () => patientId
+  const { data: documents = [] } = useAgencyScopedQuery({
+    // DocumentList reads 500 rows under these same keys; without the limit in
+    // the key the larger list was silently truncated to 100 (or this picker
+    // over-fetched) depending on mount order. Prefix invalidation still works.
+    queryKey: patientId ? ['patient-documents', patientId, 100] : ['documents', 100],
+    fetch: () => patientId
       ? base44.entities.Document.filter({ patient_id: patientId }, '-created_date', 100)
       : base44.entities.Document.list('-created_date', 100),
+    // Only the unpinned branch reads across charts. Scoping the patient_id
+    // branch would drop a document from the fax picker on the very chart it
+    // belongs to, if a clinician outside this agency uploaded it.
+    scoped: !patientId,
+    authorOf: (d) => d.uploaded_by || d.created_by,
     initialData: []
   });
 
@@ -73,13 +81,13 @@ export default function DocumentFaxSender({ patientId, prefilledData }) {
         to_number: toNumber,
         document_name: doc.title,
         patient_id: patientId,
-        to_name: ocrMeta?.patient_name || undefined
+        to_name: toName || undefined
       });
       toast.success("Fax sent successfully!");
       setSelectedDocId("");
       setToNumber("");
+      setToName("");
       setSignatureDataUrl(null);
-      setOcrMeta(null);
       setCoverSheetUrl(null);
       setAnnotatedUrl(null);
     } catch (error) {
@@ -94,7 +102,16 @@ export default function DocumentFaxSender({ patientId, prefilledData }) {
       <CardContent className="p-6 space-y-5">
         <div className="space-y-2">
           <Label className="text-sm font-semibold text-slate-700">Select Document</Label>
-          <Select value={selectedDocId} onValueChange={setSelectedDocId}>
+          <Select
+            value={selectedDocId}
+            onValueChange={(id) => {
+              // Reset any per-document artifacts so the previously annotated PDF /
+              // stale OCR / cover sheet can't be faxed under the new document's name.
+              setSelectedDocId(id);
+              setAnnotatedUrl(null);
+              setCoverSheetUrl(null);
+            }}
+          >
             <SelectTrigger className="h-11">
               <SelectValue placeholder="Choose a PDF document" />
             </SelectTrigger>
@@ -115,7 +132,7 @@ export default function DocumentFaxSender({ patientId, prefilledData }) {
           if (!doc?.file_url) return null;
           return (
             <>
-              <FaxOCRExtractor fileUrl={doc.file_url} onExtracted={(meta) => setOcrMeta(meta)} />
+              <FaxOCRExtractor fileUrl={doc.file_url} />
 
               {/* Annotate button */}
               <div className="flex items-center gap-2">
@@ -155,10 +172,10 @@ export default function DocumentFaxSender({ patientId, prefilledData }) {
             type="tel"
             placeholder="+1234567890"
             value={toNumber}
-            onChange={(e) => setToNumber(e.target.value)}
+            onChange={(e) => { setToNumber(e.target.value); setToName(""); }}
             className="h-11"
           />
-          <FaxAddressBook onSelectContact={(c) => setToNumber(c.fax_number)} />
+          <FaxAddressBook onSelectContact={(c) => { setToNumber(c.fax_number); setToName(c.name || ""); }} />
         </div>
 
         <FaxSignaturePanel onSignatureReady={setSignatureDataUrl} />
@@ -167,7 +184,7 @@ export default function DocumentFaxSender({ patientId, prefilledData }) {
           patientId={patientId}
           documentId={selectedDocId || undefined}
           recipientNumber={toNumber}
-          recipientName={ocrMeta?.patient_name || undefined}
+          recipientName={toName || undefined}
           pageCount={1}
           onCoverSheetReady={(url) => setCoverSheetUrl(url)}
         />

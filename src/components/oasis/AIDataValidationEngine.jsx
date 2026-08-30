@@ -28,11 +28,15 @@ export default function AIDataValidationEngine({
   autoValidate = false,
   onCorrection
 }) {
-  const ai = useAICall();
+  // Auto-fired analyses are background work in the app-wide AI budget, so
+  // several such cards on one page queue instead of hitting the provider at
+  // once. A run the user CLICKED passes interactive priority per call and
+  // takes the reserved slot instead of queueing behind that background work.
+  const ai = useAICall({ priority: 'background' });
   const [validationResults, setValidationResults] = useState(null);
   const [appliedCorrections, setAppliedCorrections] = useState(new Set());
 
-  const performValidation = useCallback(async () => {
+  const performValidation = useCallback(async ({ interactive = false } = {}) => {
     if (!oasisData || !patientData) return;
 
     try {
@@ -78,7 +82,7 @@ For each issue found, provide:
 - Specific do's and don'ts examples`;
 
       const result = await ai.run({
-        model: "claude_opus_4_8",
+        model: "automatic",
         prompt,
         response_json_schema: {
           type: "object",
@@ -189,7 +193,7 @@ For each issue found, provide:
             }
           }
         }
-      });
+      }, { priority: interactive ? 'interactive' : 'background' });
 
       setValidationResults(result);
     } catch (error) {
@@ -249,7 +253,7 @@ For each issue found, provide:
             {ai.loading && <Loader2 className="w-4 h-4 animate-spin text-navy-500" />}
           </CardTitle>
           {!validationResults && !ai.loading && (
-            <Button onClick={performValidation} className="bg-navy-600 hover:bg-navy-700">
+            <Button onClick={() => performValidation({ interactive: true })} className="bg-navy-600 hover:bg-navy-700">
               <Brain className="w-4 h-4 mr-2" />
               Validate Data
             </Button>
@@ -353,7 +357,7 @@ For each issue found, provide:
                                 href={isSafeExternalUrl(issue.cms_reference_link) ? issue.cms_reference_link : undefined}
                                 target="_blank" 
                                 rel="noopener noreferrer"
-                                className="text-xs text-indigo-600 underline hover:text-indigo-800"
+                                className="text-xs text-indigo-600 underline hover:text-indigo-700"
                               >
                                 View Official Guideline →
                               </a>
@@ -413,7 +417,6 @@ For each issue found, provide:
                           <Button
                             size="sm"
                             onClick={() => applyCorrection(issue, `inc-${issue.m_item_code || idx}`)}
-                            className="bg-green-600 hover:bg-green-700 text-white"
                           >
                             <CheckCircle2 className="w-3 h-3 mr-1" />
                             Apply Correction
@@ -490,7 +493,7 @@ For each issue found, provide:
                         <Button
                           size="sm"
                           onClick={() => applyCorrection(opt, `opt-${opt.m_item_code || idx}`)}
-                          className="bg-green-600 hover:bg-green-700 text-white mt-2"
+                          className="mt-2"
                         >
                           Apply Optimization
                         </Button>
@@ -513,7 +516,7 @@ For each issue found, provide:
                     <div key={idx} className="border-2 border-blue-300 rounded-lg p-3 bg-blue-50">
                       <h4 className="font-semibold mb-2">{qm.quality_measure}</h4>
                       <div className="text-sm space-y-1 mb-2">
-                        <p><strong>Affected Items:</strong> {qm.affected_m_items.join(', ')}</p>
+                        <p><strong>Affected Items:</strong> {qm.affected_m_items?.join(', ')}</p>
                         <p><strong>Current Impact:</strong> {qm.current_score_impact}</p>
                         <p className="text-green-700"><strong>Improvement:</strong> {qm.improvement_opportunity}</p>
                       </div>
@@ -556,7 +559,7 @@ For each issue found, provide:
                               href={isSafeExternalUrl(risk.cms_reference_link) ? risk.cms_reference_link : undefined}
                               target="_blank" 
                               rel="noopener noreferrer"
-                              className="text-xs text-indigo-600 underline hover:text-indigo-800"
+                              className="text-xs text-indigo-600 underline hover:text-indigo-700"
                             >
                               View Official CMS Guideline →
                             </a>
@@ -599,7 +602,7 @@ For each issue found, provide:
                       <div className="bg-white rounded p-2">
                         <p className="font-medium text-xs mb-1">Mitigation Steps:</p>
                         <ul className="list-disc list-inside text-xs space-y-1">
-                          {risk.mitigation_steps.map((step, sidx) => (
+                          {risk.mitigation_steps?.map((step, sidx) => (
                             <li key={sidx}>{step}</li>
                           ))}
                         </ul>
@@ -637,7 +640,7 @@ For each issue found, provide:
                             href={isSafeExternalUrl(exp.cms_reference_link) ? exp.cms_reference_link : undefined} 
                             target="_blank" 
                             rel="noopener noreferrer"
-                            className="text-xs text-indigo-600 underline hover:text-indigo-800"
+                            className="text-xs text-indigo-600 underline hover:text-indigo-700"
                           >
                             View Official CMS Guideline →
                           </a>
@@ -711,7 +714,7 @@ For each issue found, provide:
               </div>
             )}
 
-            <Button onClick={performValidation} variant="outline" className="w-full">
+            <Button onClick={() => performValidation({ interactive: true })} variant="outline" className="w-full">
               Re-run Validation
             </Button>
           </div>

@@ -182,11 +182,29 @@ const ENUM_USAGE = {
   // pipeline. NOTE: 'signed' is a display-only normalization in
   // src/components/signature/signatureUtils.js and is never persisted here.
   'DocumentSignature.status': ['pending', 'in_progress', 'completed', 'rejected'],
+  // DocumentSignature.document_type — written by the signature-request creators.
+  'DocumentSignature.document_type': ['custom_request', 'other'],
   // PatientAlert.alert_type — written by monitorComplianceRisks /
   // predictiveRiskAnalysis. 'documentation_risk' was the historically-dropped value.
   'PatientAlert.alert_type': ['care_gap', 'documentation_risk', 'readmission_risk'],
   // Patient.status — 'merged' is written by deduplicatePatients' merge-archive step.
   'Patient.status': ['active', 'discharged', 'merged'],
+  // Visit.status — the offline capture queues 'pending_review' (grounding deferred
+  // to reconnect); the sync worker / other flows write 'completed'.
+  'Visit.status': ['completed', 'pending_review'],
+  // AdrAuditCase.status — the ADR Center workflow writes every stage transition
+  // (src/pages/ADRCenter.jsx + components); generateAdrPacket writes
+  // 'packet_generated'.
+  'AdrAuditCase.status': [
+    'letter_uploaded', 'checklist_ready', 'packet_uploaded', 'packet_verified',
+    'packet_generated', 'submitted', 'closed',
+  ],
+  // AdrAuditCase.outcome — written by the outcome tracker in
+  // src/components/adr/AdrSubmissionPanel.jsx (OUTCOME_LABELS keys).
+  'AdrAuditCase.outcome': [
+    'pending', 'paid_in_full', 'partially_denied', 'fully_denied',
+    'appealed', 'appeal_favorable', 'appeal_unfavorable',
+  ],
 };
 
 // ---------------------------------------------------------------------------
@@ -204,10 +222,43 @@ const ENUM_USAGE = {
 const FIELD_USAGE = {
   Notification: ['metadata'],
   FaxLog: ['retry_claimed_by', 'retry_claimed_at'],
-  DocumentSignature: ['document_title', 'document_name', 'signers', 'last_reminder_sent_at'],
+  IncomingFax: ['claimed_by', 'claimed_at'],
+  DocumentSignature: [
+    'document_title', 'document_name', 'signers', 'last_reminder_sent_at',
+    // Added after the 2026-06-29 write-drift sweep: the e-signature pipeline
+    // writes these but the schema lacked them (silent drops). Reader analysis
+    // confirmed the schema was simply incomplete (the similarly-named
+    // completed_at/expiration_date belong to DocumentPackage, not this entity).
+    'document_content', 'signed_pdf_url', 'completed_date', 'due_date', 'expires_at',
+    'sent_date', 'reminder_sent', 'created_by_email', 'message', 'required_signatures',
+    'signer_name', 'signer_email', 'signature_hash', 'signature_hash_alg',
+    'signature_hash_at', 'archived', 'admin_notified',
+  ],
   Patient: ['merged_into_id', 'merged_at', 'merged_by', 'validation_overrides'],
-  Referral: ['page_range', 'detection_confidence', 'manually_confirmed', 'rejection_date', 'rejected_by'],
+  // ComplianceAudit.rule_versions — the smart-note save path stamps which
+  // agency-configured MedicareComplianceRule versions judged the note.
+  ComplianceAudit: ['rule_versions'],
+  // Visit.documentation_source — persistVisitNote records how the note was
+  // captured (smart_note / audio / manual) for the compliance audit trail.
+  // Visit.grounding_pending — set true when an offline save deferred the AI
+  // grounding pass until reconnect (audit-trail completeness marker).
+  Visit: ['documentation_source', 'grounding_pending'],
+  Referral: [
+    'page_range', 'detection_confidence', 'manually_confirmed', 'rejection_date', 'rejected_by',
+    // Intake→SOC (Timely Initiation of Care) tracker writes these.
+    'soc_date', 'first_visit_date', 'soc_completed_by',
+  ],
   PatientAlert: ['contributing_factors', 'recommended_actions', 'risk_score'],
+  // PatientOutcomeMetric — written by computeOutcomeMeasures (the keystone
+  // outcome-measure cron). These fields were added alongside the CMS change-score
+  // engine; without them the platform would silently drop the per-measure
+  // results, GG score, and dyspnea-improvement flag.
+  PatientOutcomeMetric: [
+    'functional_improvement', 'gg_discharge_function_score', 'measure_results',
+    'outcome_measure_source',
+    // PPH worklist captures intervention + outcome here.
+    'pph_prevention', 'readmission_30_day', 'er_visit_30_day',
+  ],
   // OASISFeedback is written by two paths: the patient-match writers
   // (feedback_type/extracted_name + match fields) and the AI-suggestion
   // OASISFeedbackPanel (the fields below). The panel fields were historically
@@ -216,6 +267,14 @@ const FIELD_USAGE = {
     'visit_id', 'patient_id', 'suggestion_type', 'oasis_item', 'original_suggestion',
     'user_action', 'modified_text', 'feedback_reason', 'reimbursement_impact_accuracy',
     'clinical_accuracy', 'helpfulness_rating',
+  ],
+  // AdrAuditCase — written by the ADR Center flow (ADRCenter.jsx,
+  // AdrPacketVerifier.jsx, AdrSubmissionPanel.jsx), generateAdrPacket, and the
+  // checkAdrDeadlines reminder job.
+  AdrAuditCase: [
+    'verification_summary', 'final_packet_url', 'final_packet_pages',
+    'deadline_reminders', 'submission_faxes', 'outcome', 'decision_date',
+    'appeal_due_date', 'outcome_notes',
   ],
 };
 

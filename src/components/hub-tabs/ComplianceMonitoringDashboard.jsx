@@ -1,11 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { useAgencyScopedQuery } from '@/hooks/useAgencyScopedQuery';
+import { agencyQueryKey } from '@/lib/agencyRoster';
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import StatCard from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { deriveComplianceIssueStats } from "@/components/compliance/complianceIssueStats";
 import {
   AlertTriangle,
   Clock,
@@ -26,7 +29,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { format, parseISO, differenceInDays } from "date-fns";
+import { isAdminView } from "@/lib/roles";
+import { ALL_ROWS } from '@/lib/queryLimits';
+import { parseLocalDate, formatLocalDate } from "@/lib/dateLocal";
+
+/** Calendar-day delta from local midnight today to a date-only value (negative = past). */
+function localDaysUntil(dateStr) {
+  const due = parseLocalDate(dateStr);
+  const todayLocal = new Date();
+  todayLocal.setHours(0, 0, 0, 0);
+  return due ? Math.round((due - todayLocal) / 86400000) : null;
+}
 
 export default function ComplianceMonitoringDashboard() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -41,29 +54,34 @@ export default function ComplianceMonitoringDashboard() {
   });
 
   const { data: allUsers = [], refetch: refetchUsers } = useQuery({
-    queryKey: ['allUsers'],
-    queryFn: () => base44.entities.User.list(),
+    queryKey: ['allUsers', ALL_ROWS, agencyQueryKey(currentUser)],
+    queryFn: async () => {
+      const _rows = await base44.entities.User.list(undefined, ALL_ROWS);
+      const { filterUsersByCallerAgency } = await import('@/lib/agencyScope');
+      return filterUsersByCallerAgency(_rows, currentUser);
+    },
     initialData: [],
+    enabled: !!currentUser,
     refetchInterval: 30000, // Refresh every 30 seconds
   });
 
   const { data: trainingAssignments = [], refetch: refetchAssignments } = useQuery({
-    queryKey: ['allTrainingAssignments'],
-    queryFn: () => base44.entities.TrainingAssignment.list('-updated_date', 500),
+    queryKey: ['allTrainingAssignments', '-updated_date', 500],
+    queryFn: () => base44.entities.TrainingAssignment.list('-updated_date', 5000),
     initialData: [],
     refetchInterval: 30000,
   });
 
   const { data: personnelCredentials = [], refetch: refetchCredentials } = useQuery({
     queryKey: ['allPersonnelCredentials'],
-    queryFn: () => base44.entities.PersonnelCredential.list('-updated_date', 500),
+    queryFn: () => base44.entities.PersonnelCredential.list('-updated_date', 5000),
     initialData: [],
     refetchInterval: 30000,
   });
 
-  const { data: visits = [], refetch: refetchVisits } = useQuery({
+  const { data: visits = [], refetch: refetchVisits } = useAgencyScopedQuery({
     queryKey: ['allVisits'],
-    queryFn: () => base44.entities.Visit.filter({}, '-visit_date', 500),
+    fetch: () => base44.entities.Visit.filter({}, '-visit_date', 5000),
     initialData: [],
     refetchInterval: 30000,
   });
@@ -93,14 +111,13 @@ export default function ComplianceMonitoringDashboard() {
   // Calculate compliance issues
   const complianceIssues = React.useMemo(() => {
     const issues = [];
-    const today = new Date();
 
     // Check overdue training
     trainingAssignments.forEach(assignment => {
       if (assignment.status !== 'completed' && assignment.due_date) {
-        const dueDate = parseISO(assignment.due_date);
-        const daysOverdue = differenceInDays(today, dueDate);
-        
+        const daysUntil = localDaysUntil(assignment.due_date);
+        const daysOverdue = daysUntil != null && daysUntil < 0 ? Math.abs(daysUntil) : 0;
+
         if (daysOverdue > 0) {
           const user = allUsers.find(u => u.email === assignment.assigned_to_user_id);
           if (user) {
@@ -124,9 +141,9 @@ export default function ComplianceMonitoringDashboard() {
     // Check expiring/expired credentials
     personnelCredentials.forEach(cred => {
       if (cred.expiration_date) {
-        const expDate = parseISO(cred.expiration_date);
-        const daysUntilExpiry = differenceInDays(expDate, today);
-        
+        const daysUntilExpiry = localDaysUntil(cred.expiration_date);
+        if (daysUntilExpiry == null) return;
+
         if (daysUntilExpiry <= 30 || cred.status === 'expired') {
           const user = allUsers.find(u => u.email === cred.user_id);
           if (user) {
@@ -153,8 +170,12 @@ export default function ComplianceMonitoringDashboard() {
     // Check missing documentation (visits without proper notes in last 7 days)
     const recentVisits = visits.filter(v => {
       if (!v.visit_date) return false;
-      const visitDate = parseISO(v.visit_date);
-      return differenceInDays(today, visitDate) <= 7;
+      // Without the lower bound, future-dated scheduled visits (which have no notes
+      // yet) counted as "recent" and were flagged as incomplete documentation.
+      const daysUntil = localDaysUntil(v.visit_date);
+      if (daysUntil == null) return false;
+      const daysAgo = -daysUntil;
+      return daysAgo >= 0 && daysAgo <= 7;
     });
 
     const userVisitCounts = {};
@@ -167,8 +188,10 @@ export default function ComplianceMonitoringDashboard() {
       }
       userVisitCounts[visit.created_by]++;
       
-      // Check if visit has minimal documentation
-      if (!visit.assessment || !visit.interventions || visit.assessment.length < 50) {
+      // Check if visit has minimal documentation. The Visit entity stores the
+      // narrative in `nurse_notes` (there are no `assessment`/`interventions`
+      // fields — reading those flagged every visit as 100% incomplete).
+      if (!visit.nurse_notes || visit.nurse_notes.length < 50) {
         userIncompleteVisits[visit.created_by]++;
       }
     });
@@ -199,38 +222,19 @@ export default function ComplianceMonitoringDashboard() {
     return issues;
   }, [trainingAssignments, personnelCredentials, visits, allUsers]);
 
-  // Filter issues
-  const filteredIssues = complianceIssues.filter(issue => {
-    const matchesSearch = !searchTerm ||
-      (issue.userName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (issue.title || '').toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesCategory = categoryFilter === 'all' || issue.type === categoryFilter;
-    const matchesSeverity = severityFilter === 'all' || issue.severity === severityFilter;
-    
-    return matchesSearch && matchesCategory && matchesSeverity;
-  });
-
-  // Group by user
-  const groupedByUser = filteredIssues.reduce((acc, issue) => {
-    if (!acc[issue.userId]) {
-      acc[issue.userId] = {
-        userName: issue.userName,
-        userRole: issue.userRole,
-        issues: []
-      };
-    }
-    acc[issue.userId].issues.push(issue);
-    return acc;
-  }, {});
-
-  // Calculate stats
-  const criticalCount = complianceIssues.filter(i => i.severity === 'critical').length;
-  const highCount = complianceIssues.filter(i => i.severity === 'high').length;
-  const affectedUsers = Object.keys(groupedByUser).length;
-  const overdueTraining = complianceIssues.filter(i => i.type === 'overdue_training').length;
-  const expiringCreds = complianceIssues.filter(i => i.type === 'expiring_credential').length;
+  // Filter, group and count (shared with the Compliance Center page).
+  const { filteredIssues, groupedByUser, criticalCount, highCount, affectedUsers, overdueTraining, expiringCreds } =
+    deriveComplianceIssueStats(complianceIssues, { searchTerm, categoryFilter, severityFilter });
   const incompleteDoc = complianceIssues.filter(i => i.type === 'incomplete_documentation').length;
+
+  // Prune selections that fall out of view when filters change, so a stale
+  // selected email can't reach handleNotifySelected with no matching issue data.
+  useEffect(() => {
+    setSelectedUsers(prev => {
+      const next = new Set(Array.from(prev).filter(email => groupedByUser[email]));
+      return next.size === prev.size ? prev : next;
+    });
+  }, [groupedByUser]);
 
   const handleToggleUser = (userId) => {
     const newSelected = new Set(selectedUsers);
@@ -324,7 +328,7 @@ Compliance Management System`;
     }
   };
 
-  if (currentUser?.role !== 'admin') {
+  if (!isAdminView(currentUser)) {
     return (
       <div className="p-8 max-w-2xl mx-auto text-center">
         <AlertTriangle className="w-16 h-16 text-yellow-500 mx-auto mb-4" />
@@ -404,7 +408,7 @@ Compliance Management System`;
               <Button
                 onClick={handleNotifySelected}
                 disabled={selectedUsers.size === 0 || sendNotificationMutation.isPending}
-                className="bg-orange-600 hover:bg-orange-700 flex-1 lg:flex-none"
+                className="flex-1 lg:flex-none"
               >
                 <Bell className="w-4 h-4 mr-2" />
                 Notify ({selectedUsers.size})
@@ -483,12 +487,12 @@ Compliance Management System`;
                           <p className="text-sm text-slate-700">{issue.details}</p>
                           {issue.dueDate && (
                             <p className="text-xs text-slate-500 mt-1">
-                              Due: {format(parseISO(issue.dueDate), 'MMM d, yyyy')}
+                              Due: {formatLocalDate(issue.dueDate, { month: 'short', day: 'numeric', year: 'numeric' })}
                             </p>
                           )}
                           {issue.expirationDate && (
                             <p className="text-xs text-slate-500 mt-1">
-                              Expires: {format(parseISO(issue.expirationDate), 'MMM d, yyyy')}
+                              Expires: {formatLocalDate(issue.expirationDate, { month: 'short', day: 'numeric', year: 'numeric' })}
                             </p>
                           )}
                         </div>

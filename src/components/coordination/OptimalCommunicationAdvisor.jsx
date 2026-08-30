@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useAICall } from "@/hooks/useAICall";
+import { formatAge } from "@/lib/age";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -32,12 +33,12 @@ export default function OptimalCommunicationAdvisor({
       const nextVisit = upcomingVisits?.[0];
 
       const result = await ai.run({
-        model: "claude_sonnet_4_6",
+        model: "automatic",
         prompt: `You are a patient communication expert. Recommend optimal communication strategy for patient outreach.
 
 PATIENT PROFILE:
 - Name: ${patientData.first_name} ${patientData.last_name}
-- Age: ${patientData.date_of_birth ? Math.floor((new Date() - new Date(patientData.date_of_birth)) / (365.25 * 24 * 60 * 60 * 1000)) : 'Unknown'}
+- Age: ${formatAge(patientData.date_of_birth)}
 - Primary Language: ${patientData.social_history?.primary_language || 'English'}
 - Interpreter Needed: ${patientData.social_history?.interpreter_needed ? 'Yes' : 'No'}
 - Living Situation: ${patientData.social_history?.living_situation || 'Unknown'}

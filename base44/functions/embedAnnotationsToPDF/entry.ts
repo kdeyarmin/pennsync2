@@ -1,9 +1,19 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 import { PDFDocument, rgb } from 'npm:pdf-lib@1.17.1';
 
-// SSRF guard: only fetch https URLs on public hosts, never internal IPs /
-// metadata. Set FILE_URL_ALLOWED_HOSTS (comma-separated) to restrict to your
-// storage host(s).
+// <<<BEGIN SHARED HELPER: requireActiveUser — generated, edit base44/_shared/backendHelpers.mjs>>>
+const isDeactivatedUser = (u) => !!u && u.is_active === false;
+const DEACTIVATED_USER_RESPONSE = () => Response.json(
+  { error: 'Unauthorized - account is deactivated' },
+  { status: 403 },
+);
+// <<<END SHARED HELPER: requireActiveUser>>>
+
+
+// SSRF guard: only fetch https URLs on the app's own storage/app hosts, never
+// internal IPs / metadata. The allowlist is hardcoded (always-on, fail-closed)
+// rather than env-configured; add a host here if file storage ever moves.
+const FILE_URL_ALLOWED_HOSTS = ['qtrypzzcjebvfcihiynt.supabase.co', 'base44.app', 'base44.io'];
 function isSafeFetchUrl(raw) {
   let u;
   try { u = new URL(String(raw)); } catch { return false; }
@@ -16,18 +26,37 @@ function isSafeFetchUrl(raw) {
     const a = +m[1], b = +m[2];
     if (a === 10 || a === 127 || (a === 169 && b === 254) || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168)) return false;
   }
-  const allow = Deno.env.get('FILE_URL_ALLOWED_HOSTS');
-  if (allow) {
-    const hosts = allow.split(',').map((h) => h.trim().toLowerCase()).filter(Boolean);
-    if (!hosts.some((h) => host === h || host.endsWith('.' + h))) return false;
-  }
+  if (!FILE_URL_ALLOWED_HOSTS.some((h) => host === h || host.endsWith('.' + h))) return false;
   return true;
+}
+
+// Fetch that re-validates every redirect hop against isSafeFetchUrl. With the
+// default redirect:'follow' the guard only checks the FIRST URL, so an
+// allowlisted host that 3xx-redirects to an internal/metadata IP would still be
+// fetched (SSRF). Returns null if a hop resolves to a disallowed host.
+async function safeFetchFollow(initialUrl) {
+  let response;
+  let nextUrl = initialUrl;
+  for (let hop = 0; hop < 4; hop++) {
+    response = await fetch(nextUrl, { redirect: 'manual' });
+    if (response.status >= 300 && response.status < 400) {
+      const location = response.headers.get('location');
+      if (!location) break;
+      const resolved = new URL(location, nextUrl).toString();
+      if (!isSafeFetchUrl(resolved)) return null;
+      nextUrl = resolved;
+      continue;
+    }
+    break;
+  }
+  return response;
 }
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
+    if (isDeactivatedUser(user)) return DEACTIVATED_USER_RESPONSE();
 
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
@@ -50,7 +79,10 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Invalid or disallowed pdf_url' }, { status: 400 });
     }
     // Fetch the original PDF
-    const pdfResponse = await fetch(pdf_url);
+    const pdfResponse = await safeFetchFollow(pdf_url);
+    if (!pdfResponse) {
+      return Response.json({ error: 'Redirect to a disallowed host blocked' }, { status: 400 });
+    }
     if (!pdfResponse.ok) {
       throw new Error(`Failed to fetch PDF: ${pdfResponse.statusText}`);
     }
@@ -133,21 +165,28 @@ Deno.serve(async (req) => {
       return count + (Array.isArray(pageAnnots) ? pageAnnots.filter(a => a.type === 'signature').length : 0);
     }, 0);
 
-    // Log the signature event
-    await base44.asServiceRole.entities.UserActivity.create({
-      user_email: user.email,
-      user_name: user.full_name,
-      action: 'document_signed',
-      details: {
-        document_type,
-        patient_id,
-        signature_count: signatureCount,
-        total_annotations: Object.values(annotations).reduce((sum, arr) => sum + arr.length, 0),
-        original_pdf: pdf_url,
-        signed_pdf: uploadResult.file_url
-      },
-      page: 'pdf_signature'
-    });
+    // Log the signature event. Best-effort: the signed PDF is already uploaded
+    // by this point, so a throw here (e.g. a non-array page entry, which the
+    // embed loop tolerates) would 500 the caller and strand the file in storage
+    // with no returned URL and no audit row.
+    try {
+      await base44.asServiceRole.entities.UserActivity.create({
+        user_email: user.email,
+        user_name: user.full_name,
+        action: 'document_signed',
+        details: {
+          document_type,
+          patient_id,
+          signature_count: signatureCount,
+          total_annotations: Object.values(annotations).reduce((sum, arr) => sum + (Array.isArray(arr) ? arr.length : 0), 0),
+          original_pdf: pdf_url,
+          signed_pdf: uploadResult.file_url
+        },
+        page: 'pdf_signature'
+      });
+    } catch (logErr) {
+      console.error('Failed to log document_signed activity:', logErr.message);
+    }
 
     return Response.json({
       success: true,
@@ -159,7 +198,7 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error('PDF annotation error:', error);
     return Response.json({ 
-      error: error.message || 'Failed to process PDF annotations' 
+      error: 'Failed to process PDF annotations' 
     }, { status: 500 });
   }
 });

@@ -12,7 +12,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Phone, PhoneOff, Save, Info, CalendarClock, CalendarDays, MessageSquare } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
-import { scheduleState, getUpcomingWeekend, WEEK_MS } from "@/components/voice/dutyUtils";
+import { scheduleState, getUpcomingWeekend, WEEK_MS, isPastAutoOffHour, DEFAULT_AUTO_OFF_HOUR } from "@/components/voice/dutyUtils";
 import { cn } from "@/lib/utils";
 
 /** ISO string -> value for an <input type="datetime-local"> (local time). */
@@ -57,9 +57,27 @@ export default function DutyStatusCard() {
     queryFn: () => base44.auth.me(),
   });
 
+  // Agency settings drive the auto-off cutoff (default 5pm): after it, the
+  // routing treats every nurse as off duty regardless of the toggle — surface
+  // that here so the card never claims "Available" while calls go to the office.
+  const { data: agencySettings = null } = useQuery({
+    queryKey: ["agencySettings", user?.agency_name || null],
+    queryFn: async () => {
+      const { fetchCallerAgencySettings } = await import("@/lib/agencySettings");
+      return fetchCallerAgencySettings(user?.agency_name);
+    },
+    enabled: !!user,
+    refetchOnWindowFocus: false,
+  });
+
   useEffect(() => {
     if (!user) return;
     setOffDutyMessage(user.off_duty_message || "");
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- deliberately scoped to this one field so saving the message doesn't clobber in-progress edits in the schedule section below
+  }, [user?.off_duty_message]);
+
+  useEffect(() => {
+    if (!user) return;
     const isRecurring = !!user.scheduled_off_duty_recurring;
     const state = scheduleState(user.scheduled_off_duty_start, user.scheduled_off_duty_end, undefined, isRecurring);
     const live = state !== "none" && state !== "expired";
@@ -67,7 +85,8 @@ export default function DutyStatusCard() {
     setRecurring(live && isRecurring);
     setStartInput(live ? toLocalInput(user.scheduled_off_duty_start) : "");
     setEndInput(live ? toLocalInput(user.scheduled_off_duty_end) : "");
-  }, [user]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- deliberately scoped to these fields so toggling duty status or saving the message doesn't clobber in-progress edits here
+  }, [user?.scheduled_off_duty_start, user?.scheduled_off_duty_end, user?.scheduled_off_duty_recurring]);
 
   const mutation = useMutation({
     mutationFn: (payload) => base44.functions.invoke("setNurseDutyStatus", payload),
@@ -209,6 +228,26 @@ export default function DutyStatusCard() {
           </div>
         </div>
       </Card>
+
+      {/* Heads-up when the agency's auto-off hour is overriding the toggle:
+          without this, the card says "Available" after 5pm while the routing
+          sends every call/text to the office. */}
+      {onDuty && agencySettings && isPastAutoOffHour(agencySettings) && (
+        <Alert className="bg-amber-50 border-amber-200">
+          <CalendarClock className="w-4 h-4 text-amber-600" />
+          <AlertDescription className="text-amber-800 text-sm">
+            It's past the agency's end-of-day cutoff (
+            {(() => {
+              const h = Number.isFinite(Number(agencySettings.auto_off_duty_hour))
+                ? Number(agencySettings.auto_off_duty_hour)
+                : DEFAULT_AUTO_OFF_HOUR;
+              return `${((h + 11) % 12) + 1}${h >= 12 ? " PM" : " AM"}`;
+            })()}
+            ) — calls and texts route to the main office overnight even while you're toggled on. You'll be
+            reachable again when you toggle on tomorrow.
+          </AlertDescription>
+        </Alert>
+      )}
 
       {/* Heads-up when a schedule is overriding an on-duty status right now */}
       {onDuty && savedState === "active" && (

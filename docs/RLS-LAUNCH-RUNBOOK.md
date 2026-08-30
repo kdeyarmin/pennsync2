@@ -58,6 +58,22 @@ For every entity below: **Read = `byPatient`**, **Write = clinician-on-own-patie
 admin** (or service-role where noted). These currently have **no in-repo block** and
 are the largest body of outstanding work.
 
+> **2026-07-02 update — interim in-repo read floor.** Seven of these now ship an
+> in-repo `rls.read` owner rule (+ admin): `OASISUpload`, `OASISAssessment`,
+> `OASISAudit`, `Referral` (created_by **and** `assigned_to`), `NoteConversion`,
+> `Document` (uploaded_by + created_by), `DischargeSummary`. This was a deliberate
+> accepted tradeoff (see `base44/securityGuardrails.test.js` §7): it closes the
+> open bulk-read of PHI now, at the cost that non-admin staff see only their own
+> rows on shared views — consistent with the app's actual role model, where
+> `Patient`/`Visit` themselves are already `created_by`-scoped. A dashboard
+> `byPatient` relation rule remains the richer end-state and may REPLACE these
+> field rules; do not simply delete them (the guardrail test pins their presence).
+> Writes on these seven were intentionally left open (`"write": {}`) pending the
+> dashboard pass, since several write flows are legitimately cross-user.
+> `ClinicalEvent` was **excluded on purpose**: its rows are created only by the
+> service role (no per-user owner field), so an owner rule would zero out every
+> non-admin's clinical timeline — it still needs the dashboard relation rule.
+
 | Entity | Link field | Write |
 |---|---|---|
 | `OASISUpload` | `patient_id` | byPatient + admin |
@@ -97,6 +113,12 @@ are the largest body of outstanding work.
 | `DocumentSignature` | `created_by_email` | owner(`created_by_email`) + signer | owner + admin; external signers write via token-scoped service-role fns |
 | `User` | self | self + admin | admin / provision fn; **`personal_cell_e164` = service-role + admin only** |
 | `NotificationPreference` | `user_email` | owner(`user_email`) | owner(`user_email`) |
+
+> `User.staff_role` remains writable through the Base44 self-service `/entities/User/me`
+> path, so `UserInvitation.staff_role` is the authoritative admin-written copy. Register
+> the scheduled `enforceStaffRoleIntegrity` function in the Base44 dashboard (same
+> `x-internal-secret: <INTERNAL_FN_SECRET>` convention as `docs/LEARNING_CENTER_SCHEDULED_JOBS.md`)
+> to revert any non-admin self-write drift back to the invitation value.
 
 > `FaxLog`/`DocumentSignature` are flagged in the spec as **unsafe to owner-scope via a
 > bare `created_by` field rule** because of shared per-patient views and the external
@@ -156,3 +178,12 @@ UI — the UI filters client-side and will look correct even when RLS is open.
 **Sign-off:** all 7 pass → RLS gate cleared. Any failure on 1–4 is a **launch
 blocker**; failures on 5 mean a rule is too tight (fix before launch but not a security
 hole).
+
+---
+
+## 6. Hosted proof worksheet (LR-01)
+
+Executable curl/seed matrix, cross-tenant probes, and evidence capture rules
+live in **`docs/HOSTED-RLS-PROOF.md`**. This runbook applies policies; that
+worksheet is what you fill when collecting LR-01 artifacts. Repository tests
+never mark hosted isolation complete.

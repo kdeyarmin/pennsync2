@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { agencyQueryKey } from '@/lib/agencyRoster';
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
@@ -22,10 +23,17 @@ import AssignmentWizard from "./AssignmentWizard";
 import { seedYearlyRequiredInServices } from "@/functions/seedYearlyRequiredInServices";
 import { assignAnnualLearningPlan } from "@/functions/assignAnnualLearningPlan";
 import { remindPlanOverdueStaff } from "@/functions/remindPlanOverdueStaff";
+import { isPastLocalDueDate, formatLocalDate } from '@/lib/dateLocal';
 
-const formatDate = (value) => (value ? new Date(value).toLocaleDateString() : "—");
+const formatDate = (value) => formatLocalDate(value) || "—";
 
 export default function LearningPlanManager() {
+  const { data: currentUser } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me(),
+  });
+
+
   const queryClient = useQueryClient();
   const confirm = useConfirm();
   const year = new Date().getFullYear();
@@ -43,7 +51,7 @@ export default function LearningPlanManager() {
   const [reminding, setReminding] = useState(false);
 
   const { data: plans = [] } = useQuery({
-    queryKey: ["learning-plans"],
+    queryKey: ["learning-plans", "-created_date", 50],
     queryFn: () => base44.entities.LearningPlan.list("-created_date", 50),
     initialData: [],
   });
@@ -88,10 +96,14 @@ export default function LearningPlanManager() {
   });
 
   const { data: users = [] } = useQuery({
-    queryKey: ["plan-assign-users"],
-    queryFn: () => base44.entities.User.list("-created_date", 500),
+    queryKey: ["plan-assign-users", agencyQueryKey(currentUser)],
+    queryFn: async () => {
+      const _rows = await base44.entities.User.list("-created_date", 500);
+      const { filterUsersByCallerAgency } = await import('@/lib/agencyScope');
+      return filterUsersByCallerAgency(_rows, currentUser);
+    },
     initialData: [],
-    enabled: showAssignDialog,
+    enabled: showAssignDialog && !!currentUser,
   });
 
   const courseMap = useMemo(
@@ -138,14 +150,18 @@ export default function LearningPlanManager() {
       const overdue =
         a.status !== "completed" &&
         a.pass_fail_result !== "passed" &&
-        (a.status === "overdue" || (a.due_date && new Date(a.due_date) < now));
+        (a.status === "overdue" || isPastLocalDueDate(a.due_date, now));
       if (overdue && a.assigned_to_user_id) users.add(a.assigned_to_user_id);
     }
     return users.size;
   }, [planAssignments]);
 
   // ─── Mutations ──────────────────────────────────────────────────────────────
-  const refetchPlans = () => queryClient.invalidateQueries({ queryKey: ["learning-plans"] });
+  // Cross-invalidate annual-plans (AnnualMandatoryEducationHub) — both list LearningPlan.
+  const refetchPlans = () => {
+    queryClient.invalidateQueries({ queryKey: ["learning-plans"] });
+    queryClient.invalidateQueries({ queryKey: ["annual-plans"] });
+  };
   const refetchCourses = () => queryClient.invalidateQueries({ queryKey: ["plan-courses"] });
 
   const deletePlanMutation = useMutation({
@@ -633,7 +649,7 @@ export default function LearningPlanManager() {
                         {planEnrollments.map((e) => {
                           const overdue =
                             e.status === "overdue" ||
-                            (e.status !== "completed" && e.due_date && new Date(e.due_date) < new Date());
+                            (e.status !== "completed" && isPastLocalDueDate(e.due_date));
                           return (
                             <div key={e.id} className="flex items-center justify-between gap-3 p-3 rounded-lg border bg-white">
                               <div className="min-w-0 flex-1">

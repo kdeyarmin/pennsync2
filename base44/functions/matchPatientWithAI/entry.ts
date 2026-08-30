@@ -1,9 +1,19 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
+// <<<BEGIN SHARED HELPER: requireActiveUser — generated, edit base44/_shared/backendHelpers.mjs>>>
+const isDeactivatedUser = (u) => !!u && u.is_active === false;
+const DEACTIVATED_USER_RESPONSE = () => Response.json(
+  { error: 'Unauthorized - account is deactivated' },
+  { status: 403 },
+);
+// <<<END SHARED HELPER: requireActiveUser>>>
+
+
 Deno.serve(async (req) => {
     try {
         const base44 = createClientFromRequest(req);
         const user = await base44.auth.me();
+        if (isDeactivatedUser(user)) return DEACTIVATED_USER_RESPONSE();
 
         if (!user) {
             return Response.json({ error: 'Unauthorized' }, { status: 401 });
@@ -19,7 +29,7 @@ Deno.serve(async (req) => {
 
         // Use AI to analyze and match patients with nuanced data points
         const matchAnalysis = await base44.integrations.Core.InvokeLLM({
-            model: "claude_opus_4_8",
+            model: "automatic",
             prompt: `You are an expert patient matching system for healthcare records with advanced fuzzy matching capabilities.
 
 Analyze the referral data and compare it against existing patients to find the best match.
@@ -189,7 +199,7 @@ Provide detailed match analysis with reasoning.`,
     } catch (error) {
         console.error('Error matching patient with AI:', error);
         return Response.json({ 
-            error: error.message,
+            error: 'Internal server error',
             success: false
         }, { status: 500 });
     }

@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { useAgencyScopedQuery } from '@/hooks/useAgencyScopedQuery';
+import { useScopedPatients } from '@/hooks/useScopedPatients';
 import { useQuery } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -15,16 +17,19 @@ import {
   AlertTriangle,
   Activity,
   Users,
-  Filter
+  Filter,
+  Loader2
 } from "lucide-react";
 import PageContainer from "@/components/ui/PageContainer";
 import PageHeader from "@/components/ui/PageHeader";
 
 import PatientRiskScorecard from "../components/predictive/PatientRiskScorecard";
 import RehospitalizationPredictor from "../components/predictive/RehospitalizationPredictor";
+import PPHPreventionWorklist from "../components/predictive/PPHPreventionWorklist";
 import TherapyNeedForecaster from "../components/predictive/TherapyNeedForecaster";
 import PopulationRiskOverview from "../components/predictive/PopulationRiskOverview";
 import PredictiveInsightsPanel from "../components/predictive/PredictiveInsightsPanel";
+import { ALL_ROWS, PATIENT_HISTORY_ROWS } from '@/lib/queryLimits';
 
 export default function PredictiveAnalytics() {
   const [activeTab, setActiveTab] = useState("overview");
@@ -32,29 +37,27 @@ export default function PredictiveAnalytics() {
   const [riskFilter, setRiskFilter] = useState("all");
 
   // Fetch patients
-  const { data: patients = [] } = useQuery({
-    queryKey: ['predictivePatients'],
-    queryFn: () => base44.entities.Patient.filter({ status: 'active' }),
-  });
+  const { data: patients = [], isPending: patientsLoading } = useScopedPatients({ status: 'active', sort: null, limit: ALL_ROWS });
 
   // Fetch OASIS data
-  const { data: oasisData = [] } = useQuery({
+  const { data: oasisData = [], isPending: oasisLoading } = useQuery({
     queryKey: ['predictiveOASIS'],
     queryFn: () => base44.entities.OASISUpload.list('-created_date', 200),
   });
 
   // Fetch visits
-  const { data: visits = [] } = useQuery({
+  const { data: visits = [], isPending: visitsLoading } = useAgencyScopedQuery({
     queryKey: ['predictiveVisits'],
-    queryFn: () => base44.entities.Visit.list('-created_date', 500),
+    fetch: () => base44.entities.Visit.list('-created_date', 500),
   });
 
   // Fetch alerts
-  const { data: alerts = [] } = useQuery({
+  const { data: alerts = [], isPending: alertsLoading } = useAgencyScopedQuery({
     queryKey: ['predictiveAlerts'],
-    queryFn: () => base44.entities.PatientAlert.filter({ status: 'active' }),
+    fetch: () => base44.entities.PatientAlert.filter({ status: 'active' }, undefined, PATIENT_HISTORY_ROWS),
   });
 
+  const isLoading = patientsLoading || oasisLoading || visitsLoading || alertsLoading;
   const selectedPatient = patients.find(p => p.id === selectedPatientId);
 
   return (
@@ -116,6 +119,13 @@ export default function PredictiveAnalytics() {
           </TabsList>
         </div>
 
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center py-16 text-slate-500 gap-3">
+            <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
+            <p className="text-sm font-medium">Loading predictive data…</p>
+          </div>
+        ) : (
+          <>
         {/* Overview Tab */}
         <TabsContent value="overview" className="space-y-4 sm:space-y-6">
           <PopulationRiskOverview 
@@ -135,7 +145,12 @@ export default function PredictiveAnalytics() {
         </TabsContent>
 
         {/* Rehospitalization Tab */}
-        <TabsContent value="rehospitalization">
+        <TabsContent value="rehospitalization" className="space-y-4 sm:space-y-6">
+          <PPHPreventionWorklist
+            patients={patients}
+            oasisData={oasisData}
+            visits={visits}
+          />
           <RehospitalizationPredictor
             patients={patients}
             oasisData={oasisData}
@@ -165,6 +180,8 @@ export default function PredictiveAnalytics() {
             selectedPatientId={selectedPatientId}
           />
         </TabsContent>
+          </>
+        )}
       </Tabs>
     </PageContainer>
   );

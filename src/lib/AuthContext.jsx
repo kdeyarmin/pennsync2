@@ -1,11 +1,11 @@
 import { createContext, useState, useContext, useEffect, useCallback } from 'react';
 import { base44 } from '@/api/base44Client';
-import { appParams } from '@/lib/app-params';
-import { createAxiosClient } from '@base44/sdk/dist/utils/axios-client';
+import { appParams, plantLoginReturnState } from '@/lib/app-params';
+import { createAxiosClient } from '@/lib/base44AxiosClient';
 import { queryClientInstance } from '@/lib/query-client';
 import { clearCachedPHI } from '@/lib/phiStorage';
 
-const AuthContext = createContext();
+const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -15,16 +15,33 @@ export const AuthProvider = ({ children }) => {
   const [authError, setAuthError] = useState(null);
   const [appPublicSettings, setAppPublicSettings] = useState(null); // Contains only { id, public_settings }
 
-  const checkUserAuth = useCallback(async () => {
+  // `silent` re-fetches the current user WITHOUT flipping the global
+  // isLoadingAuth flag — used by refreshUser() so re-reading the user (e.g.
+  // after accepting the AI content agreement) doesn't unmount the whole route
+  // tree behind the boot-time <PageLoader />. A failed silent refresh also
+  // leaves the existing session intact rather than tearing it down on a
+  // transient error.
+  const checkUserAuth = useCallback(async ({ silent = false } = {}) => {
     try {
-      // Now check if the user is authenticated
-      setIsLoadingAuth(true);
+      if (!silent) setIsLoadingAuth(true);
       const currentUser = await base44.auth.me();
       setUser(currentUser);
       setIsAuthenticated(true);
-      setIsLoadingAuth(false);
+      if (!silent) setIsLoadingAuth(false);
     } catch (error) {
       console.error('User auth check failed:', error);
+      if (silent) {
+        // 401/403 means the token has expired or been revoked — the session is
+        // genuinely invalid, not just transiently unreachable, so propagate the
+        // auth error even in silent mode. Other errors (network, 5xx) are
+        // transient; leave the existing session intact.
+        if (error.status === 401 || error.status === 403) {
+          setUser(null);
+          setIsAuthenticated(false);
+          setAuthError({ type: 'auth_required', message: 'Authentication required' });
+        }
+        return;
+      }
       setIsLoadingAuth(false);
       setIsAuthenticated(false);
 
@@ -33,6 +50,17 @@ export const AuthProvider = ({ children }) => {
         setAuthError({
           type: 'auth_required',
           message: 'Authentication required'
+        });
+      } else {
+        // Non-auth failure (network blip, 5xx) with a token still in storage:
+        // this is a backend/connectivity outage, not a missing session. With no
+        // authError set, AuthenticatedApp would fall through to <SignInScreen />
+        // and mislead the user into re-entering credentials to "fix" an outage
+        // — the exact failure mode the public-settings fetch already guards
+        // against. Surface the real error instead.
+        setAuthError({
+          type: 'unknown',
+          message: error.message || 'Could not reach the server. Check your connection and try again.'
         });
       }
     }
@@ -127,6 +155,7 @@ export const AuthProvider = ({ children }) => {
     setIsAuthenticated(false);
     // HIPAA: purge all cached PHI so the next user on a shared device can't
     // see the previous session's patient data before refetch.
+    sessionStorage.clear();
     try { queryClientInstance.clear(); } catch (_e) { /* no-op */ }
     // Also purge re-fetchable PHI persisted to localStorage/IndexedDB (the
     // in-memory React Query cache is not the only copy). Await so the IndexedDB
@@ -145,8 +174,12 @@ export const AuthProvider = ({ children }) => {
   const navigateToLogin = () => {
     // Don't redirect if we're already on the login page to prevent loops
     if (window.location.pathname === '/login') return;
-    // Use the SDK's redirectToLogin method
-    base44.auth.redirectToLogin(window.location.href);
+    // Plant a one-time auth_state on the return URL so an empty-referrer
+    // handoff from hosted login can be distinguished from a phishing link
+    // that only carries ?access_token= (see evaluateAccessTokenTrust /
+    // pending confirm on SignInScreen).
+    const returnUrl = plantLoginReturnState(window.location.href);
+    base44.auth.redirectToLogin(returnUrl);
   };
 
   return (
@@ -159,7 +192,11 @@ export const AuthProvider = ({ children }) => {
       appPublicSettings,
       logout,
       navigateToLogin,
-      checkAppState
+      checkAppState,
+      // Re-fetch the current user (e.g. after they accept the AI content
+      // responsibility agreement) so gates keyed off `user` re-evaluate.
+      // Silent so it doesn't flash the full-app boot loader mid-session.
+      refreshUser: () => checkUserAuth({ silent: true })
     }}>
       {children}
     </AuthContext.Provider>

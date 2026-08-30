@@ -48,12 +48,17 @@
       "type": "string",
       "description": "Email of admin who sent invitation"
     },
+    "agency_name": {
+      "type": "string",
+      "description": "Agency of the inviting admin; used to scope agency_admin resend/cancel"
+    },
     "status": {
       "type": "string",
       "enum": [
         "pending",
         "accepted",
-        "expired"
+        "expired",
+        "cancelled"
       ],
       "default": "pending"
     },
@@ -71,6 +76,11 @@
       "format": "date-time",
       "description": "When invitation was last sent/resent"
     },
+    "expiring_soon_notified_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When admins were emailed that this pending invitation expires within 24 hours (one-shot per invitation)"
+    },
     "resend_count": {
       "type": "number",
       "default": 0,
@@ -83,6 +93,7 @@
     "invited_by",
     "expires_at"
   ],
+  "//write-note": "Writes are service-role-only: an admin who could create a UserInvitation directly could forge { role: 'admin' } and have onUserSignup apply it verbatim, bypassing the 'only a super admin may invite an admin' guard. All legitimate invitation writes go through userManagement / createUserWithTempPassword (service role). Admins still READ invitations for the management UI.",
   "rls": {
     "read": {
       "user_condition": {
@@ -91,7 +102,7 @@
     },
     "write": {
       "user_condition": {
-        "role": "admin"
+        "role": "__service_role_only__"
       }
     }
   }

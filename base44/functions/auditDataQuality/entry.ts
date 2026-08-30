@@ -1,30 +1,64 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 // <<<BEGIN SHARED HELPER: isAdminLike — generated, edit base44/_shared/backendHelpers.mjs>>>
-const SUPER_ADMIN_EMAIL = ((typeof Deno !== 'undefined' && Deno.env.get('SUPER_ADMIN_EMAIL')) || '').trim().toLowerCase();
-const sameEmail = (a, b) => String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase();
 const isAdminLike = (u) => !!u && (
   u.role === 'admin' || u.account_type === 'agency_admin' ||
-  u.account_type === 'super_admin' || (SUPER_ADMIN_EMAIL !== '' && sameEmail(u.email, SUPER_ADMIN_EMAIL))
+  u.account_type === 'super_admin'
 );
 // <<<END SHARED HELPER: isAdminLike>>>
+
+// <<<BEGIN SHARED HELPER: requireActiveUser — generated, edit base44/_shared/backendHelpers.mjs>>>
+const isDeactivatedUser = (u) => !!u && u.is_active === false;
+const DEACTIVATED_USER_RESPONSE = () => Response.json(
+  { error: 'Unauthorized - account is deactivated' },
+  { status: 403 },
+);
+// <<<END SHARED HELPER: requireActiveUser>>>
+
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
+    if (isDeactivatedUser(user)) return DEACTIVATED_USER_RESPONSE();
 
     if (!isAdminLike(user)) {
       return Response.json({ error: 'Unauthorized - Admin access required' }, { status: 403 });
     }
 
-    // Fetch all active data
-    const [patients, users, visits, credentials] = await Promise.all([
-      base44.asServiceRole.entities.Patient.filter({ status: 'active' }),
-      base44.asServiceRole.entities.User.list('-created_date', 500),
-      base44.asServiceRole.entities.Visit.filter({ status: 'completed' }, '-visit_date', 200),
+    // Fetch active data. Scope to the caller's agency when known so an
+    // agency_admin cannot audit (and see names/ids for) every tenant.
+    let [patients, users, visits, credentials] = await Promise.all([
+      base44.asServiceRole.entities.Patient.filter({ status: 'active' }, '-created_date', 5000),
+      base44.asServiceRole.entities.User.list('-created_date', 5000),
+      base44.asServiceRole.entities.Visit.filter({ status: 'completed' }, '-visit_date', 5000),
       base44.asServiceRole.entities.PersonnelCredential.list('-expiration_date', 500),
     ]);
+
+    if (user.account_type === 'agency_admin' && !user.agency_name) {
+      return Response.json({ error: 'Forbidden: agency_name is required.' }, { status: 403 });
+    }
+    if (user.account_type !== 'super_admin' && user.agency_name) {
+      // Scope strictly to the caller's agency. The old filter also kept every
+      // super_admin account, which then (a) surfaced platform-staff profiles in
+      // every agency's user_issues and (b) seeded agencyEmails, so any patient
+      // created by a super_admin (central intake / bulk import) counted as
+      // in-agency for EVERY tenant and their name + gaps leaked cross-agency.
+      users = (Array.isArray(users) ? users : []).filter((u) =>
+        u.agency_name === user.agency_name
+      );
+      const agencyEmails = new Set(users.map((u) => u?.email).filter(Boolean));
+      patients = (Array.isArray(patients) ? patients : []).filter((p) =>
+        (p.created_by && agencyEmails.has(p.created_by))
+        || (Array.isArray(p.assigned_nurses) && p.assigned_nurses.some((e) => agencyEmails.has(e)))
+      );
+      const patientIds = new Set(patients.map((p) => p.id));
+      visits = (Array.isArray(visits) ? visits : []).filter((v) => patientIds.has(v.patient_id));
+      credentials = (Array.isArray(credentials) ? credentials : []).filter((c) =>
+        (c.agency_name && c.agency_name === user.agency_name)
+        || (c.employee_email && agencyEmails.has(c.employee_email))
+      );
+    }
 
     const criticalFields = {
       patient: ['emergency_contact_name', 'emergency_contact_phone', 'physician_name', 'phone', 'date_of_birth'],
@@ -128,6 +162,6 @@ Deno.serve(async (req) => {
 
   } catch (error) {
     console.error('Data quality audit error:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
 });

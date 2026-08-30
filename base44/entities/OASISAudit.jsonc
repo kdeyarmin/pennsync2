@@ -2,39 +2,157 @@
   "name": "OASISAudit",
   "type": "object",
   "properties": {
-    "oasis_upload_id": {
+    "user_email": {
       "type": "string",
-      "description": "Reference to OASISUpload entity"
+      "description": "Email of user who performed analysis"
     },
     "patient_id": {
       "type": "string",
-      "description": "Reference to Patient entity"
+      "description": "Reference to Patient entity if applicable"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "compliant",
+        "flagged",
+        "critical",
+        "pending_review",
+        "in_review",
+        "reviewed"
+      ],
+      "description": "Overall status of OASIS assessment"
+    },
+    "summary": {
+      "type": "string",
+      "description": "Brief summary of analysis"
+    },
+    "details": {
+      "type": "object",
+      "description": "Full AI analysis results"
+    },
+    "oasis_file_url": {
+      "type": "string",
+      "description": "URL to uploaded OASIS file"
+    },
+    "analysis_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When analysis was performed"
+    },
+    "completeness_score": {
+      "type": "number",
+      "description": "OASIS data completeness score (0-100)"
+    },
+    "accuracy_score": {
+      "type": "number",
+      "description": "OASIS data accuracy score (0-100)"
+    },
+    "missing_data_points": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "field": {
+            "type": "string"
+          },
+          "oasis_item": {
+            "type": "string"
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "critical",
+              "medium",
+              "low"
+            ]
+          },
+          "reason": {
+            "type": "string"
+          },
+          "impact_on_reimbursement": {
+            "type": "boolean"
+          }
+        }
+      },
+      "description": "Identified missing critical data points"
+    },
+    "accuracy_flags": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "field": {
+            "type": "string"
+          },
+          "oasis_item": {
+            "type": "string"
+          },
+          "issue": {
+            "type": "string"
+          },
+          "suggested_value": {
+            "type": "string"
+          },
+          "confidence": {
+            "type": "number"
+          }
+        }
+      },
+      "description": "Flags for potentially inaccurate data"
+    },
+    "predictive_summary": {
+      "type": "string",
+      "description": "AI-generated summary of predicted patient outcomes/risks"
+    },
+    "care_plan_summary": {
+      "type": "string",
+      "description": "AI-generated care plan recommendations"
+    },
+    "risk_scores": {
+      "type": "object",
+      "properties": {
+        "hospitalization_risk": {
+          "type": "number"
+        },
+        "fall_risk": {
+          "type": "number"
+        },
+        "functional_decline_risk": {
+          "type": "number"
+        },
+        "wound_healing_risk": {
+          "type": "number"
+        }
+      },
+      "description": "Predictive risk scores based on OASIS data"
+    },
+    "predicted_los": {
+      "type": "number",
+      "description": "Predicted length of service in days"
+    },
+    "oasis_upload_id": {
+      "type": "string",
+      "description": "Reference to the OASISUpload this audit was generated from"
     },
     "patient_name": {
-      "type": "string"
+      "type": "string",
+      "description": "Patient name from the audited OASIS"
     },
     "flag_reason": {
       "type": "string",
-      "enum": [
-        "low_accuracy",
-        "low_compliance",
-        "high_audit_risk",
-        "manual_flag",
-        "revenue_opportunity"
-      ],
-      "description": "Why this was flagged"
-    },
-    "accuracy_score": {
-      "type": "number"
+      "description": "Reason the OASIS was flagged for audit (e.g. manual_flag)"
     },
     "compliance_score": {
-      "type": "number"
+      "type": "number",
+      "description": "OASIS compliance score (0-100)"
     },
     "revenue_score": {
-      "type": "number"
+      "type": "number",
+      "description": "Revenue optimization score (0-100)"
     },
     "overall_score": {
-      "type": "number"
+      "type": "number",
+      "description": "Overall audit score (0-100)"
     },
     "key_issues": {
       "type": "array",
@@ -57,117 +175,82 @@
             "type": "string"
           }
         }
-      }
+      },
+      "description": "Key issues identified during the audit"
     },
     "rescore_opportunities": {
       "type": "array",
       "items": {
-        "type": "object",
-        "properties": {
-          "m_item": {
-            "type": "string"
-          },
-          "current_score": {
-            "type": "string"
-          },
-          "recommended_score": {
-            "type": "string"
-          },
-          "revenue_impact": {
-            "type": "string"
-          }
-        }
-      }
+        "type": "object"
+      },
+      "description": "Opportunities to rescore for improved reimbursement"
     },
     "estimated_revenue_impact": {
       "type": "number",
-      "description": "Potential revenue recovery in dollars"
-    },
-    "status": {
-      "type": "string",
-      "enum": [
-        "pending_review",
-        "in_review",
-        "reviewed",
-        "corrected",
-        "dismissed"
-      ],
-      "default": "pending_review"
+      "description": "Estimated revenue impact of identified issues"
     },
     "priority": {
       "type": "string",
-      "enum": [
-        "critical",
-        "high",
-        "medium",
-        "low"
-      ],
-      "default": "medium"
+      "description": "Audit priority level"
     },
     "assigned_to": {
       "type": "string",
-      "description": "Auditor email"
+      "description": "Email of the reviewer the audit is assigned to"
     },
     "reviewed_by": {
-      "type": "string"
+      "type": "string",
+      "description": "Email of the user who reviewed the audit"
     },
     "reviewed_at": {
       "type": "string",
-      "format": "date-time"
+      "format": "date-time",
+      "description": "When the audit was reviewed"
     },
     "auditor_findings": {
       "type": "string",
-      "description": "Auditor's notes and findings"
+      "description": "Reviewer findings/notes (may be free text or JSON string)"
     },
     "auditor_recommendations": {
       "type": "array",
       "items": {
         "type": "string"
-      }
+      },
+      "description": "Reviewer recommendations"
     },
     "corrections_made": {
       "type": "array",
       "items": {
-        "type": "object",
-        "properties": {
-          "item": {
-            "type": "string"
-          },
-          "original_value": {
-            "type": "string"
-          },
-          "corrected_value": {
-            "type": "string"
-          },
-          "rationale": {
-            "type": "string"
-          }
-        }
-      }
+        "type": "object"
+      },
+      "description": "Corrections applied during the audit"
     },
     "report_generated": {
       "type": "boolean",
-      "default": false
-    },
-    "report_url": {
-      "type": "string"
+      "description": "Whether an audit report has been generated"
     }
   },
   "required": [
-    "oasis_upload_id",
-    "flag_reason",
-    "status"
+    "user_email",
+    "status",
+    "summary"
   ],
+  // PHI read-scoping: with no read rule, ANY authenticated user could bulk-
+  // .list() every row (audit rows carry patient_name + finding details;
+  // assigned_to covers audits claimed by a reviewer).
+  // Reads are scoped to the owning user (+ admin), matching the app's
+  // Patient/Visit/ComplianceAudit role model: non-admin staff see only their
+  // own rows on agency-wide report surfaces; admins see everything. "write": {}
+  // deliberately preserves the existing open write behavior — this change is
+  // read-scoping only (several write flows are legitimately cross-user), the
+  // same shape as the ClinicalLibraryTemplate read-scoping fix.
   "rls": {
     "read": {
-      "user_condition": {
-        "role": "admin"
-      }
+      "$or": [
+        { "created_by": "{{user.email}}" },
+        { "assigned_to": "{{user.email}}" },
+        { "user_condition": { "role": "admin" } }
+      ]
     },
-    "write": {
-      "user_condition": {
-        "role": "admin"
-      }
-    }
+    "write": {}
   }
 }

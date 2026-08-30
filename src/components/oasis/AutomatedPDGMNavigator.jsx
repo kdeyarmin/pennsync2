@@ -1,7 +1,12 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useNavigate } from "react-router";
 import { base44 } from "@/api/base44Client";
+import { useScopedPatients } from '@/hooks/useScopedPatients';
+import { toLocalISODate } from "@/lib/dateLocal";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { buildPdgmNavigatorCsv } from "./pdgmNavigatorExport";
+import { reconcileComorbidities } from "./comorbidityReconciler";
+import FinancialGate from "@/components/ui/FinancialGate";
 import { getConfidenceBadge, getSeverityBadge, getPriorityColor, getLevelColor, formatCurrency } from "./pdgmNavigatorHelpers";
 import { resolveAgencyCosts } from "./pdgmFinancialEngine";
 import { buildNavigationRequest, buildFinancialPredictionRequest, buildResolutionWorkflowRequest } from "./pdgmNavigatorPrompts";
@@ -46,6 +51,7 @@ import AIGroupAssignmentValidator from "./AIGroupAssignmentValidator";
 
 
 export default function AutomatedPDGMNavigator({ analysisResults, pdgmData, revenueData, onNavigationComplete }) {
+  const navigate = useNavigate();
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [navigation, setNavigation] = useState(null);
   const [error, setError] = useState(null);
@@ -57,17 +63,51 @@ export default function AutomatedPDGMNavigator({ analysisResults, pdgmData, reve
   const [_showCostSettings, _setShowCostSettings] = useState(false);
   const [patientForecasts, setPatientForecasts] = useState(null);
   const [isLoadingForecasts, setIsLoadingForecasts] = useState(false);
+  const [forecastError, setForecastError] = useState(null);
+  const forecastAttemptedRef = useRef(false);
   
-  // Fetch agency settings for cost analysis
+  // Fetch agency settings for cost analysis (never newest-row across tenants).
   const { data: agencySettings } = useQuery({
     queryKey: ['agencySettings'],
     queryFn: async () => {
-      const result = await base44.entities.AgencySettings.list();
-      return result[0] || null;
+      const me = await base44.auth.me().catch(() => null);
+      const { fetchCallerAgencySettings } = await import("@/lib/agencySettings");
+      return fetchCallerAgencySettings(me?.agency_name);
     }
   });
 
   const agencyCosts = resolveAgencyCosts(agencySettings);
+
+  // Reconcile OASIS-documented condition indicators against the coded
+  // secondary-diagnosis list (comorbidityReconciler) to surface comorbidity
+  // adjustments the coding may have missed. Mirrors the module's
+  // deriveOasisConditions but reads the structured pdgmData this component
+  // receives instead of a flat answers map; deliberately conservative —
+  // diagnosis-bearing OASIS items only.
+  const comorbidityReconciliation = useMemo(() => {
+    if (!pdgmData) return null;
+    const documentedConditions = [];
+    const depression = parseInt(String(pdgmData.cognitive_status?.depression_phq2 ?? ""), 10);
+    if (Number.isFinite(depression) && depression >= 1) {
+      documentedConditions.push({ condition: "Depression", source: "M1730" });
+    }
+    if (pdgmData.clinical_items?.pressure_ulcer_present) {
+      documentedConditions.push({ condition: "Pressure Ulcer", source: "M1306" });
+    }
+    if (pdgmData.clinical_items?.stasis_ulcer) {
+      // Stasis ulcer is M1330 (M1322 is the count of Stage-1 pressure injuries).
+      documentedConditions.push({ condition: "Stasis Ulcer", source: "M1330" });
+    }
+    if (pdgmData.clinical_items?.surgical_wound) {
+      // Surgical wound is M1340 (M1330 is the stasis-ulcer item).
+      documentedConditions.push({ condition: "Surgical Wound", source: "M1340" });
+    }
+    if (documentedConditions.length === 0) return null;
+    return reconcileComorbidities({
+      documentedConditions,
+      codedSecondaries: pdgmData.comorbidities || [],
+    });
+  }, [pdgmData]);
 
   const runPDGMNavigation = useCallback(async () => {
     if (!pdgmData) return;
@@ -115,7 +155,7 @@ export default function AutomatedPDGMNavigator({ analysisResults, pdgmData, reve
     const url = URL.createObjectURL(dataBlob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `PDGM_Navigator_Analysis_${new Date().toISOString().split('T')[0]}.json`;
+    link.download = `PDGM_Navigator_Analysis_${toLocalISODate()}.json`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -133,7 +173,7 @@ export default function AutomatedPDGMNavigator({ analysisResults, pdgmData, reve
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `PDGM_Navigator_Report_${new Date().toISOString().split('T')[0]}.csv`;
+    link.download = `PDGM_Navigator_Report_${toLocalISODate()}.csv`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -185,25 +225,29 @@ export default function AutomatedPDGMNavigator({ analysisResults, pdgmData, reve
   const [isExporting, setIsExporting] = useState(false);
   const [showAnalytics, setShowAnalytics] = useState(false);
 
-  // Fetch historical patient data for forecasting
+  // Fetch historical patient data for forecasting — scoped by patient id when
+  // available. Never load an unfiltered global OASIS list into this patient's
+  // forecast cache (that mixed other patients' uploads into client memory).
+  const patientIdForHistory = pdgmData?.patient_info?.id || pdgmData?.patient_id || null;
   const { data: _patientHistory = [] } = useQuery({
-    queryKey: ['patientOasisHistory', pdgmData?.patient_info?.name],
+    queryKey: ['patientOasisHistory', patientIdForHistory || pdgmData?.patient_info?.name || null],
     queryFn: async () => {
-      if (!pdgmData?.patient_info?.name) return [];
-      return await base44.entities.OASISUpload.filter({}, '-created_date', 10);
+      if (patientIdForHistory) {
+        return await base44.entities.OASISUpload.filter({ patient_id: patientIdForHistory }, '-created_date', 10);
+      }
+      // Name-only fallback: do not fan out to all uploads.
+      return [];
     },
-    enabled: !!pdgmData
+    enabled: !!pdgmData && (!!patientIdForHistory || !!pdgmData?.patient_info?.name)
   });
 
-  const { data: allPatients = [] } = useQuery({
-    queryKey: ['patientsForForecasting'],
-    queryFn: () => base44.entities.Patient.list('-created_date', 100),
-  });
+  const { data: allPatients = [] } = useScopedPatients({ sort: '-created_date', limit: 100 });
 
   const generatePatientForecasts = useCallback(async () => {
     if (!navigation || !pdgmData) return;
 
     setIsLoadingForecasts(true);
+    setForecastError(null);
     try {
       // Get historical trends from similar patients
       const similarPatients = allPatients.filter(p => 
@@ -279,7 +323,7 @@ PREDICT:
    - Resource optimization opportunities`;
 
       const result = await invokeLLM({
-        model: "claude_opus_4_8",
+        model: "automatic",
         prompt,
         response_json_schema: {
           type: "object",
@@ -378,13 +422,17 @@ PREDICT:
       setPatientForecasts(result);
     } catch (error) {
       console.error('Forecasting error:', error);
+      setForecastError('Failed to generate patient forecasts. Please try again.');
     }
     setIsLoadingForecasts(false);
   }, [navigation, pdgmData, allPatients]);
 
-  // Auto-generate forecasts when navigation completes
+  // Auto-generate forecasts when navigation completes (one-shot: the ref latch
+  // stops the effect from re-firing on failure, which would otherwise loop the
+  // paid LLM call every time isLoadingForecasts flips back to false).
   useEffect(() => {
-    if (navigation && !patientForecasts && !isLoadingForecasts) {
+    if (navigation && !patientForecasts && !isLoadingForecasts && !forecastAttemptedRef.current) {
+      forecastAttemptedRef.current = true;
       generatePatientForecasts();
     }
   }, [navigation, patientForecasts, isLoadingForecasts, generatePatientForecasts]);
@@ -406,7 +454,7 @@ PREDICT:
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `PDGM_Navigator_${new Date().toISOString().split('T')[0]}.pdf`;
+      a.download = `PDGM_Navigator_${toLocalISODate()}.pdf`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -441,7 +489,7 @@ PREDICT:
               variant="outline" 
               size="sm" 
               className="gap-2"
-              onClick={() => window.location.href = '/agency-settings'}
+              onClick={() => navigate('/AgencySettings')}
             >
               <Settings className="w-3 h-3" />
               Agency Settings
@@ -826,6 +874,119 @@ PREDICT:
                       </div>
                     )}
 
+                    {/* OASIS <-> coded-secondaries reconciliation (deterministic,
+                        from comorbidityReconciler — not the LLM analysis above) */}
+                    {comorbidityReconciliation && (
+                      <div className="bg-white p-3 rounded border border-green-200 space-y-2">
+                        <p className="text-xs font-medium text-slate-700 flex items-center gap-1">
+                          <FileText className="w-3 h-3" /> OASIS vs Coded Secondaries
+                          <Badge variant="outline" className="ml-auto text-xs">Advisory</Badge>
+                        </p>
+
+                        {comorbidityReconciliation.comorbidity_opportunities.length > 0 && (
+                          <div className="bg-yellow-50 p-2 rounded border border-yellow-200">
+                            <p className="text-xs font-medium text-yellow-800 mb-2 flex items-center gap-1">
+                              <Lightbulb className="w-3 h-3" />
+                              Documented in OASIS but not coded — {comorbidityReconciliation.potential_adjustment_count} potential comorbidity adjustment{comorbidityReconciliation.potential_adjustment_count !== 1 ? 's' : ''}
+                            </p>
+                            <div className="space-y-2">
+                              {comorbidityReconciliation.comorbidity_opportunities.map((opp, idx) => {
+                                const predKey = `comorb_${idx}`;
+                                return (
+                                  <div key={idx} className="bg-white p-2 rounded border border-yellow-200">
+                                    <div className="flex flex-wrap items-center gap-2 mb-1">
+                                      <span className="text-xs font-semibold text-slate-800">{opp.condition}</span>
+                                      {opp.source && (
+                                        <Badge variant="outline" className="text-xs">{opp.source}</Badge>
+                                      )}
+                                      <Badge className="bg-yellow-200 text-yellow-800 text-xs">
+                                        {opp.subgroup} subgroup
+                                      </Badge>
+                                    </div>
+                                    <p className="text-xs text-slate-600">{opp.message}</p>
+
+                                    {/* Dollar figures stay behind the financial gate; the
+                                        clinical finding above renders for everyone. */}
+                                    <FinancialGate>
+                                      <div className="mt-2">
+                                        <Button
+                                          onClick={() => getFinancialPrediction({
+                                            area: "Comorbidity capture",
+                                            opportunity: opp.message,
+                                            condition: opp.condition,
+                                            subgroup: opp.subgroup,
+                                            source_item: opp.source,
+                                            action_required: `Add ${opp.condition} to the coded secondary diagnoses so the ${opp.subgroup} comorbidity subgroup is captured.`,
+                                          }, predKey, 'opportunity')}
+                                          disabled={loadingPrediction === predKey}
+                                          size="sm"
+                                          variant="outline"
+                                          className="w-full"
+                                        >
+                                          {loadingPrediction === predKey ? (
+                                            <><Loader2 className="w-3 h-3 mr-2 animate-spin" /> Calculating...</>
+                                          ) : financialPredictions[predKey] ? (
+                                            <><DollarSign className="w-3 h-3 mr-2" /> View Financial Impact</>
+                                          ) : (
+                                            <><DollarSign className="w-3 h-3 mr-2" /> Predict Financial Impact</>
+                                          )}
+                                        </Button>
+                                        {financialPredictions[predKey] && !financialPredictions[predKey].error && (
+                                          <div className="mt-2 bg-gradient-to-r from-green-50 to-emerald-50 p-2 rounded border border-green-300 text-center">
+                                            <p className="text-xs text-slate-500">Annual Opportunity</p>
+                                            <p className="text-xl font-bold text-green-700">
+                                              {formatCurrency(financialPredictions[predKey].annual_projection?.total_opportunity)}
+                                            </p>
+                                            <p className="text-xs text-green-600">
+                                              +{formatCurrency(financialPredictions[predKey].per_episode?.gain_per_episode)} per episode
+                                            </p>
+                                          </div>
+                                        )}
+                                        {financialPredictions[predKey]?.error && (
+                                          <p className="mt-2 text-xs text-red-700">{financialPredictions[predKey].error}</p>
+                                        )}
+                                      </div>
+                                    </FinancialGate>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+
+                        {comorbidityReconciliation.gaps.some((g) => !g.subgroup) && (
+                          <p className="text-xs text-slate-500">
+                            Documented but not coded (no PDGM comorbidity subgroup):{' '}
+                            {comorbidityReconciliation.gaps.filter((g) => !g.subgroup).map((g) => g.condition).join(', ')}
+                          </p>
+                        )}
+
+                        {comorbidityReconciliation.gaps.length === 0 && (
+                          <p className="text-xs text-green-700 flex items-center gap-1">
+                            <CheckCircle2 className="w-3 h-3" />
+                            All OASIS-documented conditions appear on the coded secondary-diagnosis list.
+                          </p>
+                        )}
+
+                        {comorbidityReconciliation.captured.length > 0 && (
+                          <div>
+                            <p className="text-xs text-slate-500 mb-1">Documented and already coded</p>
+                            <div className="flex flex-wrap gap-1">
+                              {comorbidityReconciliation.captured.map((c, i) => (
+                                <Badge key={i} className="bg-green-100 text-green-800 text-xs">
+                                  {c.condition}{c.source ? ` (${c.source})` : ''}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        <p className="text-xs text-slate-500 italic">
+                          Advisory reconciliation of OASIS-documented conditions vs coded secondary diagnoses — verify clinically before changing any coding.
+                        </p>
+                      </div>
+                    )}
+
                     <p className="text-xs text-slate-600 bg-slate-50 p-2 rounded">
                       {navigation.comorbidity_adjustment?.rationale}
                     </p>
@@ -939,7 +1100,6 @@ PREDICT:
                             disabled={loadingPrediction === idx}
                             size="sm"
                             variant="outline"
-                            className="border-green-300 hover:bg-green-50"
                           >
                             {loadingPrediction === idx ? (
                               <><Loader2 className="w-3 h-3 mr-2 animate-spin" /> Calculating...</>
@@ -1345,7 +1505,7 @@ PREDICT:
                           disabled={loadingPrediction === oppIndex}
                           size="sm"
                           variant="outline"
-                          className="w-full border-green-300 hover:bg-green-50"
+                          className="w-full"
                         >
                           {loadingPrediction === oppIndex ? (
                             <><Loader2 className="w-3 h-3 mr-2 animate-spin" /> Calculating...</>
@@ -1757,6 +1917,18 @@ PREDICT:
               </div>
             )}
 
+            {forecastError && !patientForecasts && !isLoadingForecasts && (
+              <Alert className="bg-red-50 border-red-300">
+                <AlertTriangle className="w-4 h-4 text-red-600" />
+                <AlertDescription className="flex items-center justify-between gap-3">
+                  <span className="text-sm text-red-800">{forecastError}</span>
+                  <Button size="sm" variant="outline" onClick={generatePatientForecasts}>
+                    Try Again
+                  </Button>
+                </AlertDescription>
+              </Alert>
+            )}
+
             {/* Key Drivers Summary */}
             {navigation.summary?.key_drivers?.length > 0 && (
               <div className="bg-indigo-50 p-3 rounded-lg border border-indigo-200">
@@ -1785,8 +1957,22 @@ PREDICT:
             />
 
             {/* Re-analyze Button */}
+            {/* Clear everything derived from the previous run, not just the
+                navigation itself. financialPredictions and resolutionWorkflows
+                are keyed by DISCREPANCY INDEX, so after a re-analysis returned a
+                different discrepancy list the old dollar predictions rendered
+                under whatever discrepancy now occupied that index. The forecast
+                ref must reset too, or forecasts never regenerate. */}
             <Button
-              onClick={() => { setNavigation(null); setAutoAnalyzed(false); }}
+              onClick={() => {
+                setNavigation(null);
+                setAutoAnalyzed(false);
+                setFinancialPredictions({});
+                setResolutionWorkflows({});
+                setPatientForecasts(null);
+                setForecastError(null);
+                forecastAttemptedRef.current = false;
+              }}
               variant="outline"
               size="sm"
               className="w-full"

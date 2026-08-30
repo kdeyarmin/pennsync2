@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { useScopedPatients } from '@/hooks/useScopedPatients';
+import { agencyQueryKey } from '@/lib/agencyRoster';
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,16 +28,19 @@ import {
   CheckCircle2,
   User,
   PenSquare,
+  Search,
+  AlertTriangle,
 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import PageHeader from "@/components/ui/PageHeader";
 import PageContainer from "@/components/ui/PageContainer";
 import PhoneFrame, { PhoneEmptyState } from "@/components/phone/PhoneFrame";
 import PhoneTopBar from "@/components/phone/PhoneTopBar";
 import ContactAvatar from "@/components/phone/ContactAvatar";
 import { shortAgo } from "@/components/phone/timeUtils";
+import { isSafeExternalUrl } from "@/components/utils/security";
 
 const PRIORITY_DOT = { urgent: "bg-red-500", high: "bg-orange-500", normal: "bg-navy-600" };
 
@@ -46,7 +51,9 @@ export default function Messages() {
   const [visibleThreadCount, setVisibleThreadCount] = useState(20);
   const [filterPriority, setFilterPriority] = useState("all");
   const [filterRead, setFilterRead] = useState("all");
+  const [search, setSearch] = useState("");
   const [replyText, setReplyText] = useState("");
+  const [replyUrgent, setReplyUrgent] = useState(false);
   const [newMessage, setNewMessage] = useState({
     subject: "",
     message_text: "",
@@ -61,6 +68,13 @@ export default function Messages() {
     queryFn: () => base44.auth.me(),
   });
 
+  // Deliberately NOT routed through useAgencyScopedQuery. A Message belongs to
+  // its PARTICIPANTS, not its author: scoping by the sender's agency would hide
+  // a message someone outside the agency addressed to this user, and the four
+  // optimistic setQueryData/getQueryData calls below key on ['messages']
+  // exactly, so appending an agency segment would silently send them to a
+  // different cache entry. Message needs participant-based narrowing instead —
+  // see docs/HOSTED-RLS-PROOF.md §5c.
   const { data: messages = [], isLoading } = useQuery({
     queryKey: ['messages'],
     queryFn: () => base44.entities.Message.list('-created_date', 200),
@@ -68,16 +82,17 @@ export default function Messages() {
   });
 
   const { data: users = [] } = useQuery({
-    queryKey: ['allUsers'],
-    queryFn: () => base44.entities.User.list('full_name', 200),
+    queryKey: ['allUsers', 'full_name', 200, agencyQueryKey(currentUser)],
+    queryFn: async () => {
+      const _rows = await base44.entities.User.list('full_name', 200);
+      const { filterUsersByCallerAgency } = await import('@/lib/agencyScope');
+      return filterUsersByCallerAgency(_rows, currentUser);
+    },
+    enabled: !!currentUser,
     initialData: [],
   });
 
-  const { data: patients = [] } = useQuery({
-    queryKey: ['patients'],
-    queryFn: () => base44.entities.Patient.list('first_name', 100),
-    initialData: [],
-  });
+  const { data: patients = [] } = useScopedPatients({ sort: 'first_name', limit: 100 });
 
   const markAsReadMutation = useMutation({
     mutationFn: async (messageId) => {
@@ -98,7 +113,28 @@ export default function Messages() {
 
   const sendMessageMutation = useMutation({
     mutationFn: (messageData) => base44.entities.Message.create(messageData),
-    onSuccess: () => {
+    onMutate: async (messageData) => {
+      await queryClient.cancelQueries({ queryKey: ['messages'] });
+      const previousMessages = queryClient.getQueryData(['messages']) || [];
+      const optimisticId = `optimistic-${Date.now()}`;
+      queryClient.setQueryData(['messages'], [
+        {
+          ...messageData,
+          id: optimisticId,
+          created_date: new Date().toISOString(),
+          updated_date: new Date().toISOString(),
+          is_optimistic: true,
+        },
+        ...previousMessages,
+      ]);
+      return { previousMessages, optimisticId };
+    },
+    onSuccess: (createdMessage, _variables, context) => {
+      if (createdMessage && context?.optimisticId) {
+        queryClient.setQueryData(['messages'], (current = []) =>
+          current.map((message) => message.id === context.optimisticId ? createdMessage : message)
+        );
+      }
       queryClient.invalidateQueries({ queryKey: ['messages'] });
       setShowNewMessage(false);
       setNewMessage({
@@ -108,6 +144,16 @@ export default function Messages() {
         priority: "normal",
         patient_id: null
       });
+      // Only clear the reply box on a confirmed send — see handleReply, which no
+      // longer clears optimistically, so a failed send on flaky cellular keeps
+      // the nurse's typed words instead of silently dropping them.
+      setReplyText("");
+      setReplyUrgent(false);
+      toast.success("Message sent");
+    },
+    onError: (_error, _variables, context) => {
+      if (context?.previousMessages) queryClient.setQueryData(['messages'], context.previousMessages);
+      toast.error("Message failed to send. Your text was kept — tap send to retry.");
     },
   });
 
@@ -128,7 +174,7 @@ export default function Messages() {
     );
     const latestMessage = sortedMessages[0];
     const unreadCount = threadMessages.filter(m =>
-      !m.read_by?.includes(currentUser?.email)
+      m.sender_email !== currentUser?.email && !m.read_by?.includes(currentUser?.email)
     ).length;
 
     return {
@@ -138,18 +184,32 @@ export default function Messages() {
       unreadCount,
       subject: latestMessage.subject || 'No Subject',
       priority: latestMessage.priority || 'normal',
-      isMyMessage: latestMessage.sender_email === currentUser?.email,
-      isRecipient: latestMessage.recipients?.includes(currentUser?.email)
+      // Membership is decided across the WHOLE thread, not just its latest
+      // message: threads are appended to with different recipients over time
+      // (e.g. a referral reassigned to another nurse), and reading only the
+      // latest row dropped the earlier participant's conversation — including
+      // her unread messages — out of her inbox entirely.
+      isMyMessage: sortedMessages.some(m => m.sender_email === currentUser?.email),
+      isRecipient: sortedMessages.some(m => m.recipients?.includes(currentUser?.email))
     };
   });
 
   // Filter threads
+  const searchQuery = search.trim().toLowerCase();
   const filteredThreads = threads
     .filter(thread => thread.isRecipient || thread.isMyMessage)
     .filter(thread => {
       if (filterPriority !== "all" && thread.priority !== filterPriority) return false;
       if (filterRead === "unread" && thread.unreadCount === 0) return false;
       if (filterRead === "read" && thread.unreadCount > 0) return false;
+      if (searchQuery) {
+        // Client-side match across subject, sender, and any message body in the
+        // thread — everything is already loaded, so this is a pure filter.
+        const inSubject = (thread.subject || "").toLowerCase().includes(searchQuery);
+        const inSender = (thread.latestMessage?.sender_name || "").toLowerCase().includes(searchQuery);
+        const inBody = thread.messages.some(m => (m.message_text || "").toLowerCase().includes(searchQuery));
+        if (!inSubject && !inSender && !inBody) return false;
+      }
       return true;
     })
     .sort((a, b) => new Date(b.latestMessage.created_date) - new Date(a.latestMessage.created_date));
@@ -167,6 +227,7 @@ export default function Messages() {
   const handleThreadClick = (thread) => {
     setSelectedThreadId(thread.threadId);
     setReplyText("");
+    setReplyUrgent(false);
     // Mark all unread messages in thread as read
     thread.messages
       .filter(m => !m.read_by?.includes(currentUser?.email))
@@ -174,6 +235,7 @@ export default function Messages() {
   };
 
   const handleSendMessage = () => {
+    if (sendMessageMutation.isPending) return;
     if (newMessage.recipients.length === 0 || !newMessage.subject.trim() || !newMessage.message_text.trim()) {
       toast.error('Please add a recipient, subject, and message.');
       return;
@@ -183,12 +245,18 @@ export default function Messages() {
       ...newMessage,
       sender_name: currentUser?.full_name,
       sender_email: currentUser?.email,
+      // The author has implicitly "read" their own message, so seed read_by to
+      // keep it out of their own unread count.
+      read_by: currentUser?.email ? [currentUser.email] : [],
       thread_id: null
     });
   };
 
   const handleReply = () => {
-    if (!selectedThread || !replyText.trim()) return;
+    // Guard on isPending so the Enter-key path can't fire a second Message.create
+    // before the first resolves — the reply text now persists until onSuccess, so
+    // without this a fast double-Enter would send the same reply twice.
+    if (!selectedThread || !replyText.trim() || sendMessageMutation.isPending) return;
 
     const me = currentUser?.email;
     const originalMessage = selectedThread.latestMessage;
@@ -208,15 +276,25 @@ export default function Messages() {
       message_text: replyText.trim(),
       sender_name: currentUser?.full_name,
       sender_email: me,
+      read_by: me ? [me] : [],
       recipients,
-      priority: originalMessage.priority,
+      // A reply inherits the thread's priority, but the nurse can escalate this
+      // specific reply to urgent (e.g. a status change the recipient must see).
+      priority: replyUrgent ? 'urgent' : originalMessage.priority,
       patient_id: originalMessage.patient_id,
       thread_id: selectedThread.threadId
     });
-    setReplyText("");
+    // NOTE: do NOT clear replyText here — it is cleared in the mutation's
+    // onSuccess so a failed send preserves the nurse's typed reply for retry.
   };
 
-  const unreadCount = threads.filter(t => t.unreadCount > 0).length;
+  // Total unread across the user's own threads (participant-scoped), independent
+  // of the active priority/read/search view filters — otherwise selecting the
+  // "Read" filter (or a search) would zero out the global header badge even
+  // though unread messages still exist.
+  const unreadCount = threads.filter(
+    t => (t.isRecipient || t.isMyMessage) && t.unreadCount > 0
+  ).length;
 
   return (
     <PageContainer>
@@ -264,7 +342,7 @@ export default function Messages() {
                       </div>
                       <div className={`mt-0.5 flex items-center gap-1 px-1 text-[10px] text-slate-400 ${mine ? "flex-row-reverse" : ""}`}>
                         <span>{format(new Date(msg.created_date), "MMM d, h:mm a")}</span>
-                        {mine && msg.read_by?.includes(currentUser?.email) && <CheckCircle2 className="h-3 w-3 text-emerald-500" />}
+                        {mine && msg.read_by?.some((reader) => reader && reader !== currentUser?.email) && <CheckCircle2 className="h-3 w-3 text-emerald-500" />}
                       </div>
                       {msg.patient_id && (
                         <Link
@@ -277,7 +355,7 @@ export default function Messages() {
                       )}
                       {msg.attachments?.length > 0 && (
                         <div className="mt-1 flex flex-wrap gap-2 px-1">
-                          {msg.attachments.map((url, i) => (
+                          {msg.attachments.filter((url) => isSafeExternalUrl(url)).map((url, i) => (
                             <a
                               key={i}
                               href={url}
@@ -318,6 +396,18 @@ export default function Messages() {
               <Button
                 type="button"
                 size="icon"
+                variant="outline"
+                onClick={() => setReplyUrgent((v) => !v)}
+                aria-pressed={replyUrgent}
+                aria-label={replyUrgent ? "Urgent priority on — tap to turn off" : "Mark this reply urgent"}
+                title={replyUrgent ? "Urgent — tap to turn off" : "Mark this reply urgent"}
+                className={`h-9 w-9 flex-shrink-0 rounded-full ${replyUrgent ? "bg-red-600 text-white hover:bg-red-700 border-red-600" : "text-slate-500"}`}
+              >
+                <AlertTriangle className="h-4 w-4" />
+              </Button>
+              <Button
+                type="button"
+                size="icon"
                 onClick={handleReply}
                 disabled={!replyText.trim() || sendMessageMutation.isPending}
                 aria-label="Send reply"
@@ -345,6 +435,19 @@ export default function Messages() {
                 </button>
               }
             />
+            {/* Search */}
+            <div className="flex-shrink-0 border-b border-slate-100 bg-white px-3 pt-2">
+              <div className="relative">
+                <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <Input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search messages…"
+                  aria-label="Search messages"
+                  className="h-9 pl-8 text-sm"
+                />
+              </div>
+            </div>
             {/* Filters */}
             <div className="flex flex-shrink-0 gap-2 border-b border-slate-100 bg-white px-3 py-2">
               <Select value={filterPriority} onValueChange={setFilterPriority}>
@@ -374,7 +477,11 @@ export default function Messages() {
               {isLoading ? (
                 <p className="py-8 text-center text-sm text-slate-500">Loading messages…</p>
               ) : filteredThreads.length === 0 ? (
-                <PhoneEmptyState icon={Mail} title="No messages found" hint="Start a conversation with the pencil icon." />
+                <PhoneEmptyState
+                  icon={search ? Search : Mail}
+                  title={search ? "No matching messages" : "No messages found"}
+                  hint={search ? "Try a different name, subject, or keyword." : "Start a conversation with the pencil icon."}
+                />
               ) : (
                 <>
                   <ul className="divide-y divide-slate-100 bg-white">

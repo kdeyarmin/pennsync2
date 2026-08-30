@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router";
 import { toast } from "sonner";
 import { base44 } from "@/api/base44Client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -17,7 +17,6 @@ import {
   BookUser,
   Archive,
   BarChart3,
-  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -38,7 +37,8 @@ import FaxSearchInterface from "../components/fax/FaxSearchInterface";
 import FaxTemplateManager from "../components/fax/FaxTemplateManager";
 import BatchFaxSender from "../components/fax/BatchFaxSender";
 import RealtimeFaxStatusTracker from "../components/fax/RealtimeFaxStatusTracker";
-import { isSuperAdmin } from "@/lib/superAdmin";
+import { isAdminLike } from "@/lib/superAdmin";
+import LoadingState from "@/components/ui/LoadingState";
 
 const FaxContacts = lazy(() => import("@/components/hub-tabs/FaxContacts"));
 const FaxLogsDashboard = lazy(() => import("@/components/hub-tabs/FaxLogsDashboard"));
@@ -67,11 +67,7 @@ const TAB_KEYS = [
 // fall through to the default tab.
 const ADMIN_TABS = ["analytics"];
 
-const tabLoader = (
-  <div className="flex justify-center py-12">
-    <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
-  </div>
-);
+const tabLoader = <LoadingState className="py-12" />;
 
 // Core "Send" actions — always visible as a segmented control.
 const SEND_TABS = [
@@ -98,7 +94,8 @@ export default function SendFax() {
     queryFn: () => base44.auth.me(),
   });
 
-  const isAdmin = currentUser?.role === 'admin' || isSuperAdmin(currentUser);
+  // Match getCommsDashboard / backend isAdminLike — agency_admin can open analytics.
+  const isAdmin = isAdminLike(currentUser);
 
   const [searchParams, setSearchParams] = useSearchParams();
   const requestedTab = searchParams.get("tab");

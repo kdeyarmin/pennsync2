@@ -1,12 +1,18 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
-import { jsPDF } from 'npm:jspdf@2.5.1';
+import { jsPDF } from 'npm:jspdf@2.5.2';
 
-// Operational logs are gated behind FUNCTIONS_DEBUG so they don't run in
-// production by default. console.error/warn remain ungated for visibility.
-const DEBUG = !!Deno.env.get('FUNCTIONS_DEBUG');
-const debugLog = (...args) => { if (DEBUG) console.log(...args); };
+// <<<BEGIN SHARED HELPER: requireActiveUser — generated, edit base44/_shared/backendHelpers.mjs>>>
+const isDeactivatedUser = (u) => !!u && u.is_active === false;
+const DEACTIVATED_USER_RESPONSE = () => Response.json(
+  { error: 'Unauthorized - account is deactivated' },
+  { status: 403 },
+);
+// <<<END SHARED HELPER: requireActiveUser>>>
 
-const LOGO_URL = 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ee80d98929370f9e8f2932/c39653ba3_PennHomeHealthInc.png';
+// Operational debug logs are compiled out in production (the FUNCTIONS_DEBUG
+// secret was retired). console.error/warn remain ungated for visibility.
+const debugLog = (..._args) => {};
+const getLogoUrl = () => 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ee80d98929370f9e8f2932/02eed9872_pennsynclogoupdated.png';
 
 // Interactive elements for handouts
 const interactiveResources = {
@@ -308,6 +314,19 @@ const handoutTemplates = {
 // Strip non-ASCII so jsPDF's core fonts render cleanly.
 const clean = (s) => String(s || '').normalize('NFKD').replace(/[\u0300-\u036f]/g, '').replace(/[^\x00-\x7F]/g, '');
 
+// HTML-escape user-supplied text before interpolating it into the emailed
+// handout body. clean() alone strips non-ASCII but leaves < > & " ' intact, so
+// caller-controlled agency name / phone / patient name could otherwise inject
+// arbitrary HTML into a platform-sent email (phishing primitive). Mirrors the
+// repo standard escapeHtml in createUserWithTempPassword.
+const escapeHtml = (s) => String(s ?? '')
+  .replace(/&/g, '&amp;')
+  .replace(/</g, '&lt;')
+  .replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;')
+  .replace(/'/g, '&#39;');
+const cleanHtml = (s) => escapeHtml(clean(s));
+
 Deno.serve(async (req) => {
   let doc;
   let base44, user;
@@ -317,6 +336,7 @@ Deno.serve(async (req) => {
     base44 = createClientFromRequest(req);
     user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    if (isDeactivatedUser(user)) return DEACTIVATED_USER_RESPONSE();
 
     diagnostics.stage = 'parsing_request';
     const body = await req.json();
@@ -332,8 +352,8 @@ Deno.serve(async (req) => {
       layout: styleOptions?.layout || 'standard',
       customHeader: styleOptions?.customHeader || '',
       customFooter: styleOptions?.customFooter || '',
-      agencyName: styleOptions?.agencyName || 'Penn Home Health Inc.',
-      agencyPhone: styleOptions?.agencyPhone || '724-465-0440'
+      agencyName: styleOptions?.agencyName || 'PennSync',
+      agencyPhone: styleOptions?.agencyPhone || ''
     };
 
     if (!condition) return Response.json({ error: 'Condition is required' }, { status: 400 });
@@ -343,7 +363,7 @@ Deno.serve(async (req) => {
     diagnostics.totalSections = template.sections?.length || 0;
 
     doc = new jsPDF();
-    doc.setProperties({ title: template.title, subject: 'Patient Education Material', author: style.agencyName, keywords: 'patient education, healthcare, ' + condition, creator: 'Penn Sync Documentation System', language: 'en-US' });
+    doc.setProperties({ title: template.title, subject: 'Patient Education Material', author: style.agencyName, keywords: 'patient education, healthcare, ' + condition, creator: 'PennSync Documentation System', language: 'en-US' });
 
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
@@ -388,9 +408,12 @@ Deno.serve(async (req) => {
     // Preload the logo once (used on every page banner).
     let logoDataUrl = null;
     try {
-      const logoResponse = await fetch(LOGO_URL);
-      const logoArrayBuffer = await logoResponse.blob().then((b) => b.arrayBuffer());
-      logoDataUrl = `data:image/png;base64,${btoa(String.fromCharCode(...new Uint8Array(logoArrayBuffer)))}`;
+      const logoUrl = getLogoUrl();
+      if (logoUrl) {
+        const logoResponse = await fetch(logoUrl);
+        const logoArrayBuffer = await logoResponse.blob().then((b) => b.arrayBuffer());
+        logoDataUrl = `data:image/png;base64,${btoa(String.fromCharCode(...new Uint8Array(logoArrayBuffer)))}`;
+      }
     } catch (e) { debugLog('Logo load skipped:', e.message); }
 
     const TOP_BAND_H = 26;
@@ -412,7 +435,7 @@ Deno.serve(async (req) => {
       }
       doc.setFont(fontFamily, 'normal'); doc.setFontSize(8); doc.setTextColor(255, 255, 255);
       doc.text(clean(style.agencyPhone), pageWidth - margin, 11, { align: 'right' });
-      doc.text('www.pennhh.com', pageWidth - margin, 16, { align: 'right' });
+      doc.text('caremetric.ai', pageWidth - margin, 16, { align: 'right' });
       doc.text('Patient Education', pageWidth - margin, 21, { align: 'right' });
     };
 
@@ -431,7 +454,7 @@ Deno.serve(async (req) => {
       doc.setFont(fontFamily, 'bold'); setColor(COLORS.primary);
       doc.text(clean(style.agencyName), margin, fy + 11);
       doc.setFont(fontFamily, 'normal'); setColor(COLORS.textLight);
-      doc.text(`${clean(style.agencyPhone)}  |  www.pennhh.com`, pageWidth - margin, fy + 11, { align: 'right' });
+      doc.text(style.agencyPhone ? `${clean(style.agencyPhone)}  |  caremetric.ai` : 'caremetric.ai', pageWidth - margin, fy + 11, { align: 'right' });
       doc.text(`Page ${pageNumber}`, pageWidth - margin, fy + 6, { align: 'right' });
     };
 
@@ -703,12 +726,12 @@ Deno.serve(async (req) => {
           body: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border:1px solid #e2e8f0; border-radius:12px; overflow:hidden;">
               <div style="background:#213a76; padding:24px; text-align:center;">
-                <h1 style="color:#fff; margin:0; font-size:20px; letter-spacing:0.3px;">${clean(style.agencyName)}</h1>
+                <h1 style="color:#fff; margin:0; font-size:20px; letter-spacing:0.3px;">${cleanHtml(style.agencyName)}</h1>
                 <div style="height:3px; width:60px; background:#c8911e; margin:10px auto 0;"></div>
               </div>
               <div style="padding:28px; background:#ffffff; color:#1e293b;">
-                <p>Dear ${clean(patientName) || 'Patient'},</p>
-                <p>Please find attached your personalized education guide on <strong>${clean(template.title)}</strong>, prepared by your care team.</p>
+                <p>Dear ${cleanHtml(patientName) || 'Patient'},</p>
+                <p>Please find attached your personalized education guide on <strong>${cleanHtml(template.title)}</strong>, prepared by your care team.</p>
                 <p style="font-weight:bold; margin-bottom:6px;">What to do next:</p>
                 <ul style="margin-top:0; color:#334155;">
                   <li>Read through the entire guide</li>
@@ -716,11 +739,11 @@ Deno.serve(async (req) => {
                   <li>Share it with family members who help with your care</li>
                   <li>Call your nurse with any questions</li>
                 </ul>
-                <p>If you have any questions, please contact us at <strong>${clean(style.agencyPhone)}</strong>.</p>
-                <p style="margin-bottom:0;">Warm regards,<br><strong>${clean(style.agencyName)}</strong></p>
+                <p>If you have any questions, please contact us at <strong>${cleanHtml(style.agencyPhone)}</strong>.</p>
+                <p style="margin-bottom:0;">Warm regards,<br><strong>${cleanHtml(style.agencyName)}</strong></p>
               </div>
               <div style="background:#f1f5f9; padding:14px; text-align:center; color:#64748b; font-size:12px;">
-                ${clean(style.agencyName)} &nbsp;|&nbsp; ${clean(style.agencyPhone)} &nbsp;|&nbsp; www.pennhh.com
+                ${cleanHtml(style.agencyName)}${style.agencyPhone ? ` &nbsp;|&nbsp; ${cleanHtml(style.agencyPhone)}` : ''} &nbsp;|&nbsp; caremetric.ai
               </div>
             </div>`
         });
@@ -760,23 +783,34 @@ Deno.serve(async (req) => {
       }
     } catch (_logError) { /* best effort */ }
 
+    // The fallback-PDF-on-error path is for the DOWNLOAD flow: a render failure
+    // still hands the nurse a usable (if generic) document. It must NOT mask an
+    // email-send failure as success — the nurse asked to educate the patient by
+    // email, and a silent no-op reads as "the patient was emailed" on a
+    // documentation-relevant action. Surface the failure so it can be retried.
+    if (diagnostics.stage === 'sending_email' || diagnostics.stage === 'email_complete') {
+      return Response.json({ error: 'Failed to email the handout — nothing was sent. Please retry.', stage: diagnostics.stage }, { status: 502 });
+    }
+
     // Minimal branded fallback PDF.
     try {
       const fb = new jsPDF();
       fb.setFillColor(33, 58, 118); fb.rect(0, 0, fb.internal.pageSize.getWidth(), 26, 'F');
       fb.setFillColor(200, 145, 30); fb.rect(0, 26, fb.internal.pageSize.getWidth(), 1.4, 'F');
       fb.setTextColor(255, 255, 255); fb.setFontSize(14); fb.setFont('helvetica', 'bold');
-      fb.text('Penn Home Health Inc.', fb.internal.pageSize.getWidth() / 2, 16, { align: 'center' });
+      fb.text('PennSync', fb.internal.pageSize.getWidth() / 2, 16, { align: 'center' });
       fb.setTextColor(30, 41, 59); fb.setFontSize(13); fb.setFont('helvetica', 'normal');
       fb.text('We could not generate the full guide right now.', fb.internal.pageSize.getWidth() / 2, 60, { align: 'center' });
       fb.text('Please contact your nurse for this information.', fb.internal.pageSize.getWidth() / 2, 70, { align: 'center' });
-      fb.setFontSize(10); fb.text('Phone: 724-465-0440', 20, 95);
+      fb.setFontSize(10);       fb.text('caremetric.ai', 20, 95);
       const fbBytes = new Uint8Array(fb.output('arraybuffer'));
       let fbBin = '';
       for (let i = 0; i < fbBytes.length; i += 8192) fbBin += String.fromCharCode.apply(null, fbBytes.subarray(i, Math.min(i + 8192, fbBytes.length)));
-      return Response.json({ success: true, pdf: btoa(fbBin), filename: 'education_guide.pdf', warning: 'Generated fallback PDF due to error: ' + error.message });
+      // Generic warning only — the raw exception text stays server-side (logged
+      // above and recorded in the SystemLog diagnostics).
+      return Response.json({ success: true, pdf: btoa(fbBin), filename: 'education_guide.pdf', warning: 'Generated fallback PDF due to an internal error' });
     } catch (_fb) { /* fall through */ }
 
-    return Response.json({ error: error.message || 'Unknown error occurred', stage: diagnostics.stage }, { status: 500 });
+    return Response.json({ error: 'Unknown error occurred', stage: diagnostics.stage }, { status: 500 });
   }
 });

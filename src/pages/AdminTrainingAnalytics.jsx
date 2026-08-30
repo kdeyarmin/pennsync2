@@ -1,10 +1,13 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { agencyQueryKey } from '@/lib/agencyRoster';
+import { isAdminView } from "@/lib/roles";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
+import { format } from "date-fns";
 import {
   BarChart,
   Bar,
@@ -31,6 +34,7 @@ import PageContainer from "@/components/ui/PageContainer";
 import PageHeader from "@/components/ui/PageHeader";
 import StatCard from "@/components/ui/stat-card";
 import AccessDeniedState from "@/components/ui/AccessDeniedState";
+import { ALL_ROWS, PATIENT_HISTORY_ROWS } from '@/lib/queryLimits';
 
 export default function AdminTrainingAnalytics() {
   const [_selectedModule, _setSelectedModule] = useState('all');
@@ -42,32 +46,36 @@ export default function AdminTrainingAnalytics() {
   });
 
   const { data: allUsers = [] } = useQuery({
-    queryKey: ['allUsers'],
-    queryFn: () => base44.entities.User.list(),
-    enabled: currentUser?.role === 'admin'
+    queryKey: ['allUsers', 5000, agencyQueryKey(currentUser)],
+    queryFn: async () => {
+      const _rows = await base44.entities.User.list('-created_date', 5000);
+      const { filterUsersByCallerAgency } = await import('@/lib/agencyScope');
+      return filterUsersByCallerAgency(_rows, currentUser);
+    },
+    enabled: isAdminView(currentUser)
   });
 
   // Org-wide training activity now comes from the live TrainingAssignment system
   // (the retired TrainingCompletion entity is no longer written).
   const { data: assignments = [] } = useQuery({
-    queryKey: ['allTrainingAssignments'],
+    queryKey: ['allTrainingAssignments', '-created_date', 5000],
     queryFn: () => base44.entities.TrainingAssignment.list('-created_date', 5000),
-    enabled: currentUser?.role === 'admin'
+    enabled: isAdminView(currentUser)
   });
 
   const { data: modules = [] } = useQuery({
     queryKey: ['trainingModules'],
-    queryFn: () => base44.entities.TrainingModule.list(),
-    enabled: currentUser?.role === 'admin'
+    queryFn: () => base44.entities.TrainingModule.list(undefined, ALL_ROWS),
+    enabled: isAdminView(currentUser)
   });
 
   const { data: recommendations = [] } = useQuery({
     queryKey: ['allRecommendations'],
-    queryFn: () => base44.entities.TrainingRecommendation.list(),
-    enabled: currentUser?.role === 'admin'
+    queryFn: () => base44.entities.TrainingRecommendation.list(undefined, PATIENT_HISTORY_ROWS),
+    enabled: isAdminView(currentUser)
   });
 
-  if (currentUser?.role !== 'admin') {
+  if (!isAdminView(currentUser)) {
     return (
       <PageContainer>
         <AccessDeniedState description="Training analytics are available to administrators only." />
@@ -125,7 +133,7 @@ export default function AdminTrainingAnalytics() {
   const weeklyData = {};
   completedAssignments.forEach(a => {
     if (a.completion_date) {
-      const week = new Date(a.completion_date).toISOString().substring(0, 10);
+      const week = format(new Date(a.completion_date), "yyyy-MM-dd");
       weeklyData[week] = (weeklyData[week] || 0) + 1;
     }
   });

@@ -10,11 +10,20 @@ import { useQuery } from '@tanstack/react-query';
 import ReportFilters from './ReportFilters';
 import { toCsv, exportTimestamp } from '../admin/csvExport';
 import { toast } from 'sonner';
+import { parseLocalDate, formatLocalDate } from '@/lib/dateLocal';
 
-const formatDate = (value) => (value ? new Date(value).toLocaleDateString() : '—');
+const formatDate = (value) => formatLocalDate(value) || '—';
 
 const MS_PER_DAY = 1000 * 60 * 60 * 24;
-const daysUntil = (date) => Math.floor((new Date(date).getTime() - Date.now()) / MS_PER_DAY);
+// Compare local calendar midnights so a date-only expiration isn't parsed as UTC
+// midnight (which marks a still-valid certificate as Expired a day early).
+const daysUntil = (date) => {
+  const d = parseLocalDate(date);
+  if (!d) return NaN;
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  return Math.round((d.getTime() - today.getTime()) / MS_PER_DAY);
+};
 
 const statusFor = (days) => {
   if (days < 0) return { label: 'Expired', className: 'bg-red-100 text-red-800' };
@@ -26,7 +35,6 @@ const statusFor = (days) => {
 
 export default function CertificateExpirationReport() {
   const [filters, setFilters] = useState({
-    businessLine: 'home_health',
     dateStart: '',
     dateEnd: '',
     employee: '',
@@ -119,12 +127,12 @@ export default function CertificateExpirationReport() {
 
   return (
     <div className="space-y-6">
+      {/* No business-line control: PersonnelCredential has no business_line field,
+          so half the rows here can't be scoped by it. The picker was rendered but
+          never applied, so switching it appeared to do nothing. */}
       <ReportFilters
         onFilterChange={setFilters}
-        businessLineOptions={[
-          { value: 'home_health', label: 'Home Health' },
-          { value: 'hospice', label: 'Hospice' },
-        ]}
+        showBusinessLine={false}
         showCourse={false}
         showPlan={false}
         showStatus={false}

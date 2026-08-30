@@ -1,5 +1,21 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
+// <<<BEGIN SHARED HELPER: requireActiveUser — generated, edit base44/_shared/backendHelpers.mjs>>>
+const isDeactivatedUser = (u) => !!u && u.is_active === false;
+const DEACTIVATED_USER_RESPONSE = () => Response.json(
+  { error: 'Unauthorized - account is deactivated' },
+  { status: 403 },
+);
+// <<<END SHARED HELPER: requireActiveUser>>>
+
+// <<<BEGIN SHARED HELPER: isAdminLike — generated, edit base44/_shared/backendHelpers.mjs>>>
+const isAdminLike = (u) => !!u && (
+  u.role === 'admin' || u.account_type === 'agency_admin' ||
+  u.account_type === 'super_admin'
+);
+// <<<END SHARED HELPER: isAdminLike>>>
+
+
 // Tolerant JSON extractor: we ask for strict JSON in-prompt instead of passing
 // response_json_schema, because the provider rejects deeply-nested object
 // schemas that lack an explicit `required` array at every level.
@@ -21,29 +37,81 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
+    if (isDeactivatedUser(user)) return DEACTIVATED_USER_RESPONSE();
 
-    if (!user || user.role !== 'admin') {
+    if (!isAdminLike(user)) {
       return Response.json({ error: 'Unauthorized - Admin only' }, { status: 403 });
+    }
+    if (user.account_type === 'agency_admin' && !user.agency_name) {
+      return Response.json({ error: 'Forbidden: agency_name is required.' }, { status: 403 });
     }
 
     const { patient_id, visit_id, timeframe_days = 7 } = await req.json();
 
     // Fetch patient data
-    const patient = patient_id ? 
-      await base44.asServiceRole.entities.Patient.get(patient_id) :
+    const patient = patient_id ?
+      await base44.asServiceRole.entities.Patient.get(patient_id).catch(() => null) :
       null;
 
     // Determine which patients to analyze
     let patientsToAnalyze = [];
     if (patient_id) {
+      if (!patient) {
+        return Response.json({ error: 'Patient not found' }, { status: 404 });
+      }
+      // Single-patient path must use the same agency gate as the bulk path —
+      // otherwise any admin-like caller can pull another tenant's chart into
+      // LLM prompts via a guessed patient_id.
+      const isSuperAdmin = user.account_type === 'super_admin';
+      const isAgencyScopedAdmin = user.account_type === 'agency_admin'
+        || (user.role === 'admin' && !!user.agency_name && !isSuperAdmin);
+      if (isAgencyScopedAdmin) {
+        const agencyUsers = await base44.asServiceRole.entities.User
+          .filter({ agency_name: user.agency_name }, '-created_date', 5000)
+          .catch(() => []);
+        const agencyEmails = new Set(
+          (Array.isArray(agencyUsers) ? agencyUsers : [])
+            .map((u) => u?.email)
+            .filter(Boolean)
+        );
+        const inAgency = (patient.created_by && agencyEmails.has(patient.created_by))
+          || (Array.isArray(patient.assigned_nurses)
+            && patient.assigned_nurses.some((e) => agencyEmails.has(e)));
+        if (!inAgency) {
+          return Response.json({ error: 'Forbidden: patient is outside your agency' }, { status: 403 });
+        }
+      }
       patientsToAnalyze = [patient];
     } else {
-      // Analyze all active patients
-      patientsToAnalyze = await base44.asServiceRole.entities.Patient.filter(
-        { status: 'active' }, 
-        '-updated_date', 
+      // Analyze active patients. Scope to the caller's agency when known so an
+      // agency_admin cannot pull every tenant's charts into LLM prompts.
+      // Facility role:admin with agency_name is also scoped (parity with
+      // getDashboardData) — only super_admin / admin-without-agency is global.
+      const allActive = await base44.asServiceRole.entities.Patient.filter(
+        { status: 'active' },
+        '-updated_date',
         100
       );
+      const isPlatformWide = user.account_type === 'super_admin'
+        || (user.role === 'admin' && !user.agency_name);
+      if (isPlatformWide) {
+        patientsToAnalyze = allActive;
+      } else if (!user.agency_name) {
+        patientsToAnalyze = [];
+      } else {
+        const agencyUsers = await base44.asServiceRole.entities.User
+          .filter({ agency_name: user.agency_name }, '-created_date', 5000)
+          .catch(() => []);
+        const agencyEmails = new Set(
+          (Array.isArray(agencyUsers) ? agencyUsers : [])
+            .map((u) => u?.email)
+            .filter(Boolean)
+        );
+        patientsToAnalyze = (Array.isArray(allActive) ? allActive : []).filter((p) =>
+          (p.created_by && agencyEmails.has(p.created_by))
+          || (Array.isArray(p.assigned_nurses) && p.assigned_nurses.some((e) => agencyEmails.has(e)))
+        );
+      }
     }
 
     const proposals = [];
@@ -51,6 +119,7 @@ Deno.serve(async (req) => {
     cutoffDate.setDate(cutoffDate.getDate() - timeframe_days);
 
     for (const pt of patientsToAnalyze) {
+      if (!pt?.id) continue;
       // Gather clinical data
       const [visits, carePlans, medications, incidents] = await Promise.all([
         base44.asServiceRole.entities.Visit.filter(
@@ -107,12 +176,30 @@ Deno.serve(async (req) => {
       // Current care plan interventions
       const currentInterventions = carePlans.flatMap(cp => cp.interventions || []);
 
+      // Claim before LLM + CarePlanProposal/PatientAlert creates so concurrent
+      // monitor runs cannot both invent duplicate proposals for the same patient.
+      const claimToken = typeof crypto !== 'undefined' && crypto.randomUUID
+        ? crypto.randomUUID()
+        : `care-plan-monitor-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      try {
+        await base44.asServiceRole.entities.Patient.update(pt.id, {
+          care_plan_monitor_claimed_by: claimToken,
+        });
+      } catch {
+        continue;
+      }
+      const claimCheck = await base44.asServiceRole.entities.Patient
+        .filter({ id: pt.id }, '', 1).catch(() => []);
+      if (!claimCheck[0] || claimCheck[0].care_plan_monitor_claimed_by !== claimToken) {
+        continue;
+      }
+
       // AI Analysis. The raw result must go through parseLLMJson (this function
       // intentionally omits response_json_schema). Every use below referenced an
       // undeclared `analysis` — a guaranteed ReferenceError that 500'd the run, so
       // no CarePlanProposal/notification/alert was ever produced. Parse it here.
       const rawAnalysis = await base44.asServiceRole.integrations.Core.InvokeLLM({
-        model: "claude_opus_4_8",
+        model: "automatic",
         prompt: `You are a clinical AI monitoring patient data to propose care plan updates when clinical thresholds are met.
 
 PATIENT: ${pt.first_name} ${pt.last_name} (${pt.id})
@@ -315,8 +402,10 @@ Identify if ANY care plan updates are warranted. Be conservative but proactive.`
 
   } catch (error) {
     console.error('Clinical monitoring error:', error);
+    // Generic client-facing message; detail stays server-side only (matches the
+    // hardened userManagement pattern — leaking error.message aids reconnaissance).
     return Response.json({
-      error: error.message
+      error: 'Clinical monitoring failed'
     }, { status: 500 });
   }
 });

@@ -1,24 +1,77 @@
-import { useState, useCallback, useMemo } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { base44 } from "@/api/base44Client";
+import { useScopedPatients } from '@/hooks/useScopedPatients';
+import { toLocalISODate } from "@/lib/dateLocal";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import PageContainer from "@/components/ui/PageContainer";
 import { useIsEmbedded } from "@/components/ui/embeddedPage";
 import {
-  ChevronDown, ChevronUp, Users, Search, Save, CheckCircle2,
+  ChevronDown, ChevronUp, Users, Search, Save, CheckCircle2, History,
   Loader2, AlertCircle, AlertTriangle, Brain, Activity, ShieldAlert, Lightbulb, Printer
 } from "lucide-react";
 import { toast } from "sonner";
 import { exportToPDF } from "@/components/utils/pdfExporter";
+import { todayEastern } from "@/components/utils/timezone";
 import { evaluateOASIS, computeCareScope } from "@/components/oasis/oasisScoringEngine";
 import OASISSuggestionPanel from "@/components/oasis/OASISSuggestionPanel";
 import OASISComplianceWarnings, { getComplianceIssues } from "@/components/oasis/OASISComplianceWarnings";
 import OASISClinicalReasoningEngine, { getClinicalReasoningIssues } from "@/components/oasis/OASISClinicalReasoningEngine";
 import OASISQuestionGuidance from "@/components/oasis/OASISQuestionGuidance";
+import { OASIS_GUIDANCE } from "@/components/oasis/oasisGuidanceData";
+import NoteToOasisPrefill from "@/components/oasis/NoteToOasisPrefill";
 import { OASIS_SECTIONS } from "@/components/oasis/oasisQuestions";
-import { INTERVENTIONS_LIBRARY } from "@/components/carePlan/InterventionLibrary";
+import { VISIT_TYPES, completeReferralSocForPatient } from "@/components/clinical/OASISQuickUpdate";
 import { AssessmentSkeleton } from "@/components/ui/PageSkeleton";
+import { debounce } from "@/lib/debounce";
+import { LOCAL_PHI_KEYS } from "@/lib/localPhiKeys";
+
+// ─── Answer + draft helpers ───────────────────────────────────────────────────
+const toNum = (v) => (typeof v === "number" ? v : parseInt(v, 10));
+
+// A select's first option (value 0, "Select …") is a placeholder prompt, not a
+// real response — don't count it as answered. Shared by the printed guide and
+// the pre-save blank-item checklist so both agree on what "answered" means.
+function isAnswered(question, answers) {
+  const val = answers[question.id];
+  if (val === undefined || val === "") return false;
+  if (question.type === "select") {
+    const placeholder = question.options[0];
+    if (placeholder && /^select/i.test(placeholder.label) && toNum(val) === placeholder.value) {
+      return false;
+    }
+  }
+  return true;
+}
+
+// In-progress answers autosave to localStorage so a refresh/crash can't wipe a
+// 25-item assessment. Keyed per patient + visit type under the registered
+// LOCAL_PHI_KEYS.VISIT_DRAFT_PREFIX, so the logout/idle PHI purge classifies the
+// draft with the other unsynced field documentation (PRESERVE — wiping it on an
+// idle timeout mid-assessment would be silent loss of documented care; see
+// src/lib/localPhiKeys.js).
+const DRAFT_AUTOSAVE_DEBOUNCE_MS = 1000;
+
+function draftStorageKey(patientId, visitType) {
+  const typeSlug = String(visitType).toLowerCase().replace(/[^a-z0-9]+/g, "_");
+  return `${LOCAL_PHI_KEYS.VISIT_DRAFT_PREFIX}oasis_${patientId}_${typeSlug}`;
+}
+
+function readDraft(key) {
+  try {
+    const draft = JSON.parse(localStorage.getItem(key) ?? "null");
+    const hasAnswers = draft && typeof draft.answers === "object" && draft.answers !== null &&
+      Object.keys(draft.answers).length > 0;
+    return hasAnswers ? draft : null;
+  } catch {
+    return null; // malformed entry or storage unavailable — behave as "no draft"
+  }
+}
 
 // ─── Question field ───────────────────────────────────────────────────────────
 function QuestionField({ question, value, onChange, _onShowGuidance }) {
@@ -86,18 +139,28 @@ function SectionCard({ section, answers, onChange, onShowGuidance }) {
           {section.questions.map(q => (
             <div key={q.id} className="px-4 py-4">
               <div className="mb-2">
-                <button
-                  onClick={() => onShowGuidance(q.id, q.label)}
-                  className="text-left w-full hover:bg-indigo-50 -mx-2 px-2 py-1 rounded-lg transition-colors group"
-                >
-                  <p className="text-sm font-semibold text-slate-800 group-hover:text-indigo-700 flex items-center gap-2">
-                    {q.label}
-                    <Lightbulb className="w-3.5 h-3.5 text-slate-400 group-hover:text-indigo-500" />
-                  </p>
-                  <p className="text-xs text-slate-400 mt-0.5 leading-relaxed group-hover:text-indigo-600">
-                    {q.description} • Click for real-world scenarios & guidance
-                  </p>
-                </button>
+                {OASIS_GUIDANCE[q.id] ? (
+                  <button
+                    type="button"
+                    onClick={() => onShowGuidance(q.id, q.label)}
+                    className="text-left w-full hover:bg-indigo-50 -mx-2 px-2 py-1 rounded-lg transition-colors group"
+                  >
+                    <p className="text-sm font-semibold text-slate-800 group-hover:text-indigo-700 flex items-center gap-2">
+                      {q.label}
+                      <Lightbulb className="w-3.5 h-3.5 text-slate-400 group-hover:text-indigo-500" />
+                    </p>
+                    <p className="text-xs text-slate-400 mt-0.5 leading-relaxed group-hover:text-indigo-600">
+                      {q.description} • Click for real-world scenarios & guidance
+                    </p>
+                  </button>
+                ) : (
+                  <div className="px-2 py-1 -mx-2">
+                    <p className="text-sm font-semibold text-slate-800">{q.label}</p>
+                    {q.description && (
+                      <p className="text-xs text-slate-400 mt-0.5 leading-relaxed">{q.description}</p>
+                    )}
+                  </div>
+                )}
               </div>
               <QuestionField question={q} value={answers[q.id]} onChange={onChange} onShowGuidance={onShowGuidance} />
             </div>
@@ -154,7 +217,7 @@ function PatientPicker({ patients, selectedPatientId, onSelect }) {
 }
 
 // ─── Right Panel (tabbed: Recommendations | Compliance) ──────────────────────
-function RightPanel({ suggestions, complianceIssues, reasoningIssues, onAddToCarePlan, addedIds }) {
+function RightPanel({ suggestions, complianceIssues, reasoningIssues }) {
   const criticalCount = complianceIssues.filter(r => r.severity === "critical").length;
   const reasoningCount = reasoningIssues.length;
 
@@ -184,7 +247,7 @@ function RightPanel({ suggestions, complianceIssues, reasoningIssues, onAddToCar
             <p className="text-xs text-slate-400">Updates live as you complete the assessment</p>
           </div>
           <div className="flex-1 overflow-hidden flex flex-col">
-            <OASISSuggestionPanel suggestions={suggestions} onAddToCarePlan={onAddToCarePlan} addedIds={addedIds} />
+            <OASISSuggestionPanel suggestions={suggestions} />
           </div>
         </TabsContent>
 
@@ -206,31 +269,87 @@ export default function SmartOASISAssessment() {
   // standalone PageContainer and shrink the fixed full-screen height to fit under
   // the hub's header + tab strip (otherwise the split-pane overflows the viewport).
   const embedded = useIsEmbedded();
-  const queryClient = useQueryClient();
   const [answers, setAnswers] = useState({});
   const [selectedPatientId, setSelectedPatientId] = useState("");
+  // OASIS assessment reason (RFA). Load-bearing for the star rating: outcome
+  // measures pair Start-of-Care ↔ Discharge assessments, so the saved
+  // visit_type must reflect the visit actually being documented.
+  const [visitType, setVisitType] = useState("Start of Care");
+  const [draftPrompt, setDraftPrompt] = useState(null); // matching saved draft awaiting restore/discard
+  const [missingItems, setMissingItems] = useState(null); // non-null → pre-save blank-items dialog open
   const [saving, setSaving] = useState(false);
   const [exporting, setExporting] = useState(false);
-  const [addedToCarePlan, setAddedToCarePlan] = useState([]);
   const [guidanceOpen, setGuidanceOpen] = useState(false);
   const [currentGuidance, setCurrentGuidance] = useState({ questionId: null, questionLabel: "" });
 
-  const { data: patients = [], isLoading: patientsLoading } = useQuery({
-    queryKey: ["patients-list"],
-    queryFn: () => base44.entities.Patient.list("-updated_date", 100),
-    initialData: [],
-  });
-
-  const { data: _existingCarePlans = [] } = useQuery({
-    queryKey: ["care-plans", selectedPatientId],
-    queryFn: () => base44.entities.CarePlan.filter({ patient_id: selectedPatientId }),
-    enabled: !!selectedPatientId,
-    initialData: [],
-  });
+  const { data: patients = [], isLoading: patientsLoading } = useScopedPatients({ sort: '-updated_date', limit: 100 });
 
   const handleAnswer = useCallback((questionId, value) => {
     setAnswers(prev => ({ ...prev, [questionId]: value }));
   }, []);
+
+  // ── Draft autosave + recovery ──────────────────────────────────────────────
+  const draftKey = selectedPatientId ? draftStorageKey(selectedPatientId, visitType) : null;
+
+  const writeDraft = useMemo(() => debounce((key, payload) => {
+    try {
+      localStorage.setItem(key, JSON.stringify(payload));
+    } catch {
+      // Storage full/unavailable — autosave is best-effort, never interrupt entry.
+    }
+  }, DRAFT_AUTOSAVE_DEBOUNCE_MS), []);
+  useEffect(() => () => writeDraft.cancel(), [writeDraft]);
+
+  // Never carry one patient's responses onto another chart. Nothing cleared
+  // `answers` when the picker changed patient (or after a successful save), so a
+  // finished assessment stayed on screen with Save still enabled — selecting the
+  // next patient and saving committed the PREVIOUS patient's OASIS responses to
+  // their chart. Clearing here also re-arms the recovery banner below, which
+  // then offers the newly selected patient's own autosaved draft.
+  const previousPatientIdRef = useRef(selectedPatientId);
+  useEffect(() => {
+    if (previousPatientIdRef.current === selectedPatientId) return;
+    previousPatientIdRef.current = selectedPatientId;
+    setAnswers({});
+  }, [selectedPatientId]);
+
+  // Autosave (debounced) so in-progress work survives a refresh. Guarded on the
+  // answers object actually changing: switching patient/visit type alone must
+  // not re-file the on-screen answers under the new selection's key.
+  const lastSeenAnswersRef = useRef(answers);
+  useEffect(() => {
+    const answersChanged = lastSeenAnswersRef.current !== answers;
+    lastSeenAnswersRef.current = answers;
+    if (!answersChanged || !draftKey || Object.keys(answers).length === 0) return;
+    writeDraft(draftKey, {
+      patient_id: selectedPatientId,
+      visit_type: visitType,
+      answers,
+      saved_at: new Date().toISOString(),
+    });
+  }, [answers, draftKey, selectedPatientId, visitType, writeDraft]);
+
+  // Offer to restore a matching saved draft — only while nothing has been
+  // entered yet, so a restore can never clobber live entries (and the banner
+  // dismisses itself once the clinician starts answering).
+  useEffect(() => {
+    if (!draftKey || Object.keys(answers).length > 0) { setDraftPrompt(null); return; }
+    const draft = readDraft(draftKey);
+    setDraftPrompt(draft && draft.patient_id === selectedPatientId ? draft : null);
+  }, [draftKey, selectedPatientId, answers]);
+
+  const handleRestoreDraft = () => {
+    if (draftPrompt?.answers) setAnswers(draftPrompt.answers);
+    setDraftPrompt(null);
+  };
+
+  const handleDiscardDraft = () => {
+    writeDraft.cancel();
+    if (draftKey) {
+      try { localStorage.removeItem(draftKey); } catch { /* storage unavailable */ }
+    }
+    setDraftPrompt(null);
+  };
 
   const handleShowGuidance = useCallback((questionId, questionLabel) => {
     setCurrentGuidance({ questionId, questionLabel });
@@ -246,59 +365,69 @@ export default function SmartOASISAssessment() {
   const totalQuestions = OASIS_SECTIONS.reduce((sum, s) => sum + s.questions.length, 0);
   const completionPct = Math.round((answeredTotal / totalQuestions) * 100);
 
-  const handleAddToCarePlan = async (interventionIds) => {
-    if (!selectedPatientId) { toast.error("Please select a patient first."); return; }
-    const newInterventions = interventionIds.filter(id => !addedToCarePlan.includes(id));
-    if (newInterventions.length === 0) return;
-    setSaving(true);
-    try {
-      const allItems = INTERVENTIONS_LIBRARY.flatMap(cat => cat.items);
-      const toAdd = newInterventions.map(id => allItems.find(i => i.id === id)).filter(Boolean);
-      await Promise.all(toAdd.map(item =>
-        base44.entities.CarePlan.create({
-          patient_id: selectedPatientId,
-          problem: item.name,
-          goal: `Achieve and maintain ${item.name.toLowerCase()} goals as documented in the care plan.`,
-          interventions: [item.description],
-          status: "active",
-        })
-      ));
-      setAddedToCarePlan(prev => [...new Set([...prev, ...newInterventions])]);
-      queryClient.invalidateQueries({ queryKey: ["care-plans", selectedPatientId] });
-      toast.success(`${newInterventions.length} intervention${newInterventions.length > 1 ? "s" : ""} added to care plan!`);
-    } catch (err) {
-      console.error("Failed to add interventions to care plan:", err);
-      toast.error("Failed to add interventions to care plan. Please try again.");
-    } finally {
-      setSaving(false);
-    }
-  };
-
   const handleSaveAssessment = async () => {
     if (!selectedPatientId) { toast.error("Please select a patient first."); return; }
     setSaving(true);
     try {
-      await base44.entities.Patient.update(selectedPatientId, {
-        care_type: careScope === "hospice" ? "hospice" : "home_health",
-      });
+      // care_type drives the whole app's regulatory frame (hospice 42 CFR 418
+      // vs home-health 484 — required note elements, framing, PDGM). It is set
+      // explicitly at referral/admission; only FILL it here when the chart has
+      // none. The old unconditional write silently flipped a hospice patient
+      // to home_health whenever an assessment's heuristic said otherwise.
+      const chartPatient = patients.find((p) => p.id === selectedPatientId);
+      if (!chartPatient?.care_type) {
+        await base44.entities.Patient.update(selectedPatientId, {
+          care_type: careScope === "hospice" ? "hospice" : "home_health",
+        });
+      }
+      // Eastern calendar day (matches OASISQuickUpdate) — this date drives
+      // Medicare assessment-timing windows and the referral SOC clock below.
+      const assessmentDate = todayEastern();
       await base44.entities.OASISAssessment.create({
         patient_id: selectedPatientId,
-        visit_type: "Start of Care",
+        visit_type: visitType,
+        assessment_date: assessmentDate,
         oasis_items: Object.entries(answers).map(([item_number, response]) => ({
           item_number, response: String(response), ai_suggested: false, manually_edited: true,
         })),
         status: "completed",
         completed_date: new Date().toISOString(),
       });
+      // The assessment now lives server-side — the local draft is obsolete.
+      // Cancel any pending debounced write first so it can't resurrect it.
+      writeDraft.cancel();
+      if (draftKey) {
+        try { localStorage.removeItem(draftKey); } catch { /* storage unavailable */ }
+      }
+      if (visitType === "Start of Care") {
+        // Fire-and-forget (no await): close the referral's intake→SOC clock,
+        // never blocking or failing the OASIS save.
+        completeReferralSocForPatient(selectedPatientId, assessmentDate);
+      }
+      // Clear the form: the assessment is committed, and leaving the responses
+      // on screen is what let them be re-saved onto the next patient selected.
+      setAnswers({});
       toast.success("OASIS assessment saved successfully.");
     } catch (err) {
       // Don't leave the Save button stuck on the spinner with the completed
-      // Start-of-Care assessment silently unsaved.
+      // assessment silently unsaved.
       console.error("Failed to save OASIS assessment:", err);
       toast.error("Failed to save assessment. Please try again.");
     } finally {
       setSaving(false);
     }
+  };
+
+  // Pre-save gate: list every OASIS item still blank and let the clinician go
+  // back (or knowingly save anyway) before the assessment is committed.
+  const handleSaveClick = () => {
+    if (!selectedPatientId) { toast.error("Please select a patient first."); return; }
+    const blanks = OASIS_SECTIONS.flatMap(s => s.questions.filter(q => !isAnswered(q, answers)));
+    if (blanks.length > 0) {
+      setMissingItems(blanks.map(q => ({ id: q.id, label: q.label })));
+      return;
+    }
+    handleSaveAssessment();
   };
 
   const careScopeBadge = {
@@ -319,28 +448,16 @@ export default function SmartOASISAssessment() {
         ? `${selectedPatient.first_name} ${selectedPatient.last_name}`.trim()
         : "";
 
-      const toNum = (v) => (typeof v === "number" ? v : parseInt(v, 10));
-      // A select's first option (value 0, "Select …") is a placeholder prompt,
-      // not a real response — don't count it as answered or print it as one.
-      const isAnswered = (q) => {
-        const val = answers[q.id];
-        if (val === undefined || val === "") return false;
-        if (q.type === "select") {
-          const placeholder = q.options[0];
-          if (placeholder && /^select/i.test(placeholder.label) && toNum(val) === placeholder.value) {
-            return false;
-          }
-        }
-        return true;
-      };
+      // isAnswered (module scope) skips placeholder select prompts, so they are
+      // neither counted as answered nor printed as a response.
       const responseLabel = (q) => {
-        if (!isAnswered(q)) return "— Not answered —";
+        if (!isAnswered(q, answers)) return "— Not answered —";
         const opt = q.options.find(o => o.value === toNum(answers[q.id]));
         return opt ? opt.label : String(answers[q.id]);
       };
 
       const exportAnswered = OASIS_SECTIONS.reduce(
-        (n, s) => n + s.questions.filter(isAnswered).length, 0,
+        (n, s) => n + s.questions.filter(q => isAnswered(q, answers)).length, 0,
       );
       if (exportAnswered === 0) {
         toast.error("Answer at least one OASIS item before printing the guide.");
@@ -386,7 +503,7 @@ export default function SmartOASISAssessment() {
 
       const safeName =
         (patientName || "Patient").replace(/[^a-z0-9]+/gi, "_").replace(/^_+|_+$/g, "") || "Patient";
-      const dateStr = new Date().toISOString().slice(0, 10);
+      const dateStr = toLocalISODate();
       await exportToPDF({
         filename: `OASIS_Guide_${safeName}_${dateStr}.pdf`,
         title: "OASIS Data Entry Guide",
@@ -416,8 +533,21 @@ export default function SmartOASISAssessment() {
         <PatientPicker
           patients={patients}
           selectedPatientId={selectedPatientId}
-          onSelect={(id) => { setSelectedPatientId(id); setAddedToCarePlan([]); }}
+          onSelect={(id) => setSelectedPatientId(id)}
         />
+
+        {/* Assessment reason (RFA) — the exact OASISAssessment.visit_type enum. */}
+        <Select value={visitType} onValueChange={setVisitType}>
+          <SelectTrigger
+            aria-label="Assessment reason"
+            className="h-auto w-auto gap-1.5 rounded-lg border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-800"
+          >
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {VISIT_TYPES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+          </SelectContent>
+        </Select>
 
         {answeredTotal > 0 && (
           <div className="flex items-center gap-2">
@@ -459,7 +589,7 @@ export default function SmartOASISAssessment() {
             {exporting ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" /> : <Printer className="w-3.5 h-3.5 mr-1.5" />}
             Print Guide
           </Button>
-          <Button size="sm" onClick={handleSaveAssessment} disabled={saving || answeredTotal === 0 || !selectedPatientId}>
+          <Button size="sm" onClick={handleSaveClick} disabled={saving || answeredTotal === 0 || !selectedPatientId}>
             {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" /> : <Save className="w-3.5 h-3.5 mr-1.5" />}
             Save Assessment
           </Button>
@@ -470,6 +600,29 @@ export default function SmartOASISAssessment() {
       <div className="flex-1 flex overflow-hidden">
         {/* Left — OASIS Questions */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          {/* Autosaved-draft recovery */}
+          {draftPrompt && (
+            <div className="flex flex-wrap items-center gap-3 p-3 bg-amber-50 border border-amber-300 rounded-xl">
+              <History className="w-4 h-4 text-amber-600 flex-shrink-0" />
+              <div className="flex-1 min-w-[12rem]">
+                <p className="text-sm font-semibold text-amber-800">Unsaved draft found</p>
+                <p className="text-xs text-amber-700 mt-0.5">
+                  {Object.keys(draftPrompt.answers).length} answer{Object.keys(draftPrompt.answers).length !== 1 ? "s" : ""} for
+                  this patient ({draftPrompt.visit_type}) autosaved{" "}
+                  {draftPrompt.saved_at ? new Date(draftPrompt.saved_at).toLocaleString() : "earlier"}.
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button size="sm" variant="outline" onClick={handleDiscardDraft}>Discard</Button>
+                <Button size="sm" onClick={handleRestoreDraft}>Restore draft</Button>
+              </div>
+            </div>
+          )}
+          <NoteToOasisPrefill
+            patientId={selectedPatientId}
+            sections={OASIS_SECTIONS}
+            onApply={handleAnswer}
+          />
           {OASIS_SECTIONS.map(section => (
             <SectionCard 
               key={section.id} 
@@ -486,10 +639,34 @@ export default function SmartOASISAssessment() {
           suggestions={suggestions}
           complianceIssues={complianceIssues}
           reasoningIssues={reasoningIssues}
-          onAddToCarePlan={handleAddToCarePlan}
-          addedIds={addedToCarePlan}
         />
       </div>
+
+      {/* Pre-save checklist: OASIS items still blank */}
+      <AlertDialog open={missingItems !== null} onOpenChange={(open) => { if (!open) setMissingItems(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertCircle className="w-5 h-5 text-amber-500 flex-shrink-0" />
+              {missingItems?.length} OASIS item{missingItems?.length !== 1 ? "s" : ""} still blank
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              The following items have no response. Go back to complete them, or save the assessment as-is.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="max-h-56 overflow-y-auto rounded-lg border border-slate-200 divide-y divide-slate-100">
+            {(missingItems ?? []).map(item => (
+              <p key={item.id} className="px-3 py-2 text-sm text-slate-700">{item.label}</p>
+            ))}
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Go back</AlertDialogCancel>
+            <AlertDialogAction onClick={() => { setMissingItems(null); handleSaveAssessment(); }}>
+              Save anyway
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Question Guidance Dialog */}
       <OASISQuestionGuidance

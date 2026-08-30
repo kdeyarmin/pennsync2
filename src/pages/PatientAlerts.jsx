@@ -1,6 +1,7 @@
-import { useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router";
 import { base44 } from "@/api/base44Client";
+import { useScopedPatients } from "@/hooks/useScopedPatients";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -23,20 +24,36 @@ import PatientAlertsDashboard from "../components/alerts/PatientAlertsDashboard"
 import PatientAlertAnalyzer from "../components/alerts/PatientAlertAnalyzer";
 import PageContainer from "@/components/ui/PageContainer";
 import PageHeader from "@/components/ui/PageHeader";
+import { ALL_ROWS } from '@/lib/queryLimits';
 
 export default function PatientAlerts() {
   const [searchParams] = useSearchParams();
-  const [selectedPatientId, setSelectedPatientId] = useState(searchParams.get("patientId") || searchParams.get("id") || "");
+  const urlPatientId = searchParams.get("patientId") || searchParams.get("id") || "";
+  const [selectedPatientId, setSelectedPatientId] = useState(urlPatientId);
   const [analysisResults, setAnalysisResults] = useState(null);
 
-  const { data: patients = [] } = useQuery({
-    // Namespaced: this is the ACTIVE-only patient set. The bare ['patients'] key is
-    // also used by all-patients (Patient.list) queries elsewhere, so sharing it let
-    // React Query serve this active-only screen the full unfiltered roster (or vice
-    // versa) depending on mount order. A ['patients']-prefix invalidate still
-    // refreshes this key.
-    queryKey: ['patients', 'active'],
-    queryFn: () => base44.entities.Patient.filter({ status: 'active' })
+  // Follow same-route deep-link changes (?patientId=A -> ?patientId=B): the
+  // mount-time snapshot froze the page on the first patient. Manual dropdown
+  // selection still works because this only fires when the URL param changes.
+  useEffect(() => {
+    if (urlPatientId) {
+      setSelectedPatientId(urlPatientId);
+    }
+  }, [urlPatientId]);
+
+  // Clear sticky analysis summary whenever the selected patient changes
+  // (URL deep-link OR manual dropdown), so Patient B never shows Patient A's results.
+  useEffect(() => {
+    setAnalysisResults(null);
+  }, [selectedPatientId]);
+
+  // ACTIVE-only patient set. `status` is part of the hook's cache key, so this
+  // can no longer be served the full unfiltered roster (or vice versa) depending
+  // on mount order, and a ['patients']-prefix invalidate still refreshes it.
+  const { data: patients = [] } = useScopedPatients({
+    status: 'active',
+    sort: null,
+    limit: ALL_ROWS,
   });
 
   const { data: _currentUser } = useQuery({
@@ -61,7 +78,7 @@ export default function PatientAlerts() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Main Alerts Dashboard */}
         <div className="lg:col-span-2">
-          <PatientAlertsDashboard showAllPatients={true} />
+          <PatientAlertsDashboard patientId={selectedPatientId || null} />
         </div>
 
         {/* Sidebar - Analyzer & Quick Actions */}

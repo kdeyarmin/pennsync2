@@ -1,5 +1,23 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
+// <<<BEGIN SHARED HELPER: requireActiveUser — generated, edit base44/_shared/backendHelpers.mjs>>>
+const isDeactivatedUser = (u) => !!u && u.is_active === false;
+const DEACTIVATED_USER_RESPONSE = () => Response.json(
+  { error: 'Unauthorized - account is deactivated' },
+  { status: 403 },
+);
+// <<<END SHARED HELPER: requireActiveUser>>>
+
+// <<<BEGIN SHARED HELPER: requireAgencyAdminAgency — generated, edit base44/_shared/backendHelpers.mjs>>>
+function agencyAdminMissingAgencyResponse(user) {
+  if (user && user.account_type === 'agency_admin' && !String(user.agency_name || '').trim()) {
+    return Response.json({ error: 'Forbidden: agency_name is required.' }, { status: 403 });
+  }
+  return null;
+}
+// <<<END SHARED HELPER: requireAgencyAdminAgency>>>
+
+
 // Returns org-wide required-training readiness for educators and admins. Runs
 // with the service role and computes the rollups server-side so that non-admin
 // educators (whose TrainingAssignment RLS would otherwise limit reads to their
@@ -28,6 +46,11 @@ Deno.serve(async (req) => {
     if (!user?.email) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    if (isDeactivatedUser(user)) return DEACTIVATED_USER_RESPONSE();
+    {
+      const _agencyAdminGate = agencyAdminMissingAgencyResponse(user);
+      if (_agencyAdminGate) return _agencyAdminGate;
+    }
     if (!isAuthorized(user)) {
       return Response.json({ error: 'Forbidden' }, { status: 403 });
     }
@@ -41,11 +64,27 @@ Deno.serve(async (req) => {
 
     const courseById = Object.fromEntries(courses.map((c) => [c.id, c]));
 
-    // Agency admins only see their own agency's staff
+    // Only platform admins (super_admin, or bare role:admin with no agency_name
+    // — platform-wide by design) see every tenant's staff. Everyone else,
+    // INCLUDING educator/supervisor training_roles who aren't admins, is scoped
+    // to their own agency. The old condition only scoped admin account types, so
+    // a plain educator/supervisor passed authorization and received the unscoped
+    // list — a cross-tenant staff roster + training-compliance dump. Fail closed
+    // when an agency-scoped caller lacks an agency_name.
+    const isSuperAdmin = user.account_type === 'super_admin';
+    // A user who is BOTH account_type agency_admin AND role admin with no
+    // agency_name must NOT be promoted to platform-wide via the bare-role:admin
+    // path — an agency_admin without an agency_name fails closed by design.
+    const isPlatformAdmin = isSuperAdmin
+      || (user.role === 'admin' && user.account_type !== 'agency_admin' && !String(user.agency_name || '').trim());
     let scopedAssignments = assignments;
-    if (user.account_type === 'agency_admin' && user.agency_name) {
+    if (!isPlatformAdmin) {
+      const agency = String(user.agency_name || '').trim();
+      if (!agency) {
+        return Response.json({ error: 'Forbidden: agency membership required' }, { status: 403 });
+      }
       const agencyEmails = new Set(
-        users.filter((u) => u.agency_name === user.agency_name).map((u) => u.email)
+        users.filter((u) => u.agency_name === agency).map((u) => u.email)
       );
       scopedAssignments = assignments.filter((a) => agencyEmails.has(a.assigned_to_user_id));
     }
@@ -105,6 +144,7 @@ Deno.serve(async (req) => {
 
     return Response.json({ overall, byBusinessLine, rolesNeedingAttention, rows });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error('getTeamTrainingReadiness failed:', error);
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
 });

@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router";
 import { base44 } from "@/api/base44Client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -13,12 +13,12 @@ import {
   BarChart3,
   TrendingUp,
   Eye,
-  Loader2,
 } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import PageContainer from "@/components/ui/PageContainer";
 import EmbeddedPage from "@/components/ui/embeddedPage";
-import { isSuperAdmin } from "@/lib/superAdmin";
+import { isAdminView } from "@/lib/roles";
+import LoadingState from "@/components/ui/LoadingState";
 
 const SmartOASISAssessment = lazy(() => import("@/components/hub-tabs/SmartOASISAssessment"));
 const OASISAnalyzer = lazy(() => import("@/components/hub-tabs/OASISAnalyzer"));
@@ -29,6 +29,7 @@ const OASISDocumentationReview = lazy(() => import("@/components/hub-tabs/OASISD
 const OASISRevenueAnalysis = lazy(() => import("@/components/hub-tabs/OASISRevenueAnalysis"));
 const OASISAnalyticsDashboard = lazy(() => import("@/components/hub-tabs/OASISAnalyticsDashboard"));
 const OASISAuditDashboard = lazy(() => import("@/components/hub-tabs/OASISAuditDashboard"));
+const OutcomeMeasuresSection = lazy(() => import("@/components/oasis/OutcomeMeasuresSection"));
 
 // Tab keys, kept in sync with the TabsTrigger values below. Used to validate the
 // ?tab= deep-link so the retired standalone pages (Assessment, Analyzer, Review,
@@ -43,11 +44,7 @@ const TAB_KEYS = ["assessment", "analyze", "review", "clinical", "quality", "rev
 // admin-only and intentionally hidden from nurses.
 const ADMIN_TABS = ["revenue", "analytics", "audit"];
 
-const tabLoader = (
-  <div className="flex justify-center py-12">
-    <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
-  </div>
-);
+const tabLoader = <LoadingState className="py-12" />;
 
 export default function OASISCenter() {
   const { data: currentUser, isLoading: isUserLoading } = useQuery({
@@ -55,7 +52,7 @@ export default function OASISCenter() {
     queryFn: () => base44.auth.me(),
   });
 
-  const isAdmin = currentUser?.role === 'admin' || isSuperAdmin(currentUser);
+  const isAdmin = isAdminView(currentUser);
 
   const [searchParams, setSearchParams] = useSearchParams();
   const requestedTab = searchParams.get("tab");
@@ -169,10 +166,16 @@ export default function OASISCenter() {
           <Suspense fallback={tabLoader}>
             <div className="space-y-6">
               {isAdmin && (
-                <section className="space-y-4">
-                  <h2 className="text-lg font-semibold text-slate-900">Compliance Review</h2>
-                  <OASISComplianceReview />
-                </section>
+                <>
+                  <section className="space-y-4">
+                    <h2 className="text-lg font-semibold text-slate-900">Outcome Measures</h2>
+                    <OutcomeMeasuresSection />
+                  </section>
+                  <section className="space-y-4">
+                    <h2 className="text-lg font-semibold text-slate-900">Compliance Review</h2>
+                    <OASISComplianceReview />
+                  </section>
+                </>
               )}
               <section className="space-y-4">
                 <h2 className="text-lg font-semibold text-slate-900">Documentation Review</h2>

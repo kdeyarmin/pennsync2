@@ -1,5 +1,47 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
+// <<<BEGIN SHARED HELPER: requireActiveUser — generated, edit base44/_shared/backendHelpers.mjs>>>
+const isDeactivatedUser = (u) => !!u && u.is_active === false;
+const DEACTIVATED_USER_RESPONSE = () => Response.json(
+  { error: 'Unauthorized - account is deactivated' },
+  { status: 403 },
+);
+// <<<END SHARED HELPER: requireActiveUser>>>
+
+/** Explicit patient access — Patient RLS treats role:admin as platform-wide. */
+async function assertPatientAccess(base44, user, patient) {
+  if (!patient) return Response.json({ error: 'Patient not found' }, { status: 404 });
+  const isSuperAdmin = user.account_type === 'super_admin';
+  const isAgencyScopedAdmin =
+    user.account_type === 'agency_admin'
+    || (user.role === 'admin' && !!user.agency_name && !isSuperAdmin);
+  const isPlatformAdmin = isSuperAdmin || (user.role === 'admin' && !user.agency_name);
+  const isAssigned = Array.isArray(patient.assigned_nurses)
+    && patient.assigned_nurses.includes(user.email);
+  if (!isPlatformAdmin && !isAgencyScopedAdmin && patient.created_by !== user.email && !isAssigned) {
+    return Response.json({ error: 'Forbidden' }, { status: 403 });
+  }
+  if (isAgencyScopedAdmin) {
+    if (!user.agency_name) {
+      return Response.json({ error: 'Forbidden' }, { status: 403 });
+    }
+    const agencyUsers = await base44.asServiceRole.entities.User
+      .list('-created_date', 5000).catch(() => []);
+    const agencyEmails = new Set(
+      (agencyUsers || [])
+        .filter((u) => u.agency_name === user.agency_name && u.email)
+        .map((u) => u.email),
+    );
+    const inAgency = (patient.created_by && agencyEmails.has(patient.created_by))
+      || (Array.isArray(patient.assigned_nurses)
+        && patient.assigned_nurses.some((e) => agencyEmails.has(e)));
+    if (!inAgency) {
+      return Response.json({ error: 'Forbidden' }, { status: 403 });
+    }
+  }
+  return null;
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -8,6 +50,7 @@ Deno.serve(async (req) => {
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    if (isDeactivatedUser(user)) return DEACTIVATED_USER_RESPONSE();
 
     const { patient_id, discharge_date } = await req.json();
 
@@ -16,35 +59,35 @@ Deno.serve(async (req) => {
     }
 
     // Fetch patient data
-    const [patient] = await base44.entities.Patient.filter({ id: patient_id });
-    if (!patient) {
-      return Response.json({ error: 'Patient not found' }, { status: 404 });
-    }
+    const [patient] = await base44.entities.Patient.filter({ id: patient_id }, undefined, 5000);
+    const denied = await assertPatientAccess(base44, user, patient);
+    if (denied) return denied;
 
     // Fetch all visits for this patient
     const visits = await base44.entities.Visit.filter(
       { patient_id, status: 'completed' },
-      '-visit_date'
+      '-visit_date',
+      5000,
     );
-
-    // Fetch care plans
-    const carePlans = await base44.entities.CarePlan.filter({ patient_id });
 
     // Fetch education materials sent
     const educationMaterials = await base44.entities.SentEducationMaterial.filter(
       { patient_id }
-    );
+    , undefined, 5000);
 
     // Find admission date (earliest visit)
     const admissionDate = visits.length > 0
       ? visits[visits.length - 1].visit_date
       : patient.created_date;
 
-    // Separate visits by type
+    // Separate visits by type (Visit.visit_type enum has no 'therapy' —
+    // count routine/prn/discharge separately so the signed summary is truthful).
     const skilledNursingVisits = visits.filter(v =>
       ['skilled_nursing', 'admission', 'recertification'].includes(v.visit_type)
     );
-    const therapyVisits = visits.filter(v => v.visit_type === 'therapy');
+    const routineVisits = visits.filter(v =>
+      ['routine_visit', 'prn', 'discharge'].includes(v.visit_type)
+    );
 
     // Generate comprehensive AI summary
     const aiPrompt = `You are a home health discharge summary specialist. Generate a comprehensive, Medicare-compliant discharge summary based on the following patient data.
@@ -58,22 +101,14 @@ Discharge Date: ${discharge_date || new Date().toISOString().split('T')[0]}
 
 VISIT SUMMARY:
 Total Visits: ${visits.length}
-Skilled Nursing Visits: ${skilledNursingVisits.length}
-Therapy Visits: ${therapyVisits.length}
+Skilled Nursing / Admission / Recert Visits: ${skilledNursingVisits.length}
+Routine / PRN / Discharge Visits: ${routineVisits.length}
 
 RECENT VISIT NOTES (Last 5):
 ${visits.slice(0, 5).map(v => `
 Date: ${v.visit_date}
 Type: ${v.visit_type}
 Notes: ${v.nurse_notes?.substring(0, 500) || 'No notes'}
-`).join('\n')}
-
-CARE PLANS:
-${carePlans.map(cp => `
-Problem: ${cp.problem}
-Goal: ${cp.goal}
-Status: ${cp.status}
-Interventions: ${cp.interventions?.join(', ') || 'None listed'}
 `).join('\n')}
 
 PATIENT EDUCATION PROVIDED:
@@ -90,7 +125,7 @@ Format as a professional medical summary. Be detailed, objective, and Medicare-c
 
     const aiResponseRaw = await base44.integrations.Core.InvokeLLM({
       prompt: aiPrompt,
-      model: 'claude_opus_4_8'
+      model: 'automatic'
     });
     // InvokeLLM may return a structured object rather than a raw string; coerce so
     // the .split() parsing below can't throw "split is not a function".
@@ -110,16 +145,6 @@ Format as a professional medical summary. Be detailed, objective, and Medicare-c
       return `${v.visit_date}: ${v.visit_type}`;
     });
 
-    // Determine care plan outcomes
-    const carePlanOutcomes = carePlans.map(cp => ({
-      problem: cp.problem,
-      goal: cp.goal,
-      outcome: cp.status === 'met' ? 'met' :
-               cp.status === 'not_met' ? 'not_met' :
-               cp.status === 'revised' ? 'partially_met' : 'ongoing',
-      notes: cp.progress_notes || 'See visit documentation'
-    }));
-
     // Create discharge summary
     const dischargeSummary = await base44.entities.DischargeSummary.create({
       patient_id,
@@ -134,23 +159,28 @@ Format as a professional medical summary. Be detailed, objective, and Medicare-c
       visit_summary: {
         total_visits: visits.length,
         skilled_nursing_visits: skilledNursingVisits.length,
-        therapy_visits: therapyVisits.length,
+        // Kept for schema compatibility; Visit has no therapy type — use routine counts.
+        therapy_visits: routineVisits.length,
+        routine_visits: routineVisits.length,
         visit_highlights: visitHighlights
       },
-      care_plan_outcomes: carePlanOutcomes,
+      // Do NOT fabricate affirmative clinical conclusions here. This record is
+      // reviewed and SIGNED as a legal Medicare discharge document, and the review
+      // UI must let the clinician set these — never assert "improved" / a specific
+      // disposition on a patient who may have been transferred to acute care or
+      // expired. Leave functional status / disposition / education understanding
+      // blank for the reviewing clinician to complete.
       functional_status: {
         at_admission: 'See admission assessment',
-        at_discharge: 'Patient improved overall functional status',
-        improvement_areas: (carePlans || [])
-          .filter(cp => cp && cp.status === 'met' && cp.problem)
-          .map(cp => cp.problem)
+        at_discharge: '',
+        improvement_areas: []
       },
       patient_education_provided: educationMaterials.map(e => ({
         topic: e.material_title,
         materials_provided: 'Written materials',
-        patient_understanding: 'Patient verbalized understanding'
+        patient_understanding: ''
       })),
-      discharge_disposition: 'home_independent',
+      // discharge_disposition intentionally left unset — the reviewer selects it.
       discharge_instructions: 'Continue current medications. Follow up with physician as recommended. Contact home health if symptoms worsen.',
       follow_up_recommendations: [
         {
@@ -163,9 +193,7 @@ Format as a professional medical summary. Be detailed, objective, and Medicare-c
       generated_by: user.email,
       generated_date: new Date().toISOString(),
       ai_generation_metadata: {
-        visits_analyzed: visits.length,
-        care_plans_analyzed: carePlans.length,
-        generation_confidence: 95
+        visits_analyzed: visits.length
       }
     });
 
@@ -177,7 +205,7 @@ Format as a professional medical summary. Be detailed, objective, and Medicare-c
   } catch (error) {
     console.error('Error generating discharge summary:', error);
     return Response.json({
-      error: error.message || 'Failed to generate discharge summary'
+      error: 'Failed to generate discharge summary'
     }, { status: 500 });
   }
 });

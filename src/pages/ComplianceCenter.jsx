@@ -1,10 +1,15 @@
 import { lazy, Suspense, useEffect, useState, useMemo } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router";
 import { base44 } from "@/api/base44Client";
+import { useAgencyScopedQuery } from '@/hooks/useAgencyScopedQuery';
+import { useScopedPatients } from '@/hooks/useScopedPatients';
+import { agencyQueryKey } from '@/lib/agencyRoster';
 import { useAICall } from "@/hooks/useAICall";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import StatCard from "@/components/ui/stat-card";
+import EmptyState from "@/components/ui/empty-state";
+import { deriveComplianceIssueStats } from "@/components/compliance/complianceIssueStats";
 import { Button } from "@/components/ui/button";
 import PageContainer from "@/components/ui/PageContainer";
 import EmbeddedPage from "@/components/ui/embeddedPage";
@@ -13,15 +18,28 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import {
+import { Loader2,
   Shield, AlertTriangle, TrendingDown, Users, FileText, Calendar, BarChart3, Clock, Award, Bell, Search, CheckCircle2,
-  BookOpen, LayoutDashboard, Lock, Loader2
+  BookOpen, LayoutDashboard, Lock
 } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { format, subDays, startOfDay, parseISO, differenceInDays } from "date-fns";
+import { format, subDays, startOfDay } from "date-fns";
 import { toast } from "sonner";
 import ComplianceReportGenerator from "@/components/compliance/ComplianceReportGenerator";
 import AIComplianceAssistant from "@/components/compliance/AIComplianceAssistant";
+import MedicareRuleSeeder from "@/components/compliance/MedicareRuleSeeder";
+import { isAdminView } from "@/lib/roles";
+import LoadingState from "@/components/ui/LoadingState";
+import { ALL_ROWS } from '@/lib/queryLimits';
+import { parseLocalDate } from "@/lib/dateLocal";
+
+/** Calendar-day delta from local midnight today to a date-only value (negative = past). */
+function localDaysUntil(dateStr) {
+  const due = parseLocalDate(dateStr);
+  const todayLocal = new Date();
+  todayLocal.setHours(0, 0, 0, 0);
+  return due ? Math.round((due - todayLocal) / 86400000) : null;
+}
 
 const RegulatoryCompliance = lazy(() => import("@/components/hub-tabs/RegulatoryCompliance"));
 const ComplianceMonitoringDashboard = lazy(() => import("@/components/hub-tabs/ComplianceMonitoringDashboard"));
@@ -35,11 +53,7 @@ const SecurityPolicy = lazy(() => import("@/components/hub-tabs/SecurityPolicy")
 // Security Policy) redirect straight to the right tab.
 const TAB_KEYS = ["dashboard", "regulatory", "security"];
 
-const tabLoader = (
-  <div className="flex justify-center py-12">
-    <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
-  </div>
-);
+const tabLoader = <LoadingState className="py-12" />;
 
 export default function ComplianceCenter() {
   const [timeRange, setTimeRange] = useState(30);
@@ -88,52 +102,53 @@ export default function ComplianceCenter() {
   });
 
   const { data: audits = [] } = useQuery({
-    queryKey: ['complianceAudits', timeRange],
+    queryKey: ['complianceAudits', 'list', 1000, timeRange],
     queryFn: () => base44.entities.ComplianceAudit.list('-audit_date', 1000),
     initialData: [],
   });
 
   const { data: _medicareRules = [] } = useQuery({
     queryKey: ['medicareComplianceRules'],
-    queryFn: () => base44.entities.MedicareComplianceRule.list(),
+    queryFn: () => base44.entities.MedicareComplianceRule.list(undefined, ALL_ROWS),
     initialData: [],
   });
 
-  const { data: _patients = [] } = useQuery({
-    queryKey: ['patients'],
-    queryFn: () => base44.entities.Patient.list('-updated_date', 2000),
-    initialData: [],
-  });
+  const { data: _patients = [] } = useScopedPatients({ sort: '-updated_date', limit: 2000 });
 
   const { data: allUsers = [], refetch: _refetchUsers } = useQuery({
-    queryKey: ['allUsers'],
-    queryFn: () => base44.entities.User.list(),
+    queryKey: ['allUsers', 5000, agencyQueryKey(currentUser)],
+    queryFn: async () => {
+      const _rows = await base44.entities.User.list('-created_date', 5000);
+      const { filterUsersByCallerAgency } = await import('@/lib/agencyScope');
+      return filterUsersByCallerAgency(_rows, currentUser);
+    },
     initialData: [],
+    enabled: !!currentUser,
     refetchInterval: 30000,
   });
 
   const { data: trainingAssignments = [], refetch: _refetchAssignments } = useQuery({
-    queryKey: ['allTrainingAssignments'],
-    queryFn: () => base44.entities.TrainingAssignment.list('-updated_date', 500),
+    queryKey: ['allTrainingAssignments', '-updated_date', 500],
+    queryFn: () => base44.entities.TrainingAssignment.list('-updated_date', 5000),
     initialData: [],
     refetchInterval: 30000,
   });
 
   const { data: personnelCredentials = [], refetch: _refetchCredentials } = useQuery({
     queryKey: ['allPersonnelCredentials'],
-    queryFn: () => base44.entities.PersonnelCredential.list('-updated_date', 500),
+    queryFn: () => base44.entities.PersonnelCredential.list('-updated_date', 5000),
     initialData: [],
     refetchInterval: 30000,
   });
 
-  const { data: _visits = [], refetch: _refetchVisits } = useQuery({
+  const { data: _visits = [], refetch: _refetchVisits } = useAgencyScopedQuery({
     queryKey: ['allVisits'],
-    queryFn: () => base44.entities.Visit.filter({}, '-visit_date', 500),
+    fetch: () => base44.entities.Visit.filter({}, '-visit_date', 5000),
     initialData: [],
     refetchInterval: 30000,
   });
 
-  const isAdmin = currentUser?.role === 'admin';
+  const isAdmin = isAdminView(currentUser);
 
   // Filter audits by time range
   const cutoffDate = subDays(new Date(), timeRange);
@@ -225,14 +240,13 @@ export default function ComplianceCenter() {
   // Calculate monitoring issues
   const complianceIssues = useMemo(() => {
     const issues = [];
-    const today = new Date();
 
     // Overdue training
     trainingAssignments.forEach(assignment => {
       if (assignment.status !== 'completed' && assignment.due_date) {
-        const dueDate = parseISO(assignment.due_date);
-        const daysOverdue = differenceInDays(today, dueDate);
-        
+        const daysUntil = localDaysUntil(assignment.due_date);
+        const daysOverdue = daysUntil != null && daysUntil < 0 ? Math.abs(daysUntil) : 0;
+
         if (daysOverdue > 0) {
           const user = allUsers.find(u => u.email === assignment.assigned_to_user_id);
           if (user) {
@@ -255,9 +269,9 @@ export default function ComplianceCenter() {
     // Expiring credentials
     personnelCredentials.forEach(cred => {
       if (cred.expiration_date) {
-        const expDate = parseISO(cred.expiration_date);
-        const daysUntilExpiry = differenceInDays(expDate, today);
-        
+        const daysUntilExpiry = localDaysUntil(cred.expiration_date);
+        if (daysUntilExpiry == null) return;
+
         if (daysUntilExpiry <= 30 || cred.status === 'expired') {
           const user = allUsers.find(u => u.email === cred.user_id);
           if (user) {
@@ -282,43 +296,31 @@ export default function ComplianceCenter() {
     return issues;
   }, [trainingAssignments, personnelCredentials, allUsers]);
 
-  const filteredIssues = complianceIssues.filter(issue => {
-    const matchesSearch = !searchTerm ||
-      (issue.userName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (issue.title || '').toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = categoryFilter === 'all' || issue.type === categoryFilter;
-    const matchesSeverity = severityFilter === 'all' || issue.severity === severityFilter;
-    return matchesSearch && matchesCategory && matchesSeverity;
-  });
+  // Filter, group and count (shared with ComplianceMonitoringDashboard).
+  const { filteredIssues, groupedByUser, criticalCount, highCount, affectedUsers, overdueTraining, expiringCreds } =
+    deriveComplianceIssueStats(complianceIssues, { searchTerm, categoryFilter, severityFilter });
 
-  const groupedByUser = filteredIssues.reduce((acc, issue) => {
-    if (!acc[issue.userId]) {
-      acc[issue.userId] = {
-        userName: issue.userName,
-        userRole: issue.userRole,
-        issues: []
-      };
-    }
-    acc[issue.userId].issues.push(issue);
-    return acc;
-  }, {});
-
-  const criticalCount = complianceIssues.filter(i => i.severity === 'critical').length;
-  const highCount = complianceIssues.filter(i => i.severity === 'high').length;
-  const affectedUsers = Object.keys(groupedByUser).length;
-  const overdueTraining = complianceIssues.filter(i => i.type === 'overdue_training').length;
-  const expiringCreds = complianceIssues.filter(i => i.type === 'expiring_credential').length;
+  // Prune selections that fall out of view when filters change, so a stale
+  // selected email can't reach handleNotifySelected with no matching issue data.
+  useEffect(() => {
+    setSelectedUsers(prev => {
+      const next = new Set(Array.from(prev).filter(email => groupedByUser[email]));
+      return next.size === prev.size ? prev : next;
+    });
+  }, [groupedByUser]);
 
   const sendNotificationMutation = useMutation({
-    mutationFn: async ({ userEmails, message, subject }) => {
+    mutationFn: async ({ recipients, subject }) => {
+      // Each recipient gets ONLY their own compliance issues — never a combined
+      // roster (that would leak every selected employee's PHI to everyone).
       return await Promise.all(
-        userEmails.map(email => 
+        recipients.map(({ email, message }) =>
           base44.integrations.Core.SendEmail({ to: email, subject, body: message })
         )
       );
     },
     onSuccess: (_, variables) => {
-      toast.success(`Notifications sent to ${variables.userEmails.length} employee(s)`);
+      toast.success(`Notifications sent to ${variables.recipients.length} employee(s)`);
       setSelectedUsers(new Set());
     },
     onError: () => {
@@ -333,16 +335,18 @@ export default function ComplianceCenter() {
     }
 
     const userEmails = Array.from(selectedUsers);
-    const issuesSummary = userEmails.map(email => {
+    const recipients = userEmails.map(email => {
       const userData = groupedByUser[email];
       const issues = userData.issues.map(issue => `• ${issue.details}`).join('\n');
-      return `${userData.userName}:\n${issues}`;
-    }).join('\n\n');
+      return {
+        email,
+        message: `You have compliance items requiring immediate attention:\n\n${issues}\n\nPlease address these items as soon as possible.`
+      };
+    });
 
     sendNotificationMutation.mutate({
-      userEmails,
+      recipients,
       subject: "⚠️ Compliance Action Required",
-      message: `You have compliance items requiring immediate attention:\n\n${issuesSummary}\n\nPlease address these items as soon as possible.`
     });
   };
 
@@ -452,7 +456,7 @@ export default function ComplianceCenter() {
             <Button className="w-full sm:w-auto" onClick={async () => {
               try {
                 const result = await ai.run({
-                  model: "claude_opus_4_8",
+                  model: "automatic",
                   prompt: `Analyze Medicare compliance data and provide executive insights.
 METRICS: ${filteredAudits.length} audits, ${avgComplianceScore.toFixed(1)}% avg score, ${criticalIssuesCount} critical issues
 TOP ISSUES: ${topIssues.slice(0, 5).map(i => `${i.name}: ${i.count}`).join(', ')}
@@ -475,7 +479,7 @@ Provide: overall_assessment, critical_priorities (array), systemic_issues, actio
             }} disabled={ai.loading}>
               {ai.loading ? (
                 <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
                   Analyzing...
                 </>
               ) : (
@@ -599,7 +603,6 @@ Provide: overall_assessment, critical_priorities (array), systemic_issues, actio
                 <Button
                   onClick={handleNotifySelected}
                   disabled={selectedUsers.size === 0}
-                  className="bg-orange-600 hover:bg-orange-700"
                 >
                   <Bell className="w-4 h-4 mr-2" />
                   Notify ({selectedUsers.size})
@@ -609,13 +612,7 @@ Provide: overall_assessment, critical_priorities (array), systemic_issues, actio
           </Card>
 
           {filteredIssues.length === 0 ? (
-            <Card>
-              <CardContent className="py-12 text-center">
-                <CheckCircle2 className="w-16 h-16 text-emerald-500 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-slate-900 mb-2">All Clear!</h3>
-                <p className="text-slate-600">No compliance issues found.</p>
-              </CardContent>
-            </Card>
+            <EmptyState icon={CheckCircle2} title="All Clear!" description="No compliance issues found." />
           ) : (
             <div className="space-y-4">
               {Object.entries(groupedByUser).map(([userId, userData]) => {
@@ -685,7 +682,8 @@ Provide: overall_assessment, critical_priorities (array), systemic_issues, actio
         </TabsContent>
 
         {/* Regulatory Tab */}
-        <TabsContent value="regulatory">
+        <TabsContent value="regulatory" className="space-y-6">
+          {isAdmin && <MedicareRuleSeeder />}
           <Suspense fallback={tabLoader}>
             <RegulatoryCompliance />
           </Suspense>

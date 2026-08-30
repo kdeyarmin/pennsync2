@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -11,18 +11,26 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import CustomValidationRuleManager from "../components/validation/CustomValidationRuleManager";
 import PageContainer from "@/components/ui/PageContainer";
 import PageHeader from "@/components/ui/PageHeader";
+import LoadingState from "@/components/ui/LoadingState";
+import AdminOnboardingChecklistStrip from "@/components/admin/AdminOnboardingChecklistStrip";
 
 export default function AgencySettings() {
   const queryClient = useQueryClient();
   const [successMessage, setSuccessMessage] = useState(null);
 
-  // Fetch existing settings
+  const { data: currentUser } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me(),
+  });
+
+  // Fetch existing settings for THIS agency (never global newest-row).
   const { data: settings, isLoading } = useQuery({
-    queryKey: ['agencySettings'],
+    queryKey: ['agencySettings', currentUser?.agency_name || null],
     queryFn: async () => {
-      const result = await base44.entities.AgencySettings.list();
-      return result[0] || null;
-    }
+      const { fetchCallerAgencySettings } = await import('@/lib/agencySettings');
+      return fetchCallerAgencySettings(currentUser?.agency_name);
+    },
+    enabled: !!currentUser,
   });
 
   // Form state
@@ -39,7 +47,7 @@ export default function AgencySettings() {
   });
 
   // Update form when settings load
-  React.useEffect(() => {
+  useEffect(() => {
     if (settings) {
       setFormData({
         office_name: settings.office_name || '',
@@ -58,11 +66,15 @@ export default function AgencySettings() {
   // Save mutation
   const saveMutation = useMutation({
     mutationFn: async (data) => {
+      const agencyKey = String(currentUser?.agency_name || '').trim();
+      const payload = {
+        ...data,
+        ...(agencyKey ? { agency_code: agencyKey, office_name: data.office_name || agencyKey } : {}),
+      };
       if (settings?.id) {
-        return await base44.entities.AgencySettings.update(settings.id, data);
-      } else {
-        return await base44.entities.AgencySettings.create(data);
+        return await base44.entities.AgencySettings.update(settings.id, payload);
       }
+      return await base44.entities.AgencySettings.create(payload);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['agencySettings'] });
@@ -77,14 +89,27 @@ export default function AgencySettings() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    saveMutation.mutate(formData);
+    // Numeric fields are stored as raw strings while editing so that 0 and
+    // partial decimals (e.g. a sub-1.0 wage index typed as "0.85") are not
+    // clobbered per keystroke. Coerce and apply defaults only at save time.
+    const toNum = (v, def) => {
+      const n = parseFloat(v);
+      return Number.isNaN(n) ? def : n;
+    };
+    saveMutation.mutate({
+      ...formData,
+      wage_index: toNum(formData.wage_index, 1.0),
+      avg_staff_hourly_rate: toNum(formData.avg_staff_hourly_rate, 45),
+      training_cost_per_hour: toNum(formData.training_cost_per_hour, 35),
+      documentation_time_per_episode: toNum(formData.documentation_time_per_episode, 0.5),
+      audit_staff_hourly_rate: toNum(formData.audit_staff_hourly_rate, 50),
+      avg_episodes_per_year: toNum(formData.avg_episodes_per_year, 50),
+    });
   };
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-      </div>
+      <LoadingState className="py-24" />
     );
   }
 
@@ -97,6 +122,8 @@ export default function AgencySettings() {
         description="Configure agency-wide settings, validation rules, and cost analysis"
         favoritePage="AgencySettings"
       />
+
+        <AdminOnboardingChecklistStrip />
 
         {successMessage && (
           <Alert className="bg-emerald-50 border-emerald-200">
@@ -156,7 +183,7 @@ export default function AgencySettings() {
           </Card>
 
           {/* PDGM Location Settings */}
-          <Card className="border-2 border-blue-200">
+          <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <MapPin className="w-5 h-5 text-blue-600" />
@@ -191,7 +218,7 @@ export default function AgencySettings() {
                   step="0.0001"
                   placeholder="1.0000"
                   value={formData.wage_index}
-                  onChange={(e) => handleChange('wage_index', parseFloat(e.target.value) || 1.0)}
+                  onChange={(e) => handleChange('wage_index', e.target.value)}
                 />
                 <p className="text-xs text-slate-500">
                   Find your wage index at{' '}
@@ -226,7 +253,7 @@ export default function AgencySettings() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="avg_staff_hourly_rate">Average Staff Hourly Rate ($)</Label>
                   <Input
@@ -234,7 +261,7 @@ export default function AgencySettings() {
                     type="number"
                     step="0.01"
                     value={formData.avg_staff_hourly_rate}
-                    onChange={(e) => handleChange('avg_staff_hourly_rate', parseFloat(e.target.value) || 45)}
+                    onChange={(e) => handleChange('avg_staff_hourly_rate', e.target.value)}
                   />
                 </div>
                 <div className="space-y-2">
@@ -244,7 +271,7 @@ export default function AgencySettings() {
                     type="number"
                     step="0.01"
                     value={formData.training_cost_per_hour}
-                    onChange={(e) => handleChange('training_cost_per_hour', parseFloat(e.target.value) || 35)}
+                    onChange={(e) => handleChange('training_cost_per_hour', e.target.value)}
                   />
                 </div>
                 <div className="space-y-2">
@@ -254,7 +281,7 @@ export default function AgencySettings() {
                     type="number"
                     step="0.1"
                     value={formData.documentation_time_per_episode}
-                    onChange={(e) => handleChange('documentation_time_per_episode', parseFloat(e.target.value) || 0.5)}
+                    onChange={(e) => handleChange('documentation_time_per_episode', e.target.value)}
                   />
                 </div>
                 <div className="space-y-2">
@@ -264,7 +291,7 @@ export default function AgencySettings() {
                     type="number"
                     step="0.01"
                     value={formData.audit_staff_hourly_rate}
-                    onChange={(e) => handleChange('audit_staff_hourly_rate', parseFloat(e.target.value) || 50)}
+                    onChange={(e) => handleChange('audit_staff_hourly_rate', e.target.value)}
                   />
                 </div>
                 <div className="space-y-2">
@@ -273,7 +300,7 @@ export default function AgencySettings() {
                     id="avg_episodes_per_year"
                     type="number"
                     value={formData.avg_episodes_per_year}
-                    onChange={(e) => handleChange('avg_episodes_per_year', parseInt(e.target.value) || 50)}
+                    onChange={(e) => handleChange('avg_episodes_per_year', e.target.value)}
                   />
                 </div>
               </div>
@@ -285,7 +312,7 @@ export default function AgencySettings() {
             <Button 
               type="submit" 
               disabled={saveMutation.isPending}
-              className="bg-blue-600 hover:bg-blue-700 gap-2 min-h-[44px] w-full sm:w-auto"
+              className="gap-2 min-h-[44px] w-full sm:w-auto"
             >
               {saveMutation.isPending ? (
                 <><Loader2 className="w-4 h-4 animate-spin" /> Saving...</>

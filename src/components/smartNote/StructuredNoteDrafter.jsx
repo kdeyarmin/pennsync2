@@ -1,4 +1,6 @@
 import { useState, useRef } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -7,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Sparkles, Copy, CheckCircle2, ClipboardList, ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
 import VoiceNoteIntegration from "./VoiceNoteIntegration";
+import QuickPhraseTextarea from "./QuickPhraseTextarea";
 import { toCanonicalVitalSigns, extractCanonicalVitalsFromText } from "./compliance/factExtraction";
 
 const VISIT_TYPES = [
@@ -23,6 +26,8 @@ const BLANK_VITALS = {
 };
 
 export default function StructuredNoteDrafter({ onDraftReady }) {
+  // Current user drives quick-phrase visibility (own + agency-wide phrases).
+  const { data: currentUser } = useQuery({ queryKey: ["currentUser"], queryFn: () => base44.auth.me() });
   const [visitType, setVisitType] = useState("routine_visit");
   const [vitals, setVitals] = useState(BLANK_VITALS);
   const [symptoms, setSymptoms] = useState("");
@@ -39,7 +44,10 @@ export default function StructuredNoteDrafter({ onDraftReady }) {
 
   const setVital = (k, v) => setVitals(prev => ({ ...prev, [k]: v }));
 
-  const hasContent = symptoms.trim() || Object.values(vitals).some(v => v.trim());
+  // generate() assembles lines from ALL five text fields plus the vitals grid, so
+  // the gate must too — otherwise a teaching-only / intervention-only visit (only
+  // interventions/education/plan filled) leaves the button disabled and strands input.
+  const hasContent = [symptoms, interventions, education, plan].some(s => s.trim()) || Object.values(vitals).some(v => v.trim());
 
   // Deterministically assemble the nurse's structured input into a rough draft.
   // No LLM and no fabricated defaults for blank fields — the compliant narrative
@@ -100,11 +108,15 @@ export default function StructuredNoteDrafter({ onDraftReady }) {
     // regex extractVitals uses) so a documented kg reading is normalized to lbs —
     // and so a stray "kg" elsewhere in the draft can't rescale a pounds value.
     // Falls back to the grid weight (already in lbs) when the text has no weight.
-    const wtMatch = draft.match(/(?:wt|weight)\s*:?\s*(\d{2,3}(?:\.\d)?)\s*(lbs?|kg)?/i);
+    // Leading \b so "underweight 15%" can't read as weight 15, trailing (?!\d) so
+    // "weight 1800" is dropped rather than truncated to 180, and the kg spelling
+    // variants nurses actually write are accepted — without them "80 kilograms"
+    // captured no unit and was emitted as 80 lbs.
+    const wtMatch = draft.match(/\b(?:wt|weight)\s*:?\s*(\d{2,3}(?:\.\d)?)(?!\d)\s*(lbs?|pounds?|kgs?|kilograms?)?\b/i);
     let weight = gridWeight;
     if (wtMatch) {
       weight = parseFloat(wtMatch[1]);
-      if (/^kg$/i.test(wtMatch[2] || "")) weight = Math.round(weight * 2.20462 * 10) / 10;
+      if (/^k/i.test(wtMatch[2] || "")) weight = Math.round(weight * 2.20462 * 10) / 10;
     }
     if (weight) handoff = `${handoff}\nWeight: ${weight} lbs.`.trim();
     onDraftReady(handoff, visitType, structuredVitals);
@@ -141,7 +153,7 @@ export default function StructuredNoteDrafter({ onDraftReady }) {
 
       {!collapsed && (
         <div className="p-4 space-y-4">
-          <p className="text-xs text-slate-500">Fill in structured fields to build a rough draft from exactly what you enter, then run the full compliance check in the Note Builder.</p>
+          <p className="text-xs text-slate-500">Fill in structured fields to build a rough draft from exactly what you enter, then run the full compliance check in the Note Builder. Tip: in any text field type <span className="font-mono">/</span> or a <span className="font-mono">.dot-token</span> (e.g. <span className="font-mono">.diabeticedu</span>) to insert a quick phrase.</p>
 
           {/* Visit Type */}
           <div>
@@ -198,10 +210,12 @@ export default function StructuredNoteDrafter({ onDraftReady }) {
                   disabled={false}
                 />
               </div>
-              <textarea
+              <QuickPhraseTextarea
                 ref={f.ref}
                 value={f.val}
-                onChange={e => f.set(e.target.value)}
+                onChange={f.set}
+                visitType={visitType}
+                userEmail={currentUser?.email}
                 placeholder={f.placeholder}
                 className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 bg-slate-50 focus:ring-2 focus:ring-navy-300 focus:border-navy-400 outline-none resize-none min-h-[70px] leading-relaxed"
               />
@@ -230,7 +244,7 @@ export default function StructuredNoteDrafter({ onDraftReady }) {
                       <Sparkles className="w-3 h-3" /> Use in Note Builder
                     </Button>
                   )}
-                  <Button size="sm" className="h-7 bg-green-600 hover:bg-green-700 gap-1 text-xs" onClick={copy}>
+                  <Button size="sm" className="h-7 gap-1 text-xs" onClick={copy}>
                     {copied ? <><CheckCircle2 className="w-3 h-3" /> Copied</> : <><Copy className="w-3 h-3" /> Copy</>}
                   </Button>
                 </div>

@@ -32,6 +32,7 @@ import {
   AlertTriangle,
   Info
 } from "lucide-react";
+import { ALL_ROWS } from '@/lib/queryLimits';
 
 export default function CustomValidationRuleManager() {
   const confirm = useConfirm();
@@ -52,7 +53,7 @@ export default function CustomValidationRuleManager() {
 
   const { data: rules = [] } = useQuery({
     queryKey: ['customValidationRules'],
-    queryFn: () => base44.entities.CustomValidationRule.list('-created_date')
+    queryFn: () => base44.entities.CustomValidationRule.list('-created_date', ALL_ROWS)
   });
 
   const createRuleMutation = useMutation({
@@ -91,6 +92,15 @@ export default function CustomValidationRuleManager() {
     });
     setEditingRule(null);
     setShowDialog(false);
+  };
+
+  // Open a fresh "create" dialog: clear any leftover edit state (editingRule +
+  // formData) before opening so a prior, dismissed edit can't be silently
+  // resubmitted as an update. resetForm sets showDialog=false; the subsequent
+  // setShowDialog(true) is batched in the same handler and wins.
+  const handleAddRule = () => {
+    resetForm();
+    setShowDialog(true);
   };
 
   const handleSubmit = () => {
@@ -137,7 +147,7 @@ export default function CustomValidationRuleManager() {
               <Settings className="w-5 h-5" />
               Custom Validation Rules
             </CardTitle>
-            <Button onClick={() => setShowDialog(true)} className="bg-blue-600 hover:bg-blue-700">
+            <Button onClick={handleAddRule} className="bg-blue-600 hover:bg-blue-700">
               <Plus className="w-4 h-4 mr-2" />
               Add Rule
             </Button>
@@ -213,7 +223,7 @@ export default function CustomValidationRuleManager() {
         </CardContent>
       </Card>
 
-      <Dialog open={showDialog} onOpenChange={setShowDialog}>
+      <Dialog open={showDialog} onOpenChange={(open) => { if (!open) resetForm(); else setShowDialog(true); }}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>

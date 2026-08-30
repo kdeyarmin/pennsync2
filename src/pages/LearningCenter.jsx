@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useCallback, lazy, Suspense } from 'react';
-import { useQueryClient, useMutation } from '@tanstack/react-query';
+import { useQueryClient, useMutation, useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import EmptyState from '@/components/ui/empty-state';
 import { Button } from '@/components/ui/button';
@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { toast } from 'sonner';
 import {
   GraduationCap,
   BookOpen,
@@ -41,21 +42,26 @@ import {
   Brain
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
-import { useQuery } from '@tanstack/react-query';
+import { isAdminView } from '@/lib/roles';
+import { parseLocalDate, formatLocalDate, toLocalISODate, isPastLocalDueDate } from '@/lib/dateLocal';
 import PageContainer from '@/components/ui/PageContainer';
 import PageHeader from '@/components/ui/PageHeader';
 import EmbeddedPage from '@/components/ui/embeddedPage';
 import { createPageUrl } from '@/utils';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router';
 import CertificateDownloadButton from '@/components/training/CertificateDownloadButton';
 import LearnerPolicyAcknowledgments from '@/components/training/LearnerPolicyAcknowledgments';
 import LearnerMemoryBoosters from '@/components/training/LearnerMemoryBoosters';
 import EducatorReadinessPanel from '@/components/learning/EducatorReadinessPanel';
+import CourseCatalogDetail from '@/components/learning/CourseCatalogDetail';
+import CeCreditSummary from '@/components/learning/CeCreditSummary';
+import { buildCeTranscript } from '@/components/learning/ceTranscript';
 import GamificationDashboard from '@/components/training/GamificationDashboard';
 import { selfEnrollCourse } from '@/functions/selfEnrollCourse';
-import { generateLearningTranscriptPDF } from '@/functions/generateLearningTranscriptPDF';
 import { submitCourseFeedback } from '@/functions/submitCourseFeedback';
 import { getCourseFeedbackSummary } from '@/functions/getCourseFeedbackSummary';
+import LoadingState from "@/components/ui/LoadingState";
+import { ALL_ROWS } from '@/lib/queryLimits';
 
 // Lazy spokes — the former My Learning hub's tabs (My Courses, In-Services,
 // Annual Education, Transcripts) now render inside this canonical Learning Center.
@@ -74,25 +80,24 @@ const TAB_KEYS = [
   'boosters', 'courses', 'inservices', 'annual', 'policies', 'transcripts',
 ];
 
-const tabLoader = (
-  <div className="flex justify-center py-12">
-    <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
-  </div>
-);
+const tabLoader = <LoadingState className="py-12" />;
 
-const formatDate = (value) => value ? new Date(value).toLocaleDateString() : '—';
+// Due/renewal dates are date-only strings ("2026-08-15"); `new Date(...)` parses
+// those as UTC midnight, so rendering in a US (negative-offset) timezone showed
+// the PREVIOUS day. parseLocalDate/formatLocalDate treat them as local calendar days.
+const formatDate = (value) => (value && formatLocalDate(value)) || '—';
 
 // Build an all-day .ics calendar from renewal items (client-side, browser only)
 const icsEscape = (s) => String(s || '').replace(/([,;\\])/g, '\\$1').replace(/\n/g, '\\n');
 const toIcsDate = (value) => {
-  const d = new Date(value);
+  const d = parseLocalDate(value) || new Date(value);
   return `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`;
 };
 const buildRenewalIcs = (items) => {
   const stamp = new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
   const lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//PENNSync//Learning//EN', 'CALSCALE:GREGORIAN'];
   items.forEach((item) => {
-    const start = new Date(item.date);
+    const start = parseLocalDate(item.date) || new Date(item.date);
     const end = new Date(start);
     end.setDate(end.getDate() + 1);
     lines.push(
@@ -156,12 +161,13 @@ function RateStars({ value, onRate, disabled }) {
 }
 const daysUntil = (date) => {
   if (!date) return Infinity;
-  const target = new Date(date);
+  const target = parseLocalDate(date) || new Date(date);
   const now = new Date();
-  // Compare dates only, ignoring time to avoid timezone edge cases
-  target.setHours(23, 59, 59, 999);
+  // Compare whole calendar days from local midnight to local midnight, so an item
+  // due today is 0 (not 1) and one due yesterday is -1 (Expired), not 0.
+  target.setHours(0, 0, 0, 0);
   now.setHours(0, 0, 0, 0);
-  return Math.ceil((target - now) / (1000 * 60 * 60 * 24));
+  return Math.round((target - now) / (1000 * 60 * 60 * 24));
 };
 
 export default function LearningCenter() {
@@ -169,7 +175,9 @@ export default function LearningCenter() {
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [businessLineFilter, setBusinessLineFilter] = useState('all');
   const [requiredOnly, setRequiredOnly] = useState(false);
+  const [ceOnly, setCeOnly] = useState(false);
   const [catalogLimit, setCatalogLimit] = useState(12);
+  const [detailCourse, setDetailCourse] = useState(null);
   const queryClient = useQueryClient();
 
   const { data: user, isLoading: userLoading } = useQuery({
@@ -218,7 +226,7 @@ export default function LearningCenter() {
     queryFn: () => base44.entities.Competency.filter({
       role_target: user.role,
       active: true
-    }),
+    }, undefined, ALL_ROWS),
     enabled: !!user?.role,
     initialData: []
   });
@@ -253,13 +261,18 @@ export default function LearningCenter() {
     [assignments]
   );
   const overdueAssignments = useMemo(() =>
-    assignments.filter(a => a.status === 'overdue'),
+    assignments.filter(a => {
+      if (a.status === 'completed' || a.pass_fail_result === 'passed') return false;
+      // Status may lag until cron flips to 'overdue' — also count past due dates.
+      return a.status === 'overdue' || isPastLocalDueDate(a.due_date);
+    }),
     [assignments]
   );
   const dueSoonAssignments = useMemo(() =>
     activeAssignments.filter(a => {
+      if (a.status === 'overdue' || isPastLocalDueDate(a.due_date)) return false;
       const days = daysUntil(a.due_date);
-      return days >= 0 && days <= 7 && a.status !== 'overdue';
+      return days >= 0 && days <= 7;
     }),
     [activeAssignments]
   );
@@ -290,7 +303,11 @@ export default function LearningCenter() {
   const requiredOutstanding = useMemo(
     () => requiredAssignments
       .filter(a => !(a.status === 'completed' || a.pass_fail_result === 'passed'))
-      .sort((a, b) => new Date(a.due_date || '9999') - new Date(b.due_date || '9999')),
+      .sort((a, b) => {
+        const aDue = a.due_date ? (parseLocalDate(a.due_date)?.getTime() ?? Number.POSITIVE_INFINITY) : Number.POSITIVE_INFINITY;
+        const bDue = b.due_date ? (parseLocalDate(b.due_date)?.getTime() ?? Number.POSITIVE_INFINITY) : Number.POSITIVE_INFINITY;
+        return aDue - bDue;
+      }),
     [requiredAssignments]
   );
   const requiredReadiness = requiredAssignments.length > 0
@@ -305,23 +322,13 @@ export default function LearningCenter() {
     )[0] || null;
   }, [assignments]);
 
-  // CEU hours earned from completed courses, with a per-category breakdown
-  const ceu = useMemo(() => {
-    let total = 0;
-    const byCategory = {};
-    completedAssignments.forEach(a => {
-      const course = courseById[a.course_id];
-      const hours = Number(course?.ceu_hours) || 0;
-      if (hours <= 0) return;
-      total += hours;
-      const cat = course?.category || 'general';
-      byCategory[cat] = (byCategory[cat] || 0) + hours;
-    });
-    const breakdown = Object.entries(byCategory)
-      .map(([category, hours]) => ({ category, hours }))
-      .sort((x, y) => y.hours - x.hours);
-    return { total: Math.round(total * 10) / 10, breakdown };
-  }, [completedAssignments, courseById]);
+  // Credit-year education ledger built from issued certificates: CE credit
+  // hours, clock (in-service) hours, and progress against the learner's annual
+  // hour requirement when one applies (aides, per 42 CFR §484.80(d)).
+  const ceTranscript = useMemo(
+    () => buildCeTranscript(certificates, { coursesById: courseById, user }),
+    [certificates, courseById, user]
+  );
 
   // Courses the user already has an assignment for (to gate self-enrollment)
   const assignedCourseIds = useMemo(
@@ -342,13 +349,22 @@ export default function LearningCenter() {
         items.push({ id: `asg-${a.id}`, title: a.course_title, kind: 'Training renewal', date: a.renewal_due_date });
       }
     });
-    return items.sort((x, y) => new Date(x.date) - new Date(y.date));
+    return items.sort((x, y) => {
+      const xTs = x.date ? (parseLocalDate(x.date)?.getTime() ?? Number.POSITIVE_INFINITY) : Number.POSITIVE_INFINITY;
+      const yTs = y.date ? (parseLocalDate(y.date)?.getTime() ?? Number.POSITIVE_INFINITY) : Number.POSITIVE_INFINITY;
+      return xTs - yTs;
+    });
   }, [certificates, assignments]);
 
   // Self-enrollment for elective (non-required) catalog courses
   const [enrollFeedback, setEnrollFeedback] = useState({});
   const enrollMutation = useMutation({
-    mutationFn: (courseId) => selfEnrollCourse({ courseId }),
+    mutationFn: async (courseId) => {
+      const res = await selfEnrollCourse({ courseId });
+      const data = res?.data ?? res;
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
     onMutate: (courseId) => setEnrollFeedback(prev => ({ ...prev, [courseId]: 'loading' })),
     onSuccess: (_data, courseId) => {
       setEnrollFeedback(prev => ({ ...prev, [courseId]: 'done' }));
@@ -363,10 +379,20 @@ export default function LearningCenter() {
     if (!user?.email) return;
     setDownloadingTranscript(true);
     try {
-      const response = await generateLearningTranscriptPDF({ employeeId: user.email });
-      downloadBlob(`Training_Transcript_${new Date().toISOString().split('T')[0]}.pdf`, response.data, 'application/pdf');
+      // Fetch as binary: functions.invoke UTF-8-decodes PDF bytes and corrupts
+      // the file, so use functions.fetch + arrayBuffer (mirrors UserGuides/Help).
+      const response = await base44.functions.fetch('generateLearningTranscriptPDF', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ employeeId: user.email })
+      });
+      if (!response.ok) throw new Error(`PDF generation failed (${response.status})`);
+      downloadBlob(`Training_Transcript_${toLocalISODate()}.pdf`, await response.arrayBuffer(), 'application/pdf');
     } catch (error) {
       console.error('Failed to download transcript:', error);
+      // The spinner clears either way, so without a message a failed request
+      // looked identical to a no-op click.
+      toast.error('Failed to generate your transcript PDF. Please try again.');
     } finally {
       setDownloadingTranscript(false);
     }
@@ -374,7 +400,7 @@ export default function LearningCenter() {
 
   const exportRenewalsCalendar = (items) => {
     if (!items.length) return;
-    downloadBlob(`learning_renewals_${new Date().toISOString().split('T')[0]}.ics`, buildRenewalIcs(items), 'text/calendar;charset=utf-8;');
+    downloadBlob(`learning_renewals_${toLocalISODate()}.ics`, buildRenewalIcs(items), 'text/calendar;charset=utf-8;');
   };
 
   // Aggregate course ratings: average, count, and the current user's own rating
@@ -408,7 +434,9 @@ export default function LearningCenter() {
     return [...activeAssignments].sort((a, b) => {
       const orderDiff = (order[a.status] ?? 3) - (order[b.status] ?? 3);
       if (orderDiff !== 0) return orderDiff;
-      return new Date(a.due_date || '9999') - new Date(b.due_date || '9999');
+      const aDue = a.due_date ? (parseLocalDate(a.due_date)?.getTime() ?? Number.POSITIVE_INFINITY) : Number.POSITIVE_INFINITY;
+      const bDue = b.due_date ? (parseLocalDate(b.due_date)?.getTime() ?? Number.POSITIVE_INFINITY) : Number.POSITIVE_INFINITY;
+      return aDue - bDue;
     });
   }, [activeAssignments]);
 
@@ -437,8 +465,11 @@ export default function LearningCenter() {
     if (requiredOnly) {
       filtered = filtered.filter(isRequiredCourse);
     }
+    if (ceOnly) {
+      filtered = filtered.filter(c => (Number(c.ceu_hours) || 0) > 0);
+    }
     return filtered;
-  }, [courses, searchQuery, categoryFilter, businessLineFilter, requiredOnly]);
+  }, [courses, searchQuery, categoryFilter, businessLineFilter, requiredOnly, ceOnly]);
 
   const categories = useMemo(() => {
     const cats = new Set(courses.map(c => c.category).filter(Boolean));
@@ -461,7 +492,7 @@ export default function LearningCenter() {
     [enrollments]
   );
 
-  const isEducatorOrAdmin = user?.role === 'admin' || user?.training_role === 'educator';
+  const isEducatorOrAdmin = isAdminView(user) || user?.training_role === 'educator';
   const isSupervisor = user?.training_role === 'supervisor';
 
   // Overall completion rate
@@ -489,9 +520,7 @@ export default function LearningCenter() {
 
   if (userLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-      </div>
+      <LoadingState className="min-h-[400px]" />
     );
   }
 
@@ -610,7 +639,7 @@ export default function LearningCenter() {
             {requiredOutstanding.length > 0 && (
               <div className="mt-3 space-y-2">
                 {requiredOutstanding.slice(0, 3).map(a => {
-                  const overdue = a.status === 'overdue';
+                  const overdue = a.status === 'overdue' || isPastLocalDueDate(a.due_date);
                   return (
                     <div key={a.id} className="flex items-center justify-between gap-3 p-2.5 bg-white rounded-lg border border-slate-200">
                       <div className="min-w-0 flex-1">
@@ -657,37 +686,8 @@ export default function LearningCenter() {
         </Card>
       )}
 
-      {/* Continuing Education (CEU) earned */}
-      {ceu.total > 0 && (
-        <Card className="border-navy-200 bg-navy-50/30">
-          <CardContent className="p-4 sm:p-5">
-            <div className="flex items-center justify-between gap-4 flex-wrap">
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="w-11 h-11 bg-navy-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                  <GraduationCap className="w-6 h-6 text-navy-600" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-slate-900">Continuing Education Earned</h3>
-                  <p className="text-sm text-slate-600">CEU hours from your completed courses</p>
-                </div>
-              </div>
-              <div className="text-right flex-shrink-0">
-                <p className="text-3xl font-bold text-navy-600">{ceu.total}</p>
-                <p className="text-xs text-slate-500">CEU hours</p>
-              </div>
-            </div>
-            {ceu.breakdown.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-3">
-                {ceu.breakdown.map(b => (
-                  <Badge key={b.category} variant="outline" className="capitalize text-xs">
-                    {b.category.replace(/_/g, ' ')}: {b.hours} hr{b.hours === 1 ? '' : 's'}
-                  </Badge>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
+      {/* Continuing education earned, scoped to the current credit year */}
+      {ceTranscript.years.length > 0 && <CeCreditSummary transcript={ceTranscript} compact />}
 
       {/* Achievements highlight */}
       {leaderboardEntry && (
@@ -852,9 +852,7 @@ export default function LearningCenter() {
         {/* Active Assignments Tab */}
         <TabsContent value="active" className="space-y-3">
           {assignmentsLoading ? (
-            <div className="flex justify-center py-12">
-              <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
-            </div>
+            <LoadingState className="py-12" />
           ) : sortedActive.length === 0 ? (
             <Card>
               <CardContent className="p-12 text-center">
@@ -865,7 +863,10 @@ export default function LearningCenter() {
             </Card>
           ) : (
             sortedActive.map(assignment => {
-              const isOverdue = assignment.status === 'overdue';
+              const isOverdue = assignment.status === 'overdue'
+                || (isPastLocalDueDate(assignment.due_date)
+                  && assignment.status !== 'completed'
+                  && assignment.pass_fail_result !== 'passed');
               const isInProgress = assignment.status === 'in_progress';
               const days = daysUntil(assignment.due_date);
               const isDueSoon = days >= 0 && days <= 7 && !isOverdue;
@@ -937,8 +938,10 @@ export default function LearningCenter() {
             />
           ) : (
             activePlans.map(enrollment => {
+              // daysUntil treats the date-only due date as a local calendar day, so a
+              // plan due TODAY isn't flagged overdue all day (UTC-midnight parse bug).
               const isOverdue = enrollment.status === 'overdue' ||
-                (enrollment.due_date && new Date(enrollment.due_date) < new Date() && enrollment.status !== 'completed');
+                (enrollment.due_date && daysUntil(enrollment.due_date) < 0 && enrollment.status !== 'completed');
               return (
                 <Card key={enrollment.id} className={`border transition-all hover:shadow-md ${
                   isOverdue ? 'border-red-200 bg-red-50/20' : 'border-slate-200'
@@ -1027,6 +1030,19 @@ export default function LearningCenter() {
                 <ShieldCheck className="w-3.5 h-3.5 inline mr-1 -mt-0.5" />
                 Required only
               </button>
+              <button
+                type="button"
+                aria-pressed={ceOnly}
+                onClick={() => { setCeOnly(v => !v); setCatalogLimit(12); }}
+                className={`text-sm rounded-lg px-3 py-2 border transition-colors whitespace-nowrap focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 ${
+                  ceOnly
+                    ? 'bg-emerald-600 text-white border-emerald-600'
+                    : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                }`}
+              >
+                <GraduationCap className="w-3.5 h-3.5 inline mr-1 -mt-0.5" />
+                CE credit
+              </button>
             </div>
           </div>
 
@@ -1064,13 +1080,22 @@ export default function LearningCenter() {
                         )}
                       </div>
                     </div>
-                    <h3 className="font-bold text-slate-900 leading-tight group-hover:text-blue-700 transition-colors">
+                    <button
+                      type="button"
+                      onClick={() => setDetailCourse(course)}
+                      className="block text-left font-bold text-slate-900 leading-tight group-hover:text-blue-700 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded"
+                    >
                       {course.title}
-                    </h3>
+                    </button>
                     {course.short_description && (
                       <p className="text-sm text-slate-500 line-clamp-2">{course.short_description}</p>
                     )}
-                    <div className="flex items-center gap-3 text-xs text-slate-400 pt-1">
+                    <div className="flex items-center gap-3 text-xs text-slate-400 pt-1 flex-wrap">
+                      {(Number(course.ceu_hours) || 0) > 0 && (
+                        <span className="flex items-center gap-1 text-emerald-700 font-medium">
+                          <GraduationCap className="w-3 h-3" /> {course.ceu_hours} CE hr{course.ceu_hours === 1 ? '' : 's'}
+                        </span>
+                      )}
                       {course.estimated_minutes && (
                         <span className="flex items-center gap-1">
                           <Clock className="w-3 h-3" /> {course.estimated_minutes} min
@@ -1091,6 +1116,14 @@ export default function LearningCenter() {
                       <StarsDisplay value={feedbackByCourse[course.id].avg} count={feedbackByCourse[course.id].count} />
                     )}
                     <div className="space-y-2 pt-1">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full"
+                        onClick={() => setDetailCourse(course)}
+                      >
+                        <BookOpen className="w-4 h-4 mr-1.5" /> Course details
+                      </Button>
                       {(() => {
                         const state = enrollFeedback[course.id];
                         if (assignedCourseIds.has(course.id) || state === 'done') {
@@ -1146,6 +1179,18 @@ export default function LearningCenter() {
               </Button>
             </div>
           )}
+
+          <CourseCatalogDetail
+            course={detailCourse}
+            open={!!detailCourse}
+            onOpenChange={(next) => { if (!next) setDetailCourse(null); }}
+            enrolled={!!detailCourse && (assignedCourseIds.has(detailCourse.id) || enrollFeedback[detailCourse.id] === 'done')}
+            required={!!detailCourse && isRequiredCourse(detailCourse)}
+            enrolling={!!detailCourse && enrollFeedback[detailCourse.id] === 'loading'}
+            enrollError={!!detailCourse && enrollFeedback[detailCourse.id] === 'error'}
+            onEnroll={(courseId) => enrollMutation.mutate(courseId)}
+            canPreview={isEducatorOrAdmin}
+          />
         </TabsContent>
 
         {/* Competencies Tab */}
@@ -1261,7 +1306,7 @@ export default function LearningCenter() {
               {(() => {
               let lastMonth = null;
               return renewals.map(item => {
-                const monthLabel = new Date(item.date).toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+                const monthLabel = formatLocalDate(item.date, { month: 'long', year: 'numeric' });
                 const showHeader = monthLabel !== lastMonth;
                 lastMonth = monthLabel;
                 const days = daysUntil(item.date);
@@ -1371,9 +1416,12 @@ export default function LearningCenter() {
         {/* Transcripts — Annual and Employee certificate history. */}
         <TabsContent value="transcripts">
           <Suspense fallback={tabLoader}>
-            <Tabs defaultValue="annual" className="space-y-4">
+            <Tabs defaultValue="credit" className="space-y-4">
               <div className="overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0">
                 <TabsList className="inline-flex w-max min-w-full gap-1 h-auto p-1">
+                  <TabsTrigger value="credit" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
+                    CE Credit
+                  </TabsTrigger>
                   <TabsTrigger value="annual" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
                     Annual
                   </TabsTrigger>
@@ -1382,6 +1430,9 @@ export default function LearningCenter() {
                   </TabsTrigger>
                 </TabsList>
               </div>
+              <TabsContent value="credit">
+                <CeCreditSummary transcript={ceTranscript} />
+              </TabsContent>
               <TabsContent value="annual">
                 <Suspense fallback={tabLoader}>
                   <AnnualEducationTranscript />

@@ -1,8 +1,10 @@
 import { useState } from "react";
+import { toLocalISODate } from "@/lib/dateLocal";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { toCsvRows } from "@/components/admin/csvExport";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import EmptyState from "@/components/ui/empty-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,6 +36,8 @@ import {
   Legend,
   ResponsiveContainer
 } from "recharts";
+import { endOfDay, parseISO } from "date-fns";
+import { ALL_ROWS } from '@/lib/queryLimits';
 
 const COLORS = ['#10b981', '#3557b0', '#f59e0b', '#ef4444', '#8b5cf6'];
 
@@ -50,8 +54,11 @@ export default function WorkflowMonitoringDashboard() {
 
   // Fetch automation rules for filtering
   const { data: automationRules = [] } = useQuery({
+    // Same sort as OASISAutomationSettings so the two views that share the
+    // ['automationRules'] cache entry can't hand each other a differently
+    // ordered list depending on which mounted first.
     queryKey: ['automationRules'],
-    queryFn: () => base44.entities.OASISAutomationRule.list(),
+    queryFn: () => base44.entities.OASISAutomationRule.list('-priority', ALL_ROWS),
   });
 
   // Filter data
@@ -70,7 +77,7 @@ export default function WorkflowMonitoringDashboard() {
       matches = false;
     }
 
-    if (dateRange.end && new Date(exec.created_date) > new Date(dateRange.end)) {
+    if (dateRange.end && new Date(exec.created_date) > endOfDay(parseISO(dateRange.end))) {
       matches = false;
     }
 
@@ -146,7 +153,7 @@ export default function WorkflowMonitoringDashboard() {
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `Workflow_Report_${new Date().toISOString().split('T')[0]}.csv`;
+    a.download = `Workflow_Report_${toLocalISODate()}.csv`;
     document.body.appendChild(a);
     a.click();
     window.URL.revokeObjectURL(url);
@@ -342,7 +349,7 @@ export default function WorkflowMonitoringDashboard() {
         </CardHeader>
         <CardContent>
           {filteredExecutions.length === 0 ? (
-            <p className="text-center text-slate-500 py-8">No workflow executions found</p>
+            <EmptyState icon={Activity} title="No workflow executions found" description="" />
           ) : (
             <div className="space-y-3">
               {filteredExecutions.slice(0, 20).map((exec) => (

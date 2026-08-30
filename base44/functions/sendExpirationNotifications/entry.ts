@@ -1,31 +1,79 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
+// <<<BEGIN SHARED HELPER: schedulerAuth — generated, edit base44/_shared/backendHelpers.mjs>>>
+const SCHEDULER_SECRET_HEADER = 'x-internal-secret';
+function isSchedulerAdmin(user) {
+  return !!user && (
+    user.role === 'admin' || user.account_type === 'agency_admin' ||
+    user.account_type === 'super_admin'
+  );
+}
+// Constant-time string compare for the shared-secret check (mirrors
+// createTelehealthToken's timingSafeEqual). A plain === short-circuits on the
+// first differing character, so response timing could leak how much of the
+// secret matched. Dependency-free char-code XOR so the identical source runs
+// under Deno (consumers) and Node (tests).
+function timingSafeEqualStr(a, b) {
+  if (typeof a !== 'string' || typeof b !== 'string' || a.length !== b.length) return false;
+  let mismatch = 0;
+  for (let i = 0; i < a.length; i++) mismatch |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return mismatch === 0;
+}
+function getSchedulerAuthError(req, user) {
+  if (isSchedulerAdmin(user)) return null;
+  const expectedSecret = String(Deno.env.get('INTERNAL_FN_SECRET') || '').trim();
+  if (!expectedSecret) {
+    return Response.json(
+      { error: 'Server misconfigured: INTERNAL_FN_SECRET is required for scheduled/internal functions' },
+      { status: 500 },
+    );
+  }
+  const providedSecret = String(req.headers.get(SCHEDULER_SECRET_HEADER) || '').trim();
+  if (timingSafeEqualStr(providedSecret, expectedSecret)) return null;
+  return Response.json(
+    { error: user ? 'Forbidden: admin or scheduler secret required' : 'Unauthorized: scheduler secret required' },
+    { status: user ? 403 : 401 },
+  );
+}
+// <<<END SHARED HELPER: schedulerAuth>>>
+
+// <<<BEGIN SHARED HELPER: requireActiveUser — generated, edit base44/_shared/backendHelpers.mjs>>>
+const isDeactivatedUser = (u) => !!u && u.is_active === false;
+const DEACTIVATED_USER_RESPONSE = () => Response.json(
+  { error: 'Unauthorized - account is deactivated' },
+  { status: 403 },
+);
+// <<<END SHARED HELPER: requireActiveUser>>>
+
+
+// Local calendar day count for date-only YYYY-MM-DD fields (mirrors
+// sendPersonnelExpirationNotifications / remindPlanOverdueStaff).
+function localDaysUntil(dateOnly, now = new Date()) {
+  const raw = String(dateOnly || '').trim();
+  let target;
+  if (/^\d{4}-\d{1,2}-\d{1,2}$/.test(raw)) {
+    const [y, m, d] = raw.split('-').map(Number);
+    target = new Date(y, m - 1, d);
+  } else {
+    target = new Date(dateOnly);
+  }
+  if (Number.isNaN(target.getTime())) return null;
+  const todayLocal = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  return Math.round((target.getTime() - todayLocal.getTime()) / (1000 * 60 * 60 * 24));
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
 
-    // Authorization: opt-in lockdown for this privileged scheduled job (mirrors
-    // processTrainingRenewals / syncFaxStatuses). When INTERNAL_FN_SECRET is set,
-    // require an admin OR the internal-secret header; the no-identity cron path is
-    // allowed only while no secret is configured.
+    // Authorization: privileged scheduled job (mirrors processTrainingRenewals /
+    // syncFaxStatuses). Admins can run it with session auth; scheduled/internal callers must send `x-internal-secret`; every other caller is rejected.
     const me = await base44.auth.me().catch(() => null);
-    const isAdmin = me?.role === 'admin';
-    const internalSecret = Deno.env.get('INTERNAL_FN_SECRET');
-    if (internalSecret) {
-      if (!isAdmin && req.headers.get('x-internal-secret') !== internalSecret) {
-        return Response.json({ error: 'Forbidden' }, { status: 403 });
-      }
-    } else if (me && !isAdmin) {
-      return Response.json({ error: 'Forbidden: admin access required' }, { status: 403 });
-    }
+    const authError = getSchedulerAuthError(req, me);
+    if (authError) return authError;
+    if (isDeactivatedUser(me)) return DEACTIVATED_USER_RESPONSE();
 
-    // Get today's date and 30 days from now
     const today = new Date();
-    const thirtyDaysFromNow = new Date(today);
-    thirtyDaysFromNow.setDate(today.getDate() + 30);
-    
-    const todayStr = today.toISOString().split('T')[0];
-    const thirtyDaysStr = thirtyDaysFromNow.toISOString().split('T')[0];
 
     // Fetch assignments/credentials, sorted ASCENDING by date so the SOONEST-
     // expiring (the ones this job exists to notify) are within the 500-row cap.
@@ -33,7 +81,7 @@ Deno.serve(async (req) => {
     // ones off the tail — exactly the records that needed a warning.
     const assignments = await base44.asServiceRole.entities.TrainingAssignment.filter({
       status: 'completed'
-    }, 'due_date', 500);
+    }, 'renewal_due_date', 500);
 
     const credentials = await base44.asServiceRole.entities.PersonnelCredential.filter({
       status: 'approved'
@@ -41,34 +89,63 @@ Deno.serve(async (req) => {
 
     const notifications = [];
     const adminNotifications = [];
-    // Deferred reminder-tier marker writes. These must run only AFTER the employee
-    // notifications are persisted — marking a tier "sent" before bulkCreate means a
-    // bulkCreate failure permanently suppresses that reminder for every record
-    // processed before the failure. Worst case if a marker write fails post-create
-    // is a duplicate reminder next run (the safe direction).
-    const markerUpdates = [];
+    const runId = typeof crypto !== 'undefined' && crypto.randomUUID
+      ? crypto.randomUUID()
+      : `exp-${Date.now()}`;
+
+    // Resolve each staff member's agency once so training-expiration items can be
+    // attributed. TrainingAssignment carries no agency_name, so these items used
+    // to be built unscoped and — because the admin summary treats a null agency
+    // as "visible to every admin" — every tenant's admins received every other
+    // agency's staff names + course titles. Credentials already carry agency_name.
+    const allStaff = await base44.asServiceRole.entities.User.list('-created_date', 5000).catch(() => []);
+    const agencyByEmail = new Map(
+      (Array.isArray(allStaff) ? allStaff : [])
+        .filter((u) => u && u.email)
+        .map((u) => [u.email, String(u.agency_name || '').trim() || null]),
+    );
 
     // Reminder tiers (days before expiration). Fire when the count is AT or
     // BELOW a tier that hasn't been sent yet, rather than on an exact-day match.
     // A missed cron run no longer skips the tier permanently; per-record
-    // `reminder_offsets_sent` tracking prevents re-sending a tier already fired.
+    // `expiration_note_offsets_sent` tracking prevents re-sending a tier already fired.
     const reminderOffsets = [30, 14, 7, 3];
 
     // Process training assignments with renewal dates
     for (const assignment of assignments) {
       if (!assignment.renewal_due_date) continue;
 
-      const renewalDate = new Date(assignment.renewal_due_date);
-      const daysUntilExpiration = Math.ceil((renewalDate - today) / (1000 * 60 * 60 * 24));
+      const daysUntilExpiration = localDaysUntil(assignment.renewal_due_date, today);
+      if (daysUntilExpiration === null) continue;
 
-      const remindersSent = assignment.reminder_offsets_sent || [];
+      // Dedicated marker for THIS job's in-app expiration note — sendRenewalReminders
+      // uses TrainingAssignment.reminder_offsets_sent with a different tier set, and
+      // sharing it meant whichever ran first suppressed the other's reminders.
+      const remindersSent = assignment.expiration_note_offsets_sent || [];
       const dueOffsets = reminderOffsets.filter(
-        (offset) => daysUntilExpiration <= offset && !remindersSent.includes(offset)
+        (offset) => daysUntilExpiration >= 0 && daysUntilExpiration <= offset && !remindersSent.includes(offset)
       );
 
-      if (dueOffsets.length > 0) {
-        // Create notification for employee
-        notifications.push({
+      if (dueOffsets.length === 0) continue;
+
+      const nextOffsets = [...remindersSent, ...dueOffsets];
+      const claimToken = `exp:${runId}`;
+      try {
+        await base44.asServiceRole.entities.TrainingAssignment.update(assignment.id, {
+          expiration_note_offsets_sent: nextOffsets,
+          expiration_note_claimed_by: claimToken,
+        });
+      } catch {
+        continue;
+      }
+      const claimCheck = await base44.asServiceRole.entities.TrainingAssignment
+        .filter({ id: assignment.id }, '-created_date', 1).catch(() => []);
+      if (!claimCheck[0] || claimCheck[0].expiration_note_claimed_by !== claimToken) {
+        continue;
+      }
+
+      try {
+        await base44.asServiceRole.entities.Notification.create({
           user_email: assignment.assigned_to_user_id,
           type: 'expiration_warning',
           title: `Training Renewal Due Soon: ${assignment.course_title}`,
@@ -78,21 +155,21 @@ Deno.serve(async (req) => {
           is_read: false,
           expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
         });
-
-        // Create admin notification
+        notifications.push(1);
         adminNotifications.push({
           type: 'training_expiration',
           user_id: assignment.assigned_to_user_id,
           course_title: assignment.course_title,
           days_until_expiration: daysUntilExpiration,
-          renewal_due_date: assignment.renewal_due_date
+          renewal_due_date: assignment.renewal_due_date,
+          agency_name: agencyByEmail.get(assignment.assigned_to_user_id) || null,
         });
-
-        // Record every newly-crossed tier so it is never re-sent — deferred until
-        // after the notifications are actually created (see markerUpdates above).
-        markerUpdates.push(() => base44.asServiceRole.entities.TrainingAssignment.update(assignment.id, {
-          reminder_offsets_sent: [...remindersSent, ...dueOffsets]
-        }));
+      } catch (err) {
+        console.error('sendExpirationNotifications: assignment notify failed', err?.message || err);
+        await base44.asServiceRole.entities.TrainingAssignment.update(assignment.id, {
+          expiration_note_offsets_sent: remindersSent,
+          expiration_note_claimed_by: '',
+        }).catch(() => {});
       }
     }
 
@@ -100,17 +177,37 @@ Deno.serve(async (req) => {
     for (const credential of credentials) {
       if (!credential.expiration_date) continue;
 
-      const expirationDate = new Date(credential.expiration_date);
-      const daysUntilExpiration = Math.ceil((expirationDate - today) / (1000 * 60 * 60 * 24));
+      const daysUntilExpiration = localDaysUntil(credential.expiration_date, today);
+      if (daysUntilExpiration === null) continue;
 
-      const remindersSent = credential.reminder_offsets_sent || [];
+      // Dedicated marker for THIS job — sendCredentialRenewalReminders and
+      // sendPersonnelExpirationNotifications key off other fields on the same
+      // PersonnelCredential, so a shared marker cross-suppressed their reminders.
+      const remindersSent = credential.expiration_note_offsets_sent || [];
       const dueOffsets = reminderOffsets.filter(
-        (offset) => daysUntilExpiration <= offset && !remindersSent.includes(offset)
+        (offset) => daysUntilExpiration >= 0 && daysUntilExpiration <= offset && !remindersSent.includes(offset)
       );
 
-      if (dueOffsets.length > 0) {
-        // Create notification for employee
-        notifications.push({
+      if (dueOffsets.length === 0) continue;
+
+      const nextOffsets = [...remindersSent, ...dueOffsets];
+      const claimToken = `exp:${runId}`;
+      try {
+        await base44.asServiceRole.entities.PersonnelCredential.update(credential.id, {
+          expiration_note_offsets_sent: nextOffsets,
+          expiration_note_claimed_by: claimToken,
+        });
+      } catch {
+        continue;
+      }
+      const claimCheck = await base44.asServiceRole.entities.PersonnelCredential
+        .filter({ id: credential.id }, '-created_date', 1).catch(() => []);
+      if (!claimCheck[0] || claimCheck[0].expiration_note_claimed_by !== claimToken) {
+        continue;
+      }
+
+      try {
+        await base44.asServiceRole.entities.Notification.create({
           user_email: credential.user_id,
           type: 'credential_expiration',
           title: `Credential Expiring Soon: ${credential.title}`,
@@ -120,50 +217,56 @@ Deno.serve(async (req) => {
           is_read: false,
           expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
         });
-
-        // Create admin notification
+        notifications.push(1);
         adminNotifications.push({
           type: 'credential_expiration',
           user_id: credential.user_id,
           user_name: credential.user_name,
           credential_title: credential.title,
           days_until_expiration: daysUntilExpiration,
-          expiration_date: credential.expiration_date
+          expiration_date: credential.expiration_date,
+          agency_name: credential.agency_name || null,
         });
-
-        // Record every newly-crossed tier so it is never re-sent — deferred until
-        // after the notifications are actually created (see markerUpdates above).
-        markerUpdates.push(() => base44.asServiceRole.entities.PersonnelCredential.update(credential.id, {
-          reminder_offsets_sent: [...remindersSent, ...dueOffsets]
-        }));
+      } catch (err) {
+        console.error('sendExpirationNotifications: credential notify failed', err?.message || err);
+        await base44.asServiceRole.entities.PersonnelCredential.update(credential.id, {
+          expiration_note_offsets_sent: remindersSent,
+          expiration_note_claimed_by: '',
+        }).catch(() => {});
       }
     }
 
-    // Bulk create employee notifications
-    if (notifications.length > 0) {
-      await base44.asServiceRole.entities.Notification.bulkCreate(notifications);
-    }
-
-    // Only now that the employee notifications are persisted, record the crossed
-    // reminder tiers so a bulkCreate failure can't permanently drop a reminder.
-    for (const applyMarker of markerUpdates) {
-      await applyMarker();
-    }
-
-    // Create consolidated admin notification
     if (adminNotifications.length > 0) {
-      const adminUsers = await base44.asServiceRole.entities.User.filter({ role: 'admin' }, '', 100);
-      
+      // Scope each admin to expirations from their own agency (super_admins see
+      // all). Unscoped fan-out leaked staff names/credential titles across
+      // tenants. Reuse the staff roster fetched above.
+      const adminUsers = (Array.isArray(allStaff) ? allStaff : []).filter((u) =>
+        u && u.email && (
+          u.role === 'admin' ||
+          u.account_type === 'agency_admin' ||
+          u.account_type === 'super_admin'
+        )
+      );
+
       for (const admin of adminUsers) {
+        // Agency-scoped admins receive ONLY items positively attributed to their
+        // agency; unattributable items (no agency_name) go to super_admins only,
+        // never fanned out to every agency admin.
+        const scoped = admin.account_type === 'super_admin'
+          ? adminNotifications
+          : adminNotifications.filter((n) =>
+            n.agency_name && n.agency_name === admin.agency_name
+          );
+        if (scoped.length === 0) continue;
         await base44.asServiceRole.entities.Notification.create({
           user_email: admin.email,
           type: 'admin_expiration_summary',
-          title: `${adminNotifications.length} Upcoming Expirations`,
-          message: `There are ${adminNotifications.length} training certifications or credentials expiring soon.`,
+          title: `${scoped.length} Upcoming Expirations`,
+          message: `There are ${scoped.length} training certifications or credentials expiring soon.`,
           action_url: '/AdminOperations',
           priority: 'medium',
           is_read: false,
-          metadata: { expirations: adminNotifications },
+          metadata: { expirations: scoped },
           expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
         });
       }
@@ -177,6 +280,7 @@ Deno.serve(async (req) => {
     });
 
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error('sendExpirationNotifications failed:', error);
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
 });

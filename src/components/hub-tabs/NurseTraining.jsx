@@ -3,8 +3,10 @@ import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { useMyTrainingCompletions } from "@/hooks/useMyTrainingCompletions";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
+  ArrowLeft,
   Target,
   Award,
   TrendingUp,
@@ -26,6 +28,7 @@ import TrainingModuleViewer from "@/components/training/TrainingModuleViewer";
 import PersonalizedLearningPath from "@/components/training/PersonalizedLearningPath";
 import TrainingLibrary from "@/components/training/TrainingLibrary";
 import { logActivity, ActivityActions } from "@/components/utils/activityLogger";
+import { PATIENT_HISTORY_ROWS } from '@/lib/queryLimits';
 
 export default function NurseTraining() {
   const [activeTab, setActiveTab] = useState("onboarding");
@@ -47,7 +50,7 @@ export default function NurseTraining() {
     queryKey: ['myTrainingProgress', currentUser?.email],
     queryFn: () => base44.entities.MicroLearningProgress.filter({ 
       nurse_email: currentUser?.email 
-    }),
+    }, undefined, PATIENT_HISTORY_ROWS),
     enabled: !!currentUser?.email,
   });
 
@@ -56,7 +59,7 @@ export default function NurseTraining() {
     queryFn: () => base44.entities.TrainingRecommendation.filter({ 
       nurse_email: currentUser?.email,
       addressed: false
-    }),
+    }, undefined, PATIENT_HISTORY_ROWS),
     enabled: !!currentUser?.email,
   });
 
@@ -77,20 +80,24 @@ export default function NurseTraining() {
     setViewingModule(true);
   };
 
-  const handleModuleComplete = (_score) => {
-    setViewingModule(false);
-    setSelectedModule(null);
-  };
-
   if (viewingModule && selectedModule) {
+    // TrainingModuleViewer takes only { module } — it ignored nurseEmail/onComplete/
+    // onBack and renders no navigation of its own, so replacing the whole tab with it
+    // left the user with no way back. Supply the exit affordances at this call site.
     return (
-      <div className="p-4 md:p-8 max-w-5xl mx-auto">
-        <TrainingModuleViewer
-          module={selectedModule}
-          nurseEmail={currentUser?.email}
-          onComplete={handleModuleComplete}
-          onBack={() => setViewingModule(false)}
-        />
+      <div className="p-4 md:p-8 max-w-5xl mx-auto space-y-4">
+        <Button variant="ghost" onClick={() => { setViewingModule(false); setSelectedModule(null); }}>
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back to training
+        </Button>
+        {/* Keyed on the module so the viewer's per-module read progress resets
+            when a different module is opened (see TrainingCoursePlayer.jsx). */}
+        <TrainingModuleViewer key={selectedModule.id} module={selectedModule} />
+        {/* Deliberately no "Mark complete" here. Completion is owned by the
+            graded flow (TrainingAssignment + TrainingAttempt + certificate); a
+            button in this viewer could only close the panel, so it would have
+            told a nurse their required training was done while it stayed
+            incomplete everywhere else — including the compliance reports. */}
       </div>
     );
   }

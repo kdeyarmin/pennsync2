@@ -94,6 +94,14 @@
       "default": false,
       "description": "Whether delivery notification was sent"
     },
+    "delivery_notify_claimed_by": {
+      "type": "string",
+      "description": "Best-effort claim token for delivery confirmation notify (poller/webhook)"
+    },
+    "failure_notify_claimed_by": {
+      "type": "string",
+      "description": "Best-effort claim token for final-failure notify (poller/webhook)"
+    },
     "ocr_text": {
       "type": "string",
       "description": "Extracted text content from OCR"
@@ -106,6 +114,10 @@
     "ocr_confidence": {
       "type": "number",
       "description": "OCR confidence score 0-100"
+    },
+    "ocr_failure_reason": {
+      "type": "string",
+      "description": "Why the last OCR attempt failed. Distinct from failure_reason (which records fax SEND/delivery failures) so a transient OCR error does not overwrite the real send-failure reason that retry/polling/UI read."
     },
     "retry_claimed_by": {
       "type": "string",

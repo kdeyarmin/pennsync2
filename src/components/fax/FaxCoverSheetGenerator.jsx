@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { configNotReadyMessage } from "@/lib/aiFeatureError";
 import { Button } from "@/components/ui/button";
@@ -39,6 +39,25 @@ export default function FaxCoverSheetGenerator({
     stat: "bg-red-100 text-red-700 border-red-200",
   };
 
+  const prevRecipientRef = useRef({ recipientNumber, recipientName, pageCount });
+
+  // A generated cover sheet bakes recipientNumber/recipientName into a rendered
+  // PDF. If the parent's recipient selection changes afterward, that PDF is now
+  // stale and would misidentify the recipient it's actually being sent to — so
+  // invalidate the cached cover sheet and force the user to regenerate it.
+  useEffect(() => {
+    const prev = prevRecipientRef.current;
+    const changed = prev.recipientNumber !== recipientNumber ||
+      prev.recipientName !== recipientName ||
+      prev.pageCount !== pageCount;
+    prevRecipientRef.current = { recipientNumber, recipientName, pageCount };
+    if (changed && coverData) {
+      setCoverData(null);
+      onCoverSheetReady?.(null, null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- coverData/onCoverSheetReady intentionally omitted; this should only re-run when the recipient/page props change, not when the cover sheet it manages (or the callback) changes
+  }, [recipientNumber, recipientName, pageCount]);
+
   const generateCoverSheet = async () => {
     setIsGenerating(true);
     try {
@@ -75,7 +94,7 @@ export default function FaxCoverSheetGenerator({
     const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "letter" });
     const W = 215.9;
     const margin = 20;
-    let y = margin;
+    let y = 26;
 
     // Header bar
     pdf.setFillColor(30, 64, 175); // indigo-800
@@ -85,12 +104,10 @@ export default function FaxCoverSheetGenerator({
     pdf.setFont("helvetica", "bold");
     pdf.text("CONFIDENTIAL FAX TRANSMISSION", W / 2, 12, { align: "center" });
 
-    y = 26;
-
     // Urgency badge
     const urgencyLabel = (data.urgency || "routine").toUpperCase();
     const urgencyColor = data.urgency === "stat" ? [220, 38, 38] : data.urgency === "urgent" ? [217, 119, 6] : [22, 163, 74];
-    pdf.setFillColor(...urgencyColor);
+    pdf.setFillColor(urgencyColor[0], urgencyColor[1], urgencyColor[2]);
     pdf.roundedRect(margin, y - 4, 40, 8, 2, 2, "F");
     pdf.setTextColor(255, 255, 255);
     pdf.setFontSize(9);
@@ -308,11 +325,14 @@ export default function FaxCoverSheetGenerator({
             <div className="space-y-1">
               <Label className="text-xs">Sender Fax #</Label>
               <Input
-                placeholder="+1234567890"
+                placeholder="Office fax (default)"
                 value={form.sender_number}
                 onChange={(e) => setForm(f => ({ ...f, sender_number: e.target.value }))}
                 className="h-11 text-sm"
               />
+              <p className="text-[10px] text-slate-400">
+                Leave blank to show the office fax number, so replies go to the office.
+              </p>
             </div>
           </div>
 
@@ -338,7 +358,7 @@ export default function FaxCoverSheetGenerator({
             onClick={generateCoverSheet}
             disabled={isGenerating}
             size="sm"
-            className="w-full h-11 rounded-xl bg-slate-900 text-white hover:bg-slate-800"
+            className="w-full h-11 rounded-xl"
           >
             {isGenerating ? (
               <><Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" /> Generating...</>

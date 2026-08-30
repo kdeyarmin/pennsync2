@@ -1,5 +1,14 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
-import OpenAI from 'npm:openai';
+import OpenAI from 'npm:openai@4.104.0';
+
+// <<<BEGIN SHARED HELPER: requireActiveUser — generated, edit base44/_shared/backendHelpers.mjs>>>
+const isDeactivatedUser = (u) => !!u && u.is_active === false;
+const DEACTIVATED_USER_RESPONSE = () => Response.json(
+  { error: 'Unauthorized - account is deactivated' },
+  { status: 403 },
+);
+// <<<END SHARED HELPER: requireActiveUser>>>
+
 
 Deno.serve(async (req) => {
     try {
@@ -9,6 +18,7 @@ Deno.serve(async (req) => {
         if (!user) {
             return Response.json({ error: 'Unauthorized' }, { status: 401 });
         }
+        if (isDeactivatedUser(user)) return DEACTIVATED_USER_RESPONSE();
 
         // Construct the OpenAI client inside the handler — module-level init
         // crashes boot if the secret is missing (no try/catch reached, no logs).
@@ -44,13 +54,16 @@ Deno.serve(async (req) => {
 
         const transcript = transcriptionResponse;
 
-        // 2. Generate the SOAP note using Claude (claude-opus-4-8) — the most
-        // capable model, the best fit for clinical reasoning over the transcript.
-        // Transcription stays on OpenAI's gpt-4o-transcribe above; only this
-        // reasoning step uses Anthropic (same direct-API pattern as
-        // generateFaxCoverPage). claude-opus-4-8 rejects temperature/top_p and
-        // does not take an OpenAI-style response_format, so the JSON contract is
-        // expressed in the prompt and extracted from the response text.
+        // 2. Generate the SOAP note using Claude — the reasoning step over the
+        // transcript. Transcription stays on OpenAI's gpt-4o-transcribe above;
+        // only this step uses Anthropic (same direct-API pattern as
+        // generateFaxCoverPage). The model id MUST be a real Anthropic id:
+        // 'automatic' is a Base44 InvokeLLM convention that 404s on the direct
+        // Messages API, so every SOAP draft was silently failing to the
+        // degrade path below. claude-opus-4-8 runs without thinking when the
+        // thinking field is omitted, so the whole max_tokens budget goes to the
+        // JSON answer; it does not take an OpenAI-style response_format, so the
+        // JSON contract is expressed in the prompt and extracted from the text.
         const anthropicKey = Deno.env.get("ANTHROPIC_API_KEY");
         if (!anthropicKey) {
             return Response.json({ error: 'Anthropic API key not configured' }, { status: 500 });
@@ -66,7 +79,7 @@ Deno.serve(async (req) => {
             body: JSON.stringify({
                 model: 'claude-opus-4-8',
                 max_tokens: 2048,
-                system: "You are an expert clinical documentation assistant. Extract information from the provided transcript and generate a structured SOAP note (Subjective, Objective, Assessment, Plan). Return ONLY a JSON object with keys: subjective, objective, assessment, plan.",
+                system: "You are an expert clinical documentation assistant. Re-organize ONLY the information in the provided transcript into a structured SOAP note (Subjective, Objective, Assessment, Plan). This is a DRAFT for a nurse to verify — it is NOT the final record. Do NOT add, infer, or invent any clinical fact, vital sign, measurement, medication, diagnosis, or finding that is not explicitly stated in the transcript. If something was not said, leave it out. Return ONLY a JSON object with keys: subjective, objective, assessment, plan.",
                 messages: [
                     {
                         role: "user",
@@ -95,7 +108,13 @@ Deno.serve(async (req) => {
            const jsonMatch = soapText.match(/\{[\s\S]*\}/);
            soapNote = JSON.parse(jsonMatch ? jsonMatch[0] : soapText);
         } catch (e) {
-           soapNote = { subjective: "Error parsing response.", objective: "", assessment: "", plan: "" };
+           // Degrade to the nurse's actual words, never placeholder junk: the
+           // client renders these fields, and "Error parsing response." could
+           // otherwise end up pasted into a draft note.
+           soapNote = {
+             subjective: String(transcript || '').trim() || 'Transcription unavailable — please re-record.',
+             objective: "", assessment: "", plan: "", parse_error: true,
+           };
         }
 
         soapNote.raw_transcript = transcript;
@@ -104,6 +123,6 @@ Deno.serve(async (req) => {
 
     } catch (error) {
         console.error("Error in transcribeAndGenerateSOAPNote:", error);
-        return Response.json({ error: error.message || 'Internal Server Error' }, { status: 500 });
+        return Response.json({ error: 'Internal Server Error' }, { status: 500 });
     }
 });

@@ -1,16 +1,23 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { toLocalISODate } from "@/lib/dateLocal";
 import { useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { createPageUrl } from "@/utils";
 import ReferralPDFSummarizer from "@/components/referral/ReferralPDFSummarizer";
 import ReferralAnalyzer from "@/components/referral/ReferralAnalyzer";
+import AdmissionBriefEmailCard from "@/components/referral/AdmissionBriefEmailCard";
+import ClinicalManagerBriefCard from "@/components/referral/ClinicalManagerBriefCard";
+import ProviderFaxRequestCard from "@/components/referral/ProviderFaxRequestCard";
+import FinancialGate from "@/components/ui/FinancialGate";
+import { generateDiagnosisCodes, codeLabel } from "@/components/referral/diagnosisCodeGenerator";
+import { referralPatientReadiness } from "@/components/referral/referralPatientReadiness";
 import AIAdmissionDocumentationAssistant from "@/components/clinical/AIAdmissionDocumentationAssistant";
 import AIGeneratedOASISAssessment from "@/components/oasis/AIGeneratedOASISAssessment";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { FileText, UserPlus, ArrowRight, TrendingUp, Sparkles, Target, CheckCircle2 } from "lucide-react";
+import { FileText, UserPlus, ArrowRight, TrendingUp, Sparkles, CheckCircle2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { toast } from 'sonner';
 
@@ -18,15 +25,19 @@ export default function ReferralProcessor() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [extractedData, setExtractedData] = useState(null);
-  const [_referralAnalysis, setReferralAnalysis] = useState(null);
+  const [referralAnalysis, setReferralAnalysis] = useState(null);
+  // Source referral file + generated admission packet, for the nurse briefing email.
+  const [sourceFile, setSourceFile] = useState(null);
+  const [packetUrl, setPacketUrl] = useState(null);
+  // The AI-generated admission narrative (from the note generator inside the
+  // summarizer), embedded into the nurse briefing email when available.
+  const [admissionNote, setAdmissionNote] = useState("");
   const [isCreatingPatient, setIsCreatingPatient] = useState(false);
   const [diagnosisRanking, setDiagnosisRanking] = useState(null);
   const [isRankingDiagnoses, setIsRankingDiagnoses] = useState(false);
   const [selectedPrimaryDx, setSelectedPrimaryDx] = useState(null);
   const [selectedSecondaryDx, _setSelectedSecondaryDx] = useState([]);
-  const [isCreatingCarePlans, setIsCreatingCarePlans] = useState(false);
   const [createdPatientId, setCreatedPatientId] = useState(null);
-  const [createdCarePlans, setCreatedCarePlans] = useState(null);
 
   const rankDiagnoses = async () => {
     if (!extractedData?.diagnoses) return;
@@ -61,29 +72,62 @@ export default function ReferralProcessor() {
 
     setIsCreatingPatient(true);
     try {
-      // Parse patient name intelligently from extracted data
-      const fullName = extractedData.demographics?.full_name || '';
-      const nameParts = fullName.trim().split(/\s+/);
-      const firstName = nameParts[0] || 'Unknown';
-      const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : 'Unknown';
+      // Deterministic PDGM-sequenced coding from the referral (codes only
+      // ever harvested from the referral, never generated) — the default
+      // diagnosis set when the user hasn't hand-picked one above.
+      let coding = null;
+      try {
+        const me = await base44.auth.me().catch(() => null);
+        const { fetchCallerPdgmRateConfig } = await import('@/lib/agencySettings');
+        const rateRow = await fetchCallerPdgmRateConfig(me?.agency_name);
+        coding = generateDiagnosisCodes(extractedData, {
+          rates: rateRow?.rates,
+          icdGroups: rateRow?.icd10_clinical_groups,
+        });
+      } catch {
+        coding = generateDiagnosisCodes(extractedData);
+      }
+
+      // Same readiness gate as triage/intake — never mint "Doe," / "Unknown" charts.
+      const readiness = referralPatientReadiness({
+        patient_name: extractedData.demographics?.full_name,
+        full_name: extractedData.demographics?.full_name,
+        date_of_birth: extractedData.demographics?.date_of_birth,
+        medical_record_number: extractedData.demographics?.medical_record_number || extractedData.demographics?.mrn,
+        phone: extractedData.demographics?.phone,
+        address: extractedData.demographics?.address,
+      });
+      if (!readiness.ready) {
+        toast.error(`Cannot create patient chart. Missing: ${readiness.missing.join(', ')}.`);
+        return;
+      }
 
       const patientData = {
-        first_name: firstName,
-        last_name: lastName,
-        date_of_birth: extractedData.demographics?.date_of_birth || null,
-        address: extractedData.demographics?.address || null,
-        phone: extractedData.demographics?.phone || null,
+        first_name: readiness.first_name,
+        last_name: readiness.last_name,
+        date_of_birth: readiness.identifiers.date_of_birth || null,
+        address: readiness.identifiers.address || null,
+        phone: readiness.identifiers.phone || null,
         email: null,
         emergency_contact_name: extractedData.demographics?.emergency_contact || null,
         emergency_contact_phone: extractedData.demographics?.emergency_phone || null,
         emergency_contact_relationship: extractedData.demographics?.emergency_relationship || null,
         physician_name: extractedData.demographics?.primary_care_physician || extractedData.demographics?.referring_physician || null,
         physician_phone: extractedData.demographics?.pcp_contact || extractedData.demographics?.referring_physician_contact || null,
-        primary_diagnosis: selectedPrimaryDx || extractedData.diagnoses?.primary_diagnosis || null,
-        secondary_diagnoses: selectedSecondaryDx.length > 0 ? selectedSecondaryDx : (extractedData.diagnoses?.secondary_diagnoses || []),
+        primary_diagnosis:
+          selectedPrimaryDx ||
+          (coding?.primary ? codeLabel(coding.primary) : null) ||
+          extractedData.diagnoses?.primary_diagnosis ||
+          null,
+        secondary_diagnoses:
+          selectedSecondaryDx.length > 0
+            ? selectedSecondaryDx
+            : coding?.secondaries?.length
+            ? coding.secondaries.map(codeLabel)
+            : (extractedData.diagnoses?.secondary_diagnoses || []),
         allergies: extractedData.diagnoses?.allergies || null,
         current_medications: extractedData.medications || [],
-        admission_date: extractedData.admission_details?.admission_date || new Date().toISOString().split('T')[0],
+        admission_date: extractedData.admission_details?.admission_date || toLocalISODate(),
         admission_source: extractedData.admission_details?.admission_source || 'home',
         care_type: 'home_health',
         status: 'active'
@@ -94,9 +138,8 @@ export default function ReferralProcessor() {
       queryClient.invalidateQueries({ queryKey: ['patients'] });
 
       toast.success('Patient created successfully!');
-      // Return the new id so callers (generateCarePlans) can use it immediately
-      // — setCreatedPatientId is async and the captured createdPatientId is still
-      // stale within the same tick.
+      // Return the new id so callers can use it immediately — setCreatedPatientId
+      // is async and the captured createdPatientId is still stale within the same tick.
       return newPatient.id;
     } catch (error) {
       console.error('Error creating patient:', error);
@@ -104,39 +147,6 @@ export default function ReferralProcessor() {
     } finally {
       setIsCreatingPatient(false);
     }
-  };
-
-  const generateCarePlans = async () => {
-    if (!createdPatientId && !extractedData) return;
-
-    setIsCreatingCarePlans(true);
-    try {
-      // If no patient created yet, create one first
-      let patientId = createdPatientId;
-      if (!patientId) {
-        patientId = await createPatientFromReferral();
-      }
-
-      if (!patientId) {
-        throw new Error('Failed to create patient');
-      }
-
-      const { data } = await base44.functions.invoke('generateCarePlansFromReferral', {
-        patient_id: patientId,
-        referral_data: extractedData,
-        primary_diagnosis: selectedPrimaryDx || extractedData.diagnoses?.primary_diagnosis,
-        secondary_diagnoses: selectedSecondaryDx.length > 0 ? selectedSecondaryDx : extractedData.diagnoses?.secondary_diagnoses
-      });
-
-      setCreatedCarePlans(data);
-      queryClient.invalidateQueries({ queryKey: ['carePlans'] });
-
-      toast.success(`Successfully created ${data.care_plans_created} care plans!`);
-    } catch (error) {
-      console.error('Error generating care plans:', error);
-      toast.error('Failed to generate care plans. Please try again.');
-    }
-    setIsCreatingCarePlans(false);
   };
 
   return (
@@ -156,7 +166,16 @@ export default function ReferralProcessor() {
         </Alert>
 
         <ReferralPDFSummarizer
-          onDataExtracted={(data) => setExtractedData(data)}
+          onDataExtracted={(data) => {
+            setExtractedData(data);
+            // A new document supersedes the previous one's analysis/links/note.
+            setReferralAnalysis(null);
+            setPacketUrl(null);
+            setAdmissionNote("");
+          }}
+          onNoteGenerated={(result) => setAdmissionNote(result?.note || "")}
+          onSourceFile={(file) => setSourceFile(file)}
+          onExtractionComplete={(_data, _raw, pdfUrl) => setPacketUrl(pdfUrl || null)}
           onUseForAdmission={(_data) => {
             navigate(createPageUrl('SmartNoteAssistant'));
           }}
@@ -302,83 +321,30 @@ export default function ReferralProcessor() {
               }}
             />
 
-            {/* Care Plan Generation */}
-            {diagnosisRanking && selectedPrimaryDx && (
-              <Card className="border-2 border-teal-300 bg-teal-50">
-                <CardContent className="p-3 sm:p-4 md:p-6">
-                  <h3 className="text-base sm:text-lg font-semibold text-teal-900 mb-3 flex items-center gap-2">
-                    <Target className="w-5 h-5" />
-                    Auto-Generate Care Plans
-                  </h3>
-                  
-                  {!createdCarePlans ? (
-                    <div className="space-y-3">
-                      <Alert className="bg-white border-teal-300">
-                        <AlertDescription className="text-sm text-slate-700">
-                          Generate comprehensive, Medicare-compliant care plans based on the selected diagnosis and referral data.
-                        </AlertDescription>
-                      </Alert>
-                      <Button
-                        onClick={generateCarePlans}
-                        disabled={isCreatingCarePlans || isCreatingPatient}
-                        className="bg-teal-600 hover:bg-teal-700 w-full min-h-[44px]"
-                      >
-                        {isCreatingCarePlans ? (
-                          <>
-                            <Sparkles className="w-4 h-4 mr-2 animate-spin" />
-                            Generating Care Plans...
-                          </>
-                        ) : (
-                          <>
-                            <Target className="w-4 h-4 mr-2" />
-                            Generate Care Plans
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      <Alert className="bg-green-50 border-green-300">
-                        <CheckCircle2 className="w-4 h-4 text-green-600" />
-                        <AlertDescription>
-                          <p className="font-semibold text-green-900">
-                            Successfully created {createdCarePlans.care_plans_created} care plans!
-                          </p>
-                        </AlertDescription>
-                      </Alert>
+            {/* Fax the provider one itemized request for everything still
+                missing or needing clarification (F2F, orders, coding, …) */}
+            <ProviderFaxRequestCard referralData={extractedData} analysis={referralAnalysis} />
 
-                      <div className="space-y-2">
-                        {createdCarePlans.care_plans?.map((cp, idx) => (
-                          <div key={idx} className="bg-white border border-teal-200 rounded p-3">
-                            <p className="font-semibold text-slate-900 mb-1">{cp.problem}</p>
-                            <p className="text-sm text-slate-700 mb-2">Goal: {cp.goal}</p>
-                            <div className="flex gap-2">
-                              <Badge className="bg-teal-600 text-white text-xs">{cp.status}</Badge>
-                              <Badge variant="outline" className="text-xs">
-                                Target: {new Date(cp.target_date).toLocaleDateString()}
-                              </Badge>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
+            {/* Email the admitting nurse the full briefing + referral documents */}
+            <AdmissionBriefEmailCard
+              referralData={extractedData}
+              analysis={referralAnalysis}
+              admissionNote={admissionNote}
+              sourceFileUrl={sourceFile?.url || ""}
+              packetUrl={packetUrl || ""}
+            />
 
-                      {createdCarePlans.education_priorities?.length > 0 && (
-                        <Alert className="bg-blue-50 border-blue-300">
-                          <AlertDescription>
-                            <p className="font-semibold text-blue-900 mb-1">Education Priorities:</p>
-                            <ul className="space-y-1">
-                              {createdCarePlans.education_priorities.map((edu, idx) => (
-                                <li key={idx} className="text-sm text-blue-800">• {edu}</li>
-                              ))}
-                            </ul>
-                          </AlertDescription>
-                        </Alert>
-                      )}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            )}
+            {/* Revenue brief PDF for the clinical manager — financial data, so
+                admin-gated (the card also fails closed internally and the PDGM
+                dollars are stripped server-side for non-admin callers). */}
+            <FinancialGate>
+              <ClinicalManagerBriefCard
+                referralData={extractedData}
+                analysis={referralAnalysis}
+                sourceFileUrl={sourceFile?.url || ""}
+                packetUrl={packetUrl || ""}
+              />
+            </FinancialGate>
 
             <Card className="border-2 border-green-300 bg-green-50">
               <CardContent className="p-3 sm:p-4 md:p-6">
@@ -387,7 +353,7 @@ export default function ReferralProcessor() {
                   <Button
                     onClick={createPatientFromReferral}
                     disabled={isCreatingPatient || createdPatientId}
-                    className="bg-green-600 hover:bg-green-700 w-full min-h-[44px]"
+                    className="w-full min-h-[44px]"
                   >
                     {createdPatientId ? (
                       <>

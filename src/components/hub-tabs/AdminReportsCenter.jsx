@@ -1,5 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
+import { useAgencyScopedQuery } from '@/hooks/useAgencyScopedQuery';
+import { useScopedPatients } from '@/hooks/useScopedPatients';
+import { agencyQueryKey } from '@/lib/agencyRoster';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BarChart3, Gauge, Brain, FileText } from "lucide-react";
 import ReportsCenter from "@/components/admin/ReportsCenter";
@@ -14,26 +17,33 @@ import NoteConversionReport from "@/components/admin/NoteConversionReport";
  * reports, and documentation note-conversion analytics.
  */
 export default function AdminReportsCenterPage() {
+  const { data: currentUser } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me(),
+  });
+
+
   // ReportsCenter expects roster/clinical data as props (it filters them
   // directly), so fetch them here and pass arrays with safe defaults.
   const { data: users = [] } = useQuery({
-    queryKey: ["reports-users"],
-    queryFn: () => base44.entities.User.list("-created_date", 1000),
+    queryKey: ["reports-users", agencyQueryKey(currentUser)],
+    queryFn: async () => {
+      const _rows = await base44.entities.User.list("-created_date", 1000);
+      const { filterUsersByCallerAgency } = await import('@/lib/agencyScope');
+      return filterUsersByCallerAgency(_rows, currentUser);
+    },
+    enabled: !!currentUser,
     initialData: [],
   });
-  const { data: patients = [] } = useQuery({
-    queryKey: ["reports-patients"],
-    queryFn: () => base44.entities.Patient.list("-created_date", 1000),
-    initialData: [],
-  });
-  const { data: visits = [] } = useQuery({
+  const { data: patients = [] } = useScopedPatients({ sort: '-created_date', limit: 1000 });
+  const { data: visits = [] } = useAgencyScopedQuery({
     queryKey: ["reports-visits"],
-    queryFn: () => base44.entities.Visit.list("-created_date", 1000),
+    fetch: () => base44.entities.Visit.list("-created_date", 1000),
     initialData: [],
   });
-  const { data: incidents = [] } = useQuery({
+  const { data: incidents = [] } = useAgencyScopedQuery({
     queryKey: ["reports-incidents"],
-    queryFn: () => base44.entities.Incident.list("-created_date", 1000),
+    fetch: () => base44.entities.Incident.list("-created_date", 1000),
     initialData: [],
   });
 

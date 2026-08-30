@@ -2,29 +2,121 @@
   "name": "DocumentSignature",
   "type": "object",
   "properties": {
-    "patient_id": {
+    "document_id": {
       "type": "string",
-      "description": "Reference to Patient entity"
+      "description": "Reference to PatientDocument"
+    },
+    "patient_id": {
+      "type": "string"
     },
     "document_type": {
       "type": "string",
-      "description": "Type of document (e.g., admission_consent, hipaa_authorization)"
+      "enum": [
+        "consent",
+        "hipaa",
+        "treatment_agreement",
+        "financial_agreement",
+        "advance_directive",
+        "release",
+        "custom_request",
+        "other"
+      ]
     },
-    "document_title": {
-      "type": "string",
-      "description": "Title/name of the document"
+    // Field placements captured in the request builder's step 3 (drag a
+    // signature/date/text box onto the page). SignatureRequestCreator already
+    // sends these on create, but with no property here Base44 dropped them, so
+    // every placement the requester positioned was discarded the moment the
+    // request was sent. Persisting them stops that data loss; RENDERING them in
+    // the signer portal and stamping them into the output PDF is still to do —
+    // until then a request behaves as it does today (whole-document signing).
+    "signature_fields": {
+      "type": "array",
+      "description": "Placed field boxes: position/size are page-relative percentages",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "signerId": { "type": "string" },
+          "type": {
+            "type": "string",
+            "enum": ["signature", "initials", "date", "text"]
+          },
+          "label": { "type": "string" },
+          "required": { "type": "boolean" },
+          "position": {
+            "type": "object",
+            "properties": {
+              "x": { "type": "number" },
+              "y": { "type": "number" }
+            }
+          },
+          "size": {
+            "type": "object",
+            "properties": {
+              "width": { "type": "number" },
+              "height": { "type": "number" }
+            }
+          }
+        }
+      }
     },
-    "document_name": {
-      "type": "string",
-      "description": "Display name of the document — written by the package/signature creators and read directly by the signatures list and package viewer (falls back to document_title where absent)"
+    "signers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "signer_name": {
+            "type": "string"
+          },
+          "signer_role": {
+            "type": "string",
+            "enum": [
+              "patient",
+              "caregiver",
+              "legal_representative",
+              "witness",
+              "provider"
+            ]
+          },
+          "email": {
+            "type": "string"
+          },
+          "signature_data": {
+            "type": "string",
+            "description": "Base64 encoded signature image"
+          },
+          "signed_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "ip_address": {
+            "type": "string"
+          },
+          "device_info": {
+            "type": "string"
+          },
+          "verification_method": {
+            "type": "string",
+            "enum": [
+              "drawn",
+              "typed",
+              "uploaded",
+              "biometric"
+            ]
+          }
+        }
+      }
     },
-    "document_content": {
+    "workflow_status": {
       "type": "string",
-      "description": "Original document content before signing"
-    },
-    "document_url": {
-      "type": "string",
-      "description": "URL to the stored document file (PDF)"
+      "enum": [
+        "pending",
+        "partial",
+        "completed",
+        "expired",
+        "cancelled"
+      ],
+      "default": "pending"
     },
     "status": {
       "type": "string",
@@ -35,172 +127,141 @@
         "rejected"
       ],
       "default": "pending",
-      "description": "Overall signature status"
+      "description": "Per-record signature status written/read across the e-signature UI (package create, signature submit, trackers). ('signed' is a display-only normalization in signatureUtils.js and is never persisted.)"
     },
-    "signers": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "number",
-            "description": "Unique identifier for this signer"
-          },
-          "name": {
-            "type": "string",
-            "description": "Full name of signer"
-          },
-          "email": {
-            "type": "string",
-            "format": "email",
-            "description": "Email address of signer"
-          },
-          "role": {
-            "type": "string",
-            "enum": [
-              "patient",
-              "guardian",
-              "witness",
-              "clinician",
-              "other"
-            ],
-            "description": "Role of the signer"
-          },
-          "required": {
-            "type": "boolean",
-            "default": true,
-            "description": "Whether this signature is required"
-          },
-          "status": {
-            "type": "string",
-            "enum": [
-              "pending",
-              "completed",
-              "rejected"
-            ],
-            "default": "pending",
-            "description": "Per-signer signature status"
-          },
-          "signed_date": {
-            "type": "string",
-            "format": "date-time",
-            "description": "When signer signed the document"
-          },
-          "signature": {
-            "type": "string",
-            "description": "Digital signature data or image URL"
-          },
-          "ip_address": {
-            "type": "string",
-            "description": "IP address where signature was captured"
-          },
-          "signature_method": {
-            "type": "string",
-            "enum": [
-              "digital_signature",
-              "signature_image",
-              "initials"
-            ],
-            "description": "Method used to sign"
-          }
-        }
-      },
-      "description": "List of signers and their signature status"
-    },
-    "message": {
+    "document_title": {
       "type": "string",
-      "description": "Optional message included with signature request"
+      "description": "Human-readable document title shown in signature lists/cover sheets"
     },
-    "created_by_email": {
+    "document_name": {
       "type": "string",
-      "description": "Email of user who initiated the signature workflow"
-    },
-    "sent_date": {
-      "type": "string",
-      "format": "date-time",
-      "description": "When signature requests were sent to signers"
-    },
-    "completed_date": {
-      "type": "string",
-      "format": "date-time",
-      "description": "When all required signatures were completed"
-    },
-    "expires_at": {
-      "type": "string",
-      "format": "date-time",
-      "description": "Expiration date for signature requests (30 days default)"
-    },
-    "due_date": {
-      "type": "string",
-      "format": "date-time",
-      "description": "Deadline by which signatures should be completed (read by signatureUtils.getSignatureDueDate / isSignatureOverdue)"
-    },
-    "required_signatures": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "signer_id": {
-            "type": "string",
-            "description": "ID of the signer this required-signature entry refers to"
-          },
-          "name": {
-            "type": "string",
-            "description": "Display name of the signer"
-          },
-          "role": {
-            "type": "string",
-            "description": "Role of the signer (e.g., patient, witness)"
-          },
-          "is_required": {
-            "type": "boolean",
-            "default": true,
-            "description": "Whether this signature is required for completion"
-          },
-          "is_signed": {
-            "type": "boolean",
-            "default": false,
-            "description": "Whether this required signature has been collected"
-          },
-          "order": {
-            "type": "number",
-            "description": "Signing order for this entry"
-          }
-        }
-      },
-      "description": "Per-signer required-signature progress entries (read by signatureUtils.getSignerProgress and DocumentSignatureTracker)"
-    },
-    "reminder_sent": {
-      "type": "boolean",
-      "default": false,
-      "description": "Whether a reminder email has been sent"
+      "description": "Source document file name"
     },
     "last_reminder_sent_at": {
       "type": "string",
       "format": "date-time",
-      "description": "Timestamp of the most recent reminder email (used as a cron idempotency guard)"
+      "description": "Timestamp of the most recent signature reminder sent"
     },
-    "archived": {
-      "type": "boolean",
-      "default": false,
-      "description": "Whether this signed document has been archived/retired"
+    "reminder_claimed_by": {
+      "type": "string",
+      "description": "Per-run claim token so overlapping signature-reminder crons do not double-send"
+    },
+    "reminder_claimed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When reminder_claimed_by was written"
+    },
+    "created_by": {
+      "type": "string"
+    },
+    "expiration_date": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "reminder_sent_count": {
+      "type": "number",
+      "default": 0
+    },
+    "last_reminder_sent": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "document_url": {
+      "type": "string",
+      "description": "Source document URL to be signed"
+    },
+    "document_content": {
+      "type": "string",
+      "description": "Inline document content/HTML for the signature request"
     },
     "signed_pdf_url": {
       "type": "string",
-      "description": "URL to the stamped/signed PDF artifact produced once all signatures are completed"
+      "description": "URL of the generated signed PDF (written on completion)"
+    },
+    "completed_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the signature package was completed (read across the trackers; the legacy completed_at is unused here)"
+    },
+    "due_date": {
+      "type": "string",
+      "description": "When the signature is due"
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the signature request expires"
+    },
+    "sent_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the signature request was sent"
+    },
+    "reminder_sent": {
+      "type": "boolean",
+      "description": "Whether a reminder has been sent (boolean flag complementing reminder_sent_count)"
+    },
+    "created_by_email": {
+      "type": "string",
+      "description": "Email of the creator (app field; distinct from the Base44 created_by system field)"
+    },
+    "message": {
+      "type": "string",
+      "description": "Optional message included with the signature request"
+    },
+    "required_signatures": {
+      "type": "array",
+      "description": "Signer specs for the package create flow (parallel to signers[])"
+    },
+    "signer_name": {
+      "type": "string",
+      "description": "Legacy single-signer name written by the bulk package create path"
+    },
+    "signer_email": {
+      "type": "string",
+      "description": "Legacy single-signer email written by the bulk package create path"
     },
     "signature_hash": {
       "type": "string",
-      "description": "Server-computed tamper-evidence MAC over the canonical signature payload (signers, dates, document identity). Set only by the signatureIntegrity backend function (action 'stamp'); never client-supplied."
+      "description": "Integrity hash of the signed document"
     },
     "signature_hash_alg": {
       "type": "string",
-      "description": "Algorithm for signature_hash: 'hmac-sha256' (keyed, forgery-resistant — SIGNATURE_HMAC_SECRET configured) or 'sha256-unkeyed' (fallback; detects accidental corruption only)."
+      "description": "Algorithm used for signature_hash"
+    },
+    "signature_hash_payload_v": {
+      "type": "number",
+      "description": "Canonical-payload version the integrity MAC was stamped with (v2 adds document_content)"
     },
     "signature_hash_at": {
       "type": "string",
       "format": "date-time",
-      "description": "When signature_hash was last computed by the server."
+      "description": "When the integrity hash was computed"
+    },
+    "archived": {
+      "type": "boolean",
+      "description": "Whether the signed document has been archived"
+    },
+    "admin_notified": {
+      "type": "boolean",
+      "description": "Idempotency flag: admin has been notified of completion"
+    },
+    "admin_notify_claimed_by": {
+      "type": "string",
+      "description": "Best-effort claim token shared by notifyAdminOfSignedDocument and onDocumentSigned; re-read before emailing admins"
+    },
+    "submit_claimed_by": {
+      "type": "string",
+      "description": "Claim token for submitDocumentSignatures idempotency. Set before rewriting signers/status so concurrent in-person collectors cannot clobber each other's signatures or double-complete."
+    },
+    "submit_claimed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When submit_claimed_by was written"
     },
     "audit_trail": {
       "type": "array",
@@ -208,36 +269,70 @@
         "type": "object",
         "properties": {
           "action": {
-            "type": "string",
-            "description": "Action taken (e.g., sent, viewed, signed, declined)"
+            "type": "string"
+          },
+          "user": {
+            "type": "string"
           },
           "timestamp": {
             "type": "string",
             "format": "date-time"
           },
-          "signer_id": {
-            "type": "number",
-            "description": "ID of signer involved in action"
-          },
-          "notes": {
+          "details": {
             "type": "string"
           }
         }
-      },
-      "description": "Complete audit trail of all signature events"
-    },
-    "admin_notified": {
-      "type": "boolean",
-      "default": false,
-      "description": "Set once the completion admin email has been sent for this signature, so entity-trigger re-fires don't re-email admins."
+      }
     }
   },
   "required": [
-    "patient_id",
     "document_type",
-    "document_title",
-    "document_content",
-    "signers",
-    "status"
-  ]
+    "patient_id"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "account_type": "agency_admin"
+          }
+        },
+        {
+          "user_condition": {
+            "account_type": "super_admin"
+          }
+        }
+      ]
+    },
+    "write": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "account_type": "agency_admin"
+          }
+        },
+        {
+          "user_condition": {
+            "account_type": "super_admin"
+          }
+        }
+      ]
+    }
+  }
 }

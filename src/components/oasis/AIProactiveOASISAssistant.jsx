@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { calculateAge, toLocalISODate } from "@/lib/dateLocal";
 import { base44 } from "@/api/base44Client";
 import { useAICall } from "@/hooks/useAICall";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -18,11 +19,17 @@ import {
   Download
 } from "lucide-react";
 import { toast } from 'sonner';
+import { PATIENT_HISTORY_ROWS } from '@/lib/queryLimits';
 
 export default function AIProactiveOASISAssistant({ patientId, autoAnalyze = false }) {
   const ai = useAICall();
   const [analysis, setAnalysis] = useState(null);
   const queryClient = useQueryClient();
+
+  // Clear sticky OASIS analysis when the parent chart switches patients.
+  React.useEffect(() => {
+    setAnalysis(null);
+  }, [patientId]);
 
   const { data: patient } = useQuery({
     queryKey: ['patient', patientId],
@@ -34,44 +41,25 @@ export default function AIProactiveOASISAssistant({ patientId, autoAnalyze = fal
   });
 
   const { data: visits = [] } = useQuery({
-    queryKey: ['patientVisits', patientId],
+    queryKey: ['patientVisits', patientId, 20],
     queryFn: () => base44.entities.Visit.filter({ patient_id: patientId }, '-visit_date', 20),
     enabled: !!patientId,
     initialData: []
   });
 
   const { data: incidents = [] } = useQuery({
-    queryKey: ['patientIncidents', patientId],
+    queryKey: ['patientIncidents', patientId, 10],
     queryFn: () => base44.entities.Incident.filter({ patient_id: patientId }, '-incident_date', 10),
     enabled: !!patientId,
     initialData: []
   });
 
-  const { data: carePlans = [] } = useQuery({
-    queryKey: ['patientCarePlans', patientId],
-    queryFn: () => base44.entities.CarePlan.filter({ patient_id: patientId }),
-    enabled: !!patientId,
-    initialData: []
-  });
-
   const { data: existingOASIS = [] } = useQuery({
-    queryKey: ['patientOASIS', patientId],
-    queryFn: () => base44.entities.OASISUpload.filter({ patient_id: patientId }, '-created_date'),
+    queryKey: ['patientOASIS', patientId, PATIENT_HISTORY_ROWS],
+    queryFn: () => base44.entities.OASISUpload.filter({ patient_id: patientId }, '-created_date', PATIENT_HISTORY_ROWS),
     enabled: !!patientId,
     initialData: []
   });
-
-  const calculateAge = React.useCallback((dob) => {
-    if (!dob) return null;
-    const birthDate = new Date(dob);
-    const today = new Date();
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
-    }
-    return age;
-  }, []);
 
   const performOASISAnalysis = React.useCallback(async () => {
     if (!patient) return;
@@ -103,16 +91,11 @@ export default function AIProactiveOASISAssistant({ patientId, autoAnalyze = fal
           date: i.incident_date,
           severity: i.severity
         })),
-        carePlans: carePlans.map(cp => ({
-          problem: cp.problem,
-          goal: cp.goal,
-          status: cp.status
-        })),
         existingOASIS: existingOASIS.length > 0
       };
 
       const result = await ai.run({
-        model: "claude_opus_4_8",
+        model: "automatic",
         prompt: `You are an expert OASIS documentation specialist with deep knowledge of CMS home health regulations and PDGM requirements.
 
 **CRITICAL TASK:** Analyze this patient's data to identify OASIS documentation gaps and generate a preliminary OASIS assessment.
@@ -253,7 +236,7 @@ Provide detailed, actionable recommendations that a home health nurse can immedi
       toast.error('Failed to perform OASIS analysis. Please try again.');
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps -- AI hook object is intentionally omitted; its run() is stable, and including it would re-fire the call every render
-  }, [patient, visits, incidents, carePlans, existingOASIS, patientId, queryClient, calculateAge]);
+  }, [patient, visits, incidents, existingOASIS, patientId, queryClient]);
 
   React.useEffect(() => {
     if (autoAnalyze && patient && !analysis && !ai.loading) {
@@ -480,7 +463,7 @@ Provide detailed, actionable recommendations that a home health nurse can immedi
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement('a');
                     a.href = url;
-                    a.download = `oasis-analysis-${patient.first_name}-${patient.last_name}-${new Date().toISOString().split('T')[0]}.json`;
+                    a.download = `oasis-analysis-${patient.first_name}-${patient.last_name}-${toLocalISODate()}.json`;
                     a.click();
                   }}
                 >

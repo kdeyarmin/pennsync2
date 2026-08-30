@@ -7,19 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import {
-  AlertTriangle,
   Loader2,
   RefreshCw,
-  Brain,
-  Activity,
-  Heart,
-  Pill,
-  TrendingDown,
-  Shield,
-  Users,
-  Clock,
-  Zap
+  Brain
 } from "lucide-react";
+import { getAlertIcon, getSeverityColor } from "@/components/alerts/alertPresentation";
+import { PATIENT_HISTORY_ROWS } from '@/lib/queryLimits';
 
 export default function PatientAlertAnalyzer({ 
   patientId, 
@@ -30,6 +23,13 @@ export default function PatientAlertAnalyzer({
   const [analysisProgress, setAnalysisProgress] = useState(0);
   const [generatedAlerts, setGeneratedAlerts] = useState([]);
   const queryClient = useQueryClient();
+
+  // Drop prior-patient analysis output when the selector changes.
+  useEffect(() => {
+    setGeneratedAlerts([]);
+    setAnalysisProgress(0);
+    setIsAnalyzing(false);
+  }, [patientId]);
 
   // Current user — needed to assign generated tasks (Task.assigned_to is required;
   // without it the critical-alert escalation task create silently fails).
@@ -47,29 +47,26 @@ export default function PatientAlertAnalyzer({
 
   // Fetch recent visits
   const { data: recentVisits = [] } = useQuery({
-    queryKey: ['patientVisits', patientId],
+    queryKey: ['patientVisits', patientId, 10],
     queryFn: () => base44.entities.Visit.filter({ patient_id: patientId }, '-visit_date', 10),
-    enabled: !!patientId
-  });
-
-  // Fetch care plans
-  const { data: carePlans = [] } = useQuery({
-    queryKey: ['patientCarePlans', patientId],
-    queryFn: () => base44.entities.CarePlan.filter({ patient_id: patientId }),
     enabled: !!patientId
   });
 
   // Fetch incidents
   const { data: incidents = [] } = useQuery({
-    queryKey: ['patientIncidents', patientId],
+    queryKey: ['patientIncidents', patientId, 5],
     queryFn: () => base44.entities.Incident.filter({ patient_id: patientId }, '-incident_date', 5),
     enabled: !!patientId
   });
 
   // Fetch existing alerts
   const { data: existingAlerts = [] } = useQuery({
-    queryKey: ['patientAlerts', patientId],
-    queryFn: () => base44.entities.PatientAlert.filter({ patient_id: patientId, status: 'active' }),
+    // Distinct from PatientAlertsDashboard's server-scoped, all-status feed,
+    // which reads ['patientAlerts', patientId] via getScopedPatientAlerts —
+    // sharing one entry mixed the two result sets. Still a ['patientAlerts']
+    // prefix so the app-wide invalidations refresh it.
+    queryKey: ['patientAlerts', patientId, 'active-entity'],
+    queryFn: () => base44.entities.PatientAlert.filter({ patient_id: patientId, status: 'active' }, undefined, PATIENT_HISTORY_ROWS),
     enabled: !!patientId
   });
 
@@ -152,13 +149,6 @@ export default function PatientAlertAnalyzer({
         details: i.details
       }));
 
-      const carePlanSummaries = carePlans.map(cp => ({
-        problem: cp.problem,
-        goal: cp.goal,
-        status: cp.status,
-        target_date: cp.target_date
-      }));
-
       setAnalysisProgress(30);
 
       // Extract vital trends
@@ -185,9 +175,6 @@ ${JSON.stringify(vitalTrends, null, 2)}
 
 RECENT INCIDENTS:
 ${JSON.stringify(incidentSummaries, null, 2)}
-
-ACTIVE CARE PLANS:
-${JSON.stringify(carePlanSummaries, null, 2)}
 
 ANALYSIS REQUIREMENTS:
 1. Identify ANY patterns suggesting clinical deterioration
@@ -284,6 +271,9 @@ Return JSON:
 
       // Refresh alerts query
       queryClient.invalidateQueries({ queryKey: ['patientAlerts', patientId] });
+      queryClient.invalidateQueries({ queryKey: ['patientRiskAlerts', patientId] });
+      queryClient.invalidateQueries({ queryKey: ['patientActiveAlerts', patientId] });
+      queryClient.invalidateQueries({ queryKey: ['patientContext', patientId] });
 
       if (onAlertsGenerated) {
         onAlertsGenerated(createdAlerts, result);
@@ -296,7 +286,7 @@ Return JSON:
       console.error("Error analyzing patient:", error);
     }
     setIsAnalyzing(false);
-  }, [patient, recentVisits, incidents, carePlans, patientId, existingAlerts, queryClient, onAlertsGenerated, extractVitalTrends, sendAlertNotifications]);
+  }, [patient, recentVisits, incidents, patientId, existingAlerts, queryClient, onAlertsGenerated, extractVitalTrends, sendAlertNotifications]);
 
   // Auto-analyze on mount if enabled
   useEffect(() => {
@@ -304,33 +294,6 @@ Return JSON:
       runAnalysis();
     }
   }, [autoAnalyze, patientId, patient, runAnalysis]);
-
-  const getAlertIcon = (type) => {
-    const icons = {
-      vital_deterioration: Activity,
-      medication_risk: Pill,
-      fall_risk: TrendingDown,
-      readmission_risk: Heart,
-      infection_risk: Shield,
-      symptom_escalation: AlertTriangle,
-      care_gap: Clock,
-      urgent_intervention: Zap,
-      hospice_transition: Heart,
-      caregiver_burnout: Users
-    };
-    const Icon = icons[type] || AlertTriangle;
-    return <Icon className="w-4 h-4" />;
-  };
-
-  const getSeverityColor = (severity) => {
-    switch (severity) {
-      case 'critical': return 'bg-red-600 text-white';
-      case 'high': return 'bg-orange-500 text-white';
-      case 'medium': return 'bg-yellow-500 text-white';
-      case 'low': return 'bg-blue-500 text-white';
-      default: return 'bg-slate-500 text-white';
-    }
-  };
 
   if (!patientId) {
     return (
@@ -413,7 +376,6 @@ Return JSON:
             <Button
               onClick={runAnalysis}
               disabled={isAnalyzing || !patient}
-              className="bg-orange-600 hover:bg-orange-700"
               size="sm"
             >
               <Brain className="w-4 h-4 mr-2" />

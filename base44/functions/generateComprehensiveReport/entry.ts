@@ -2,18 +2,26 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 import jsPDF from 'npm:jspdf@2.5.2';
 
 // <<<BEGIN SHARED HELPER: isAdminLike — generated, edit base44/_shared/backendHelpers.mjs>>>
-const SUPER_ADMIN_EMAIL = ((typeof Deno !== 'undefined' && Deno.env.get('SUPER_ADMIN_EMAIL')) || '').trim().toLowerCase();
-const sameEmail = (a, b) => String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase();
 const isAdminLike = (u) => !!u && (
   u.role === 'admin' || u.account_type === 'agency_admin' ||
-  u.account_type === 'super_admin' || (SUPER_ADMIN_EMAIL !== '' && sameEmail(u.email, SUPER_ADMIN_EMAIL))
+  u.account_type === 'super_admin'
 );
 // <<<END SHARED HELPER: isAdminLike>>>
+
+// <<<BEGIN SHARED HELPER: requireActiveUser — generated, edit base44/_shared/backendHelpers.mjs>>>
+const isDeactivatedUser = (u) => !!u && u.is_active === false;
+const DEACTIVATED_USER_RESPONSE = () => Response.json(
+  { error: 'Unauthorized - account is deactivated' },
+  { status: 403 },
+);
+// <<<END SHARED HELPER: requireActiveUser>>>
+
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
+    if (isDeactivatedUser(user)) return DEACTIVATED_USER_RESPONSE();
 
     if (!isAdminLike(user)) {
       return Response.json({ error: 'Unauthorized - Admin access required' }, { status: 403 });
@@ -21,26 +29,65 @@ Deno.serve(async (req) => {
 
     const { reportType, dateRange, includeCharts = false } = await req.json();
 
+    if (!reportType || typeof reportType !== 'string') {
+      return Response.json({ error: 'reportType is required' }, { status: 400 });
+    }
+
     const today = new Date();
-    const daysAgo = parseInt(dateRange) || 30;
+    // Clamp to 1..365 (mirrors generateAIReport): a negative range produced an
+    // inverted window that rendered an all-zero report as fact, and a huge
+    // numeric overflowed Date into a 500.
+    const daysAgo = Math.min(Math.max(parseInt(dateRange) || 30, 1), 365);
     const startDate = new Date(today);
     startDate.setDate(startDate.getDate() - daysAgo);
     const startDateStr = startDate.toISOString().split('T')[0];
     const endDateStr = today.toISOString().split('T')[0];
 
-    // Fetch comprehensive data
-    const [visits, patients, incidents, users, carePlans, complianceAudits, trainingCompletions, noteConversions, oasisUploads, alerts] = await Promise.all([
+    // Fetch comprehensive data, then agency-scope for non-super_admin callers
+    // so an agency_admin cannot pull every tenant's PHI into a PDF.
+    let [visits, patients, incidents, users, complianceAudits, trainingCompletions, noteConversions, oasisUploads, alerts] = await Promise.all([
       base44.asServiceRole.entities.Visit.list('-visit_date', 1000),
       base44.asServiceRole.entities.Patient.list('-created_date', 5000),
       base44.asServiceRole.entities.Incident.list('-incident_date', 500),
       base44.asServiceRole.entities.User.list('-created_date', 5000),
-      base44.asServiceRole.entities.CarePlan.list('-created_date', 5000),
       base44.asServiceRole.entities.ComplianceAudit.list('-audit_date', 500),
       base44.asServiceRole.entities.TrainingAssignment.list('-created_date', 5000),
       base44.asServiceRole.entities.NoteConversion.list('-created_date', 5000),
       base44.asServiceRole.entities.OASISUpload.list('-created_date', 200),
       base44.asServiceRole.entities.PatientAlert.list('-created_date', 5000)
     ]);
+
+    if (user.account_type === 'agency_admin' && !user.agency_name) {
+      return Response.json({ error: 'Forbidden: agency_name is required.' }, { status: 403 });
+    }
+    if (user.account_type !== 'super_admin' && user.agency_name) {
+      users = (Array.isArray(users) ? users : []).filter((u) =>
+        u.account_type === 'super_admin' || u.agency_name === user.agency_name
+      );
+      const agencyEmails = new Set(users.map((u) => u?.email).filter(Boolean));
+      patients = (Array.isArray(patients) ? patients : []).filter((p) =>
+        (p.created_by && agencyEmails.has(p.created_by))
+        || (Array.isArray(p.assigned_nurses) && p.assigned_nurses.some((e) => agencyEmails.has(e)))
+      );
+      const patientIds = new Set(patients.map((p) => p.id));
+      visits = (Array.isArray(visits) ? visits : []).filter((v) => patientIds.has(v.patient_id));
+      incidents = (Array.isArray(incidents) ? incidents : []).filter((i) => patientIds.has(i.patient_id));
+      complianceAudits = (Array.isArray(complianceAudits) ? complianceAudits : []).filter((a) =>
+        !a.patient_id || patientIds.has(a.patient_id)
+      );
+      trainingCompletions = (Array.isArray(trainingCompletions) ? trainingCompletions : []).filter((t) =>
+        !t.assigned_to_user_id || agencyEmails.has(t.assigned_to_user_id)
+      );
+      noteConversions = (Array.isArray(noteConversions) ? noteConversions : []).filter((n) =>
+        !n.patient_id || patientIds.has(n.patient_id)
+      );
+      oasisUploads = (Array.isArray(oasisUploads) ? oasisUploads : []).filter((o) =>
+        !o.patient_id || patientIds.has(o.patient_id)
+      );
+      alerts = (Array.isArray(alerts) ? alerts : []).filter((a) =>
+        !a.patient_id || patientIds.has(a.patient_id)
+      );
+    }
 
     // Filter by date range
     const filteredVisits = visits.filter(v => v.visit_date >= startDateStr && v.visit_date <= endDateStr);
@@ -88,7 +135,7 @@ Deno.serve(async (req) => {
     // Title Page
     doc.setFontSize(24);
     doc.setFont(undefined, 'bold');
-    doc.text('Penn Sync', 105, 40, { align: 'center' });
+    doc.text('PennSync', 105, 40, { align: 'center' });
     doc.setFontSize(18);
     doc.text('Comprehensive Report', 105, 55, { align: 'center' });
     
@@ -148,8 +195,8 @@ Deno.serve(async (req) => {
     addText(`Audits Flagged: ${flaggedAudits}`, 10);
     addText(`Critical Issues: ${criticalAudits}`, 10);
 
-    const visitsWithCompleteDoc = completedVisits > 0 
-      ? filteredVisits.filter(v => v.nurse_notes && v.nurse_notes.length > 100).length
+    const visitsWithCompleteDoc = completedVisits > 0
+      ? filteredVisits.filter(v => v.status === 'completed' && v.nurse_notes && v.nurse_notes.length > 100).length
       : 0;
     const docComplianceRate = completedVisits > 0 
       ? Math.round((visitsWithCompleteDoc / completedVisits) * 100)
@@ -199,7 +246,7 @@ Deno.serve(async (req) => {
     });
 
     // AI UTILIZATION & ROI
-    addSection('PENN SYNC AI IMPACT');
+    addSection('PENNSYNC IMPACT');
     
     const avgQualityScore = filteredNoteConversions.length > 0
       ? Math.round(filteredNoteConversions.reduce((sum, n) => sum + (n.quality_score || 0), 0) / filteredNoteConversions.length)
@@ -251,18 +298,6 @@ Deno.serve(async (req) => {
     addText(`Critical Alerts: ${criticalAlerts}`, 10);
     addText(`Resolved Alerts: ${resolvedAlerts}`, 10);
 
-    // CARE PLAN EFFECTIVENESS
-    addSection('CARE PLAN MANAGEMENT');
-    
-    const activeCarePlans = carePlans.filter(cp => cp.status === 'active').length;
-    const metGoals = carePlans.filter(cp => cp.status === 'met').length;
-    const revisedPlans = carePlans.filter(cp => cp.status === 'revised').length;
-
-    addText(`Active Care Plans: ${activeCarePlans}`, 10);
-    addText(`Goals Met: ${metGoals}`, 10);
-    addText(`Plans Revised: ${revisedPlans}`, 10);
-    addText(`Success Rate: ${carePlans.length > 0 ? Math.round((metGoals / carePlans.length) * 100) : 0}%`, 10);
-
     // RECOMMENDATIONS
     addSection('KEY RECOMMENDATIONS');
     
@@ -289,7 +324,7 @@ Deno.serve(async (req) => {
     yPosition = 280;
     doc.setFontSize(8);
     doc.setTextColor(128, 128, 128);
-    doc.text('Penn Sync - AI-Powered Home Health Documentation System', 105, yPosition, { align: 'center' });
+    doc.text('PennSync - AI-Powered Home Health Documentation System', 105, yPosition, { align: 'center' });
     doc.text(`Report generated on ${new Date().toLocaleString()}`, 105, yPosition + 5, { align: 'center' });
 
     const pdfBytes = doc.output('arraybuffer');
@@ -298,13 +333,13 @@ Deno.serve(async (req) => {
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="penn-sync-${reportType}-report-${endDateStr}.pdf"`
+        'Content-Disposition': `attachment; filename="caremetric-ai-${reportType}-report-${endDateStr}.pdf"`
       }
     });
   } catch (error) {
     console.error('Report generation error:', error);
     return Response.json({ 
-      error: error.message,
+      error: 'Internal server error',
       details: 'Failed to generate comprehensive report'
     }, { status: 500 });
   }

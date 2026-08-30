@@ -6,32 +6,103 @@
       "type": "string",
       "description": "Reference to Patient entity"
     },
-    "thread_id": {
+    "visit_id": {
       "type": "string",
-      "description": "Groups messages into conversations"
+      "description": "Reference to Visit entity (if applicable)"
+    },
+    "template_id": {
+      "type": "string",
+      "description": "Reference to MessageTemplate entity"
+    },
+    "message_type": {
+      "type": "string",
+      "enum": [
+        "appointment_reminder",
+        "follow_up",
+        "educational",
+        "general"
+      ],
+      "description": "Type of message"
+    },
+    "recipient_email": {
+      "type": "string",
+      "format": "email",
+      "description": "Patient email address"
+    },
+    "recipient_phone": {
+      "type": "string",
+      "description": "Patient phone number for SMS"
     },
     "subject": {
       "type": "string",
-      "description": "Message thread subject"
+      "description": "Email subject or message title"
+    },
+    "body": {
+      "type": "string",
+      "description": "Rendered message content"
+    },
+    "delivery_method": {
+      "type": "string",
+      "enum": [
+        "email",
+        "sms",
+        "both"
+      ],
+      "description": "How message was delivered"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "scheduled",
+        "sent",
+        "failed",
+        "bounced",
+        "opened"
+      ],
+      "default": "scheduled",
+      "description": "Delivery status"
+    },
+    "sent_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the message was sent"
+    },
+    "opened_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When email was opened (if tracked)"
+    },
+    "delivery_error": {
+      "type": "string",
+      "description": "Error message if delivery failed"
+    },
+    "personalization_data": {
+      "type": "object",
+      "description": "Data used for personalizing the message"
+    },
+    "thread_id": {
+      "type": "string",
+      "description": "Conversation thread identifier grouping related messages"
     },
     "message_text": {
       "type": "string",
-      "description": "Message content"
+      "description": "Care-team message body text (in-app messaging)"
     },
     "sender_name": {
       "type": "string",
-      "description": "Name of sender"
+      "description": "Display name of the message sender"
     },
     "sender_email": {
       "type": "string",
-      "description": "Email of sender"
+      "format": "email",
+      "description": "Email of the message sender"
     },
     "recipients": {
       "type": "array",
       "items": {
         "type": "string"
       },
-      "description": "Array of recipient emails"
+      "description": "List of recipient email addresses"
     },
     "priority": {
       "type": "string",
@@ -43,47 +114,48 @@
       "default": "normal",
       "description": "Message priority"
     },
+    "attachments": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of attachment URLs"
+    },
     "related_event_id": {
       "type": "string",
-      "description": "Reference to related clinical event, visit, or incident"
+      "description": "ID of a related entity/event (e.g. referral)"
     },
     "related_event_type": {
       "type": "string",
-      "description": "Type of related event (visit, incident, care_plan, etc.)"
+      "description": "Type of the related entity/event (e.g. 'referral')"
     },
     "is_read": {
       "type": "boolean",
-      "default": false,
-      "description": "Whether message has been read"
+      "description": "Whether the message has been read"
     },
     "read_by": {
       "type": "array",
       "items": {
         "type": "string"
       },
-      "description": "Array of user emails who have read this message"
-    },
-    "attachments": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "description": "URLs to attached files"
+      "description": "Email addresses of users who have read the message"
     }
   },
-  "required": [
-    "message_text",
-    "sender_email",
-    "sender_name"
-  ],
+  // Message backs two disjoint shapes: outbound delivery (patient_id/body/
+  // delivery_method/status) and in-app care-team messages (message_text/
+  // recipients/sender_email, e.g. Messages.jsx + referral assignment). They
+  // share no universal field, so nothing is required to avoid rejecting either.
+  "required": [],
   "rls": {
     "read": {
       "$or": [
         {
-          "sender_email": "{{user.email}}"
+          "created_by": "{{user.email}}"
         },
         {
-          "recipients": "{{user.email}}"
+          "recipients": {
+            "$contains": "{{user.email}}"
+          }
         },
         {
           "user_condition": {
@@ -94,9 +166,14 @@
     },
     "write": {
       "$or": [
-        { "sender_email": "{{user.email}}" },
-        { "recipients": "{{user.email}}" },
-        { "user_condition": { "role": "admin" } }
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
       ]
     }
   }

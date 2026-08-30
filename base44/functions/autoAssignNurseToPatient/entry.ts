@@ -16,8 +16,8 @@ Deno.serve(async (req) => {
     const payload = await req.json();
 
     // Entity-trigger (fires on Visit create): invoked by the platform with no
-    // identity / no custom header, so a secret gate would 403 the legitimate
-    // trigger when INTERNAL_FN_SECRET is set. Defense for a trigger: re-fetch the
+    // identity / no custom header, so it can't be gated on auth. Defense for a
+    // trigger: re-fetch the
     // canonical Visit by id and derive the nurse + patient FROM the real record.
     // The id is ALWAYS present on a real trigger payload, so we require it and
     // NEVER fall back to the posted body — otherwise an unauthenticated caller
@@ -35,7 +35,7 @@ Deno.serve(async (req) => {
     const nurse_email = visit.created_by;
 
     if (!patient_id || !nurse_email) {
-      console.error('Missing patient_id or created_by on Visit:', visitId);
+      console.error('Missing patient_id or created_by on Visit');
       return Response.json({ error: 'patient_id and nurse_email are required' }, { status: 400 });
     }
 
@@ -85,8 +85,12 @@ Deno.serve(async (req) => {
         // (network, permissions, …) — don't mask it by writing placeholders.
         if (backfilled.length === 0) throw minimalErr;
 
+        // Do NOT interpolate patient_id into the log line — retained service-role
+        // logs must stay identifier-free (guardrail: backend console output is
+        // aggregate/status-only). Field names and the error message are enough to
+        // act on; the record is identified by the update call itself.
         console.warn(
-          `autoAssignNurseToPatient: minimal assigned_nurses update failed for patient ${patient_id} ` +
+          `autoAssignNurseToPatient: minimal assigned_nurses update failed ` +
           `(${minimalErr?.message}); backfilling missing required fields to complete the ` +
           `assignment: ${backfilled.join(', ')}. These are PLACEHOLDERS on an incomplete legacy record ` +
           `and should be corrected with the patient's real data.`
@@ -102,6 +106,6 @@ Deno.serve(async (req) => {
     });
   } catch (error) {
     console.error('Error assigning nurse:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
 });

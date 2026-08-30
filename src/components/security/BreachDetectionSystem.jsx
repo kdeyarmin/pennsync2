@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { formatEastern } from "../utils/timezone";
 import { toast } from 'sonner';
+import { isAdminView } from "@/lib/roles";
 
 /**
  * Breach Detection System
@@ -31,15 +32,15 @@ export default function BreachDetectionSystem() {
   });
 
   const { data: securityLogs = [] } = useQuery({
-    queryKey: ['securityLogs'],
+    queryKey: ['securityLogs', '-timestamp', 1000],
     queryFn: () => base44.entities.SecurityLog.list('-timestamp', 1000),
-    enabled: currentUser?.role === 'admin'
+    enabled: isAdminView(currentUser)
   });
 
   const { data: userActivities = [] } = useQuery({
-    queryKey: ['userActivities'],
+    queryKey: ['userActivities', 2000],
     queryFn: () => base44.entities.UserActivity.list('-created_date', 2000),
-    enabled: currentUser?.role === 'admin'
+    enabled: isAdminView(currentUser)
   });
 
   const scanForBreaches = async () => {
@@ -50,8 +51,10 @@ export default function BreachDetectionSystem() {
       const indicators = [];
 
       // 1. Unauthorized Access Attempts
-      const failedLogins = securityLogs.filter(log => 
-        log.action?.includes('FAILED') && 
+      // Case-insensitive for the same reason as the deletion scan below: logged
+      // action values are not consistently uppercase.
+      const failedLogins = securityLogs.filter(log =>
+        log.action?.toUpperCase().includes('FAILED') &&
         new Date(log.timestamp) > last24h
       );
       
@@ -121,9 +124,11 @@ export default function BreachDetectionSystem() {
       const afterHoursAccess = userActivities.filter(activity => {
         const activityDate = new Date(activity.created_date);
         if (activityDate < last24h) return false;
-        
-        const hour = activityDate.getHours();
-        return hour < 6 || hour > 22;
+
+        // Evaluate the hour in Eastern Time (not the browser's local zone) so
+        // the 6am-10pm ET business-hours window is applied consistently.
+        const hour = Number(formatEastern(activityDate, 'H'));
+        return hour < 6 || hour >= 22;
       });
       
       if (afterHoursAccess.length > 20) {
@@ -147,8 +152,12 @@ export default function BreachDetectionSystem() {
       }
 
       // 5. Deleted Records
+      // Case-insensitive: every UserActivity.action this app writes is lowercase
+      // snake_case (ActivityActions.DELETE === 'delete'), so an uppercase
+      // substring test meant the Excessive Deletions breach indicator could
+      // never fire.
       const deletions = userActivities.filter(activity =>
-        activity.action?.includes('DELETE') &&
+        activity.action?.toUpperCase().includes('DELETE') &&
         new Date(activity.created_date) > last24h
       );
       

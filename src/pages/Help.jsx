@@ -5,31 +5,43 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   BookOpen, Download, Search, MessageCircle,
   FileText, Lightbulb, Award, Sparkles, Users,
-  ClipboardList, Phone, Mail, HelpCircle, Target, CheckCircle2
+  ClipboardList, Phone, Mail, HelpCircle, Target, CheckCircle2, ShieldCheck
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { generateUserManual } from "@/functions/generateUserManual";
+import { base44 } from "@/api/base44Client";
 import { toast } from 'sonner';
 import PageContainer from "@/components/ui/PageContainer";
 import PageHeader from "@/components/ui/PageHeader";
+import EmptyState from "@/components/ui/empty-state";
+import { useAuth } from "@/lib/AuthContext";
+import { isAdminView } from "@/lib/roles";
+import { hostedAssetPath } from '@/lib/assetPath';
+import { ROUTER_PATHS } from '@/routes';
 
 export default function Help() {
   const [searchQuery, setSearchQuery] = useState("");
   const [downloading, setDownloading] = useState(false);
+  const { user } = useAuth();
+  const isAdmin = isAdminView(user);
 
   const handleDownloadManual = async () => {
     setDownloading(true);
     try {
-      const response = await generateUserManual({});
-      const pdfData = response?.data ?? response;
-
-      if (!pdfData) {
-        throw new Error("No document data was returned.");
+      // Fetch the PDF as binary. The axios-based functions.invoke wrapper decodes
+      // the PDF bytes as UTF-8 text, which corrupts the binary (replacement
+      // characters shift xref offsets), so use functions.fetch + arrayBuffer.
+      const response = await base44.functions.fetch('generateUserManual', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({})
+      });
+      if (!response.ok) {
+        throw new Error(`PDF generation failed (${response.status})`);
       }
-      
+
       // Create blob and download
-      const blob = new Blob([pdfData], { type: 'application/pdf' });
+      const blob = new Blob([await response.arrayBuffer()], { type: 'application/pdf' });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
@@ -51,7 +63,7 @@ export default function Help() {
       title: "Smart Notes",
       description: "AI-powered clinical documentation",
       icon: Sparkles,
-      topics: ["Creating notes", "Voice recording", "AI enhancement", "Best practices"]
+      topics: ["Creating notes", "Voice recording", "AI enhancement", "Quick phrases (type /)", "Facility requirements checklist"]
     },
     {
       title: "Patient Management",
@@ -78,10 +90,10 @@ export default function Help() {
       topics: ["Audio recording", "Auto transcription", "Clinical extraction"]
     },
     {
-      title: "Care Plans",
-      description: "AI care plan suggestions",
-      icon: Award,
-      topics: ["AI suggestions", "Visual builder", "Gap analysis", "Progress tracking"]
+      title: "Timesheets",
+      description: "Pay-period timesheets and payroll",
+      icon: ClipboardList,
+      topics: ["Submitting your timesheet", "Pay periods & paydays", "PTO & mileage", "Approvals & payroll export (admin)"]
     }
   ];
 
@@ -117,6 +129,22 @@ export default function Help() {
     {
       q: "What happens to flagged compliance issues?",
       a: "Flagged notes appear in the Compliance Dashboard. Review them, use AI suggestions to fix issues, and re-save. System tracks improvements over time."
+    },
+    {
+      q: "How do I use a quick phrase while writing a note?",
+      a: "Type “/” in the observations box to open the Quick Phrases picker, type a saved “.shortcut” code, or tap the Quick Phrase button. Phrases bound to a specific patient only appear while charting that patient, and inserted text still goes through compliance review before you save."
+    },
+    {
+      q: "Why is Save blocked by a facility documentation requirement?",
+      a: "Your administrator defined a critical documentation rule that applies to this patient (for example, an SpO₂ reading for a patient on oxygen). Add the missing detail — the checklist clears automatically — or check the acknowledgment box to save without it. Acknowledged overrides are recorded."
+    },
+    {
+      q: "When is my timesheet due, and when is payday?",
+      a: "Pay periods are biweekly (Sunday through Saturday). Timesheets are due before noon on the Monday after the period ends, and payday is normally the Friday after the period ends — moved to Thursday when that Friday is a bank holiday, and occasionally adjusted for a specific period when payroll confirms it. The timesheet form shows the authoritative due date and payday for the period you pick."
+    },
+    {
+      q: "What is the AI-content responsibility agreement I accepted at sign-in?",
+      a: "A one-time acknowledgment (re-shown only if the wording changes) that AI-generated content may contain errors and that you are responsible for reviewing and approving anything you submit. Your acceptance is recorded with your name, the date, and the agreement version."
     }
   ];
 
@@ -172,6 +200,50 @@ export default function Help() {
 
           {/* Quick Start Tab */}
           <TabsContent value="quickstart" className="space-y-6">
+            {/* Branded, print-ready reference manuals (static PDFs in /public/manuals). */}
+            <Card className="bg-navy-900 text-white border-none shadow-lg">
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-white text-lg">
+                  <BookOpen className="w-5 h-5 text-gold-400" />
+                  PennSync Manuals
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className={`grid gap-3 ${isAdmin ? 'sm:grid-cols-2' : 'sm:grid-cols-1'}`}>
+                  <a
+                    href={hostedAssetPath("/manuals/PennSync-User-Manual.pdf", { routerPaths: ROUTER_PATHS })}
+                    download
+                    className="flex items-center gap-3 rounded-lg bg-white/5 hover:bg-white/10 ring-1 ring-inset ring-white/10 p-3 transition-colors"
+                  >
+                    <div className="w-10 h-10 rounded-lg bg-gold-400 text-navy-900 flex items-center justify-center flex-shrink-0">
+                      <BookOpen className="w-5 h-5" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-white text-sm">User Manual</p>
+                      <p className="text-xs text-navy-100">For all clinical staff · PDF</p>
+                    </div>
+                    <Download className="w-5 h-5 text-gold-400 flex-shrink-0" />
+                  </a>
+                  {isAdmin && (
+                    <a
+                      href={hostedAssetPath("/manuals/PennSync-Facility-Admin-Manual.pdf", { routerPaths: ROUTER_PATHS })}
+                      download
+                      className="flex items-center gap-3 rounded-lg bg-white/5 hover:bg-white/10 ring-1 ring-inset ring-white/10 p-3 transition-colors"
+                    >
+                      <div className="w-10 h-10 rounded-lg bg-gold-400 text-navy-900 flex items-center justify-center flex-shrink-0">
+                        <ShieldCheck className="w-5 h-5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-white text-sm">Facility Administrator Manual</p>
+                        <p className="text-xs text-navy-100">User guide + admin tools · PDF</p>
+                      </div>
+                      <Download className="w-5 h-5 text-gold-400 flex-shrink-0" />
+                    </a>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
             <Card className="border-navy-900 border-2">
               <CardHeader className="border-b border-slate-100">
                 <CardTitle className="flex items-center gap-2">
@@ -181,13 +253,13 @@ export default function Help() {
               </CardHeader>
               <CardContent className="p-6 space-y-4">
                 <p className="text-slate-700 leading-relaxed">
-                  PennSync was designed and built by <strong className="text-navy-900">Kevin Deyarmin</strong> specifically 
-                  for the Penn Home Health team. This system combines cutting-edge AI technology with Medicare-compliant 
-                  workflows to help you provide the highest quality patient care while reducing administrative burden.
+                  PennSync is an intelligent, AI-powered documentation and analytics platform designed specifically 
+                  for clinicians. It combines cutting-edge AI technology with Medicare-compliant workflows to help you 
+                  provide the highest quality patient care while reducing administrative burden.
                 </p>
                 <div className="bg-gold-400/10 border-l-4 border-gold-400 p-4 rounded">
                   <p className="text-sm text-slate-700">
-                    <strong>Our Mission:</strong> Empower Penn clinicians to focus on exceptional patient care by 
+                    <strong>Our Mission:</strong> Empower clinicians to focus on exceptional patient care by 
                     automating documentation, ensuring compliance, and providing intelligent clinical insights.
                   </p>
                 </div>
@@ -339,7 +411,7 @@ export default function Help() {
               </CardHeader>
               <CardContent className="space-y-4">
                 {filteredFAQs.length === 0 ? (
-                  <p className="text-center text-slate-500 py-8">No FAQs match your search</p>
+                  <EmptyState icon={Search} title="No FAQs match your search" description="" />
                 ) : (
                   filteredFAQs.map((faq, idx) => (
                     <div key={idx} className="border-l-4 border-gold-400 bg-slate-50 p-4 rounded-r-lg">
@@ -370,13 +442,13 @@ export default function Help() {
                     <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
                       <Users className="w-5 h-5 text-navy-900" />
                       <div>
-                        <p className="font-semibold text-navy-900">Kevin Deyarmin</p>
-                        <p className="text-sm text-slate-600">System Developer</p>
+                        <p className="font-semibold text-navy-900">PennSync Support</p>
+                        <p className="text-sm text-slate-600">Platform Administrator</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
                       <Mail className="w-5 h-5 text-navy-900" />
-                      <p className="text-sm text-slate-700">kdeyarmin@comcast.net</p>
+                      <p className="text-sm text-slate-700">Contact your agency administrator</p>
                     </div>
                   </div>
                 </CardContent>

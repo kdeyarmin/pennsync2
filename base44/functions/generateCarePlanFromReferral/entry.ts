@@ -1,9 +1,19 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
+// <<<BEGIN SHARED HELPER: requireActiveUser — generated, edit base44/_shared/backendHelpers.mjs>>>
+const isDeactivatedUser = (u) => !!u && u.is_active === false;
+const DEACTIVATED_USER_RESPONSE = () => Response.json(
+  { error: 'Unauthorized - account is deactivated' },
+  { status: 403 },
+);
+// <<<END SHARED HELPER: requireActiveUser>>>
+
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
+    if (isDeactivatedUser(user)) return DEACTIVATED_USER_RESPONSE();
     
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
@@ -54,7 +64,7 @@ GUIDELINES:
 - Prioritize based on clinical urgency and patient needs`;
 
     const response = await base44.integrations.Core.InvokeLLM({
-      model: "claude_opus_4_8",
+      model: "automatic",
       prompt: prompt,
       response_json_schema: {
         type: "object",
@@ -89,9 +99,10 @@ GUIDELINES:
 
   } catch (error) {
     console.error('Care plan generation error:', error);
-    return Response.json({ 
-      error: 'Failed to generate care plans',
-      details: error.message 
+    // Generic client-facing message; detail stays server-side only (matches the
+    // hardened userManagement pattern — leaking error.message aids reconnaissance).
+    return Response.json({
+      error: 'Failed to generate care plans'
     }, { status: 500 });
   }
 });

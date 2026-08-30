@@ -17,7 +17,7 @@
         "hospice"
       ],
       "default": "home_health",
-      "description": "Service line \u2014 determines the pay model (home health nurses are paid by point AND by hour; hospice nurses by the hour only) and which payroll report the row lands in"
+      "description": "Service line — determines the pay model (home health nurses are paid by point AND by hour; hospice nurses by the hour only) and which payroll report the row lands in"
     },
     "pay_period_start": {
       "type": "string",
@@ -32,37 +32,17 @@
     "regular_points": {
       "type": "number",
       "default": 0,
-      "description": "Home health: total visit points, computed server-side from visit_counts \u00d7 the facility's VisitPointConfig per-type point values (blank/0 for hospice)"
+      "description": "Home health: total visit points, computed server-side from visit_counts × the facility's VisitPointConfig per-type point values (blank/0 for hospice)"
     },
     "visit_counts": {
       "type": "object",
       "description": "Home health: number of visits entered by the nurse per visit type; multiplied by the facility's per-type point values to compute regular_points",
       "properties": {
-        "soc": {
-          "type": "number",
-          "default": 0,
-          "description": "Start of Care visits"
-        },
-        "roc": {
-          "type": "number",
-          "default": 0,
-          "description": "Resumption of Care visits"
-        },
-        "recert": {
-          "type": "number",
-          "default": 0,
-          "description": "Recertification visits"
-        },
-        "routine": {
-          "type": "number",
-          "default": 0,
-          "description": "Routine visits"
-        },
-        "discharge": {
-          "type": "number",
-          "default": 0,
-          "description": "Discharge visits"
-        }
+        "soc": { "type": "number", "default": 0, "description": "Start of Care visits" },
+        "roc": { "type": "number", "default": 0, "description": "Resumption of Care visits" },
+        "recert": { "type": "number", "default": 0, "description": "Recertification visits" },
+        "routine": { "type": "number", "default": 0, "description": "Routine visits" },
+        "discharge": { "type": "number", "default": 0, "description": "Discharge visits" }
       }
     },
     "emergency_visit_points": {
@@ -139,54 +119,20 @@
       "items": {
         "type": "object",
         "properties": {
-          "date": {
-            "type": "string",
-            "format": "date",
-            "description": "Calendar day (YYYY-MM-DD)"
-          },
-          "regular_hours": {
-            "type": "number",
-            "default": 0
-          },
-          "overtime_hours": {
-            "type": "number",
-            "default": 0
-          },
-          "holiday_hours": {
-            "type": "number",
-            "default": 0
-          },
-          "on_call_hours": {
-            "type": "number",
-            "default": 0
-          },
-          "on_call_visits": {
-            "type": "number",
-            "default": 0
-          },
+          "date": { "type": "string", "format": "date", "description": "Calendar day (YYYY-MM-DD)" },
+          "regular_hours": { "type": "number", "default": 0 },
+          "overtime_hours": { "type": "number", "default": 0 },
+          "holiday_hours": { "type": "number", "default": 0 },
+          "on_call_hours": { "type": "number", "default": 0 },
+          "on_call_visits": { "type": "number", "default": 0 },
           "visit_counts": {
             "type": "object",
             "properties": {
-              "soc": {
-                "type": "number",
-                "default": 0
-              },
-              "roc": {
-                "type": "number",
-                "default": 0
-              },
-              "recert": {
-                "type": "number",
-                "default": 0
-              },
-              "routine": {
-                "type": "number",
-                "default": 0
-              },
-              "discharge": {
-                "type": "number",
-                "default": 0
-              }
+              "soc": { "type": "number", "default": 0 },
+              "roc": { "type": "number", "default": 0 },
+              "recert": { "type": "number", "default": 0 },
+              "routine": { "type": "number", "default": 0 },
+              "discharge": { "type": "number", "default": 0 }
             }
           }
         }

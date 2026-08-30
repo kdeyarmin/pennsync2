@@ -1,5 +1,14 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
+// <<<BEGIN SHARED HELPER: requireActiveUser — generated, edit base44/_shared/backendHelpers.mjs>>>
+const isDeactivatedUser = (u) => !!u && u.is_active === false;
+const DEACTIVATED_USER_RESPONSE = () => Response.json(
+  { error: 'Unauthorized - account is deactivated' },
+  { status: 403 },
+);
+// <<<END SHARED HELPER: requireActiveUser>>>
+
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -8,25 +17,55 @@ Deno.serve(async (req) => {
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    if (isDeactivatedUser(user)) return DEACTIVATED_USER_RESPONSE();
 
     const body = await req.json();
-    const { patientId, includeVisits = true, includeCarePlans = true, includeIncidents = true } = body;
+    const { patientId, includeVisits = true, includeIncidents = true } = body;
 
     if (!patientId) {
       return Response.json({ error: 'Missing patientId' }, { status: 400 });
     }
 
-    // Fetch patient data
-    const patient = await base44.entities.Patient.get(patientId);
+    // Service-role read + explicit access gate — Patient RLS grants all
+    // role:admin charts, so facility admins with an agency must be scoped.
+    const [patient] = await base44.asServiceRole.entities.Patient
+      .filter({ id: patientId }, '', 1).catch(() => []);
     if (!patient) {
       return Response.json({ error: 'Patient not found' }, { status: 404 });
     }
+    const isSuperAdmin = user.account_type === 'super_admin';
+    const isAgencyScopedAdmin =
+      user.account_type === 'agency_admin'
+      || (user.role === 'admin' && !!user.agency_name && !isSuperAdmin);
+    const isPlatformAdmin = isSuperAdmin || (user.role === 'admin' && !user.agency_name);
+    const isAssigned = Array.isArray(patient.assigned_nurses)
+      && patient.assigned_nurses.includes(user.email);
+    if (!isPlatformAdmin && !isAgencyScopedAdmin && patient.created_by !== user.email && !isAssigned) {
+      return Response.json({ error: 'Forbidden' }, { status: 403 });
+    }
+    if (isAgencyScopedAdmin) {
+      if (!user.agency_name) {
+        return Response.json({ error: 'Forbidden' }, { status: 403 });
+      }
+      const agencyUsers = await base44.asServiceRole.entities.User
+        .list('-created_date', 5000).catch(() => []);
+      const agencyEmails = new Set(
+        (agencyUsers || [])
+          .filter((u) => u.agency_name === user.agency_name && u.email)
+          .map((u) => u.email),
+      );
+      const inAgency = (patient.created_by && agencyEmails.has(patient.created_by))
+        || (Array.isArray(patient.assigned_nurses)
+          && patient.assigned_nurses.some((e) => agencyEmails.has(e)));
+      if (!inAgency) {
+        return Response.json({ error: 'Forbidden' }, { status: 403 });
+      }
+    }
 
-    // Fetch related data in parallel
-    const [visits, carePlans, incidents] = await Promise.all([
-      includeVisits ? base44.entities.Visit.filter({ patient_id: patientId }, '-visit_date', 100) : [],
-      includeCarePlans ? base44.entities.CarePlan.filter({ patient_id: patientId }, '-created_date', 100) : [],
-      includeIncidents ? base44.entities.Incident.filter({ patient_id: patientId }, '-incident_date', 100) : []
+    // Fetch related data in parallel (same patient_id already authorized).
+    const [visits, incidents] = await Promise.all([
+      includeVisits ? base44.asServiceRole.entities.Visit.filter({ patient_id: patientId }, '-visit_date', 100) : [],
+      includeIncidents ? base44.asServiceRole.entities.Incident.filter({ patient_id: patientId }, '-incident_date', 100) : []
     ]);
 
     const secondaryDiagnoses = patient.secondary_diagnoses?.join(', ') || 'None';
@@ -89,9 +128,6 @@ DNR Status: ${patient.advance_directives?.dnr_status ? 'Yes' : 'No'}
 RECENT VISITS (${visits?.length || 0}):
 ${visits?.slice(0, 10).map((v, i) => `${i + 1}. ${v.visit_date}: ${v.visit_type}`).join('\n')}
 
-ACTIVE CARE PLANS (${carePlans?.length || 0}):
-${carePlans?.slice(0, 10).map((cp, i) => `${i + 1}. ${cp.problem} - Status: ${cp.status}`).join('\n')}
-
 CLINICAL INCIDENTS (${incidents?.length || 0}):
 ${incidents?.slice(0, 10).map((inc, i) => `${i + 1}. ${inc.incident_date}: ${inc.incident_type} (${inc.severity})`).join('\n')}
 
@@ -103,7 +139,7 @@ Create professional medical chart content with:
 5. Professional medical terminology`;
 
     const result = await base44.integrations.Core.InvokeLLM({
-      model: "claude_opus_4_8",
+      model: "automatic",
       prompt,
       response_json_schema: {
         type: "object",
@@ -120,6 +156,14 @@ Create professional medical chart content with:
       }
     });
 
+    const documentContent = typeof result?.document_content === 'string'
+      ? result.document_content
+      : (typeof result === 'string' ? result : '');
+    if (!documentContent.trim()) {
+      return Response.json({ error: 'Chart generation returned empty content' }, { status: 502 });
+    }
+    const pageCount = Number.isFinite(Number(result?.page_count)) ? Number(result.page_count) : undefined;
+
     // Log the export action for compliance
     await base44.entities.SecurityLog.create({
       user_email: user.email,
@@ -129,7 +173,6 @@ Create professional medical chart content with:
         patient_id: patientId,
         patient_name: `${patient.first_name} ${patient.last_name}`,
         includes_visits: includeVisits,
-        includes_care_plans: includeCarePlans,
         includes_incidents: includeIncidents,
         exported_at: new Date().toISOString()
       },
@@ -139,16 +182,16 @@ Create professional medical chart content with:
 
     return Response.json({
       success: true,
-      document: result.document_content,
+      document: documentContent,
       patient_name: `${patient.first_name} ${patient.last_name}`,
       mrn: patient.medical_record_number,
       export_date: new Date().toISOString(),
       exported_by: user.full_name,
-      pages: result.page_count
+      pages: pageCount
     });
 
   } catch (error) {
     console.error('Error generating patient chart PDF:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
 });

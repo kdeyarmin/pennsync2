@@ -7,14 +7,16 @@ import {
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { manageTrainingVideos } from "@/functions/manageTrainingVideos";
+import PresenterPicker from "@/components/training/PresenterPicker";
+import ModuleScriptPanel from "@/components/training/ModuleScriptPanel";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { isSafeExternalUrl } from "@/components/utils/security";
 
 const fmtDuration = (s) =>
   s ? `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, "0")}` : null;
@@ -26,17 +28,31 @@ const statusMeta = {
   none: { label: "No video", cls: "bg-slate-100 text-slate-600", icon: Video },
 };
 
-export default function TrainingVideoStudio() {
+export default function TrainingVideoStudio({ course = null }) {
   const queryClient = useQueryClient();
-  const [selectedCourseId, setSelectedCourseId] = useState("");
+  const [selectedCourseIdState, setSelectedCourseId] = useState("");
+  const selectedCourseId = course?.id || selectedCourseIdState;
   const [avatarId, setAvatarId] = useState("");
   const [voiceId, setVoiceId] = useState("");
   const [showAdvanced, setShowAdvanced] = useState(false);
 
+  // Drafts are included (labeled) because the AI course generator kicks off
+  // videos on courses that are still drafts — admins need to watch those render
+  // and retry failures here BEFORE publishing, not after.
   const { data: courses = [] } = useQuery({
     queryKey: ["video-studio-courses"],
-    queryFn: () => base44.entities.TrainingCourse.filter({ status: "published" }, "-updated_date", 500),
+    queryFn: async () => {
+      const [published, drafts] = await Promise.all([
+        base44.entities.TrainingCourse.filter({ status: "published" }, "-updated_date", 500),
+        base44.entities.TrainingCourse.filter({ status: "draft" }, "-updated_date", 500),
+      ]);
+      // Re-sort the merged list so recency ordering holds across both statuses.
+      return [...published, ...drafts].sort(
+        (a, b) => new Date(b.updated_date || 0) - new Date(a.updated_date || 0)
+      );
+    },
     initialData: [],
+    enabled: !course?.id,
   });
 
   const statusKey = ["training-video-status", selectedCourseId];
@@ -53,6 +69,20 @@ export default function TrainingVideoStudio() {
   });
 
   const modules = useMemo(() => statusData?.modules || [], [statusData]);
+
+  // Full module records (with content_json) back the per-lesson script panels.
+  // Shares its query key with the course builder's Lessons tab so an edit in
+  // either place refreshes both.
+  const { data: fullModules = [] } = useQuery({
+    queryKey: ["training-modules", selectedCourseId],
+    queryFn: () => base44.entities.TrainingModule.filter({ course_id: selectedCourseId }, "order_index", 100),
+    enabled: !!selectedCourseId,
+    initialData: [],
+  });
+  const fullModuleById = useMemo(
+    () => Object.fromEntries(fullModules.map((m) => [m.id, m])),
+    [fullModules]
+  );
   const heygenConfigured = statusData?.heygen_configured;
   const anyProcessing = modules.some((m) => m.video_status === "processing");
   const missingCount = modules.filter((m) => m.video_status !== "completed").length;
@@ -68,27 +98,31 @@ export default function TrainingVideoStudio() {
     onError: (e) => toast.error(`Could not start video generation: ${e.message}`),
   });
 
-  const selectedCourse = courses.find((c) => c.id === selectedCourseId);
+  const selectedCourse = course?.id === selectedCourseId
+    ? course
+    : courses.find((c) => c.id === selectedCourseId);
 
   return (
     <div className="space-y-6">
-      <Card className="border-indigo-200 bg-indigo-50/40">
-        <CardContent className="p-5 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-          <div className="flex items-start gap-3 min-w-0">
-            <div className="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center flex-shrink-0">
-              <Clapperboard className="w-5 h-5" />
+      {!course && (
+        <Card className="border-indigo-200 bg-indigo-50/40">
+          <CardContent className="p-5 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div className="flex items-start gap-3 min-w-0">
+              <div className="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center flex-shrink-0">
+                <Clapperboard className="w-5 h-5" />
+              </div>
+              <div className="min-w-0">
+                <h2 className="font-semibold text-slate-900">AI Presenter Video Studio</h2>
+                <p className="text-sm text-slate-600">
+                  Generate an AI presenter video for each lesson from its script, or regenerate to
+                  enhance an existing one. Videos generate in the background and attach to the module
+                  automatically — staff see the video at the top of the lesson, then take the quiz.
+                </p>
+              </div>
             </div>
-            <div className="min-w-0">
-              <h2 className="font-semibold text-slate-900">AI Presenter Video Studio</h2>
-              <p className="text-sm text-slate-600">
-                Generate a HeyGen presenter video for each lesson from its script, or regenerate to
-                enhance an existing one. Videos generate in the background and attach to the module
-                automatically — staff see the video at the top of the lesson, then take the quiz.
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
 
       {/* HeyGen not configured */}
       {selectedCourseId && heygenConfigured === false && (
@@ -109,22 +143,31 @@ export default function TrainingVideoStudio() {
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
-            <Video className="w-4 h-4 text-indigo-600" /> Choose a course
+            <Video className="w-4 h-4 text-indigo-600" />
+            {course ? `Presenter videos for “${course.title}”` : "Choose a course"}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex flex-col sm:flex-row gap-3 sm:items-end">
-            <div className="flex-1">
-              <Label className="text-xs text-slate-500">Published course</Label>
-              <Select value={selectedCourseId} onValueChange={setSelectedCourseId}>
-                <SelectTrigger><SelectValue placeholder="Select a course to add videos to" /></SelectTrigger>
-                <SelectContent>
-                  {courses.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>{c.title}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            {course ? (
+              <p className="flex-1 text-sm text-slate-600">
+                Each lesson’s AI-written narration script becomes a presenter video. Status refreshes automatically while HeyGen renders.
+              </p>
+            ) : (
+              <div className="flex-1">
+                <Label className="text-xs text-slate-500">Course</Label>
+                <Select value={selectedCourseId} onValueChange={setSelectedCourseId}>
+                  <SelectTrigger><SelectValue placeholder="Select a course to add videos to" /></SelectTrigger>
+                  <SelectContent>
+                    {courses.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.title}{c.status === "draft" ? " — Draft" : ""}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
             {selectedCourseId && (
               <Button
                 onClick={() => startMutation.mutate({ course_id: selectedCourseId, action: missingCount > 0 ? "start" : "regenerate" })}
@@ -152,17 +195,16 @@ export default function TrainingVideoStudio() {
                 <Settings2 className="w-3.5 h-3.5" /> Presenter options {showAdvanced ? "▲" : "▼"}
               </button>
               {showAdvanced && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2 rounded-xl border bg-slate-50 p-3">
-                  <div>
-                    <Label className="text-xs text-slate-500">Avatar ID</Label>
-                    <Input value={avatarId} onChange={(e) => setAvatarId(e.target.value)} placeholder="Daisy-inskirt-20220818 (default)" className="h-9" />
-                  </div>
-                  <div>
-                    <Label className="text-xs text-slate-500">Voice ID</Label>
-                    <Input value={voiceId} onChange={(e) => setVoiceId(e.target.value)} placeholder="Elizabeth – Friendly (default)" className="h-9" />
-                  </div>
-                  <p className="sm:col-span-2 text-xs text-slate-400">
-                    Leave blank to use the default friendly presenter. Find avatar &amp; voice IDs in your HeyGen account.
+                <div className="mt-2 rounded-xl border bg-slate-50 p-3 space-y-2">
+                  <PresenterPicker
+                    avatarId={avatarId}
+                    voiceId={voiceId}
+                    onAvatarChange={setAvatarId}
+                    onVoiceChange={setVoiceId}
+                    idPrefix="video-studio"
+                  />
+                  <p className="text-xs text-slate-400">
+                    Applies to videos you generate from this page. Leave on the defaults for the standard friendly presenter.
                   </p>
                 </div>
               )}
@@ -176,8 +218,11 @@ export default function TrainingVideoStudio() {
         <Card>
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between gap-3 flex-wrap">
-              <CardTitle className="text-base">
+              <CardTitle className="text-base flex items-center gap-2">
                 Lessons in “{selectedCourse?.title}” ({modules.length})
+                {selectedCourse?.status === "draft" && (
+                  <Badge className="bg-slate-100 text-slate-600 text-xs font-medium">Draft</Badge>
+                )}
               </CardTitle>
               <div className="flex items-center gap-2 text-xs text-slate-400">
                 {(isFetching || anyProcessing) && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
@@ -196,12 +241,13 @@ export default function TrainingVideoStudio() {
                 const Icon = meta.icon;
                 const busy = m.video_status === "processing";
                 return (
-                  <div key={m.module_id} className="flex items-center gap-3 p-3 rounded-xl border bg-white">
+                  <div key={m.module_id} className="p-3 rounded-xl border bg-white">
+                    <div className="flex items-center gap-3">
                     <span className="w-6 h-6 rounded-full bg-slate-100 text-slate-600 text-xs font-bold flex items-center justify-center flex-shrink-0">
                       {i + 1}
                     </span>
 
-                    {m.video_thumbnail_url ? (
+                    {m.video_thumbnail_url && isSafeExternalUrl(m.video_thumbnail_url) ? (
                       <img src={m.video_thumbnail_url} alt="" className="w-20 h-12 rounded object-cover border flex-shrink-0" />
                     ) : (
                       <div className="w-20 h-12 rounded bg-slate-100 border flex items-center justify-center flex-shrink-0">
@@ -226,8 +272,8 @@ export default function TrainingVideoStudio() {
                     </div>
 
                     <div className="flex items-center gap-2 flex-shrink-0">
-                      {m.video_url && (
-                        <a href={m.video_url} target="_blank" rel="noreferrer">
+                      {m.video_url && isSafeExternalUrl(m.video_url) && (
+                        <a href={m.video_url} target="_blank" rel="noopener noreferrer">
                           <Button size="sm" variant="outline"><Play className="w-3.5 h-3.5 mr-1.5" />Preview</Button>
                         </a>
                       )}
@@ -246,6 +292,12 @@ export default function TrainingVideoStudio() {
                         )}
                       </Button>
                     </div>
+                    </div>
+                    <ModuleScriptPanel
+                      module={fullModuleById[m.module_id]}
+                      courseId={selectedCourseId}
+                      disabled={busy}
+                    />
                   </div>
                 );
               })

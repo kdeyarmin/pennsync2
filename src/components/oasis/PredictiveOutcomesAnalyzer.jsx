@@ -9,9 +9,14 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
 import { Loader2, TrendingUp, Activity, AlertTriangle, Target, Brain, Calendar, Clock, Shield } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { formatAge } from "@/lib/age";
 
 export default function PredictiveOutcomesAnalyzer({ analysisResults, pdgmData, patientId, onPredictionsComplete }) {
-  const ai = useAICall();
+  // Auto-fired analyses are background work in the app-wide AI budget, so
+  // several such cards on one page queue instead of hitting the provider at
+  // once. A run the user CLICKED passes interactive priority per call and
+  // takes the reserved slot instead of queueing behind that background work.
+  const ai = useAICall({ priority: 'background' });
   const [predictions, setPredictions] = useState(null);
   const [autoPredict, setAutoPredict] = useState(false);
 
@@ -20,16 +25,15 @@ export default function PredictiveOutcomesAnalyzer({ analysisResults, pdgmData, 
     queryKey: ['patientHistory', patientId],
     queryFn: async () => {
       if (!patientId) return [];
-      const [visits, oasisData, carePlans, incidents, alerts, tasks, recommendations] = await Promise.all([
+      const [visits, oasisData, incidents, alerts, tasks, recommendations] = await Promise.all([
         base44.entities.Visit.filter({ patient_id: patientId }, '-visit_date', 50),
         base44.entities.OASISUpload.filter({ patient_id: patientId }, '-created_date', 20),
-        base44.entities.CarePlan.filter({ patient_id: patientId }),
         base44.entities.Incident.filter({ patient_id: patientId }, '-incident_date', 20),
         base44.entities.PatientAlert.filter({ patient_id: patientId }, '-created_date', 30),
         base44.entities.Task.filter({ patient_id: patientId }, '-created_date', 50),
         base44.entities.PatientRecommendation.filter({ patient_id: patientId }, '-created_date', 30)
       ]);
-      return { visits, oasisData, carePlans, incidents, alerts, tasks, recommendations };
+      return { visits, oasisData, incidents, alerts, tasks, recommendations };
     },
     enabled: !!patientId
   });
@@ -57,7 +61,6 @@ export default function PredictiveOutcomesAnalyzer({ analysisResults, pdgmData, 
       fall_count: history.incidents?.filter(i => i.incident_type === 'fall')?.length || 0,
       active_alerts: history.alerts?.filter(a => a.status === 'active').length || 0,
       critical_alerts: history.alerts?.filter(a => a.severity === 'critical' && a.status === 'active').length || 0,
-      care_plan_adherence: history.carePlans?.filter(cp => cp.status === 'met').length / (history.carePlans?.length || 1),
       recommendation_completion_rate: history.recommendations?.filter(r => r.status === 'completed').length / (history.recommendations?.length || 1),
       avg_visit_gap_days: null,
       functional_trend: 'unknown'
@@ -78,10 +81,12 @@ export default function PredictiveOutcomesAnalyzer({ analysisResults, pdgmData, 
     if (history.oasisData?.length >= 2) {
       const recent = history.oasisData.slice(0, 2);
       if (recent[0]?.pdgm_data?.functional_level && recent[1]?.pdgm_data?.functional_level) {
+        // functional_level is an IMPAIRMENT level ('high' = more functional
+        // points = more dependent), so a rising index means the patient declined.
         const levels = ['low', 'medium', 'high'];
         const current = levels.indexOf(recent[0].pdgm_data.functional_level);
         const previous = levels.indexOf(recent[1].pdgm_data.functional_level);
-        trends.functional_trend = current > previous ? 'improving' : current < previous ? 'declining' : 'stable';
+        trends.functional_trend = current > previous ? 'declining' : current < previous ? 'improving' : 'stable';
       }
     }
 
@@ -106,7 +111,7 @@ export default function PredictiveOutcomesAnalyzer({ analysisResults, pdgmData, 
     };
   }, []);
 
-  const generatePredictions = useCallback(async () => {
+  const generatePredictions = useCallback(async ({ interactive = false } = {}) => {
     if (!analysisResults || !pdgmData) return;
 
     try {
@@ -118,7 +123,7 @@ export default function PredictiveOutcomesAnalyzer({ analysisResults, pdgmData, 
 
       // Comprehensive AI prediction
       const result = await ai.run({
-        model: "claude_opus_4_8",
+        model: "automatic",
         prompt: `You are a predictive analytics expert for home health outcomes. Analyze OASIS data and predict patient outcomes with clinical reasoning.
 
 CURRENT OASIS ASSESSMENT:
@@ -136,13 +141,12 @@ ${JSON.stringify({
 }, null, 2)}
 
 PATIENT CONTEXT:
-- Age: ${patient?.date_of_birth ? Math.floor((Date.now() - new Date(patient.date_of_birth)) / 31557600000) : 'Unknown'}
+- Age: ${formatAge(patient?.date_of_birth)}
 - Past Hospitalizations: ${patient?.past_hospitalizations?.length || 0}
 - Living Situation: ${patient?.social_history?.living_situation || 'Unknown'}
 - Support System: ${patient?.social_history?.support_system || 'Unknown'}
 - Active Alerts: ${patientHistory?.alerts?.filter(a => a.status === 'active').length || 0}
 - Pending Tasks: ${patientHistory?.tasks?.filter(t => t.status === 'pending').length || 0}
-- Active Care Plans: ${patientHistory?.carePlans?.filter(cp => cp.status === 'active').length || 0}
 - Recent Incidents: ${patientHistory?.incidents?.length || 0} (falls: ${patientHistory?.incidents?.filter(i => i.incident_type === 'fall').length || 0}, hospitalizations: ${patientHistory?.incidents?.filter(i => i.incident_type === 'hospitalized').length || 0})
 - Previous Recommendations: ${patientHistory?.recommendations?.filter(r => r.status === 'completed').length || 0} completed, ${patientHistory?.recommendations?.filter(r => r.status === 'pending').length || 0} pending
 
@@ -362,7 +366,7 @@ Provide SPECIFIC, ACTIONABLE predictions with clinical reasoning.`,
             }
           }
         }
-      });
+      }, { priority: interactive ? 'interactive' : 'background' });
 
       setPredictions(result);
       if (onPredictionsComplete) {
@@ -404,7 +408,7 @@ Provide SPECIFIC, ACTIONABLE predictions with clinical reasoning.`,
             AI Predictive Outcomes Analysis
           </CardTitle>
           <Button
-            onClick={generatePredictions}
+            onClick={() => generatePredictions({ interactive: true })}
             disabled={ai.loading}
             className="bg-indigo-600 hover:bg-indigo-700"
           >

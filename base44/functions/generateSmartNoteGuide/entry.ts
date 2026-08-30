@@ -1,11 +1,21 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
-import { jsPDF } from 'npm:jspdf@2.5.1';
+import { jsPDF } from 'npm:jspdf@2.5.2';
+
+// <<<BEGIN SHARED HELPER: requireActiveUser — generated, edit base44/_shared/backendHelpers.mjs>>>
+const isDeactivatedUser = (u) => !!u && u.is_active === false;
+const DEACTIVATED_USER_RESPONSE = () => Response.json(
+  { error: 'Unauthorized - account is deactivated' },
+  { status: 403 },
+);
+// <<<END SHARED HELPER: requireActiveUser>>>
+
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
-
+    if (isDeactivatedUser(user)) return DEACTIVATED_USER_RESPONSE();
+    
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -341,7 +351,7 @@ Deno.serve(async (req) => {
       { label: 'Review Enhanced Note', desc: 'Read through the AI-enhanced note. Yellow highlights indicate areas that may need your attention or completion.' },
       { label: 'Edit if Needed', desc: 'The enhanced note is fully editable. Make any necessary adjustments to ensure accuracy.' },
       { label: 'Copy to Clipboard', desc: 'Click "Copy to Clipboard" to copy the note for pasting into your EHR system.' },
-      { label: 'Save to System', desc: 'Click "Save Note" to store the visit documentation in Penn Sync for future reference.' },
+      { label: 'Save to System', desc: 'Click "Save Note" to store the visit documentation in PennSync for future reference.' },
       { label: 'Generate Tasks', desc: 'Optionally generate follow-up tasks based on the visit documentation.' },
       { label: 'Generate Care Plans', desc: 'Create or update care plans based on assessment findings.' }
     ];
@@ -438,7 +448,7 @@ Deno.serve(async (req) => {
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(255, 255, 255);
-    doc.text('Penn Sync - Smart Note Assistant Guide', pageWidth / 2, pageHeight - 15, { align: 'center' });
+    doc.text('PennSync - Smart Note Assistant Guide', pageWidth / 2, pageHeight - 15, { align: 'center' });
     doc.text(`Generated: ${new Date().toLocaleDateString()}`, pageWidth / 2, pageHeight - 8, { align: 'center' });
 
     // Generate PDF
@@ -465,7 +475,7 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error('Error generating guide:', error);
     return Response.json({ 
-      error: error.message,
+      error: 'Internal server error',
     }, { status: 500 });
   }
 });

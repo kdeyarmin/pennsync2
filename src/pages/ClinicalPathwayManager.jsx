@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { isAdminView } from "@/lib/roles";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import EmptyState from "@/components/ui/empty-state";
@@ -38,18 +39,18 @@ import {
   ClipboardList,
   X,
   Sparkles,
-  Brain,
-  ShieldAlert
+  Brain
 } from "lucide-react";
 import PageContainer from "@/components/ui/PageContainer";
 import PageHeader from "@/components/ui/PageHeader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AIAssessmentDrafter from "../components/clinical/AIAssessmentDrafter";
 import AIICD10Suggester from "../components/clinical/AIICD10Suggester";
-import AICarePlanGenerator from "../components/clinical/AICarePlanGenerator";
 import AIPathwayGenerator from "../components/clinical/AIPathwayGenerator";
 import AIPathwayUpdater from "../components/clinical/AIPathwayUpdater";
 import OASISUploadWidget from "../components/oasis/OASISUploadWidget";
+import LoadingState from "@/components/ui/LoadingState";
+import AccessDeniedState from "@/components/ui/AccessDeniedState";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -60,6 +61,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { ALL_ROWS } from '@/lib/queryLimits';
 
 export default function ClinicalPathwayManager() {
   const queryClient = useQueryClient();
@@ -76,7 +78,7 @@ export default function ClinicalPathwayManager() {
 
   const { data: pathways = [], isLoading } = useQuery({
     queryKey: ['clinicalPathways'],
-    queryFn: () => base44.entities.ClinicalPathway.list('-created_date')
+    queryFn: () => base44.entities.ClinicalPathway.list('-created_date', ALL_ROWS)
   });
 
   const createMutation = useMutation({
@@ -349,24 +351,17 @@ export default function ClinicalPathwayManager() {
 
   if (isLoading || isLoadingUser) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
-      </div>
+      <LoadingState className="py-24" />
     );
   }
 
   // Admin-only surface: block non-admins (server-side authz remains the real gate).
-  if (currentUser?.role !== 'admin') {
+  if (!isAdminView(currentUser)) {
     return (
-      <div className="p-8 max-w-2xl mx-auto">
-        <Card className="border-l-4 border-l-red-500">
-          <CardContent className="p-12 text-center">
-            <ShieldAlert className="w-16 h-16 text-red-500 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-slate-900 mb-2">Access Restricted</h2>
-            <p className="text-slate-600">Only administrators can manage clinical pathways.</p>
-          </CardContent>
-        </Card>
-      </div>
+      <AccessDeniedState
+        title="Access Restricted"
+        description="Only administrators can manage clinical pathways."
+      />
     );
   }
 
@@ -426,7 +421,7 @@ export default function ClinicalPathwayManager() {
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <div className="overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0 mb-4 sm:mb-6">
-            <TabsList className="inline-flex md:grid md:w-full md:grid-cols-5 gap-1 min-w-max h-auto">
+            <TabsList className="inline-flex md:grid md:w-full md:grid-cols-4 gap-1 min-w-max h-auto">
               <TabsTrigger value="pathways" className="flex items-center gap-1 sm:gap-2 py-2 sm:py-3 text-xs sm:text-sm whitespace-nowrap">
                 <Route className="w-3 h-3 sm:w-4 sm:h-4" />
                 <span>Pathways</span>
@@ -443,11 +438,6 @@ export default function ClinicalPathwayManager() {
               <TabsTrigger value="icd10" className="flex items-center gap-1 sm:gap-2 py-2 sm:py-3 text-xs sm:text-sm whitespace-nowrap">
                 <FileText className="w-3 h-3 sm:w-4 sm:h-4" />
                 <span>ICD-10</span>
-              </TabsTrigger>
-              <TabsTrigger value="careplan" className="flex items-center gap-1 sm:gap-2 py-2 sm:py-3 text-xs sm:text-sm whitespace-nowrap">
-                <ClipboardList className="w-3 h-3 sm:w-4 sm:h-4" />
-                <span className="hidden md:inline">Care Plan</span>
-                <span className="md:hidden">Plan</span>
               </TabsTrigger>
             </TabsList>
           </div>
@@ -495,7 +485,7 @@ export default function ClinicalPathwayManager() {
                 </CardHeader>
                 <CardContent className="space-y-3">
                   {/* Stats */}
-                  <div className="grid grid-cols-4 gap-2 text-center text-xs">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs">
                     <div className="bg-blue-50 p-2 rounded">
                       <Zap className="w-3 h-3 text-blue-600 mx-auto mb-1" />
                       <p className="font-bold text-blue-700">{pathway.trigger_conditions?.length || 0}</p>
@@ -613,12 +603,6 @@ export default function ClinicalPathwayManager() {
           <TabsContent value="icd10">
             <AIICD10Suggester
               onCodesSelected={() => {}}
-            />
-          </TabsContent>
-
-          <TabsContent value="careplan">
-            <AICarePlanGenerator
-              onCarePlanGenerated={() => {}}
             />
           </TabsContent>
         </Tabs>
@@ -759,7 +743,7 @@ function PathwayForm({ pathway, onSave, onCancel, isSaving }) {
         <div className="space-y-2 max-h-40 overflow-y-auto">
           {formData.trigger_conditions?.map((trigger, idx) => (
             <div key={idx} className="flex gap-2 items-end bg-slate-50 p-2 rounded">
-              <div className="flex-1 grid grid-cols-3 gap-2">
+              <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-2">
                 <Select value={trigger.type} onValueChange={(v) => updateTrigger(idx, 'type', v)}>
                   <SelectTrigger className="h-8 text-xs">
                     <SelectValue />
@@ -825,7 +809,7 @@ function PathwayForm({ pathway, onSave, onCancel, isSaving }) {
 const getPriorityColor = (priority) => {
   switch (priority) {
     case 'critical': return 'bg-red-600 text-white';
-    case 'high': return 'bg-orange-500 text-white';
+    case 'high': return 'bg-orange-100 text-orange-800 border border-orange-200';
     case 'medium': return 'bg-amber-500 text-white';
     case 'low': return 'bg-blue-500 text-white';
     default: return 'bg-slate-500 text-white';

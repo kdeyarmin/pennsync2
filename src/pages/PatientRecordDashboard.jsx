@@ -1,5 +1,8 @@
 import { useState, useMemo } from "react";
+import { useNavigate } from "react-router";
 import { base44 } from "@/api/base44Client";
+import { useAgencyScopedQuery } from '@/hooks/useAgencyScopedQuery';
+import { useScopedPatients } from '@/hooks/useScopedPatients';
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import EmptyState from "@/components/ui/empty-state";
@@ -17,6 +20,7 @@ import PageContainer from "@/components/ui/PageContainer";
 import PageHeader from "@/components/ui/PageHeader";
 import StatCard from "@/components/ui/stat-card";
 import LoadingState from "@/components/ui/LoadingState";
+import { parseLocalDate } from "@/lib/dateLocal";
 import PatientSearchBar from "../components/dashboard/PatientSearchBar";
 import PatientQuickActions from "../components/dashboard/PatientQuickActions";
 import PatientOverviewCard from "../components/dashboard/PatientOverviewCard";
@@ -24,6 +28,7 @@ import RecentActivityFeed from "../components/dashboard/RecentActivityFeed";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function PatientRecordDashboard() {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState({
     status: "all",
@@ -37,30 +42,30 @@ export default function PatientRecordDashboard() {
 
   // Refresh the dashboard's data after a quick action without a full page reload.
   const refreshDashboard = () => {
-    ['all-patients', 'all-visits', 'all-care-plans', 'active-alerts'].forEach(
+    ['all-patients', 'all-visits', 'active-alerts'].forEach(
       (key) => queryClient.invalidateQueries({ queryKey: [key] })
     );
   };
 
   // Fetch all data in parallel
-  const { data: patients = [], isLoading: loadingPatients } = useQuery({
-    queryKey: ['all-patients'],
-    queryFn: () => base44.entities.Patient.list('-updated_date', 1000)
+  const { data: patients = [], isLoading: loadingPatients } = useScopedPatients({ sort: '-updated_date', limit: 1000 });
+
+  const { data: visits = [] } = useAgencyScopedQuery({
+    queryKey: ['all-visits', 'created', 500],
+    fetch: () => base44.entities.Visit.list('-created_date', 500)
   });
 
-  const { data: visits = [] } = useQuery({
-    queryKey: ['all-visits'],
-    queryFn: () => base44.entities.Visit.list('-created_date', 500)
-  });
-
-  const { data: carePlans = [] } = useQuery({
-    queryKey: ['all-care-plans'],
-    queryFn: () => base44.entities.CarePlan.list('-created_date', 500)
-  });
-
+  // Server-scoped alerts — avoid entity list(N) + agency post-filter truncation.
   const { data: alerts = [] } = useQuery({
-    queryKey: ['active-alerts'],
-    queryFn: () => base44.entities.PatientAlert.filter({ status: 'active' }, '-created_date', 100)
+    queryKey: ['active-alerts', 'patient-record-dashboard'],
+    queryFn: async () => {
+      const res = await base44.functions.invoke('getScopedPatientAlerts', {
+        limit: 500,
+        status: 'active',
+      });
+      return res?.data?.alerts || [];
+    },
+    initialData: [],
   });
 
   // Filter patients based on search and filters
@@ -99,11 +104,13 @@ export default function PatientRecordDashboard() {
 
     // Date range filter
     if (filters.dateRange !== "all") {
-      const now = new Date();
+      const startOfToday = new Date();
+      startOfToday.setHours(0, 0, 0, 0);
       result = result.filter(p => {
         if (!p.admission_date) return false;
-        const admissionDate = new Date(p.admission_date);
-        const daysDiff = (now - admissionDate) / (1000 * 60 * 60 * 24);
+        const admissionDate = parseLocalDate(p.admission_date);
+        if (!admissionDate) return false;
+        const daysDiff = (startOfToday - admissionDate) / (1000 * 60 * 60 * 24);
 
         switch (filters.dateRange) {
           case "week":
@@ -127,11 +134,15 @@ export default function PatientRecordDashboard() {
   const stats = useMemo(() => {
     const activePatients = patients.filter(p => p.status === 'active').length;
     const criticalAlerts = alerts.filter(a => a.severity === 'critical').length;
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
     const recentVisits = visits.filter(v => {
       if (!v.visit_date) return false;
-      const visitDate = new Date(v.visit_date);
-      const daysDiff = (new Date() - visitDate) / (1000 * 60 * 60 * 24);
-      return daysDiff <= 7;
+      const visitDate = parseLocalDate(v.visit_date);
+      if (!visitDate) return false;
+      const daysDiff = (startOfToday - visitDate) / (1000 * 60 * 60 * 24);
+      // Lower bound too, so future-dated visits don't count as "recent".
+      return daysDiff >= 0 && daysDiff <= 7;
     }).length;
 
     return {
@@ -224,7 +235,6 @@ export default function PatientRecordDashboard() {
                           key={patient.id}
                           patient={patient}
                           visits={visits.filter(v => v.patient_id === patient.id)}
-                          carePlans={carePlans.filter(cp => cp.patient_id === patient.id)}
                           alerts={alerts.filter(a => a.patient_id === patient.id)}
                           isSelected={selectedPatient?.id === patient.id}
                           onSelect={() => setSelectedPatient(patient)}
@@ -285,7 +295,7 @@ export default function PatientRecordDashboard() {
                     </div>
                     <Button
                       className="w-full mt-4"
-                      onClick={() => window.location.href = `/PatientDetails?id=${selectedPatient.id}`}
+                      onClick={() => navigate(`/PatientDetails?id=${selectedPatient.id}`)}
                     >
                       <FileText className="w-4 h-4 mr-2" />
                       View Full Record

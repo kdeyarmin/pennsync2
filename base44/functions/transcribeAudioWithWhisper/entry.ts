@@ -1,5 +1,14 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
+// <<<BEGIN SHARED HELPER: requireActiveUser — generated, edit base44/_shared/backendHelpers.mjs>>>
+const isDeactivatedUser = (u) => !!u && u.is_active === false;
+const DEACTIVATED_USER_RESPONSE = () => Response.json(
+  { error: 'Unauthorized - account is deactivated' },
+  { status: 403 },
+);
+// <<<END SHARED HELPER: requireActiveUser>>>
+
+
 Deno.serve(async (req) => {
   try {
     // Only allow POST
@@ -10,12 +19,19 @@ Deno.serve(async (req) => {
     // Authenticate user
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
+    if (isDeactivatedUser(user)) return DEACTIVATED_USER_RESPONSE();
     if (!user) {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Parse FormData
-    const formData = await req.formData();
+    // Parse FormData — return a clean 400 (not a 500) when the request isn't
+    // multipart/form-data (e.g. JSON body or missing boundary).
+    let formData;
+    try {
+      formData = await req.formData();
+    } catch {
+      return Response.json({ error: "Request must be multipart/form-data with a 'file' field" }, { status: 400 });
+    }
     const audioFile = formData.get("file");
 
     if (!audioFile) {
@@ -82,7 +98,7 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error("Transcription error:", error);
     return Response.json(
-      { error: error.message || "Internal server error" },
+      { error: "Internal server error" },
       { status: 500 }
     );
   }

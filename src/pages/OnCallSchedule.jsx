@@ -1,7 +1,8 @@
 import { useState, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
+import { agencyQueryKey } from '@/lib/agencyRoster';
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { startOfMonth, endOfMonth, format } from "date-fns";
+import { startOfMonth, endOfMonth, startOfWeek, endOfWeek, format } from "date-fns";
 import { toast } from "sonner";
 import { ShieldCheck } from "lucide-react";
 import PageContainer from "@/components/ui/PageContainer";
@@ -10,7 +11,8 @@ import PageHeader from "@/components/ui/PageHeader";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import OnCallCalendar from "@/components/oncall/OnCallCalendar";
 import AssignOnCallDialog from "@/components/oncall/AssignOnCallDialog";
-import { isSuperAdmin } from "@/lib/superAdmin";
+import { isAdminView } from "@/lib/roles";
+import { ALL_ROWS } from '@/lib/queryLimits';
 
 export default function OnCallSchedule() {
   const queryClient = useQueryClient();
@@ -21,26 +23,33 @@ export default function OnCallSchedule() {
     queryKey: ["currentUser"],
     queryFn: () => base44.auth.me(),
   });
-  const isAdmin = currentUser?.role === "admin" || isSuperAdmin(currentUser);
+  const isAdmin = isAdminView(currentUser);
 
   // Load shifts for the visible month (plus a small buffer for grid spillover).
   const monthKey = format(cursor, "yyyy-MM");
   const { data: shifts = [] } = useQuery({
     queryKey: ["onCallShifts", monthKey],
     queryFn: () => {
-      const from = format(startOfMonth(cursor), "yyyy-MM-dd");
-      const to = format(endOfMonth(cursor), "yyyy-MM-dd");
+      // Match the calendar's rendered grid, which spills into the trailing days
+      // of the prior month and the leading days of the next — otherwise shifts on
+      // those visible spillover cells load as "Unassigned".
+      const from = format(startOfWeek(startOfMonth(cursor), { weekStartsOn: 0 }), "yyyy-MM-dd");
+      const to = format(endOfWeek(endOfMonth(cursor), { weekStartsOn: 0 }), "yyyy-MM-dd");
       return base44.entities.OnCallShift.filter({
         shift_date: { $gte: from, $lte: to },
-      });
+      }, undefined, ALL_ROWS);
     },
     initialData: [],
   });
 
   // Staff list for the assign dropdown (admins only — User list is admin-scoped).
   const { data: staff = [] } = useQuery({
-    queryKey: ["onCallStaff"],
-    queryFn: () => base44.entities.User.list(),
+    queryKey: ["onCallStaff", agencyQueryKey(currentUser)],
+    queryFn: async () => {
+      const _rows = await base44.entities.User.list('-created_date', 5000);
+      const { filterUsersByCallerAgency } = await import('@/lib/agencyScope');
+      return filterUsersByCallerAgency(_rows, currentUser);
+    },
     initialData: [],
     enabled: isAdmin,
   });

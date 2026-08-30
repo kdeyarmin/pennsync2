@@ -1,9 +1,52 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
+// <<<BEGIN SHARED HELPER: requireActiveUser — generated, edit base44/_shared/backendHelpers.mjs>>>
+const isDeactivatedUser = (u) => !!u && u.is_active === false;
+const DEACTIVATED_USER_RESPONSE = () => Response.json(
+  { error: 'Unauthorized - account is deactivated' },
+  { status: 403 },
+);
+// <<<END SHARED HELPER: requireActiveUser>>>
+
+/** Explicit patient access — Patient RLS treats role:admin as platform-wide. */
+async function assertPatientAccess(base44, user, patient) {
+  if (!patient) return Response.json({ error: 'Patient not found' }, { status: 404 });
+  const isSuperAdmin = user.account_type === 'super_admin';
+  const isAgencyScopedAdmin =
+    user.account_type === 'agency_admin'
+    || (user.role === 'admin' && !!user.agency_name && !isSuperAdmin);
+  const isPlatformAdmin = isSuperAdmin || (user.role === 'admin' && !user.agency_name);
+  const isAssigned = Array.isArray(patient.assigned_nurses)
+    && patient.assigned_nurses.includes(user.email);
+  if (!isPlatformAdmin && !isAgencyScopedAdmin && patient.created_by !== user.email && !isAssigned) {
+    return Response.json({ error: 'Forbidden' }, { status: 403 });
+  }
+  if (isAgencyScopedAdmin) {
+    if (!user.agency_name) {
+      return Response.json({ error: 'Forbidden' }, { status: 403 });
+    }
+    const agencyUsers = await base44.asServiceRole.entities.User
+      .list('-created_date', 5000).catch(() => []);
+    const agencyEmails = new Set(
+      (agencyUsers || [])
+        .filter((u) => u.agency_name === user.agency_name && u.email)
+        .map((u) => u.email),
+    );
+    const inAgency = (patient.created_by && agencyEmails.has(patient.created_by))
+      || (Array.isArray(patient.assigned_nurses)
+        && patient.assigned_nurses.some((e) => agencyEmails.has(e)));
+    if (!inAgency) {
+      return Response.json({ error: 'Forbidden' }, { status: 403 });
+    }
+  }
+  return null;
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
+    if (isDeactivatedUser(user)) return DEACTIVATED_USER_RESPONSE();
 
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
@@ -16,22 +59,20 @@ Deno.serve(async (req) => {
     }
 
     // Fetch patient data and recent thread
-    const [patients, recentVisits, carePlans, incidents, threadMessages] = await Promise.all([
-      base44.entities.Patient.filter({ id: patient_id }),
+    const [patients, recentVisits, incidents, threadMessages] = await Promise.all([
+      base44.entities.Patient.filter({ id: patient_id }, undefined, 5000),
       base44.entities.Visit.filter({ patient_id }, '-visit_date', 5),
-      base44.entities.CarePlan.filter({ patient_id, status: 'active' }),
       base44.entities.Incident.filter({ patient_id }, '-incident_date', 5),
       thread_id ? base44.entities.Message.filter({ thread_id }, '-created_date', 10) : Promise.resolve([])
     ]);
 
     const patient = patients[0];
-    if (!patient) {
-      return Response.json({ error: 'Patient not found' }, { status: 404 });
-    }
+    const denied = await assertPatientAccess(base44, user, patient);
+    if (denied) return denied;
 
     // Generate contextual suggestions
     const result = await base44.integrations.Core.InvokeLLM({
-      model: "claude_sonnet_4_6",
+      model: "automatic",
       prompt: `You are an AI assistant helping a care team communicate about a patient. Based on the patient's record and conversation, suggest relevant information to share.
 
 PATIENT INFORMATION:
@@ -43,14 +84,11 @@ Current Medications: ${patient.current_medications?.map(m => m.name).join(', ') 
 RECENT VISITS (${recentVisits.length}):
 ${recentVisits.map(v => `${v.visit_date}: ${v.visit_type} - ${v.nurse_notes?.substring(0, 200) || 'No notes'}`).join('\n')}
 
-ACTIVE CARE PLANS (${carePlans.length}):
-${carePlans.map(cp => `${cp.problem}: ${cp.goal} (${cp.status})`).join('\n')}
-
 RECENT INCIDENTS (${incidents.length}):
 ${incidents.map(i => `${i.incident_date}: ${i.incident_type} - ${i.severity}`).join('\n')}
 
 CONVERSATION CONTEXT:
-${threadMessages.map(m => `${m.sender_name}: ${m.message_text.substring(0, 200)}`).join('\n')}
+${threadMessages.map(m => `${m.sender_name}: ${String(m.message_text || '').substring(0, 200)}`).join('\n')}
 
 ${current_message ? `CURRENT MESSAGE BEING WRITTEN:\n${current_message}` : ''}
 
@@ -102,7 +140,7 @@ Suggest:
   } catch (error) {
     console.error('Error generating suggestions:', error);
     return Response.json({
-      error: error.message
+      error: 'Internal server error'
     }, { status: 500 });
   }
 });

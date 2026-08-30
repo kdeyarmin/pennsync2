@@ -1,27 +1,38 @@
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
+import { useScopedPatients } from '@/hooks/useScopedPatients';
+import { agencyQueryKey } from '@/lib/agencyRoster';
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Link } from "react-router-dom";
-import { getStaffRole } from "@/lib/roles";
+import { Link } from "react-router";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, ArrowRight, CheckCircle2, Database } from "lucide-react";
+import { parseLocalDate } from "@/lib/dateLocal";
+import { ALL_ROWS, PATIENT_HISTORY_ROWS } from '@/lib/queryLimits';
+import { getStaffRole } from "@/lib/roles";
 
 export default function QuickHealthOverview() {
-  const { data: patients = [] } = useQuery({
-    queryKey: ['patients-health'],
-    queryFn: () => base44.entities.Patient.filter({ status: 'active' }),
-    initialData: [],
+  const { data: currentUser } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me(),
   });
 
+
+  const { data: patients = [] } = useScopedPatients({ status: 'active', sort: null, limit: ALL_ROWS });
+
   const { data: users = [] } = useQuery({
-    queryKey: ['users-health'],
-    queryFn: () => base44.entities.User.list('-created_date', 200),
+    queryKey: ['users-health', agencyQueryKey(currentUser)],
+    queryFn: async () => {
+      const _rows = await base44.entities.User.list('-created_date', 200);
+      const { filterUsersByCallerAgency } = await import('@/lib/agencyScope');
+      return filterUsersByCallerAgency(_rows, currentUser);
+    },
+    enabled: !!currentUser,
     initialData: [],
   });
 
   const { data: credentials = [] } = useQuery({
     queryKey: ['credentials-health'],
-    queryFn: () => base44.entities.PersonnelCredential.list(),
+    queryFn: () => base44.entities.PersonnelCredential.list(undefined, PATIENT_HISTORY_ROWS),
     initialData: [],
   });
 
@@ -33,14 +44,22 @@ export default function QuickHealthOverview() {
     !u.phone || u.phone === '' || (getStaffRole(u) === 'nurse' && !u.care_scope)
   ).length;
 
-  // Only nurses carry personnel credentials, so non-nurse staff (office, social
-  // work, spiritual care) must not be counted as "missing credentials".
+  // PersonnelCredential.user_id references a user's email. Count fetched users
+  // that lack any credential — filtering falsy ids and restricting to the loaded
+  // user set keeps the figure from being deflated (or negative) by stale/ownerless
+  // credential rows (e.g. ex-employees outside the current page).
   const nurseEmails = new Set(users.filter(u => getStaffRole(u) === 'nurse').map(u => u.email).filter(Boolean));
-  const credentialedEmails = new Set(credentials.map(c => c.user_id));
-  const usersWithoutCreds = [...nurseEmails].filter(email => !credentialedEmails.has(email)).length;
+  const coveredUsers = new Set(credentials.map(c => c.user_id).filter(Boolean));
+  const usersWithoutCreds = [...nurseEmails].filter(email => !coveredUsers.has(email)).length;
 
   const now = new Date();
-  const expiredCreds = credentials.filter(c => new Date(c.expiration_date) < now).length;
+  // Compare on local calendar midnights so a date-only expiration isn't parsed as
+  // UTC midnight and counted as expired up to a day early.
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const expiredCreds = credentials.filter(c => {
+    const d = parseLocalDate(c.expiration_date);
+    return d && d < startOfToday;
+  }).length;
 
   const hasIssues = incompletePatients > 0 || incompleteUsers > 0 || usersWithoutCreds > 0 || expiredCreds > 0;
 

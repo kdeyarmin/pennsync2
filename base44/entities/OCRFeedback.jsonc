@@ -2,13 +2,17 @@
   "name": "OCRFeedback",
   "type": "object",
   "properties": {
-    "fax_log_id": {
+    "user_email": {
       "type": "string",
-      "description": "Reference to FaxLog entity"
+      "description": "Email of the user who provided correction"
     },
-    "original_ocr_text": {
+    "document_url": {
       "type": "string",
-      "description": "Original OCR extracted text"
+      "description": "URL of the document"
+    },
+    "original_text": {
+      "type": "string",
+      "description": "Original OCR output"
     },
     "corrected_text": {
       "type": "string",
@@ -21,29 +25,56 @@
         "moderate",
         "major"
       ],
-      "description": "Severity of correction needed"
-    },
-    "feedback_notes": {
-      "type": "string",
-      "description": "User notes about the correction"
+      "description": "Severity of correction"
     },
     "document_type": {
       "type": "string",
-      "description": "Type of document (medical form, prescription, etc.)"
+      "description": "Type of document for categorization"
     },
-    "corrected_by": {
+    "training_session_id": {
       "type": "string",
-      "description": "Email of user who made correction"
+      "description": "ID of the training session that used this feedback"
+    },
+    "feedback_notes": {
+      "type": "string",
+      "description": "Reviewer notes about the OCR correction; read by OCRFeedbackDashboard"
     },
     "applied_to_training": {
       "type": "boolean",
       "default": false,
-      "description": "Whether this feedback was used for model improvement"
+      "description": "Whether this feedback has been applied to retraining; written/filtered/read by retrainOCRModel and OCR dashboards (distinct from is_applied)"
+    },
+    "fax_log_id": {
+      "type": "string",
+      "description": "Related FaxLog record id as written by OCRReviewPanel (distinct from fax_history_id)"
+    },
+    "original_ocr_text": {
+      "type": "string",
+      "description": "Original OCR output as written by OCRReviewPanel; read by retrainOCRModel (distinct from original_text)"
+    },
+    "corrected_by": {
+      "type": "string",
+      "description": "Email of the user who made the correction as written by OCRReviewPanel (distinct from user_email)"
     }
   },
   "required": [
-    "fax_log_id",
-    "original_ocr_text",
+    "user_email",
+    "original_text",
     "corrected_text"
-  ]
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "user_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "write": {}
+  }
 }

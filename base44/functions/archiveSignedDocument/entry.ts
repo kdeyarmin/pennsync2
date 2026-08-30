@@ -1,5 +1,23 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
+// <<<BEGIN SHARED HELPER: requireActiveUser — generated, edit base44/_shared/backendHelpers.mjs>>>
+const isDeactivatedUser = (u) => !!u && u.is_active === false;
+const DEACTIVATED_USER_RESPONSE = () => Response.json(
+  { error: 'Unauthorized - account is deactivated' },
+  { status: 403 },
+);
+// <<<END SHARED HELPER: requireActiveUser>>>
+
+// <<<BEGIN SHARED HELPER: requireAgencyAdminAgency — generated, edit base44/_shared/backendHelpers.mjs>>>
+function agencyAdminMissingAgencyResponse(user) {
+  if (user && user.account_type === 'agency_admin' && !String(user.agency_name || '').trim()) {
+    return Response.json({ error: 'Forbidden: agency_name is required.' }, { status: 403 });
+  }
+  return null;
+}
+// <<<END SHARED HELPER: requireAgencyAdminAgency>>>
+
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -8,7 +26,12 @@ Deno.serve(async (req) => {
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    if (isDeactivatedUser(user)) return DEACTIVATED_USER_RESPONSE();
 
+    {
+      const _agencyAdminGate = agencyAdminMissingAgencyResponse(user);
+      if (_agencyAdminGate) return _agencyAdminGate;
+    }
     // Archiving retires a patient's signed clinical/legal document, so restrict
     // it to administrators rather than any authenticated user.
     const isAdminLike =
@@ -26,12 +49,40 @@ Deno.serve(async (req) => {
     }
 
     // Fetch the document
-    const docs = await base44.entities.DocumentSignature.filter({ id: document_id });
+    const docs = await base44.entities.DocumentSignature.filter({ id: document_id }, undefined, 5000);
     if (!docs || docs.length === 0) {
       return Response.json({ error: 'Document not found' }, { status: 404 });
     }
 
     const document = docs[0];
+
+    // Agency-scoped admins (agency_admin OR facility admin with agency_name)
+    // may only archive documents for patients in their agency.
+    const isAgencyScopedAdmin = user.account_type !== 'super_admin'
+      && user.agency_name
+      && (user.account_type === 'agency_admin' || user.role === 'admin');
+    if (isAgencyScopedAdmin) {
+      if (!document.patient_id) {
+        return Response.json({ error: 'Forbidden: document is outside your agency.' }, { status: 403 });
+      }
+      const agencyUsers = await base44.asServiceRole.entities.User.list('-created_date', 5000).catch(() => []);
+      const agencyEmails = new Set(
+        (agencyUsers || [])
+          .filter((u) => u.agency_name === user.agency_name && u.email)
+          .map((u) => u.email),
+      );
+      const patients = await base44.asServiceRole.entities.Patient
+        .filter({ id: document.patient_id }, undefined, 5)
+        .catch(() => []);
+      const patient = patients?.[0];
+      const inAgency = patient && (
+        (patient.created_by && agencyEmails.has(patient.created_by))
+        || (Array.isArray(patient.assigned_nurses) && patient.assigned_nurses.some((e) => agencyEmails.has(e)))
+      );
+      if (!inAgency) {
+        return Response.json({ error: 'Forbidden: document is outside your agency.' }, { status: 403 });
+      }
+    }
 
     // Add archive entry to audit trail
     const updatedAuditTrail = document.audit_trail || [];
@@ -79,6 +130,6 @@ Deno.serve(async (req) => {
     });
   } catch (error) {
     console.error('Error archiving document:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
 });

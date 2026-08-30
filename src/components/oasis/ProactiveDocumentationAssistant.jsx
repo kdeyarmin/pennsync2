@@ -21,6 +21,7 @@ import {
   Shield,
   Target
 } from "lucide-react";
+import { severityBadgeClass } from "@/lib/severityStyles";
 
 export default function ProactiveDocumentationAssistant({
   oasisData,
@@ -29,13 +30,17 @@ export default function ProactiveDocumentationAssistant({
   autoAnalyze = true,
   onApplySuggestion
 }) {
-  const ai = useAICall();
+  // Auto-fired analyses are background work in the app-wide AI budget, so
+  // several such cards on one page queue instead of hitting the provider at
+  // once. A run the user CLICKED passes interactive priority per call and
+  // takes the reserved slot instead of queueing behind that background work.
+  const ai = useAICall({ priority: 'background' });
   const [gaps, setGaps] = useState(null);
   const [expandedGap, setExpandedGap] = useState(null);
   const [editingNarrative, setEditingNarrative] = useState({});
   const [appliedSuggestions, setAppliedSuggestions] = useState(new Set());
 
-  const analyzeDocumentation = useCallback(async () => {
+  const analyzeDocumentation = useCallback(async ({ interactive = false } = {}) => {
     if (!oasisData) return;
 
     try {
@@ -102,7 +107,7 @@ For EACH gap found, provide:
 - Estimated revenue/quality impact`;
 
       const result = await ai.run({
-        model: "claude_opus_4_8",
+        model: "automatic",
         prompt,
         response_json_schema: {
           type: "object",
@@ -146,7 +151,7 @@ For EACH gap found, provide:
             }
           }
         }
-      });
+      }, { priority: interactive ? 'interactive' : 'background' });
 
       setGaps(result);
     } catch (error) {
@@ -161,16 +166,6 @@ For EACH gap found, provide:
       analyzeDocumentation();
     }
   }, [oasisData, clinicalNotes, autoAnalyze, analyzeDocumentation]);
-
-  const getSeverityColor = (severity) => {
-    switch (severity) {
-      case 'critical': return 'bg-red-100 text-red-800 border-red-300';
-      case 'high': return 'bg-orange-100 text-orange-800 border-orange-300';
-      case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-300';
-      case 'low': return 'bg-blue-100 text-blue-800 border-blue-300';
-      default: return 'bg-slate-100 text-slate-800 border-slate-300';
-    }
-  };
 
   const getSeverityIcon = (severity) => {
     switch (severity) {
@@ -226,7 +221,7 @@ For EACH gap found, provide:
             {ai.loading && <Loader2 className="w-4 h-4 animate-spin text-navy-500" />}
           </CardTitle>
           {!gaps && !ai.loading && (
-            <Button onClick={analyzeDocumentation} className="bg-navy-600 hover:bg-navy-700">
+            <Button onClick={() => analyzeDocumentation({ interactive: true })} className="bg-navy-600 hover:bg-navy-700">
               <Sparkles className="w-4 h-4 mr-2" />
               Analyze Documentation
             </Button>
@@ -304,7 +299,7 @@ For EACH gap found, provide:
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
                             <h4 className="font-semibold text-slate-900">{gap.gap_title}</h4>
-                            <Badge className={getSeverityColor(gap.severity)}>
+                            <Badge className={severityBadgeClass(gap.severity)}>
                               {gap.severity}
                             </Badge>
                             {appliedSuggestions.has(idx) && (
@@ -488,7 +483,7 @@ For EACH gap found, provide:
 
             {/* Re-analyze Button */}
             <Button
-              onClick={analyzeDocumentation}
+              onClick={() => analyzeDocumentation({ interactive: true })}
               variant="outline"
               size="sm"
               disabled={ai.loading}

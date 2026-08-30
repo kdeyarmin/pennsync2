@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,8 +27,9 @@ import { createPageUrl } from "@/utils";
 import { toast } from "sonner";
 
 export default function CareTeamMessaging({ patientId, relatedEventId, relatedEventType }) {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [selectedThread, setSelectedThread] = useState(null);
+  const [selectedThreadId, setSelectedThreadId] = useState(null);
   const [newMessage, setNewMessage] = useState("");
   const [newSubject, setNewSubject] = useState("");
   const [priority, setPriority] = useState("normal");
@@ -38,11 +40,27 @@ export default function CareTeamMessaging({ patientId, relatedEventId, relatedEv
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
   const [expandedSuggestions, setExpandedSuggestions] = useState(false);
 
+  // PatientDetails keeps this mounted across ?id= changes — clear composer /
+  // selection so a drafted thread can't send under the wrong patient_id.
+  useEffect(() => {
+    setSelectedThreadId(null);
+    setNewMessage("");
+    setNewSubject("");
+    setPriority("normal");
+    setShowNewThread(false);
+    setThreadSummary(null);
+    setSuggestions(null);
+    setExpandedSuggestions(false);
+  }, [patientId]);
+
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me()
   });
 
+  // NOT agency-scoped: this is one patient's care-team thread. Filtering by the
+  // sender's agency would drop messages from co-treating staff outside it, and
+  // the patient_id pin is already narrower than agency.
   const { data: messages = [], _isLoading } = useQuery({
     queryKey: ['messages', patientId],
     queryFn: async () => {
@@ -71,17 +89,52 @@ export default function CareTeamMessaging({ patientId, relatedEventId, relatedEv
     }));
   }, [messages, user?.email]);
 
+  // Derive the open thread from the freshly-grouped threads each render (keyed by
+  // id) so sent replies and incoming messages show immediately, instead of
+  // rendering a stale snapshot captured at click time.
+  const selectedThread = threads.find(t => t.threadId === selectedThreadId) || null;
+
   const sendMessageMutation = useMutation({
     mutationFn: async (messageData) => {
       return base44.entities.Message.create(messageData);
     },
-    onSuccess: () => {
+    onMutate: async (messageData) => {
+      await queryClient.cancelQueries({ queryKey: ['messages', patientId] });
+      const previousMessages = queryClient.getQueryData(['messages', patientId]) || [];
+      const optimisticId = `optimistic-${Date.now()}`;
+      queryClient.setQueryData(['messages', patientId], [
+        {
+          ...messageData,
+          id: optimisticId,
+          created_date: new Date().toISOString(),
+          updated_date: new Date().toISOString(),
+          read_by: user?.email ? [user.email] : [],
+          is_optimistic: true,
+        },
+        ...previousMessages,
+      ]);
+      setSelectedThreadId(messageData.thread_id);
+      return { previousMessages, optimisticId };
+    },
+    onSuccess: (createdMessage, _variables, context) => {
+      if (createdMessage && context?.optimisticId) {
+        queryClient.setQueryData(['messages', patientId], (current = []) =>
+          current.map((message) => message.id === context.optimisticId ? createdMessage : message)
+        );
+      }
       queryClient.invalidateQueries({ queryKey: ['messages', patientId] });
+      // Also refresh the inbox (`['messages']`) — prefix invalidation does not
+      // refresh the shorter key from a longer one.
+      queryClient.invalidateQueries({ queryKey: ['messages'] });
       setNewMessage("");
       if (showNewThread) {
         setNewSubject("");
         setShowNewThread(false);
       }
+    },
+    onError: (_error, _variables, context) => {
+      if (context?.previousMessages) queryClient.setQueryData(['messages', patientId], context.previousMessages);
+      toast.error("Message failed to send. Your text was kept — tap send to retry.");
     }
   });
 
@@ -99,6 +152,9 @@ export default function CareTeamMessaging({ patientId, relatedEventId, relatedEv
     },
     onSuccess: () => {
       toast.success("Thread saved to patient chart");
+    },
+    onError: (err) => {
+      toast.error(err?.message || "Couldn't save the thread to the chart. Please try again.");
     }
   });
 
@@ -115,6 +171,7 @@ export default function CareTeamMessaging({ patientId, relatedEventId, relatedEv
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['messages', patientId] });
+      queryClient.invalidateQueries({ queryKey: ['messages'] });
     }
   });
 
@@ -195,7 +252,7 @@ export default function CareTeamMessaging({ patientId, relatedEventId, relatedEv
               size="sm"
               onClick={() => {
                 setShowNewThread(true);
-                setSelectedThread(null);
+                setSelectedThreadId(null);
                 setThreadSummary(null);
               }}
               className="bg-blue-600 hover:bg-blue-700"
@@ -212,7 +269,7 @@ export default function CareTeamMessaging({ patientId, relatedEventId, relatedEv
               <div
                 key={thread.threadId}
                 onClick={() => {
-                  setSelectedThread(thread);
+                  setSelectedThreadId(thread.threadId);
                   setShowNewThread(false);
                   setThreadSummary(null);
                 }}
@@ -398,7 +455,7 @@ export default function CareTeamMessaging({ patientId, relatedEventId, relatedEv
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => window.location.href = createPageUrl(`ReferralIntake`)}
+                      onClick={() => navigate(createPageUrl(`ReferralIntake`))}
                       className="text-xs"
                     >
                       <FileText className="w-3 h-3 mr-1" />
@@ -407,7 +464,7 @@ export default function CareTeamMessaging({ patientId, relatedEventId, relatedEv
                     <Button
                       size="sm"
                       className="bg-navy-600 hover:bg-navy-700 text-xs"
-                      onClick={() => window.location.href = createPageUrl(`ReferralIntake?tab=admission&referral_id=${msg.related_event_id}`)}
+                      onClick={() => navigate(createPageUrl(`ReferralIntake?tab=admission&referral_id=${msg.related_event_id}`))}
                     >
                       <Sparkles className="w-3 h-3 mr-1" />
                       Create Admission Note

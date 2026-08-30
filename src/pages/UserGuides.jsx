@@ -2,22 +2,36 @@ import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileText, Download, BookOpen, Users, Stethoscope, Star, Loader2, CheckCircle2, AlertTriangle, ListChecks, Lightbulb } from "lucide-react";
+import { FileText, Download, BookOpen, Users, Stethoscope, Star, Loader2, CheckCircle2, AlertTriangle, ListChecks, Lightbulb, ShieldCheck } from "lucide-react";
 import PageContainer from "@/components/ui/PageContainer";
 import PageHeader from "@/components/ui/PageHeader";
 import { toast } from 'sonner';
+import { useAuth } from "@/lib/AuthContext";
+import { isAdminView } from "@/lib/roles";
+import { hostedAssetPath } from '@/lib/assetPath';
+import { ROUTER_PATHS } from '@/routes';
 
 export default function UserGuides() {
   const [downloading, setDownloading] = useState(null);
+  const { user } = useAuth();
+  const isAdmin = isAdminView(user);
 
   const handleDownloadGuide = async (guideType, guideName) => {
     setDownloading(guideType);
     try {
-      const response = await base44.functions.invoke('generateUserGuidePDF', {
-        guide_type: guideType
+      // Fetch the PDF as binary. The axios-based functions.invoke wrapper uses
+      // responseType 'json' and decodes the PDF bytes as UTF-8 text, which
+      // corrupts the binary (replacement characters shift xref offsets).
+      const response = await base44.functions.fetch('generateUserGuidePDF', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ guide_type: guideType })
       });
+      if (!response.ok) {
+        throw new Error(`PDF generation failed (${response.status})`);
+      }
 
-      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const blob = new Blob([await response.arrayBuffer()], { type: 'application/pdf' });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -38,7 +52,7 @@ export default function UserGuides() {
     {
       type: 'all_features',
       title: 'Complete User Guide - All Features',
-      description: 'Comprehensive guide covering every feature of Penn Sync Healthcare platform',
+      description: 'Comprehensive guide covering every feature of the PennSync platform',
       icon: BookOpen,
       color: 'purple',
       audience: 'All Users',
@@ -51,12 +65,11 @@ export default function UserGuides() {
         'Visual PDF editor & field mapping',
         'E-signature workflows',
         'Documentation tools',
-        'OASIS & care plans',
+        'OASIS assessments',
         'Patient alerts & monitoring',
         'Quality & compliance',
         'Communication & messaging',
         'Training & personalized learning',
-        'Offline documentation mode',
         'Admin features & analytics'
       ],
       featured: true
@@ -125,8 +138,7 @@ export default function UserGuides() {
         'Voice dictation',
         'AI enhancement',
         'Compliance checking',
-        'Clinical event extraction',
-        'Offline documentation'
+        'Clinical event extraction'
       ]
     },
     {
@@ -143,22 +155,6 @@ export default function UserGuides() {
         'PDGM case mix',
         'Quality validation',
         'Submission process'
-      ]
-    },
-    {
-      type: 'care_plans',
-      title: 'Care Plan Management Guide',
-      description: 'Create and manage comprehensive care plans with AI-generated suggestions',
-      icon: FileText,
-      color: 'purple',
-      audience: 'Clinical Nurses',
-      topics: [
-        'Creating care plans',
-        'AI suggestions',
-        'SMART goals',
-        'Progress tracking',
-        'Gap analysis',
-        'Interdisciplinary coordination'
       ]
     },
     {
@@ -258,22 +254,6 @@ export default function UserGuides() {
       ]
     },
     {
-      type: 'offline_mode',
-      title: 'Offline Documentation Guide',
-      description: 'Document patient visits without internet and sync when back online',
-      icon: FileText,
-      color: 'purple',
-      audience: 'Clinical Nurses',
-      topics: [
-        'Enabling offline mode',
-        'Patient data caching',
-        'Offline documentation',
-        'Auto-sync process',
-        'Conflict resolution',
-        'Troubleshooting'
-      ]
-    },
-    {
       type: 'personalized_training',
       title: 'AI Personalized Training Guide',
       description: 'Improve documentation quality with AI-driven personalized learning',
@@ -300,6 +280,54 @@ export default function UserGuides() {
         description="Download comprehensive PDF guides with step-by-step instructions and screenshots"
         favoritePage="UserGuides"
       />
+
+        {/* Branded, print-ready reference manuals (static PDFs in /public/manuals). */}
+        <Card className="mb-6 bg-navy-900 text-white border-none shadow-lg">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-white">
+              <BookOpen className="w-5 h-5 text-gold-400" />
+              PennSync Manuals
+            </CardTitle>
+            <p className="text-sm text-navy-100">
+              Professionally designed, print-ready reference manuals covering every feature — branded for PennSync by CareMetric.
+            </p>
+          </CardHeader>
+          <CardContent>
+            <div className={`grid gap-4 ${isAdmin ? 'sm:grid-cols-2' : 'sm:grid-cols-1'}`}>
+              <a
+                href={hostedAssetPath("/manuals/PennSync-User-Manual.pdf", { routerPaths: ROUTER_PATHS })}
+                download
+                className="flex items-center gap-4 rounded-lg bg-white/5 hover:bg-white/10 ring-1 ring-inset ring-white/10 p-4 transition-colors"
+              >
+                <div className="w-11 h-11 rounded-lg bg-gold-400 text-navy-900 flex items-center justify-center flex-shrink-0">
+                  <BookOpen className="w-6 h-6" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-white">User Manual</p>
+                  <p className="text-xs text-navy-100">For all clinical staff · PDF</p>
+                </div>
+                <Download className="w-5 h-5 text-gold-400 flex-shrink-0" />
+              </a>
+
+              {isAdmin && (
+                <a
+                  href={hostedAssetPath("/manuals/PennSync-Facility-Admin-Manual.pdf", { routerPaths: ROUTER_PATHS })}
+                  download
+                  className="flex items-center gap-4 rounded-lg bg-white/5 hover:bg-white/10 ring-1 ring-inset ring-white/10 p-4 transition-colors"
+                >
+                  <div className="w-11 h-11 rounded-lg bg-gold-400 text-navy-900 flex items-center justify-center flex-shrink-0">
+                    <ShieldCheck className="w-6 h-6" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-white">Facility Administrator Manual</p>
+                    <p className="text-xs text-navy-100">User guide + admin tools · PDF</p>
+                  </div>
+                  <Download className="w-5 h-5 text-gold-400 flex-shrink-0" />
+                </a>
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Featured Complete Guide */}
         {guides.filter(g => g.featured).map((guide) => {

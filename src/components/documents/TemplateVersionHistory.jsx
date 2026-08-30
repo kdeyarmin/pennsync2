@@ -5,11 +5,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { History, Eye } from "lucide-react";
 import { format } from "date-fns";
+import { PATIENT_HISTORY_ROWS } from '@/lib/queryLimits';
+import { openExternalUrl } from "@/components/utils/security";
 
 export default function TemplateVersionHistory({ parentTemplateId }) {
   const { data: versions = [] } = useQuery({
     queryKey: ['template-versions', parentTemplateId],
-    queryFn: () => base44.entities.PDFTemplate.filter({ parent_template_id: parentTemplateId }, '-created_date'),
+    queryFn: () => base44.entities.PDFTemplate.filter({ parent_template_id: parentTemplateId }, '-created_date', PATIENT_HISTORY_ROWS),
     initialData: [],
     enabled: !!parentTemplateId
   });
@@ -54,7 +56,7 @@ export default function TemplateVersionHistory({ parentTemplateId }) {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => window.open(version.template_file_url, '_blank')}
+                onClick={() => openExternalUrl(version.template_file_url)}
               >
                 <Eye className="w-4 h-4" />
               </Button>

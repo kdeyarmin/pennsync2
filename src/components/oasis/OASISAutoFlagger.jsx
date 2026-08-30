@@ -1,5 +1,7 @@
 import { base44 } from "@/api/base44Client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { PATIENT_HISTORY_ROWS } from '@/lib/queryLimits';
 
 // Threshold configuration
 const THRESHOLDS = {
@@ -45,6 +47,11 @@ async function autoFlagOASIS(oasisUpload, analysisResults) {
   } else if (analysisResults.accuracy_score < THRESHOLDS.accuracy) {
     // Accuracy in [60, 75) — a genuine accuracy flag, not the generic default.
     flagReason = 'low_accuracy';
+    priority = 'high';
+  } else if (analysisResults.overall_score < THRESHOLDS.overall) {
+    // Flagged solely for a low overall score (accuracy/compliance individually OK).
+    // Previously this fell through to the default low_accuracy/medium mislabel.
+    flagReason = 'low_overall_score';
     priority = 'high';
   }
 
@@ -130,10 +137,16 @@ function useAutoFlagOASIS() {
         // Check if already flagged
         const existing = await base44.entities.OASISAudit.filter({ 
           oasis_upload_id: oasisUpload.id 
-        });
+        }, undefined, PATIENT_HISTORY_ROWS);
         
         if (existing.length === 0) {
-          return await base44.entities.OASISAudit.create(auditRecord);
+          const me = await base44.auth.me();
+          const summary = `Auto-flagged (${auditRecord.flag_reason}) at ${auditRecord.priority} priority — accuracy ${auditRecord.accuracy_score ?? 'N/A'}%, compliance ${auditRecord.compliance_score ?? 'N/A'}%, overall ${auditRecord.overall_score ?? 'N/A'}%.`;
+          return await base44.entities.OASISAudit.create({
+            ...auditRecord,
+            user_email: me?.email,
+            summary
+          });
         }
         return existing[0];
       }
@@ -141,6 +154,10 @@ function useAutoFlagOASIS() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['oasisAudits'] });
+    },
+    onError: (error) => {
+      console.error('Auto-flag OASIS error:', error);
+      toast.error("Couldn't flag this assessment for audit review. Please try again.");
     }
   });
 }

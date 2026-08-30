@@ -55,7 +55,6 @@ export const MEDICAL_TERMS = {
   common_mishears: {
     "metforman": "Metformin",
     "lesinopril": "Lisinopril",
-    "statin": "atorvastatin",
     "amlodipin": "Amlodipine",
     "omeprozole": "Omeprazole",
     "levothyroxen": "Levothyroxine",
@@ -70,7 +69,7 @@ export const MEDICAL_TERMS = {
     "insulin": "Insulin",
     "coumadin": "Warfarin",
     "plavix": "Clopidogrel",
-    "prilosec": "Pantoprazole",
+    "prilosec": "Omeprazole",
     "zantac": "Ranitidine",
     "neurontin": "Gabapentin",
     "tramadol": "Tramadol",
@@ -92,13 +91,26 @@ export const MEDICAL_TERMS = {
     "headache": "Headache",
     "fever": "Fever",
     "chills": "Chills",
-    "sweats": "Diaphoresis",
+    // NOTE: no "sweats" -> "Diaphoresis" entry: "sweats" is usually a VERB
+    // ("patient sweats profusely") and swapping in the noun mangled the
+    // nurse's sentence. "sweats" is valid clinical English as written.
     "fatigue": "Fatigue",
     "weakness": "Weakness",
     "dizziness": "Dizziness",
     "vertigo": "Vertigo"
   }
 };
+
+// Case-aware replacement: an identity-up-to-case "correction" keeps the
+// nurse's own casing ("no chest pain" must NOT become "no Chest pain"
+// mid-sentence), and a real correction inherits the source's leading case so a
+// mid-sentence fix doesn't inject a stray capital. The dictated draft is what
+// the nurse attests to — corrections must never rewrite its grammar or case.
+function applyCase(source, replacement) {
+  if (source.toLowerCase() === replacement.toLowerCase()) return source;
+  if (/^[a-z]/.test(source)) return replacement.charAt(0).toLowerCase() + replacement.slice(1);
+  return replacement;
+}
 
 /**
  * Enhance transcribed text with medical term corrections
@@ -110,82 +122,29 @@ export function enhanceTranscription(text) {
   
   let enhanced = text;
   
-  // Apply common mishear corrections
+  // Apply common mishear corrections (case-aware; see applyCase above)
   Object.entries(MEDICAL_TERMS.common_mishears).forEach(([mishear, correct]) => {
     const regex = new RegExp(`\\b${mishear}\\b`, "gi");
-    enhanced = enhanced.replace(regex, correct);
+    enhanced = enhanced.replace(regex, (m) => applyCase(m, correct));
   });
   
-  // Capitalize medical terms properly
+  // Capitalize medication names (drug names are conventionally capitalized)
   MEDICAL_TERMS.medications.forEach(med => {
     const regex = new RegExp(`\\b${med}\\b`, "gi");
     enhanced = enhanced.replace(regex, med);
   });
   
+  // Diagnoses / clinical terms are ordinary nouns — never re-case them
+  // mid-sentence ("pressure sore" must not become "Pressure Sore").
   MEDICAL_TERMS.diagnoses.forEach(diag => {
     const regex = new RegExp(`\\b${diag}\\b`, "gi");
-    enhanced = enhanced.replace(regex, diag);
+    enhanced = enhanced.replace(regex, (m) => applyCase(m, diag));
   });
   
   MEDICAL_TERMS.clinical_terms.forEach(term => {
     const regex = new RegExp(`\\b${term}\\b`, "gi");
-    enhanced = enhanced.replace(regex, term);
+    enhanced = enhanced.replace(regex, (m) => applyCase(m, term));
   });
   
   return enhanced;
-}
-
-/**
- * Suggest corrections for uncertain medical terms based on phonetic similarity
- * @param {string} word - Word to check for suggestions
- * @returns {string[]} Array of suggested corrections
- */
-export function suggestMedicalCorrections(word) {
-  if (!word || word.length < 3) return [];
-  
-  const allTerms = [
-    ...MEDICAL_TERMS.medications,
-    ...MEDICAL_TERMS.diagnoses,
-    ...MEDICAL_TERMS.clinical_terms,
-  ];
-  
-  const lowerWord = word.toLowerCase();
-
-  // The same term can live in more than one category array (e.g. "Heart" is
-  // both a diagnosis and a clinical term), so de-duplicate case-insensitively
-  // before returning — otherwise the user sees the same suggestion twice and
-  // the duplicates also eat into the partial-match `.slice(0, 5)` budget.
-  const uniq = (arr) => [...new Map(arr.map((t) => [t.toLowerCase(), t])).values()];
-
-  // Check for exact matches first
-  const exactMatches = uniq(allTerms.filter(t => t.toLowerCase() === lowerWord));
-  if (exactMatches.length > 0) return exactMatches;
-
-  // Check for partial matches (starts with or contains)
-  // A term is a candidate when it starts with the typed word (prefix
-  // completion) or the typed word starts with the full term (the user typed
-  // extra trailing chars). The old `lowerWord.startsWith(lower.substring(0,3))`
-  // matched on only the first 3 letters, so "metf" fanned out to Metformin,
-  // Metoprolol, Metronidazole, Metastatic — drop that noisy clause.
-  const partialMatches = uniq(allTerms
-    .filter(t => {
-      const lower = t.toLowerCase();
-      return lower.startsWith(lowerWord) || lowerWord.startsWith(lower);
-    }))
-    .slice(0, 5); // Limit suggestions
-
-  return partialMatches;
-}
-
-/**
- * Get hints for speech recognition grammar (if supported by browser)
- * Returns comma-separated list of high-priority medical terms
- */
-export function getSpeechRecognitionHints() {
-  const hints = [
-    ...MEDICAL_TERMS.medications.slice(0, 20),
-    ...MEDICAL_TERMS.diagnoses.slice(0, 15),
-    ...MEDICAL_TERMS.clinical_terms.slice(0, 15),
-  ];
-  return hints.join(", ");
 }

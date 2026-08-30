@@ -1,6 +1,15 @@
 import { jsPDF } from 'npm:jspdf@2.5.2';
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
+// <<<BEGIN SHARED HELPER: requireActiveUser — generated, edit base44/_shared/backendHelpers.mjs>>>
+const isDeactivatedUser = (u) => !!u && u.is_active === false;
+const DEACTIVATED_USER_RESPONSE = () => Response.json(
+  { error: 'Unauthorized - account is deactivated' },
+  { status: 403 },
+);
+// <<<END SHARED HELPER: requireActiveUser>>>
+
+
 Deno.serve(async (req) => {
   try {
     const { referralData, selectedSections } = await req.json();
@@ -12,6 +21,7 @@ Deno.serve(async (req) => {
     // Initialize base44 client for AI analysis
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
+    if (isDeactivatedUser(user)) return DEACTIVATED_USER_RESPONSE();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
     // AI-powered risk analysis
@@ -43,7 +53,7 @@ Also provide:
 - Specific monitoring recommendations`;
 
       riskAnalysis = await base44.asServiceRole.integrations.Core.InvokeLLM({
-        model: "claude_opus_4_8",
+        model: "automatic",
         prompt: riskPrompt,
         response_json_schema: {
           type: "object",
@@ -920,9 +930,12 @@ Also provide:
     doc.setFont('helvetica', 'normal');
     const homeboundReasons = [];
     
-    // Add relevant homebound factors based on patient data
+    // Add relevant homebound factors based on patient data. Reference the ACTUAL
+    // primary diagnosis rather than asserting a specific anatomical site: a wrist,
+    // rib or ankle fracture must not be documented as a "pelvic fracture" in a
+    // compliance-critical M1910 justification.
     if (dx.primary_diagnosis?.toLowerCase().includes('fracture')) {
-      homeboundReasons.push('Recent pelvic fracture requiring assistive device and moderate assistance for ambulation');
+      homeboundReasons.push(`Recent ${dx.primary_diagnosis} requiring assistive device and moderate assistance for ambulation`);
     }
     if (func.ambulation?.toLowerCase().includes('assist') || func.ambulation?.toLowerCase().includes('walker')) {
       homeboundReasons.push('Requires walker (FWW) and physical assistance to ambulate safely');
@@ -984,9 +997,9 @@ Also provide:
     doc.rect(margin - 5, yPos, 190, 130, 'F');
     yPos += 8;
 
-    const sampleAssessment = `SUBJECTIVE: ${demo.age || '96'}-year-old ${demo.gender || 'female'} admitted to home health following ${admission.admission_source || 'skilled nursing facility stay'} for ${dx.primary_diagnosis || 'right pelvic fracture'}. Patient reports pain level ${func.pain || '6/10'} with movement, managed with oxycodone. States "I want to get stronger so I can be more independent." Daughter present and supportive. Patient alert and cooperative with assessment.
+    const sampleAssessment = `SUBJECTIVE: ${demo.age || '[age]'}-year-old ${demo.gender || '[gender]'} admitted to home health following ${admission.admission_source || 'skilled nursing facility stay'} for ${dx.primary_diagnosis || '[primary diagnosis per referral]'}. Patient reports pain level ${func.pain || '[pain level per assessment]'} with movement, managed per current pain regimen. States "I want to get stronger so I can be more independent." Caregiver present and supportive. Patient alert and cooperative with assessment.
 
-OBJECTIVE: Vital signs - BP ${clinical.vital_signs || '160/82'}, HR ${clinical.vital_signs?.includes('94') ? '94' : 'WNL'}, Temp ${clinical.vital_signs?.includes('97.4') ? '97.4°F' : 'afebrile'}, RR ${clinical.vital_signs?.includes('16') ? '16' : 'WNL'}, SpO2 ${clinical.vital_signs?.includes('96') ? '96%' : '>95%'} on room air. Weight ${clinical.weight || '168 lbs'}. 
+OBJECTIVE: Vital signs - BP ${clinical.vital_signs || '[record on admission]'}, HR ${clinical.vital_signs?.includes('94') ? '94' : 'WNL'}, Temp ${clinical.vital_signs?.includes('97.4') ? '97.4°F' : 'afebrile'}, RR ${clinical.vital_signs?.includes('16') ? '16' : 'WNL'}, SpO2 ${clinical.vital_signs?.includes('96') ? '96%' : '>95%'} on room air. Weight ${clinical.weight || '[record on admission]'}.
 
 Ambulation: ${func.ambulation || 'Requires FWW and moderate assistance for short distances'}. Gait unsteady. Transfers bed/chair with moderate assistance. 
 
@@ -998,15 +1011,15 @@ Respiratory: Lungs clear to auscultation bilaterally. No SOB at rest.
 
 Integumentary: Skin intact, warm and dry. No wounds, pressure areas, or rashes noted. ${func.skin_integrity || 'Good turgor for age'}.
 
-Musculoskeletal: Generalized weakness noted. ROM limited by pain in lower extremity. ${dx.primary_diagnosis?.includes('fracture') ? 'Tenderness to palpation right pelvic area. WBAT per physician orders.' : ''}
+Musculoskeletal: Generalized weakness noted. ROM limited by pain in lower extremity. ${dx.primary_diagnosis?.includes('fracture') ? 'Tenderness to palpation at the fracture site. WBAT per physician orders.' : ''}
 
 Neurological: Alert and oriented x4. ${func.cognitive_status?.includes('deficit') ? 'Noted mild cognitive communication deficit - follows simple commands, some memory impairment.' : 'Speech clear, follows multi-step commands.'} PERRLA. Sensation intact.
 
-Pain: Reports ${func.pain || '6/10'} pain with movement, relieved by oxycodone. Takes medication before PT as ordered.
+Pain: Reports ${func.pain || '[pain level per assessment]'} pain with movement, relieved by current pain regimen. Takes medication before PT as ordered.
 
 Safety: Home environment assessed - ${safety.environmental_hazards || 'daughter nearby for support'}. Fall risk HIGH - recent fall history, age, mobility limitations. ${safety.safety_equipment_needed ? 'Safety equipment: ' + safety.safety_equipment_needed + '.' : 'FWW provided.'}
 
-ASSESSMENT: ${demo.age || '96'}-year-old with recent pelvic fracture requiring skilled nursing for assessment, medication management, and coordination of therapy services. Patient is HOMEBOUND due to inability to ambulate safely without assistance, high fall risk, significant pain with movement, and taxing effort required to leave home. Patient demonstrates good rehab potential with supportive family.
+ASSESSMENT: ${demo.age || '[age]'}-year-old with ${dx.primary_diagnosis || 'the referring diagnosis'} requiring skilled nursing for assessment, medication management, and coordination of therapy services. Patient is HOMEBOUND due to inability to ambulate safely without assistance, high fall risk, significant pain with movement, and taxing effort required to leave home. Patient demonstrates good rehab potential with supportive family.
 
 PLAN: 
 - Skilled nursing visits for comprehensive assessment, medication review, vital signs monitoring, and care coordination
@@ -1018,7 +1031,7 @@ PLAN:
 - Teach patient/caregiver signs/symptoms to report
 - Goals: Improve functional mobility, pain management, prevent complications, maximize independence
 
-Patient/caregiver verbalize understanding of plan of care and agree with goals. All questions answered.`;
+[On the admission visit, document patient/caregiver understanding of and agreement with the plan of care, and that questions were answered.]`;
 
     doc.setFontSize(9);
     doc.setFont('helvetica', 'normal');
@@ -1050,7 +1063,7 @@ Patient/caregiver verbalize understanding of plan of care and agree with goals. 
     // Fracture-related care plan
     if (dx.primary_diagnosis?.toLowerCase().includes('fracture')) {
       carePlans.push({
-        problem: 'Impaired Physical Mobility related to pelvic fracture',
+        problem: `Impaired Physical Mobility related to ${dx.primary_diagnosis}`,
         goal: 'Patient will ambulate 50 feet with walker and minimal assistance within 60 days',
         interventions: [
           'Assess mobility status and fall risk each visit',
@@ -1099,7 +1112,7 @@ Patient/caregiver verbalize understanding of plan of care and agree with goals. 
         goal: 'Patient will report improved mood and engagement in activities within 60 days',
         interventions: [
           'Screen for depression using standardized tool (PHQ-2/PHQ-9)',
-          'Monitor medication compliance with Sertraline',
+          'Monitor antidepressant medication compliance',
           'Assess social isolation and encourage family engagement',
           'Provide emotional support and active listening',
           'Collaborate with MD if symptoms worsen'
@@ -1108,13 +1121,13 @@ Patient/caregiver verbalize understanding of plan of care and agree with goals. 
     }
 
     // Pain management care plan
-    if (func.pain) {
+    if (func.pain && dx.primary_diagnosis?.toLowerCase().includes('fracture')) {
       carePlans.push({
-        problem: 'Acute Pain related to pelvic fracture',
+        problem: `Acute Pain related to ${dx.primary_diagnosis}`,
         goal: 'Patient will report pain level 3/10 or less with improved function within 30 days',
         interventions: [
           'Assess pain level using 0-10 scale each visit',
-          'Monitor effectiveness of oxycodone and side effects',
+          'Monitor effectiveness of current pain medication and side effects',
           'Educate on non-pharmacological pain management techniques',
           'Assess for signs of medication misuse or adverse effects',
           'Coordinate with MD if pain management inadequate'
@@ -1188,7 +1201,7 @@ Patient/caregiver verbalize understanding of plan of care and agree with goals. 
     console.error('Error generating PDF:', error);
     return Response.json({ 
       error: 'Failed to generate PDF', 
-      details: error.message 
+      details: 'Internal server error' 
     }, { status: 500 });
   }
 });
