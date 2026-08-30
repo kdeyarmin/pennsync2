@@ -41,9 +41,6 @@ const OAuthConsent = lazy(() => import('@/pages/OAuthConsent'));
 // Store Connect, so it must render before the auth gate.
 const PrivacyPolicy = lazy(() => import('@/pages/PrivacyPolicy'));
 
-// OAuth consent page for the app's MCP server — manages its own auth redirect.
-const OAuthConsent = lazy(() => import('@/pages/OAuthConsent'));
-
 // Shown when a non-admin navigates directly to an admin-only route. Admin pages
 // are hidden from the sidebar/palette for non-admins, but routes are reachable
 // by URL, so this is the client-side authorization gate (server RLS is the real
