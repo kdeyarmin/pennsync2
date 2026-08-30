@@ -1,5 +1,45 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
+// <<<BEGIN SHARED HELPER: requireActiveUser — generated, edit base44/_shared/backendHelpers.mjs>>>
+const isDeactivatedUser = (u) => !!u && u.is_active === false;
+const DEACTIVATED_USER_RESPONSE = () => Response.json(
+  { error: 'Unauthorized - account is deactivated' },
+  { status: 403 },
+);
+// <<<END SHARED HELPER: requireActiveUser>>>
+
+// <<<BEGIN SHARED HELPER: formatAge — generated, edit base44/_shared/backendHelpers.mjs>>>
+function parseLocalDate(value) {
+  if (value == null || value === '') return null;
+  if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : value;
+  const iso = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(String(value).trim());
+  if (iso) {
+    const y = Number(iso[1]);
+    const mo = Number(iso[2]) - 1;
+    const day = Number(iso[3]);
+    const d = new Date(y, mo, day);
+    if (d.getFullYear() !== y || d.getMonth() !== mo || d.getDate() !== day) return null;
+    return d;
+  }
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+function calculateAge(dob, now = new Date()) {
+  const birth = parseLocalDate(dob);
+  const today = parseLocalDate(now);
+  if (!birth || !today) return null;
+  let age = today.getFullYear() - birth.getFullYear();
+  const m = today.getMonth() - birth.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+  return age;
+}
+function formatAge(dob, now = new Date(), fallback = 'Unknown') {
+  const age = calculateAge(dob, now);
+  return age == null ? fallback : age;
+}
+// <<<END SHARED HELPER: formatAge>>>
+
+
 // Tolerant JSON extractor: we ask for strict JSON in-prompt instead of passing
 // response_json_schema, because the provider rejects deeply-nested object
 // schemas that lack an explicit `required` array at every level.
@@ -17,10 +57,46 @@ function parseLLMJson(raw) {
   }
 }
 
+
+/** Explicit patient access — Patient RLS treats role:admin as platform-wide. */
+async function assertPatientAccess(base44, user, patient) {
+  if (!patient) return Response.json({ error: 'Patient not found' }, { status: 404 });
+  const isSuperAdmin = user.account_type === 'super_admin';
+  const isAgencyScopedAdmin =
+    user.account_type === 'agency_admin'
+    || (user.role === 'admin' && !!user.agency_name && !isSuperAdmin);
+  const isPlatformAdmin = isSuperAdmin || (user.role === 'admin' && !user.agency_name);
+  const isAssigned = Array.isArray(patient.assigned_nurses)
+    && patient.assigned_nurses.includes(user.email);
+  if (!isPlatformAdmin && !isAgencyScopedAdmin && patient.created_by !== user.email && !isAssigned) {
+    return Response.json({ error: 'Forbidden' }, { status: 403 });
+  }
+  if (isAgencyScopedAdmin) {
+    if (!user.agency_name) {
+      return Response.json({ error: 'Forbidden' }, { status: 403 });
+    }
+    const agencyUsers = await base44.asServiceRole.entities.User
+      .list('-created_date', 5000).catch(() => []);
+    const agencyEmails = new Set(
+      (agencyUsers || [])
+        .filter((u) => u.agency_name === user.agency_name && u.email)
+        .map((u) => u.email),
+    );
+    const inAgency = (patient.created_by && agencyEmails.has(patient.created_by))
+      || (Array.isArray(patient.assigned_nurses)
+        && patient.assigned_nurses.some((e) => agencyEmails.has(e)));
+    if (!inAgency) {
+      return Response.json({ error: 'Forbidden' }, { status: 403 });
+    }
+  }
+  return null;
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
+    if (isDeactivatedUser(user)) return DEACTIVATED_USER_RESPONSE();
 
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
@@ -36,19 +112,40 @@ Deno.serve(async (req) => {
     // asServiceRole) so the platform enforces that this user may access this
     // patient — prevents cross-patient IDOR via a guessed patient_id. Mirrors
     // the safe pattern in processCompletedVisit / expandClinicalPhrase.
-    const [patients, visits, carePlans, incidents, alerts] = await Promise.all([
-      base44.entities.Patient.filter({ id: patient_id }),
-      base44.entities.Visit.filter({ patient_id }, '-visit_date', 20),
-      base44.entities.CarePlan.filter({ patient_id }),
-      base44.entities.Incident.filter({ patient_id }),
-      base44.entities.PatientAlert.filter({ patient_id, status: 'active' })
-    ]);
+    const [patient] = await base44.asServiceRole.entities.Patient
+      .filter({ id: patient_id }, '', 1).catch(() => []);
+    const denied = await assertPatientAccess(base44, user, patient);
+    if (denied) return denied;
 
-    const patient = patients[0];
-    if (!patient) {
-      // Either the patient doesn't exist or the caller isn't authorized for it.
-      return Response.json({ error: 'Patient not found' }, { status: 404 });
+    // Claim before LLM + PatientAlert.create so concurrent runs cannot both
+    // see empty alerts and duplicate high-risk rows.
+    const claimToken = typeof crypto !== 'undefined' && crypto.randomUUID
+      ? crypto.randomUUID()
+      : `risk-predict-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    try {
+      await base44.asServiceRole.entities.Patient.update(patient_id, {
+        risk_predict_claimed_by: claimToken,
+      });
+    } catch {
+      return Response.json({ error: 'Could not claim patient for risk prediction' }, { status: 409 });
     }
+    const claimCheck = await base44.asServiceRole.entities.Patient
+      .filter({ id: patient_id }, '', 1).catch(() => []);
+    if (!claimCheck[0] || claimCheck[0].risk_predict_claimed_by !== claimToken) {
+      return Response.json({
+        success: true,
+        already_processed: true,
+        alerts_created: 0,
+        alerts: [],
+        skipped: 'claimed by concurrent run',
+      });
+    }
+
+    const [visits, incidents, alerts] = await Promise.all([
+      base44.asServiceRole.entities.Visit.filter({ patient_id }, '-visit_date', 20),
+      base44.asServiceRole.entities.Incident.filter({ patient_id }, undefined, 5000),
+      base44.asServiceRole.entities.PatientAlert.filter({ patient_id, status: 'active' }, undefined, 5000)
+    ]);
 
     const completedVisits = visits.filter(v => v.status === 'completed');
     const recentVisits = completedVisits.slice(0, 5);
@@ -56,7 +153,7 @@ Deno.serve(async (req) => {
     // Prepare data for AI analysis
     const analysisData = {
       patient_info: {
-        age: patient.date_of_birth ? Math.floor((new Date() - new Date(patient.date_of_birth)) / (365.25 * 24 * 60 * 60 * 1000)) : null,
+        age: calculateAge(patient.date_of_birth),
         primary_diagnosis: patient.primary_diagnosis,
         secondary_diagnoses: patient.secondary_diagnoses || [],
         care_type: patient.care_type,
@@ -71,11 +168,6 @@ Deno.serve(async (req) => {
         notes_excerpt: v.nurse_notes?.substring(0, 200)
       })),
       vital_trends: calculateVitalTrends(recentVisits),
-      care_plan_status: carePlans.map(cp => ({
-        problem: cp.problem,
-        status: cp.status,
-        goal: cp.goal
-      })),
       incident_history: incidents.map(i => ({
         type: i.incident_type,
         date: i.incident_date,
@@ -123,7 +215,7 @@ Return ONLY valid JSON, no prose or code fences, with this shape:
 {"overall_risk_level":"low|medium|high|critical","risk_assessments":[{"risk_type":"","risk_score":0,"urgency":"low|medium|high|critical","contributing_factors":[""],"recommendations":[""],"evidence":""}],"immediate_actions_needed":[""],"monitoring_priorities":[""]}`;
 
     const rawRiskPredictions = await base44.asServiceRole.integrations.Core.InvokeLLM({
-      model: "claude_opus_4_8",
+      model: "automatic",
       prompt: predictionPrompt
     });
     const riskPredictions = parseLLMJson(rawRiskPredictions) || {};
@@ -197,7 +289,7 @@ Return ONLY valid JSON, no prose or code fences, with this shape:
   } catch (error) {
     console.error('Error predicting patient risks:', error);
     return Response.json({
-      error: error.message
+      error: 'Internal server error'
     }, { status: 500 });
   }
 });

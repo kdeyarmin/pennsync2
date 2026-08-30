@@ -1,13 +1,10 @@
 import * as React from "react"
-
-function cn(...inputs) {
-  return inputs.filter(Boolean).join(' ')
-}
+import { cn } from "@/lib/utils"
 
 const Card = React.forwardRef(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("rounded-xl border border-slate-200/80 bg-slate-50 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_1px_3px_rgba(15,23,42,0.06)] hover:shadow-[0_4px_16px_rgba(15,23,42,0.08)] transition-shadow duration-300", className)}
+    className={cn("rounded-xl border border-slate-200/80 bg-white text-slate-900 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_1px_3px_rgba(15,23,42,0.06)] hover:shadow-[0_4px_16px_rgba(15,23,42,0.08)] transition-shadow duration-300 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:shadow-[0_1px_2px_rgba(0,0,0,0.35)]", className)}
     {...props}
   />
 ))
@@ -25,7 +22,7 @@ CardHeader.displayName = "CardHeader"
 const CardTitle = React.forwardRef(({ className, ...props }, ref) => (
   <h3
     ref={ref}
-    className={cn("text-2xl font-semibold leading-none tracking-tight", className)}
+    className={cn("text-2xl font-semibold leading-tight tracking-tight text-slate-900 dark:text-slate-100", className)}
     {...props}
   />
 ))
@@ -34,7 +31,7 @@ CardTitle.displayName = "CardTitle"
 const CardDescription = React.forwardRef(({ className, ...props }, ref) => (
   <p
     ref={ref}
-    className={cn("text-sm text-slate-500", className)}
+    className={cn("text-sm font-medium leading-normal text-slate-600 dark:text-slate-300", className)}
     {...props}
   />
 ))

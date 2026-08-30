@@ -1,5 +1,13 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
+// <<<BEGIN SHARED HELPER: requireActiveUser — generated, edit base44/_shared/backendHelpers.mjs>>>
+const isDeactivatedUser = (u) => !!u && u.is_active === false;
+const DEACTIVATED_USER_RESPONSE = () => Response.json(
+  { error: 'Unauthorized - account is deactivated' },
+  { status: 403 },
+);
+// <<<END SHARED HELPER: requireActiveUser>>>
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -8,18 +16,40 @@ Deno.serve(async (req) => {
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    if (isDeactivatedUser(user)) return DEACTIVATED_USER_RESPONSE();
 
     const { nurseEmail, daysPeriod = 30 } = await req.json();
-    // Only admins may analyze another nurse's deficits/PHI; others get themselves.
-    if (nurseEmail && nurseEmail !== user.email && user.role !== 'admin') {
-      return Response.json({ error: 'Forbidden' }, { status: 403 });
+    // Only admin-like callers may analyze another nurse's deficits/PHI, and
+    // only within their agency.
+    if (nurseEmail && nurseEmail !== user.email) {
+      const isAdminLike = user.role === 'admin'
+        || user.account_type === 'agency_admin'
+        || user.account_type === 'super_admin';
+      if (!isAdminLike) {
+        return Response.json({ error: 'Forbidden' }, { status: 403 });
+      }
+      if (user.account_type === 'agency_admin' && !user.agency_name) {
+      return Response.json({ error: 'Forbidden: agency_name is required.' }, { status: 403 });
+    }
+    if (user.account_type !== 'super_admin' && user.agency_name) {
+        const [target] = await base44.asServiceRole.entities.User
+          .filter({ email: nurseEmail }, '-created_date', 1).catch(() => []);
+        if (!target?.agency_name || target.agency_name !== user.agency_name) {
+          return Response.json({ error: 'Forbidden' }, { status: 403 });
+        }
+      }
     }
     const emailToAnalyze = nurseEmail || user.email;
 
-    // Fetch all AI suggestions for this nurse in the time period
-    const suggestions = await base44.asServiceRole.entities.TrainingRecommendation.filter({
-      nurse_email: emailToAnalyze
-    });
+    // Fetch AI suggestions for this nurse newest-first with an explicit high limit.
+    // Without a sort/limit the SDK returns only the default first page (~50 rows,
+    // not newest-first), so a nurse with many older recommendations got an empty
+    // recent window and a blank deficit report.
+    const suggestions = await base44.asServiceRole.entities.TrainingRecommendation.filter(
+      { nurse_email: emailToAnalyze },
+      '-created_date',
+      1000
+    );
 
     // Filter by date
     const cutoffDate = new Date();
@@ -223,6 +253,7 @@ Deno.serve(async (req) => {
     });
 
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error('analyzeNurseDeficits failed:', error);
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
 });

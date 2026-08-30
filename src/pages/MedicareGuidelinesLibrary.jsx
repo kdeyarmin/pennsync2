@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { isAdminView } from "@/lib/roles";
 import { useConfirm } from "@/components/ui/confirm-dialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -37,9 +38,13 @@ import {
   CheckCircle2,
   Trash2
 } from "lucide-react";
+import { isSafeExternalUrl } from "@/components/utils/security";
 import ReactMarkdown from "react-markdown";
 import PageContainer from "@/components/ui/PageContainer";
 import PageHeader from "@/components/ui/PageHeader";
+import LoadingState from "@/components/ui/LoadingState";
+import { formatLocalDate } from "@/lib/dateLocal";
+import { ALL_ROWS } from '@/lib/queryLimits';
 
 export default function MedicareGuidelinesLibrary() {
   const queryClient = useQueryClient();
@@ -63,11 +68,11 @@ export default function MedicareGuidelinesLibrary() {
     queryFn: () => base44.auth.me(),
   });
 
-  const isAdmin = currentUser?.role === 'admin';
+  const isAdmin = isAdminView(currentUser);
 
   const { data: guidelines = [], isLoading } = useQuery({
     queryKey: ['medicareGuidelines'],
-    queryFn: () => base44.entities.MedicareGuideline.filter({ is_active: true }, '-last_fetched_date'),
+    queryFn: () => base44.entities.MedicareGuideline.filter({ is_active: true }, '-last_fetched_date', ALL_ROWS),
     initialData: [],
   });
 
@@ -151,7 +156,7 @@ export default function MedicareGuidelinesLibrary() {
       hospice_regulations: "bg-gold-100 text-gold-800",
       quality_measures: "bg-amber-100 text-amber-800",
       compliance_audit: "bg-orange-100 text-orange-800",
-      pdgm: "bg-teal-100 text-teal-800",
+      pdgm: "bg-sky-100 text-sky-800",
       other: "bg-slate-100 text-slate-800"
     };
     return colors[category] || colors.other;
@@ -314,9 +319,7 @@ export default function MedicareGuidelinesLibrary() {
 
       {/* Guidelines List */}
       {isLoading ? (
-        <div className="flex justify-center items-center py-12">
-          <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-        </div>
+        <LoadingState className="py-12" />
       ) : filteredGuidelines.length === 0 ? (
         <EmptyState
           icon={FileText}
@@ -368,7 +371,7 @@ export default function MedicareGuidelinesLibrary() {
                   {guideline.effective_date && (
                     <div className="flex items-center gap-1">
                       <Calendar className="w-3 h-3" />
-                      Effective: {new Date(guideline.effective_date).toLocaleDateString()}
+                      Effective: {formatLocalDate(guideline.effective_date)}
                     </div>
                   )}
                   {guideline.cms_manual_chapter && (
@@ -452,7 +455,7 @@ export default function MedicareGuidelinesLibrary() {
                     <div>
                       <span className="font-medium text-slate-700">Effective Date:</span>
                       <p className="text-slate-600">
-                        {new Date(selectedGuideline.effective_date).toLocaleDateString()}
+                        {formatLocalDate(selectedGuideline.effective_date)}
                       </p>
                     </div>
                   )}
@@ -498,15 +501,17 @@ export default function MedicareGuidelinesLibrary() {
 
                 {/* Source Link */}
                 <div className="border-t pt-4">
-                  <a
-                    href={selectedGuideline.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 hover:text-blue-700 text-sm flex items-center gap-1"
-                  >
-                    View Original on CMS.gov
-                    <ExternalLink className="w-3 h-3" />
-                  </a>
+                  {selectedGuideline.url && isSafeExternalUrl(selectedGuideline.url) ? (
+                    <a
+                      href={selectedGuideline.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:text-blue-700 hover:underline text-sm flex items-center gap-1"
+                    >
+                      View Original on CMS.gov
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  ) : null}
                   <p className="text-xs text-slate-500 mt-1">
                     Last fetched: {new Date(selectedGuideline.last_fetched_date).toLocaleString()}
                   </p>

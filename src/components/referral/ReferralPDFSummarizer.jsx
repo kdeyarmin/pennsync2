@@ -16,6 +16,8 @@ import {
   formatBytes,
   REFERRAL_ACCEPT_ATTR,
 } from "./referralUploadUtils";
+import { isSafeExternalUrl } from "@/components/utils/security";
+import { isAdminView } from "@/lib/roles";
 import {
   FileText,
   UploadCloud,
@@ -39,7 +41,6 @@ import {
 } from "lucide-react";
 import AISmartOASISAssistant from "../oasis/AISmartOASISAssistant";
 import AIAdmissionNoteGenerator from "./AIAdmissionNoteGenerator";
-import AICarePlanSuggestionEngine from "./AICarePlanSuggestionEngine";
 import AdmissionPacketCustomizer from "./AdmissionPacketCustomizer";
 import {
   Accordion,
@@ -60,9 +61,14 @@ const processingStages = [
 export default function ReferralPDFSummarizer({
   onDataExtracted,
   onUseForAdmission,
-  patientId = null,
   fileUrl: externalFileUrl = null,
-  onExtractionComplete = null
+  onExtractionComplete = null,
+  // Called with { url, mime } once a document EXTRACTS successfully, so hosts
+  // (e.g. the admission-briefing email) can reference the source referral file.
+  onSourceFile = null,
+  // Pass-through to the embedded AIAdmissionNoteGenerator, so hosts can reuse
+  // the generated admission narrative (e.g. in the nurse briefing email).
+  onNoteGenerated = null
 }) {
   const [isUploading, setIsUploading] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -74,12 +80,18 @@ export default function ReferralPDFSummarizer({
   const [isDragging, setIsDragging] = useState(false);
   const [generatingPDF, setGeneratingPDF] = useState(false);
   const [generatedPdfUrl, setGeneratedPdfUrl] = useState(null);
-  const [oasisResults, setOasisResults] = useState(null);
+  // OASIS suggestions applied via the assistant below; retained as state so the
+  // assistant's onApplySuggestion has a sink and resets cleanly between documents.
+  const [_oasisResults, setOasisResults] = useState(null);
   const [showPreview, setShowPreview] = useState(true);
   const fileInputRef = useRef(null);
   const progressIntervalRef = useRef(null);
   // Remember the last document we processed so "Try again" can re-run without re-upload.
   const lastProcessedRef = useRef({ url: externalFileUrl, mime: "application/pdf" });
+  // Track the externalFileUrl we've already auto-processed so a persistent
+  // extraction failure can't re-fire the (billed, 120s) extraction in a loop —
+  // retries go through the explicit "Try Again" button instead.
+  const autoProcessedUrlRef = useRef(null);
 
   // Real per-section AI confidence (0-100) self-reported by the extraction model,
   // falling back to a neutral default for older data that predates the field.
@@ -99,7 +111,7 @@ export default function ReferralPDFSummarizer({
     queryFn: () => base44.auth.me(),
   });
 
-  const isAdmin = currentUser?.role === 'admin';
+  const isAdmin = isAdminView(currentUser);
 
   // Clear the progress interval if the component unmounts mid-processing.
   React.useEffect(() => () => {
@@ -236,6 +248,7 @@ export default function ReferralPDFSummarizer({
 
       setExtractedData(result);
       onDataExtracted?.(result);
+      onSourceFile?.({ url, mime: fileType });
 
       // Silently generate + store the admission packet so external workflows
       // (e.g. referral intake) get a permanent URL. The browser download only
@@ -264,11 +277,17 @@ export default function ReferralPDFSummarizer({
       setIsProcessing(false);
       setProcessingStage(0);
     }
-  }, [onDataExtracted, onExtractionComplete, buildAdmissionPacket]);
+  }, [onDataExtracted, onExtractionComplete, onSourceFile, buildAdmissionPacket]);
 
-  // Auto-process if fileUrl is provided externally
+  // Auto-process if fileUrl is provided externally (at most once per URL).
   React.useEffect(() => {
-    if (externalFileUrl && !extractedData && !isProcessing) {
+    if (
+      externalFileUrl &&
+      !extractedData &&
+      !isProcessing &&
+      autoProcessedUrlRef.current !== externalFileUrl
+    ) {
+      autoProcessedUrlRef.current = externalFileUrl;
       setFileUrl(externalFileUrl);
       lastProcessedRef.current = { url: externalFileUrl, mime: "application/pdf" };
       processReferral(externalFileUrl);
@@ -414,7 +433,7 @@ export default function ReferralPDFSummarizer({
                     Admission Packet PDF
                   </Button>
                   {onUseForAdmission && (
-                    <Button size="sm" onClick={() => onUseForAdmission(extractedData)} className="bg-green-600 hover:bg-green-700">
+                    <Button size="sm" onClick={() => onUseForAdmission(extractedData)} >
                       <ArrowRight className="w-4 h-4 mr-1" />
                       Use for Admission
                     </Button>
@@ -487,14 +506,16 @@ export default function ReferralPDFSummarizer({
                       Source Document
                     </CardTitle>
                     <div className="flex items-center gap-2">
-                      <a
-                        href={fileUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xs text-blue-600 hover:underline inline-flex items-center gap-1"
-                      >
-                        <ExternalLink className="w-3 h-3" /> Open
-                      </a>
+                      {fileUrl && (isSafeExternalUrl(fileUrl) || fileUrl.startsWith('blob:')) && (
+                        <a
+                          href={fileUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs text-blue-600 hover:underline inline-flex items-center gap-1"
+                        >
+                          <ExternalLink className="w-3 h-3" /> Open
+                        </a>
+                      )}
                       <Button
                         size="sm"
                         variant="ghost"
@@ -507,7 +528,7 @@ export default function ReferralPDFSummarizer({
                     </div>
                   </div>
                 </CardHeader>
-                {showPreview && (
+                {showPreview && (isSafeExternalUrl(fileUrl) || fileUrl.startsWith('blob:')) && (
                   <CardContent className="p-0">
                     {previewIsImage ? (
                       <div className="max-h-[78vh] overflow-auto bg-slate-100">
@@ -1273,7 +1294,7 @@ export default function ReferralPDFSummarizer({
           <AIAdmissionNoteGenerator
             referralData={extractedData}
             autoGenerate={true}
-            onNoteGenerated={() => {}}
+            onNoteGenerated={onNoteGenerated || (() => {})}
           />
 
           {/* AI OASIS Assistant */}
@@ -1298,15 +1319,6 @@ export default function ReferralPDFSummarizer({
               />
             </CardContent>
           </Card>
-
-          {/* AI Care Plan Suggestions */}
-          <AICarePlanSuggestionEngine
-            referralData={extractedData}
-            oasisData={oasisResults || extractedData.oasis_assessment}
-            patientId={patientId}
-            autoGenerate={true}
-            onCarePlansGenerated={() => {}}
-          />
 
           {/* Admission Packet Customizer */}
           <AdmissionPacketCustomizer 

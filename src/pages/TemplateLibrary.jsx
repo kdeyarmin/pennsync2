@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { base44 } from "@/api/base44Client";
-import { useQuery } from "@tanstack/react-query";
+import { useScopedPatients } from '@/hooks/useScopedPatients';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -9,11 +8,12 @@ import { Label } from "@/components/ui/label";
 import { ArrowLeft, User, Sparkles, FileText, Copy, CheckCircle2, Bot } from "lucide-react";
 import PageContainer from "@/components/ui/PageContainer";
 import PageHeader from "@/components/ui/PageHeader";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { toast } from "sonner";
 import { createPageUrl } from "@/utils";
 import ClinicalTemplateLibrary from "../components/templates/ClinicalTemplateLibrary";
 import TemplateEditor from "../components/templates/TemplateEditor";
+import { ALL_ROWS } from '@/lib/queryLimits';
 
 export default function TemplateLibrary() {
   const navigate = useNavigate();
@@ -22,21 +22,21 @@ export default function TemplateLibrary() {
   const [templateContent, setTemplateContent] = useState('');
   const [copied, setCopied] = useState(false);
 
-  const { data: patients } = useQuery({
-    queryKey: ['templatePatients'],
-    queryFn: () => base44.entities.Patient.filter({ status: 'active' }),
-    initialData: [],
-  });
+  const { data: patients } = useScopedPatients({ status: 'active', sort: null, limit: ALL_ROWS });
 
   const handleSelectTemplate = (data) => {
     setSelectedTemplateData(data);
     setTemplateContent(data.content?.template_content || '');
   };
 
-  const handleCopyToClipboard = () => {
-    navigator.clipboard.writeText(templateContent);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const handleCopyToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText(templateContent);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error('Could not copy to clipboard');
+    }
   };
 
   const handleUseInVisit = async () => {
@@ -154,7 +154,7 @@ export default function TemplateLibrary() {
                     </Button>
                     <Button
                       onClick={handleUseInVisit}
-                      className="bg-emerald-600 hover:bg-emerald-700 gap-2"
+                      className="gap-2"
                     >
                       <FileText className="w-4 h-4" />
                       Use in Visit Documentation

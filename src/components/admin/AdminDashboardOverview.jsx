@@ -1,7 +1,8 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { Link } from "react-router-dom";
+import { agencyQueryKey } from '@/lib/agencyRoster';
+import { Link } from "react-router";
 import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,10 +14,21 @@ import QuickHealthOverview from "./QuickHealthOverview";
 import { getDocumentDisplayName, getNormalizedSignatureStatus, getSignatureStatusLabel } from "@/components/signature/signatureUtils";
 
 export default function AdminDashboardOverview() {
+  const { data: currentUser } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me(),
+  });
+
+
   // Fetch user count
   const { data: users = [] } = useQuery({
-    queryKey: ['admin-users'],
-    queryFn: () => base44.entities.User.list('-created_date', 1000),
+    queryKey: ['admin-users', agencyQueryKey(currentUser)],
+    queryFn: async () => {
+      const _rows = await base44.entities.User.list('-created_date', 1000);
+      const { filterUsersByCallerAgency } = await import('@/lib/agencyScope');
+      return filterUsersByCallerAgency(_rows, currentUser);
+    },
+    enabled: !!currentUser,
     initialData: [],
   });
 
@@ -237,7 +249,7 @@ export default function AdminDashboardOverview() {
               ))}
             </div>
             <Link to={createPageUrl("DocumentSignatures")}>
-              <Button className="w-full bg-orange-600 hover:bg-orange-700">
+              <Button className="w-full">
                 Review Signature Requests
               </Button>
             </Link>

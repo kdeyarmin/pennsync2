@@ -1,5 +1,14 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
+// <<<BEGIN SHARED HELPER: requireActiveUser — generated, edit base44/_shared/backendHelpers.mjs>>>
+const isDeactivatedUser = (u) => !!u && u.is_active === false;
+const DEACTIVATED_USER_RESPONSE = () => Response.json(
+  { error: 'Unauthorized - account is deactivated' },
+  { status: 403 },
+);
+// <<<END SHARED HELPER: requireActiveUser>>>
+
+
 // Tolerant JSON extractor: we ask for strict JSON in-prompt instead of passing
 // response_json_schema, because the provider rejects deeply-nested object
 // schemas that lack an explicit `required` array at every level.
@@ -21,12 +30,26 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
+    if (isDeactivatedUser(user)) return DEACTIVATED_USER_RESPONSE();
     
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const { extractedData, analysisResults } = await req.json();
+
+    // Skip the expensive LLM call when there's nothing to analyze — without
+    // this guard, an empty payload still fires a claude_opus call that times
+    // out at the 120s proxy limit.
+    if (!extractedData || (typeof extractedData === 'object' && Object.keys(extractedData).length === 0)) {
+      return Response.json({
+        success: true,
+        analysis: {
+          missing_critical_info: { high_priority: ['No referral data provided — cannot analyze.'] },
+          suggested_next_steps: []
+        }
+      });
+    }
 
     // Use AI to comprehensively analyze the referral
     const analysisPrompt = `You are an expert home health intake coordinator. Analyze this referral data and provide comprehensive insights.
@@ -87,7 +110,7 @@ Provide a JSON response with the following structure:
 Return ONLY valid JSON matching the structure above, no prose or code fences.`;
 
     const response = await base44.integrations.Core.InvokeLLM({
-      model: "claude_opus_4_8",
+      model: "automatic",
       prompt: analysisPrompt
     });
 
@@ -100,7 +123,7 @@ Return ONLY valid JSON matching the structure above, no prose or code fences.`;
     console.error('Referral analysis error:', error);
     return Response.json({ 
       error: 'Failed to analyze referral',
-      details: error.message 
+      details: 'Internal server error' 
     }, { status: 500 });
   }
 });

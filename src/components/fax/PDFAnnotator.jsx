@@ -10,9 +10,13 @@ import {
 import { toast } from "sonner";
 import jsPDF from "jspdf";
 import * as pdfjsLib from "pdfjs-dist";
+import { isSafeExternalUrl } from "@/components/utils/security";
 
 // Use unpkg CDN to reliably load the worker without Vite import issues
 pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
+
+const isSafePdfUrl = (url) =>
+  typeof url === "string" && (url.startsWith("blob:") || isSafeExternalUrl(url));
 
 const TOOLS = {
   PEN: "pen",
@@ -48,44 +52,67 @@ export default function PDFAnnotator({ pdfUrl, onAnnotatedReady, onClose }) {
   const textInputRef = useRef(null);
   const [textInput, setTextInput] = useState({ visible: false, x: 0, y: 0, value: "" });
 
-  // Load PDF
+  // Load PDF.
+  //
+  // The annotator renders inline while the document picker above it stays
+  // interactive, so `pdfUrl` can change mid-load. Without the stale guard a
+  // slower earlier fetch could resolve last and install the PREVIOUS document —
+  // the nurse would then annotate one file while the sender faxed another.
+  // Cancel the superseded load and drop its result.
   useEffect(() => {
     if (!pdfUrl) return;
+    if (!isSafePdfUrl(pdfUrl)) {
+      toast.error("Blocked unsafe PDF URL");
+      setIsLoading(false);
+      return;
+    }
     setIsLoading(true);
-    pdfjsLib.getDocument({ url: pdfUrl, withCredentials: false }).promise
+    let stale = false;
+    const task = pdfjsLib.getDocument({ url: pdfUrl, withCredentials: false });
+    task.promise
       .then((doc) => {
+        if (stale) return;
         setPdfDoc(doc);
         setNumPages(doc.numPages);
         setPageNum(1);
       })
       .catch((err) => {
+        if (stale) return;
         console.error("PDF load error:", err);
         toast.error("Failed to load PDF for annotation");
         setIsLoading(false);
       });
+    return () => {
+      stale = true;
+      try { task.destroy(); } catch { /* already settled/destroyed */ }
+    };
   }, [pdfUrl]);
 
   const getAnnotations = useCallback((page) => annotationsRef.current[page] || [], []);
 
-  const drawAnnotation = useCallback((ctx, ann) => {
+  // Annotations are stored in the overlay-pixel space of the scale they were
+  // captured at (ann.scaleAtCapture). Replay them scaled by renderScale /
+  // scaleAtCapture so they land in the same place on the page at any zoom.
+  const drawAnnotation = useCallback((ctx, ann, renderScale) => {
+    const factor = renderScale / (ann.scaleAtCapture || renderScale);
     if (ann.type === "stroke") {
       const { points, color, width } = ann.data;
       if (!points || points.length < 2) return;
       ctx.beginPath();
       ctx.strokeStyle = color;
-      ctx.lineWidth = width;
+      ctx.lineWidth = width * factor;
       ctx.lineCap = "round";
       ctx.lineJoin = "round";
-      ctx.moveTo(points[0].x, points[0].y);
+      ctx.moveTo(points[0].x * factor, points[0].y * factor);
       for (let i = 1; i < points.length; i++) {
-        ctx.lineTo(points[i].x, points[i].y);
+        ctx.lineTo(points[i].x * factor, points[i].y * factor);
       }
       ctx.stroke();
     } else if (ann.type === "text") {
       const { x, y, text, color, size } = ann.data;
-      ctx.font = `${size}px Arial`;
+      ctx.font = `${size * factor}px Arial`;
       ctx.fillStyle = color;
-      ctx.fillText(text, x, y);
+      ctx.fillText(text, x * factor, y * factor);
     } else if (ann.type === "erase") {
       const { points, width } = ann.data;
       if (!points || points.length < 2) return;
@@ -93,11 +120,13 @@ export default function PDFAnnotator({ pdfUrl, onAnnotatedReady, onClose }) {
       ctx.globalCompositeOperation = "destination-out";
       ctx.beginPath();
       ctx.strokeStyle = "rgba(0,0,0,1)";
-      ctx.lineWidth = width * 4;
+      // Live erasing paints circles of radius width*4 (diameter width*8); match
+      // that band with the replayed stroke width so redrawn erasures aren't half-size.
+      ctx.lineWidth = width * 8 * factor;
       ctx.lineCap = "round";
       ctx.lineJoin = "round";
-      ctx.moveTo(points[0].x, points[0].y);
-      for (let i = 1; i < points.length; i++) ctx.lineTo(points[i].x, points[i].y);
+      ctx.moveTo(points[0].x * factor, points[0].y * factor);
+      for (let i = 1; i < points.length; i++) ctx.lineTo(points[i].x * factor, points[i].y * factor);
       ctx.stroke();
       ctx.restore();
     }
@@ -109,8 +138,8 @@ export default function PDFAnnotator({ pdfUrl, onAnnotatedReady, onClose }) {
     const ctx = overlay.getContext("2d");
     ctx.clearRect(0, 0, overlay.width, overlay.height);
     const anns = getAnnotations(page);
-    anns.forEach((ann) => drawAnnotation(ctx, ann));
-  }, [getAnnotations, drawAnnotation]);
+    anns.forEach((ann) => drawAnnotation(ctx, ann, scale));
+  }, [getAnnotations, drawAnnotation, scale]);
 
   // Render current page to base canvas
   const renderPage = useCallback(async () => {
@@ -228,6 +257,7 @@ export default function PDFAnnotator({ pdfUrl, onAnnotatedReady, onClose }) {
     const type = tool === TOOLS.ERASER ? "erase" : "stroke";
     saveAnnotation(pageNum, {
       type,
+      scaleAtCapture: scale,
       data: { points: [...points], color, width: strokeWidth },
     });
     currentStrokeRef.current = [];
@@ -246,6 +276,7 @@ export default function PDFAnnotator({ pdfUrl, onAnnotatedReady, onClose }) {
     ctx.fillText(textInput.value, textInput.x, textInput.y);
     saveAnnotation(pageNum, {
       type: "text",
+      scaleAtCapture: scale,
       data: { x: textInput.x, y: textInput.y, text: textInput.value, color, size: fontSize },
     });
     setTextInput({ ...textInput, visible: false, value: "" });
@@ -273,17 +304,25 @@ export default function PDFAnnotator({ pdfUrl, onAnnotatedReady, onClose }) {
         const page = await pdfDoc.getPage(p);
         const viewport = page.getViewport({ scale });
 
-        // Render PDF page to temp canvas
+        // Render PDF page to temp canvas (base layer)
         const tempCanvas = document.createElement("canvas");
         tempCanvas.width = viewport.width;
         tempCanvas.height = viewport.height;
         const tempCtx = tempCanvas.getContext("2d");
         await page.render({ canvasContext: tempCtx, viewport }).promise;
 
-        // Draw annotations on top
+        // Draw annotations onto a SEPARATE transparent overlay first, then
+        // composite it over the page — mirroring the live two-canvas model. This
+        // keeps eraser strokes (destination-out) from punching alpha holes through
+        // the PDF content (which JPEG would then flatten to black smears).
         const anns = getAnnotations(p);
         if (anns.length > 0) {
-          anns.forEach((ann) => drawAnnotation(tempCtx, ann));
+          const annCanvas = document.createElement("canvas");
+          annCanvas.width = viewport.width;
+          annCanvas.height = viewport.height;
+          const annCtx = annCanvas.getContext("2d");
+          anns.forEach((ann) => drawAnnotation(annCtx, ann, scale));
+          tempCtx.drawImage(annCanvas, 0, 0);
         }
 
         const imgData = tempCanvas.toDataURL("image/jpeg", 0.92);
@@ -384,7 +423,7 @@ export default function PDFAnnotator({ pdfUrl, onAnnotatedReady, onClose }) {
         </div>
 
         {/* Save / Close */}
-        <Button onClick={handleSave} disabled={isSaving} size="sm" className="h-8 gap-1.5 text-xs bg-green-600 hover:bg-green-700">
+        <Button onClick={handleSave} disabled={isSaving} size="sm" className="h-8 gap-1.5 text-xs">
           {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle className="w-3.5 h-3.5" />}
           {isSaving ? "Saving..." : "Apply & Use"}
         </Button>

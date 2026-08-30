@@ -33,6 +33,7 @@ import {
   TrendingUp
 } from "lucide-react";
 import { toast } from 'sonner';
+import { isAdminView } from "@/lib/roles";
 
 export default function AIGroupAssignmentValidator({ 
   oasisData, 
@@ -55,7 +56,7 @@ export default function AIGroupAssignmentValidator({
     queryFn: () => base44.auth.me(),
   });
 
-  const isAdmin = currentUser?.role === 'admin';
+  const isAdmin = isAdminView(currentUser);
 
   const performValidation = useCallback(async () => {
     if (!oasisData || !pdgmData) return;
@@ -105,7 +106,7 @@ PROVIDE:
 6. Red flags or concerns requiring supervisor review`;
 
       const result = await ai.run({
-        model: "claude_opus_4_8",
+        model: "automatic",
         prompt,
         response_json_schema: {
           type: "object",
@@ -196,6 +197,10 @@ PROVIDE:
       return await base44.entities.OASISAudit.create({
         oasis_upload_id: oasisData.id,
         patient_id: patientId,
+        // user_email and summary are schema-required; without them the create
+        // is rejected and the override is never persisted.
+        user_email: currentUser.email,
+        summary: `Group assignment override: clinical group ${pdgmData?.clinical_group ?? 'N/A'} -> ${overrideData.clinical_group ?? 'N/A'}, functional level ${pdgmData?.functional_level ?? 'N/A'} -> ${overrideData.functional_level ?? 'N/A'}.`,
         reviewed_by: currentUser.email,
         reviewed_at: new Date().toISOString(),
         // 'manual_flag' is the valid flag_reason enum member for a human override;
@@ -542,7 +547,7 @@ PROVIDE:
                 <Button
                   onClick={openOverrideDialog}
                   variant="outline"
-                  className="flex-1 border-orange-400 text-orange-700 hover:bg-orange-50"
+                  className="flex-1"
                 >
                   <Shield className="w-4 h-4 mr-2" />
                   Manual Override
@@ -628,7 +633,6 @@ PROVIDE:
               <Button
                 onClick={handleOverride}
                 disabled={saveOverrideMutation.isPending || !overrideReason.trim()}
-                className="bg-orange-600 hover:bg-orange-700"
               >
                 {saveOverrideMutation.isPending ? (
                   <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Saving...</>

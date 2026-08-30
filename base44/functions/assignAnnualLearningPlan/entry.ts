@@ -1,11 +1,35 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
+// <<<BEGIN SHARED HELPER: requireActiveUser — generated, edit base44/_shared/backendHelpers.mjs>>>
+const isDeactivatedUser = (u) => !!u && u.is_active === false;
+const DEACTIVATED_USER_RESPONSE = () => Response.json(
+  { error: 'Unauthorized - account is deactivated' },
+  { status: 403 },
+);
+// <<<END SHARED HELPER: requireActiveUser>>>
+
+// <<<BEGIN SHARED HELPER: requireAgencyAdminAgency — generated, edit base44/_shared/backendHelpers.mjs>>>
+function agencyAdminMissingAgencyResponse(user) {
+  if (user && user.account_type === 'agency_admin' && !String(user.agency_name || '').trim()) {
+    return Response.json({ error: 'Forbidden: agency_name is required.' }, { status: 403 });
+  }
+  return null;
+}
+// <<<END SHARED HELPER: requireAgencyAdminAgency>>>
+
+
+
 const isAdminUser = (user) => user?.role === 'admin' || user?.account_type === 'agency_admin' || user?.account_type === 'super_admin';
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
+    if (isDeactivatedUser(user)) return DEACTIVATED_USER_RESPONSE();
+    {
+      const _agencyAdminGate = agencyAdminMissingAgencyResponse(user);
+      if (_agencyAdminGate) return _agencyAdminGate;
+    }
     if (!isAdminUser(user)) {
       return Response.json({ error: 'Unauthorized' }, { status: 403 });
     }
@@ -15,7 +39,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'planId and dueDate are required' }, { status: 400 });
     }
 
-    const [plan] = await base44.asServiceRole.entities.LearningPlan.filter({ id: planId });
+    const [plan] = await base44.asServiceRole.entities.LearningPlan.filter({ id: planId }, undefined, 5000);
     if (!plan) {
       return Response.json({ error: 'Learning plan not found' }, { status: 404 });
     }
@@ -24,7 +48,10 @@ Deno.serve(async (req) => {
     const allUsers = await base44.asServiceRole.entities.User.list('-created_date', 5000);
     let candidates = allUsers.filter((candidate) => candidate.email && candidate.role !== 'admin');
 
-    if (user.account_type === 'agency_admin' && user.agency_name) {
+    if (user.account_type !== 'super_admin' && user.agency_name && (user.account_type === 'agency_admin' || user.role === 'admin')) {
+      if (!user.agency_name) {
+        return Response.json({ error: 'Forbidden: agency membership required' }, { status: 403 });
+      }
       candidates = candidates.filter((candidate) => candidate.agency_name === user.agency_name);
     }
     if (userEmails.length > 0) {
@@ -48,10 +75,25 @@ Deno.serve(async (req) => {
       severity: 'info'
     });
 
+    // Prefetch existing enrollments + assignments once so the loops below are
+    // in-memory Set lookups rather than O(users × courses) filter() calls
+    // (parity with autoEnrollAnnualPlans — timeouts / rate limits on large orgs).
+    const enrolledSet = new Set(); // `${plan_id}|${user_email}`
+    const assignedSet = new Set(); // `${plan_id}|${course_id}|${user_email}`
+    const [existingEnrollments, existingAssignments] = await Promise.all([
+      base44.asServiceRole.entities.PlanEnrollment.filter({ plan_id: planId }, '-created_date', 10000),
+      base44.asServiceRole.entities.TrainingAssignment.filter({ plan_id: planId }, '-created_date', 10000),
+    ]);
+    (existingEnrollments || []).forEach((e) => enrolledSet.add(`${planId}|${e.user_id}`));
+    (existingAssignments || []).forEach((a) => assignedSet.add(`${planId}|${a.course_id}|${a.assigned_to_user_id}`));
+
+    // Serial create + post-create re-check shrinks duplicate enrollments /
+    // assignments when concurrent admin clicks race the prefetch→create gap.
     for (const candidate of candidates) {
-      const [existingEnrollment] = await base44.asServiceRole.entities.PlanEnrollment.filter({ plan_id: planId, user_id: candidate.email });
-      if (!existingEnrollment) {
-        await base44.asServiceRole.entities.PlanEnrollment.create({
+      const enrollKey = `${planId}|${candidate.email}`;
+      if (!enrolledSet.has(enrollKey)) {
+        enrolledSet.add(enrollKey);
+        const createdEnrollment = await base44.asServiceRole.entities.PlanEnrollment.create({
           plan_id: plan.id,
           plan_name: plan.name,
           user_id: candidate.email,
@@ -64,18 +106,36 @@ Deno.serve(async (req) => {
           courses_total: planItems.length,
           due_date: dueDate
         });
+        const afterEnroll = await base44.asServiceRole.entities.PlanEnrollment.filter(
+          { plan_id: planId, user_id: candidate.email },
+          '-created_date',
+          10,
+        );
+        if (afterEnroll.length > 1) {
+          const keepId = afterEnroll
+            .slice()
+            .sort((a, b) => String(a.created_date || '').localeCompare(String(b.created_date || '')))[0]?.id;
+          if (keepId && createdEnrollment?.id && createdEnrollment.id !== keepId) {
+            try {
+              await base44.asServiceRole.entities.PlanEnrollment.delete(createdEnrollment.id);
+            } catch {
+              /* best-effort */
+            }
+          }
+        }
       }
 
       for (const item of planItems) {
-        const existingAssignment = await base44.asServiceRole.entities.TrainingAssignment.filter({ plan_id: planId, course_id: item.course_id, assigned_to_user_id: candidate.email }, '-created_date', 5);
-        if (existingAssignment.length > 0) continue;
+        const assignKey = `${planId}|${item.course_id}|${candidate.email}`;
+        if (assignedSet.has(assignKey)) continue;
+        assignedSet.add(assignKey);
 
         // Honor the per-course configuration set in the plan builder: a course's
         // own "Due by" date (specific_due_date) overrides the plan-level due
         // date, and its required flag drives whether the assignment is required.
         const courseDueDate = item.specific_due_date || dueDate;
 
-        await base44.asServiceRole.entities.TrainingAssignment.create({
+        const createdAssignment = await base44.asServiceRole.entities.TrainingAssignment.create({
           course_id: item.course_id,
           course_title: item.course_title,
           plan_id: planId,
@@ -102,11 +162,29 @@ Deno.serve(async (req) => {
           notes: JSON.stringify({ show_correct_answers: !!settings.showCorrectAnswers }),
           archived_status: false
         });
+        const afterAssign = await base44.asServiceRole.entities.TrainingAssignment.filter(
+          { plan_id: planId, course_id: item.course_id, assigned_to_user_id: candidate.email },
+          '-created_date',
+          10,
+        );
+        if (afterAssign.length > 1) {
+          const keepId = afterAssign
+            .slice()
+            .sort((a, b) => String(a.created_date || '').localeCompare(String(b.created_date || '')))[0]?.id;
+          if (keepId && createdAssignment?.id && createdAssignment.id !== keepId) {
+            try {
+              await base44.asServiceRole.entities.TrainingAssignment.delete(createdAssignment.id);
+            } catch {
+              /* best-effort */
+            }
+          }
+        }
       }
     }
 
     return Response.json({ success: true, enrolled_users: candidates.length, learning_plan_items: planItems.length });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error('assignAnnualLearningPlan failed:', error);
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
 });

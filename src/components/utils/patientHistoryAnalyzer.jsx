@@ -1,4 +1,8 @@
 import { base44 } from "@/api/base44Client";
+import { formatAge } from "@/lib/age";
+import { parseLocalDate } from "@/lib/dateLocal";
+import { differenceInCalendarDays } from "date-fns";
+import { PATIENT_HISTORY_ROWS } from '@/lib/queryLimits';
 
 /**
  * Comprehensive Patient History Analyzer
@@ -7,24 +11,22 @@ import { base44 } from "@/api/base44Client";
 
 export async function buildComprehensivePatientHistory(patientId) {
   try {
-    const [patient, visits, carePlans, incidents, alerts, tasks] = await Promise.all([
+    const [patient, visits, incidents, alerts, tasks] = await Promise.all([
       base44.entities.Patient.filter({ id: patientId }).then(data => data[0]),
       base44.entities.Visit.filter({ patient_id: patientId }, '-visit_date', 20),
-      base44.entities.CarePlan.filter({ patient_id: patientId }),
       base44.entities.Incident.filter({ patient_id: patientId }, '-incident_date', 10),
-      base44.entities.PatientAlert.filter({ patient_id: patientId, status: 'active' }),
-      base44.entities.Task.filter({ patient_id: patientId, status: { $ne: 'completed' } })
+      base44.entities.PatientAlert.filter({ patient_id: patientId, status: 'active' }, undefined, PATIENT_HISTORY_ROWS),
+      base44.entities.Task.filter({ patient_id: patientId, status: { $ne: 'completed' } }, undefined, PATIENT_HISTORY_ROWS)
     ]);
 
     return {
       patient,
       visits,
-      carePlans,
       incidents,
       alerts,
       tasks,
-      trends: analyzePatientTrends(patient, visits, carePlans),
-      continuityInsights: generateContinuityInsights(visits, carePlans, incidents)
+      trends: analyzePatientTrends(patient, visits),
+      continuityInsights: generateContinuityInsights(visits, incidents)
     };
   } catch (error) {
     console.error('Error building patient history:', error);
@@ -35,11 +37,10 @@ export async function buildComprehensivePatientHistory(patientId) {
 /**
  * Analyze trends in patient data over time
  */
-function analyzePatientTrends(patient, visits, carePlans) {
+function analyzePatientTrends(patient, visits) {
   const trends = {
     vital_trends: {},
     visit_frequency: {},
-    care_plan_progress: {},
     clinical_changes: []
   };
 
@@ -90,33 +91,27 @@ function analyzePatientTrends(patient, visits, carePlans) {
     // Visit frequency analysis
     const recentVisits = visits.slice(0, 5);
     if (recentVisits.length >= 2) {
-      const dates = recentVisits.map(v => new Date(v.visit_date));
+      // Drop visits with a missing/unparseable date: `new Date(undefined)` is an
+      // Invalid Date, which turned every interval into NaN and reported the
+      // patient's visit cadence as "NaN days / variable".
+      const dates = recentVisits.map(v => parseLocalDate(v.visit_date)).filter(Boolean);
       const intervals = [];
       for (let i = 0; i < dates.length - 1; i++) {
-        const daysBetween = Math.floor((dates[i] - dates[i + 1]) / (1000 * 60 * 60 * 24));
-        intervals.push(daysBetween);
+        // Calendar-day difference, not elapsed milliseconds. These are LOCAL
+        // midnights, so a spring-forward day is only 23 hours — dividing by
+        // 86400000 and flooring reported consecutive visits across the DST
+        // change as 0 days apart, understating the cadence and flipping the
+        // consistency verdict.
+        intervals.push(differenceInCalendarDays(dates[i], dates[i + 1]));
       }
-      const avgInterval = intervals.reduce((a, b) => a + b, 0) / intervals.length;
-      trends.visit_frequency = {
-        average_days_between: Math.round(avgInterval),
-        consistency: intervals.every(i => Math.abs(i - avgInterval) < 3) ? 'consistent' : 'variable'
-      };
+      if (intervals.length > 0) {
+        const avgInterval = intervals.reduce((a, b) => a + b, 0) / intervals.length;
+        trends.visit_frequency = {
+          average_days_between: Math.round(avgInterval),
+          consistency: intervals.every(i => Math.abs(i - avgInterval) < 3) ? 'consistent' : 'variable'
+        };
+      }
     }
-  }
-
-  // Care plan progress
-  if (carePlans?.length > 0) {
-    const activeCarePlans = carePlans.filter(cp => cp.status === 'active');
-    const metCarePlans = carePlans.filter(cp => cp.status === 'met');
-    const notMetCarePlans = carePlans.filter(cp => cp.status === 'not_met');
-
-    trends.care_plan_progress = {
-      total: carePlans.length,
-      active: activeCarePlans.length,
-      met: metCarePlans.length,
-      not_met: notMetCarePlans.length,
-      success_rate: carePlans.length > 0 ? Math.round((metCarePlans.length / carePlans.length) * 100) : 0
-    };
   }
 
   // Clinical changes detection
@@ -142,10 +137,9 @@ function analyzePatientTrends(patient, visits, carePlans) {
 /**
  * Generate continuity of care insights
  */
-function generateContinuityInsights(visits, carePlans, incidents) {
+function generateContinuityInsights(visits, incidents) {
   const insights = {
     documentation_consistency: 'unknown',
-    care_plan_alignment: 'unknown',
     incident_patterns: [],
     follow_up_items: [],
     unresolved_issues: []
@@ -158,24 +152,6 @@ function generateContinuityInsights(visits, carePlans, incidents) {
     const allHaveVitals = recentVisits.every(v => v.vital_signs);
     
     insights.documentation_consistency = allHaveNotes && allHaveVitals ? 'consistent' : 'gaps_detected';
-  }
-
-  // Care plan alignment
-  if (visits?.length > 0 && carePlans?.length > 0) {
-    const latestNote = visits[0]?.nurse_notes?.toLowerCase() || '';
-    const carePlanProblems = carePlans
-      .map(cp => (cp.problem || '').toLowerCase())
-      .filter(Boolean);
-
-    const mentionedProblems = carePlanProblems.filter(problem =>
-      latestNote.includes(problem.split(' ')[0])
-    );
-
-    // Guard against divide-by-zero when no care plan has a usable problem string.
-    const alignmentRate = carePlanProblems.length
-      ? mentionedProblems.length / carePlanProblems.length
-      : 0;
-    insights.care_plan_alignment = alignmentRate >= 0.7 ? 'aligned' : 'partial_alignment';
   }
 
   // Incident patterns
@@ -222,20 +198,34 @@ function generateContinuityInsights(visits, carePlans, incidents) {
 }
 
 /**
+ * Whole days on service, counted on LOCAL calendar days. `admission_date` is a
+ * date-only field, so subtracting `new Date()` from its UTC-midnight parse mixed
+ * two different day boundaries and could report a day either side of the truth.
+ * @param {string} admissionDate
+ * @returns {number|string} day count, or "Unknown" when there is no usable date
+ */
+function lengthOfCareDays(admissionDate) {
+  const start = parseLocalDate(admissionDate);
+  if (!start) return "Unknown";
+  // Calendar days, so a DST transition inside the episode can't shift the count.
+  return Math.max(0, differenceInCalendarDays(new Date(), start));
+}
+
+/**
  * Format patient history for AI prompt injection
  */
 export function formatHistoryForAI(history) {
   if (!history) return "";
 
-  const { patient, visits, carePlans, incidents, trends, continuityInsights } = history;
+  const { patient, visits, incidents, trends, continuityInsights } = history;
 
   return `
 COMPREHENSIVE PATIENT HISTORY & TRENDS:
 
 Patient Overview:
 - Name: ${patient?.first_name} ${patient?.last_name}
-- Age: ${patient?.date_of_birth ? new Date().getFullYear() - new Date(patient.date_of_birth).getFullYear() : 'Unknown'}
-- Length of Care: ${patient?.admission_date ? Math.floor((new Date() - new Date(patient.admission_date)) / (1000 * 60 * 60 * 24)) : 'Unknown'} days
+- Age: ${formatAge(patient?.date_of_birth)}
+- Length of Care: ${lengthOfCareDays(patient?.admission_date)} days
 - Status: ${patient?.status}
 
 CLINICAL TRENDS ANALYSIS:
@@ -255,16 +245,8 @@ ${trends?.vital_trends?.oxygen_saturation ? `
 Visit Pattern:
 ${trends?.visit_frequency?.average_days_between ? `- Average ${trends.visit_frequency.average_days_between} days between visits (${trends.visit_frequency.consistency})` : '- Visit frequency data unavailable'}
 
-Care Plan Progress:
-${trends?.care_plan_progress ? `
-- ${trends.care_plan_progress.active} active care plans
-- ${trends.care_plan_progress.met} goals met, ${trends.care_plan_progress.not_met} not met
-- ${trends.care_plan_progress.success_rate}% success rate
-` : '- No care plan data available'}
-
 CONTINUITY OF CARE INSIGHTS:
 - Documentation Consistency: ${continuityInsights?.documentation_consistency}
-- Care Plan Alignment: ${continuityInsights?.care_plan_alignment}
 ${continuityInsights?.incident_patterns?.length > 0 ? `
 - Incident Patterns Detected:
 ${continuityInsights.incident_patterns.map(p => `  • ${p.message}`).join('\n')}
@@ -281,14 +263,6 @@ Visit ${idx + 1} - ${v.visit_date}:
 - Vitals: ${v.vital_signs ? `BP ${v.vital_signs.blood_pressure_systolic}/${v.vital_signs.blood_pressure_diastolic}, HR ${v.vital_signs.heart_rate}, O2 ${v.vital_signs.oxygen_saturation}%` : 'Not recorded'}
 - Key Observations: ${v.nurse_notes ? v.nurse_notes.substring(0, 200) + '...' : 'No notes'}
 `).join('\n') || 'No visit history available'}
-
-ACTIVE CARE PLANS:
-${carePlans?.filter(cp => cp.status === 'active').map(cp => `
-- Problem: ${cp.problem}
-  Goal: ${cp.goal}
-  Interventions: ${cp.interventions?.join(', ') || 'None specified'}
-  Target Date: ${cp.target_date}
-`).join('\n') || 'No active care plans'}
 
 RECENT INCIDENTS/CONCERNS:
 ${incidents?.slice(0, 3).map(inc => `
@@ -346,16 +320,6 @@ export function extractKeyInsights(history) {
       priority: 'medium',
       message: `${continuityInsights.unresolved_issues.length} unresolved issue(s) from previous visit`,
       action: 'Address or document status of previously noted concerns'
-    });
-  }
-
-  // Care plan alignment issues
-  if (continuityInsights?.care_plan_alignment === 'partial_alignment') {
-    insights.push({
-      type: 'care_plan_gap',
-      priority: 'medium',
-      message: 'Not all active care plans addressed in recent documentation',
-      action: 'Ensure all active care plan problems are assessed and documented'
     });
   }
 

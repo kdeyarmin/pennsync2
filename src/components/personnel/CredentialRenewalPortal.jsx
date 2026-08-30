@@ -22,11 +22,21 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { validateFileUpload } from "@/components/utils/security";
-import { format, parseISO, differenceInDays, addMonths } from "date-fns";
+import { format, addMonths } from "date-fns";
+import { PATIENT_HISTORY_ROWS } from '@/lib/queryLimits';
+import { parseLocalDate, formatLocalDate, isPastLocalDueDate } from "@/lib/dateLocal";
+
+/** Calendar-day delta from local midnight today to a date-only value (negative = past). */
+function localDaysUntil(dateStr) {
+  const due = parseLocalDate(dateStr);
+  const todayLocal = new Date();
+  todayLocal.setHours(0, 0, 0, 0);
+  return due ? Math.round((due - todayLocal) / 86400000) : null;
+}
 
 export default function CredentialRenewalPortal({ userId }) {
   const [selectedCredential, setSelectedCredential] = useState(null);
-  const [_showUploadDialog, setShowUploadDialog] = useState(false);
+  const [showUploadDialog, setShowUploadDialog] = useState(false);
   const [renewalData, setRenewalData] = useState({
     uploaded_file_url: "",
     uploaded_file_name: "",
@@ -46,7 +56,7 @@ export default function CredentialRenewalPortal({ userId }) {
 
   const { data: credentials = [] } = useQuery({
     queryKey: ['userCredentials', targetUserId],
-    queryFn: () => base44.entities.PersonnelCredential.filter({ user_id: targetUserId }),
+    queryFn: () => base44.entities.PersonnelCredential.filter({ user_id: targetUserId }, undefined, PATIENT_HISTORY_ROWS),
     enabled: !!targetUserId,
     initialData: [],
   });
@@ -85,49 +95,29 @@ export default function CredentialRenewalPortal({ userId }) {
         throw new Error("Missing required data");
       }
 
-      // Create new credential record for renewal (pending approval)
-      await base44.entities.PersonnelCredential.create({
-        user_id: selectedCredential.user_id,
-        user_name: selectedCredential.user_name,
-        agency_name: selectedCredential.agency_name,
-        item_type: selectedCredential.item_type,
-        title: selectedCredential.title,
-        issuing_organization: selectedCredential.issuing_organization,
-        credential_number: renewalData.credential_number || selectedCredential.credential_number,
-        issued_date: renewalData.issued_date,
-        expiration_date: renewalData.expiration_date,
-        uploaded_file_url: renewalData.uploaded_file_url,
-        uploaded_file_name: renewalData.uploaded_file_name,
-        notes: `Renewal submission for credential ID: ${selectedCredential.id}`,
-        status: 'pending_approval'
+      // The renewal goes through submitPersonnelCredential — the entity's write
+      // RLS is admin-only, and the function pins status=pending_approval,
+      // stamps the renewal note on the old credential, and notifies the admins.
+      await base44.functions.invoke('submitPersonnelCredential', {
+        renews_credential_id: selectedCredential.id,
+        credential: {
+          item_type: selectedCredential.item_type,
+          title: selectedCredential.title,
+          issuing_organization: selectedCredential.issuing_organization,
+          credential_number: renewalData.credential_number || selectedCredential.credential_number,
+          issued_date: renewalData.issued_date,
+          expiration_date: renewalData.expiration_date,
+          uploaded_file_url: renewalData.uploaded_file_url,
+          uploaded_file_name: renewalData.uploaded_file_name,
+          notes: `Renewal submission for credential ID: ${selectedCredential.id}`,
+        },
       });
-
-      // Update old credential to show renewal submitted
-      await base44.entities.PersonnelCredential.update(selectedCredential.id, {
-        notes: (selectedCredential.notes || '') + `\n[Renewal submitted on ${format(new Date(), 'yyyy-MM-dd')}]`
-      });
-
-      // Notify admins
-      const admins = await base44.entities.User.filter({ role: 'admin' });
-      await Promise.all(
-        admins.map(admin =>
-          base44.integrations.Core.SendEmail({
-            to: admin.email,
-            subject: `📋 Credential Renewal Submitted - ${selectedCredential.title}`,
-            body: `A credential renewal has been submitted for approval:
-
-Employee: ${selectedCredential.user_name}
-Credential: ${selectedCredential.title}
-Type: ${selectedCredential.item_type}
-New Expiration: ${format(parseISO(renewalData.expiration_date), 'MMM d, yyyy')}
-
-Please review and approve in the Personnel File dashboard.`
-          })
-        )
-      );
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['userCredentials'] });
+      queryClient.invalidateQueries({ queryKey: ['personnel-credentials'] });
+      queryClient.invalidateQueries({ queryKey: ['pendingCredentials'] });
+      queryClient.invalidateQueries({ queryKey: ['allPersonnelCredentials'] });
       setShowUploadDialog(false);
       setSelectedCredential(null);
       setRenewalData({
@@ -149,22 +139,38 @@ Please review and approve in the Personnel File dashboard.`
     submitRenewalMutation.mutate();
   };
 
-  const today = new Date();
-
   const expiringCredentials = credentials.filter(cred => {
-    if (!cred.expiration_date || cred.status === 'expired') return false;
-    const expDate = parseISO(cred.expiration_date);
-    const daysUntil = differenceInDays(expDate, today);
-    return daysUntil <= 90 && daysUntil >= 0;
-  }).sort((a, b) => new Date(a.expiration_date) - new Date(b.expiration_date));
+    // Exclude rejected/expired/in-flight the same way expiredCredentials does, so a
+    // dead 'rejected' submission doesn't reappear as "Expiring Soon".
+    if (
+      !cred.expiration_date ||
+      cred.status === 'expired' ||
+      cred.status === 'pending_approval' ||
+      cred.status === 'rejected'
+    ) return false;
+    const daysUntil = localDaysUntil(cred.expiration_date);
+    return daysUntil != null && daysUntil <= 90 && daysUntil >= 0;
+  }).sort((a, b) => {
+    const aDate = parseLocalDate(a.expiration_date);
+    const bDate = parseLocalDate(b.expiration_date);
+    return (aDate?.getTime() ?? 0) - (bDate?.getTime() ?? 0);
+  });
 
   const expiredCredentials = credentials.filter(cred => {
     // A pending_approval record is a renewal-in-flight (typically with a future
     // expiration), not a credential the user needs to re-renew — exclude it so it
-    // never surfaces as "Expired / Renew Now".
-    if (!cred.expiration_date || cred.status === 'pending_approval') return false;
-    const expDate = parseISO(cred.expiration_date);
-    return expDate < today;
+    // never surfaces as "Expired / Renew Now". A 'expired' record is one that was
+    // superseded by an approved renewal, and 'rejected' is a dead submission —
+    // neither should reappear as needing renewal (mirrors expiringCredentials).
+    if (
+      !cred.expiration_date ||
+      cred.status === 'pending_approval' ||
+      cred.status === 'expired' ||
+      cred.status === 'rejected'
+    ) return false;
+    // Strictly before today (by calendar day) so a credential expiring TODAY is
+    // "Expiring" only, not listed as Expired as well (which stacked two dialogs).
+    return isPastLocalDueDate(cred.expiration_date);
   });
 
   const pendingRenewals = credentials.filter(cred => cred.status === 'pending_approval');
@@ -226,7 +232,7 @@ Please review and approve in the Personnel File dashboard.`
                 <div key={cred.id} className="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-lg">
                   <div>
                     <h4 className="font-semibold text-slate-900">{cred.title}</h4>
-                    <p className="text-sm text-slate-600">Submitted {format(parseISO(cred.created_date), 'MMM d, yyyy')}</p>
+                    <p className="text-sm text-slate-600">Submitted {formatLocalDate(cred.created_date, { month: 'short', day: 'numeric', year: 'numeric' })}</p>
                   </div>
                   <Badge className="bg-blue-600">Pending Approval</Badge>
                 </div>
@@ -253,7 +259,8 @@ Please review and approve in the Personnel File dashboard.`
           ) : (
             <div className="space-y-3">
               {expiredCredentials.map(cred => {
-                const daysOverdue = Math.abs(differenceInDays(today, parseISO(cred.expiration_date)));
+                const daysUntil = localDaysUntil(cred.expiration_date);
+                const daysOverdue = daysUntil != null ? Math.abs(daysUntil) : 0;
                 
                 return (
                   <div key={cred.id} className="border-l-4 border-l-red-600 bg-red-50 rounded-lg p-4">
@@ -267,15 +274,34 @@ Please review and approve in the Personnel File dashboard.`
                           {cred.issuing_organization} • {cred.item_type}
                         </p>
                         <p className="text-sm text-red-700 font-medium">
-                          Expired {daysOverdue} days ago on {format(parseISO(cred.expiration_date), 'MMM d, yyyy')}
+                          Expired {daysOverdue} days ago on {formatLocalDate(cred.expiration_date, { month: 'short', day: 'numeric', year: 'numeric' })}
                         </p>
                       </div>
-                      <Dialog>
+                      <Dialog
+                        open={showUploadDialog && selectedCredential?.id === cred.id}
+                        onOpenChange={(open) => {
+                          setShowUploadDialog(open);
+                          if (!open) setSelectedCredential(null);
+                        }}
+                      >
                         <DialogTrigger asChild>
                           <Button
                             size="sm"
                             className="bg-red-600 hover:bg-red-700"
-                            onClick={() => setSelectedCredential(cred)}
+                            onClick={() => {
+                              setSelectedCredential(cred);
+                              setShowUploadDialog(true);
+                              // Reset shared renewalData so a file/dates left over
+                              // from a previously opened dialog can't be submitted
+                              // as this credential's renewal.
+                              setRenewalData({
+                                uploaded_file_url: "",
+                                uploaded_file_name: "",
+                                issued_date: format(new Date(), 'yyyy-MM-dd'),
+                                expiration_date: format(addMonths(new Date(), 12), 'yyyy-MM-dd'),
+                                credential_number: ""
+                              });
+                            }}
                           >
                             <Upload className="w-4 h-4 mr-2" />
                             Renew Now
@@ -341,14 +367,16 @@ Please review and approve in the Personnel File dashboard.`
                               <Button
                                 type="button"
                                 variant="outline"
-                                onClick={() => setShowUploadDialog(false)}
+                                onClick={() => {
+                                  setShowUploadDialog(false);
+                                  setSelectedCredential(null);
+                                }}
                               >
                                 Cancel
                               </Button>
                               <Button
                                 type="submit"
                                 disabled={!renewalData.uploaded_file_url || submitRenewalMutation.isPending}
-                                className="bg-green-600 hover:bg-green-700"
                               >
                                 <FileCheck className="w-4 h-4 mr-2" />
                                 Submit for Approval
@@ -363,7 +391,7 @@ Please review and approve in the Personnel File dashboard.`
               })}
 
               {expiringCredentials.map(cred => {
-                const daysUntil = differenceInDays(parseISO(cred.expiration_date), today);
+                const daysUntil = localDaysUntil(cred.expiration_date) ?? 0;
                 
                 return (
                   <div key={cred.id} className={`border-l-4 rounded-lg p-4 ${daysUntil <= 7 ? 'border-l-red-500 bg-red-50' : daysUntil <= 30 ? 'border-l-orange-500 bg-orange-50' : 'border-l-yellow-500 bg-yellow-50'}`}>
@@ -379,16 +407,23 @@ Please review and approve in the Personnel File dashboard.`
                           {cred.issuing_organization} • {cred.item_type}
                         </p>
                         <p className="text-sm text-slate-700">
-                          Expires: {format(parseISO(cred.expiration_date), 'MMM d, yyyy')}
+                          Expires: {formatLocalDate(cred.expiration_date, { month: 'short', day: 'numeric', year: 'numeric' })}
                         </p>
                       </div>
-                      <Dialog>
+                      <Dialog
+                        open={showUploadDialog && selectedCredential?.id === cred.id}
+                        onOpenChange={(open) => {
+                          setShowUploadDialog(open);
+                          if (!open) setSelectedCredential(null);
+                        }}
+                      >
                         <DialogTrigger asChild>
                           <Button
                             size="sm"
                             variant="outline"
                             onClick={() => {
                               setSelectedCredential(cred);
+                              setShowUploadDialog(true);
                               setRenewalData({
                                 uploaded_file_url: "",
                                 uploaded_file_name: "",
@@ -462,14 +497,16 @@ Please review and approve in the Personnel File dashboard.`
                               <Button
                                 type="button"
                                 variant="outline"
-                                onClick={() => setShowUploadDialog(false)}
+                                onClick={() => {
+                                  setShowUploadDialog(false);
+                                  setSelectedCredential(null);
+                                }}
                               >
                                 Cancel
                               </Button>
                               <Button
                                 type="submit"
                                 disabled={!renewalData.uploaded_file_url || submitRenewalMutation.isPending}
-                                className="bg-green-600 hover:bg-green-700"
                               >
                                 <FileCheck className="w-4 h-4 mr-2" />
                                 {submitRenewalMutation.isPending ? "Submitting..." : "Submit for Approval"}

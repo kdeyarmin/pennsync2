@@ -1,75 +1,62 @@
 import { useMemo } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, ArrowRight, FileText } from "lucide-react";
+import { AlertTriangle, ArrowRight } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { getStaffRole } from "@/lib/roles";
+import { PATIENT_HISTORY_ROWS } from '@/lib/queryLimits';
 
 export default function ProfileCompletenessAlert({ user }) {
-  // Care scope, a nursing credential type, and an uploaded license only apply to
-  // nurses. Non-nurse staff (office, social work, spiritual care) would otherwise
-  // be nagged forever for fields that don't pertain to their role.
-  const isNurse = getStaffRole(user) === "nurse";
-
   const { data: credentials = [] } = useQuery({
     queryKey: ['myCredentials', user?.email],
-    queryFn: () => user?.email ? base44.entities.PersonnelCredential.filter({ user_id: user.email }) : Promise.resolve([]),
-    enabled: !!user?.email && isNurse,
+    queryFn: () => user?.email ? base44.entities.PersonnelCredential.filter({ user_id: user.email }, undefined, PATIENT_HISTORY_ROWS) : Promise.resolve([]),
+    enabled: !!user?.email,
     initialData: [],
   });
 
   const validation = useMemo(() => {
     if (!user) return { isComplete: true, missing: [], needsCredentials: false };
 
-    const requiredFields = isNurse
-      ? [
-          { key: 'phone', label: 'Phone Number' },
-          { key: 'care_scope', label: 'Care Scope' },
-          { key: 'credential_type', label: 'Credential Type' },
-        ]
-      : [{ key: 'phone', label: 'Phone Number' }];
+    const requiredFields = [
+      { key: 'phone', label: 'Phone Number' },
+      { key: 'care_scope', label: 'Care Scope' },
+      { key: 'credential_type', label: 'Credential Type' },
+    ];
 
-    const missing = requiredFields.filter(field =>
+    const missing = requiredFields.filter(field => 
       !user[field.key] || user[field.key] === ''
     );
 
-    // Only nurses are asked to upload a license / certifications.
-    const hasActiveCredential = !isNurse || credentials.some(c => c.status === 'approved' || c.status === 'pending_approval');
+    const hasActiveCredential = credentials.some(c => c.status === 'approved' || c.status === 'pending_approval');
 
     return {
       isComplete: missing.length === 0 && hasActiveCredential,
       missing: missing.map(m => m.label),
       needsCredentials: !hasActiveCredential
     };
-  }, [user, credentials, isNurse]);
+  }, [user, credentials]);
 
   if (validation.isComplete) {
     return null;
   }
 
   return (
-    <div className="rounded-xl border border-amber-600 bg-amber-50 p-5 mb-6 shadow-sm">
-      <div className="flex gap-4">
-        <AlertTriangle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
-        <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-amber-900 mb-2">Complete Your Profile</h3>
-          <p className="text-sm text-amber-800 mb-3">
-            {validation.missing.length > 0 && validation.needsCredentials
-              ? `Missing profile info: ${validation.missing.join(', ')} • Upload your license, certifications, and insurance`
-              : validation.missing.length > 0
-              ? `Missing profile info: ${validation.missing.join(', ')}`
-              : "Upload your license, certifications, and insurance"}
-          </p>
-          <Link to="/UserSettings" className="inline-block">
-            <Button size="sm" className="gap-2 min-h-[40px] bg-amber-600 hover:bg-amber-700">
-              <FileText className="h-4 w-4" />
-              Update Profile & Upload Credentials
-              <ArrowRight className="h-4 w-4" />
-            </Button>
-          </Link>
-        </div>
-      </div>
+    <div className="rounded-lg border border-amber-400 bg-amber-50 px-4 py-3 mb-4 flex items-center gap-3">
+      <AlertTriangle className="h-4 w-4 text-amber-600 flex-shrink-0" />
+      <p className="text-sm text-amber-800 flex-1 min-w-0">
+        <span className="font-semibold">Complete your profile: </span>
+        {validation.missing.length > 0 && validation.needsCredentials
+          ? `${validation.missing.join(', ')} • Upload credentials`
+          : validation.missing.length > 0
+          ? validation.missing.join(', ')
+          : "Upload your license, certifications, and insurance"}
+      </p>
+      <Link to="/UserSettings" className="flex-shrink-0">
+        <Button size="sm" variant="outline" className="gap-1.5 text-xs h-8 px-3">
+          Update
+          <ArrowRight className="h-3 w-3" />
+        </Button>
+      </Link>
     </div>
   );
 }

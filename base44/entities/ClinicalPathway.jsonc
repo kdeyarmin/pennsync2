@@ -3,12 +3,97 @@
   "type": "object",
   "properties": {
     "pathway_name": {
+      "type": "string"
+    },
+    "condition": {
       "type": "string",
-      "description": "Name of the clinical pathway"
+      "description": "Primary condition this pathway addresses"
+    },
+    "icd10_codes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
     },
     "description": {
+      "type": "string"
+    },
+    "phases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "phase_name": {
+            "type": "string"
+          },
+          "duration_days": {
+            "type": "number"
+          },
+          "goals": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "interventions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "discipline": {
+                  "type": "string"
+                },
+                "intervention": {
+                  "type": "string"
+                },
+                "frequency": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "milestones": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "typical_los": {
+      "type": "number",
+      "description": "Typical length of service in days"
+    },
+    "evidence_level": {
       "type": "string",
-      "description": "Description of what this pathway addresses"
+      "enum": [
+        "A",
+        "B",
+        "C",
+        "Expert Opinion"
+      ]
+    },
+    "references": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    },
+    "usage_count": {
+      "type": "number",
+      "default": 0
+    },
+    "success_rate": {
+      "type": "number",
+      "description": "% of patients achieving pathway goals"
+    },
+    "created_by": {
+      "type": "string"
     },
     "trigger_conditions": {
       "type": "array",
@@ -16,35 +101,25 @@
         "type": "object",
         "properties": {
           "type": {
-            "type": "string",
-            "enum": [
-              "diagnosis_code",
-              "diagnosis_keyword",
-              "clinical_condition",
-              "functional_score",
-              "comorbidity"
-            ]
+            "type": "string"
           },
           "value": {
             "type": "string"
           },
           "operator": {
-            "type": "string",
-            "enum": [
-              "equals",
-              "contains",
-              "starts_with",
-              "greater_than",
-              "less_than"
-            ]
+            "type": "string"
           }
         }
       },
-      "description": "Conditions that trigger this pathway"
+      "description": "Conditions (diagnosis code/keyword) that trigger this pathway"
     },
     "pdgm_clinical_group": {
       "type": "string",
-      "description": "Expected PDGM clinical group for this pathway"
+      "description": "Target PDGM clinical grouping (e.g. MMTA_Cardiac_Circulatory)"
+    },
+    "priority_level": {
+      "type": "string",
+      "description": "Priority level of this pathway (e.g. high, medium, low)"
     },
     "documentation_prompts": {
       "type": "array",
@@ -64,127 +139,43 @@
             }
           },
           "priority": {
-            "type": "string",
-            "enum": [
-              "critical",
-              "high",
-              "medium",
-              "low"
-            ]
+            "type": "string"
           }
         }
       },
-      "description": "Specific documentation to capture"
+      "description": "Documentation prompts to surface for this pathway"
     },
     "rescore_opportunities": {
       "type": "array",
       "items": {
-        "type": "object",
-        "properties": {
-          "m_item": {
-            "type": "string"
-          },
-          "typical_score_range": {
-            "type": "string"
-          },
-          "documentation_to_support": {
-            "type": "string"
-          },
-          "revenue_impact": {
-            "type": "string"
-          }
-        }
+        "type": "object"
       },
-      "description": "Common rescore opportunities for this pathway"
+      "description": "Opportunities to improve PDGM scoring"
     },
     "recommended_tasks": {
       "type": "array",
       "items": {
-        "type": "object",
-        "properties": {
-          "task_title": {
-            "type": "string"
-          },
-          "task_description": {
-            "type": "string"
-          },
-          "task_type": {
-            "type": "string",
-            "enum": [
-              "call",
-              "notify",
-              "schedule",
-              "order",
-              "coordinate",
-              "document",
-              "safety",
-              "followup",
-              "other"
-            ]
-          },
-          "priority": {
-            "type": "string",
-            "enum": [
-              "high",
-              "medium",
-              "low"
-            ]
-          },
-          "due_timeframe": {
-            "type": "string",
-            "enum": [
-              "today",
-              "24_hours",
-              "48_hours",
-              "this_week",
-              "next_visit"
-            ]
-          }
-        }
+        "type": "object"
       },
-      "description": "Auto-generated tasks for this pathway"
+      "description": "Recommended tasks for this pathway"
     },
     "comorbidity_checklist": {
       "type": "array",
       "items": {
-        "type": "string"
+        "type": "object"
       },
-      "description": "Common comorbidities to check for"
+      "description": "Comorbidity items to check for this pathway"
     },
     "functional_focus_areas": {
       "type": "array",
       "items": {
-        "type": "string"
+        "type": "object"
       },
-      "description": "Key functional areas to assess thoroughly"
-    },
-    "is_active": {
-      "type": "boolean",
-      "default": true,
-      "description": "Whether this pathway is currently active"
-    },
-    "priority_level": {
-      "type": "string",
-      "enum": [
-        "critical",
-        "high",
-        "medium",
-        "low"
-      ],
-      "default": "medium",
-      "description": "Overall pathway priority"
+      "description": "Functional focus areas for this pathway"
     }
   },
   "required": [
     "pathway_name",
-    "trigger_conditions"
-  ],
-  "rls": {
-    "read": {},
-    "write": {
-      "user_condition": {
-        "role": "admin"
-      }
-    }
-  }
+    "condition"
+  ]
 }

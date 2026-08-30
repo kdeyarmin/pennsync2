@@ -1,5 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { agencyQueryKey } from '@/lib/agencyRoster';
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,7 +10,7 @@ import {
   CheckCircle2, Circle, AlertTriangle, ArrowRight, Activity, Loader2, Rocket, ListChecks,
 } from "lucide-react";
 import { toast } from "sonner";
-import { buildIntegrationSteps, summarizeSteps, summarize } from "@/components/admin/twilioSetup";
+import { buildIntegrationSteps, summarizeSteps, summarize } from "@/components/admin/telnyxSetup";
 
 /**
  * TelnyxSetupProgress — the at-a-glance "command center" at the top of the
@@ -20,7 +21,7 @@ import { buildIntegrationSteps, summarizeSteps, summarize } from "@/components/a
  * as the secret panel and the provisioning panel, so it updates automatically as
  * the admin saves credentials, edits settings, or provisions a nurse below — no
  * duplicated state. The readiness math lives in the unit-tested
- * `twilioSetup` helpers; this component only renders it and scrolls to the
+ * `telnyxSetup` helpers; this component only renders it and scrolls to the
  * relevant section when a step's "Go" button is clicked.
  */
 
@@ -38,7 +39,18 @@ function scrollToAnchor(anchor) {
   if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
-function StepRow({ step }) {
+/**
+ * Where a step's "Go" button should send the admin. When the page groups these
+ * panels into collapsible stages it passes `onNavigate`, which expands the
+ * owning stage first — a collapsed stage's anchor is hidden, so scrolling
+ * straight to it would land on nothing. Standalone use keeps the plain scroll.
+ */
+function navigateTo(anchor, onNavigate) {
+  if (onNavigate) onNavigate(anchor);
+  else scrollToAnchor(anchor);
+}
+
+function StepRow({ step, onNavigate }) {
   const meta = STEP_META[step.status] || STEP_META.todo;
   const { Icon } = meta;
   const kindLabel = KIND_LABEL[step.kind];
@@ -64,7 +76,7 @@ function StepRow({ step }) {
           variant="ghost"
           size="sm"
           className="h-7 px-2 text-indigo-600 hover:text-indigo-700 flex-shrink-0"
-          onClick={() => scrollToAnchor(step.anchor)}
+          onClick={() => navigateTo(step.anchor, onNavigate)}
         >
           Go <ArrowRight className="w-3.5 h-3.5 ml-1" />
         </Button>
@@ -73,9 +85,9 @@ function StepRow({ step }) {
   );
 }
 
-export default function TelnyxSetupProgress() {
+export default function TelnyxSetupProgress({ onStepsChange, onNavigate } = {}) {
   // Shared query keys → this card and the panels below read/write one cache.
-  const { data: secretStatus, isLoading: secretLoading } = useQuery({
+  const { data: secretStatus, isLoading: secretLoading, isFetched: secretFetched } = useQuery({
     queryKey: ["telnyx-secret-status"],
     queryFn: async () => {
       const res = await base44.functions.invoke("getTelnyxSecretStatus", {});
@@ -84,17 +96,28 @@ export default function TelnyxSetupProgress() {
     refetchOnWindowFocus: false,
   });
 
-  const { data: settingsArr = [] } = useQuery({
-    queryKey: ["agency-settings"],
-    queryFn: () => base44.entities.AgencySettings.list("-created_date", 1),
-    refetchOnWindowFocus: false,
-    initialData: [],
+  const { data: currentUser } = useQuery({
+    queryKey: ["currentUser"],
+    queryFn: () => base44.auth.me(),
   });
-  const settings = settingsArr[0];
+  const { data: settings = null, isFetched: settingsFetched } = useQuery({
+    queryKey: ["agencySettings", currentUser?.agency_name || null],
+    queryFn: async () => {
+      const { fetchCallerAgencySettings } = await import("@/lib/agencySettings");
+      return fetchCallerAgencySettings(currentUser?.agency_name);
+    },
+    enabled: !!currentUser,
+    refetchOnWindowFocus: false,
+  });
 
-  const { data: users = [] } = useQuery({
-    queryKey: ["phone-users"],
-    queryFn: () => base44.entities.User.list("full_name", 200),
+  const { data: users = [], isFetched: usersFetched } = useQuery({
+    queryKey: ["phone-users", agencyQueryKey(currentUser)],
+    queryFn: async () => {
+      const _rows = await base44.entities.User.list("full_name", 200);
+      const { filterUsersByCallerAgency } = await import("@/lib/agencyScope");
+      return filterUsersByCallerAgency(_rows, currentUser);
+    },
+    enabled: !!currentUser,
     initialData: [],
   });
 
@@ -126,8 +149,30 @@ export default function TelnyxSetupProgress() {
   );
   const progress = useMemo(() => summarizeSteps(steps), [steps]);
 
+  // Publish the computed steps so a parent can group the panels below into
+  // stages without re-running these queries or re-deriving readiness — one
+  // source of truth for "what's done", shared by the checklist and the stages.
+  // `ready` matters: on the very first render every query is still in flight,
+  // so buildIntegrationSteps returns a full checklist derived from undefined
+  // data — every step looks unfinished. A parent that froze its layout on that
+  // would open every stage on an already-configured install and never correct
+  // itself. Publish whether the underlying queries have actually settled.
+  const stepsReady = Boolean(secretFetched && settingsFetched && usersFetched);
+  useEffect(() => {
+    if (onStepsChange) onStepsChange(steps, { ready: stepsReady, secretStatus });
+  }, [steps, stepsReady, secretStatus, onStepsChange]);
+
+  // Persistent surfacing of a rejected Telnyx API key. The live test flags this
+  // as the `telnyx_api_live` check failing (HTTP 401) even though the key is
+  // "configured" — a transient toast is easy to miss, so keep it on-screen until
+  // a valid key is saved and the test re-run.
+  const liveApiRejected = useMemo(() => {
+    const check = (liveResult?.checks || []).find((c) => c.id === "telnyx_api_live");
+    return check && check.status === "fail" ? check : null;
+  }, [liveResult]);
+
   return (
-    <Card id="twilio-overview" className="scroll-mt-24 border-indigo-100">
+    <Card id="telnyx-overview" className="scroll-mt-24 border-indigo-100">
       <CardHeader>
         <CardTitle className="flex items-center justify-between gap-2">
           <span className="flex items-center gap-2">
@@ -152,6 +197,27 @@ export default function TelnyxSetupProgress() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        {liveApiRejected && (
+          <div className="flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 p-3">
+            <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-red-900">Telnyx rejected your API key</p>
+              <p className="text-xs text-red-700 mt-0.5">
+                {liveApiRejected.detail} Texting, voice, and fax will fail until a valid key is saved.
+                Paste a current Telnyx API key in the API key section below, then re-run the live test.
+              </p>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="mt-2 h-7 border-red-300 text-red-700 hover:bg-red-100"
+                onClick={() => navigateTo("telnyx-secret", onNavigate)}
+              >
+                Update API key <ArrowRight className="w-3.5 h-3.5 ml-1" />
+              </Button>
+            </div>
+          </div>
+        )}
         <div>
           <div className="flex items-center justify-between mb-1">
             <span className="text-xs font-medium text-slate-600">Required setup</span>
@@ -172,7 +238,7 @@ export default function TelnyxSetupProgress() {
               type="button"
               size="sm"
               className="bg-indigo-600 hover:bg-indigo-700 flex-shrink-0"
-              onClick={() => scrollToAnchor(progress.nextStep.anchor)}
+              onClick={() => navigateTo(progress.nextStep.anchor, onNavigate)}
             >
               Take me there <ArrowRight className="w-3.5 h-3.5 ml-1" />
             </Button>
@@ -185,7 +251,7 @@ export default function TelnyxSetupProgress() {
         )}
 
         <div className="divide-y divide-slate-100">
-          {steps.map((step) => <StepRow key={step.id} step={step} />)}
+          {steps.map((step) => <StepRow key={step.id} step={step} onNavigate={onNavigate} />)}
         </div>
 
         <div className="flex items-center justify-between gap-2 flex-wrap border-t pt-3">

@@ -1,5 +1,14 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
+// <<<BEGIN SHARED HELPER: requireActiveUser — generated, edit base44/_shared/backendHelpers.mjs>>>
+const isDeactivatedUser = (u) => !!u && u.is_active === false;
+const DEACTIVATED_USER_RESPONSE = () => Response.json(
+  { error: 'Unauthorized - account is deactivated' },
+  { status: 403 },
+);
+// <<<END SHARED HELPER: requireActiveUser>>>
+
+
 // ---------------------------------------------------------------------------
 // Patient-import helpers (inlined — backend functions deploy independently and
 // cannot import local files). Pure + deterministic.
@@ -158,6 +167,14 @@ function buildExistingLookups(existingPatients) {
   const existingByMrn = new Map();
   const existingByNameDob = new Map();
   for (const p of existingPatients || []) {
+    // Merged losers keep their MRN forever — including them made every future
+    // row for that MRN error "Multiple existing patients share this MRN"
+    // (the survivor + the archived loser both matched). Their records belong
+    // to the survivor now, so they must never be a match target. Archived
+    // DISCHARGED patients stay matchable: the discharge path reports them as
+    // "already discharged — no change" and a census row for one flags a
+    // possible readmission instead of minting a duplicate chart.
+    if (p?.status === 'merged') continue;
     pushToLookup(existingByMrn, normalizeMrn(p.medical_record_number), p);
     pushToLookup(existingByNameDob, getNameDobKey(p), p);
   }
@@ -172,9 +189,9 @@ function parseUploadedPatient(row, rowNumber) {
   const middle_name = firstOf(row, ['middle_name', 'middlename', 'middle', 'mi']) || parsedName.middle_name;
   const medical_record_number = firstOf(row, ['medical_record_number', 'mrn', 'record_number', 'patient_id', 'chart_number']);
   const date_of_birth = normalizeDob(firstOf(row, ['date_of_birth', 'dob', 'birth_date', 'birthdate']));
-  const admission_date = normalizeDob(firstOf(row, ['admission_date', 'soc_date', 'start_of_care', 'admit_date']));
+  const admission_date = normalizeDob(firstOf(row, ['admitted_date', 'admission_date', 'soc_date', 'start_of_care', 'admit_date']));
   const discharge_date = normalizeDob(firstOf(row, ['discharge_date', 'dc_date', 'discharged_on']));
-  const rawStatus = firstOf(row, ['status', 'patient_status']).toLowerCase();
+  const rawStatus = firstOf(row, ['current_admission_status', 'status', 'patient_status']).toLowerCase();
   // Constrain to the Patient.status enum (active/discharged/hospitalized/merged);
   // an arbitrary CSV value would be written verbatim and silently dropped. Unknown
   // values map to '' so the Patient.status default ('active') applies intentionally.
@@ -182,12 +199,12 @@ function parseUploadedPatient(row, rowNumber) {
     : rawStatus.includes('hospital') ? 'hospitalized'
     : rawStatus.includes('active') ? 'active'
     : '';
-  const payor = firstOf(row, ['payor', 'payer', 'insurance', 'primary_insurance']);
+  const payor = firstOf(row, ['primary_payor', 'payor', 'payer', 'insurance', 'primary_insurance']);
   const primary_diagnosis = firstOf(row, ['primary_diagnosis', 'diagnosis', 'dx', 'primary_dx']);
   const secondaryRaw = firstOf(row, ['secondary_diagnoses', 'secondary_diagnosis', 'other_diagnoses']);
   const secondary_diagnoses = secondaryRaw ? secondaryRaw.split(/[;|]/).map((s) => s.trim()).filter(Boolean) : [];
   const phone = firstOf(row, ['phone', 'phone_number', 'home_phone', 'primary_phone']);
-  const address = firstOf(row, ['address', 'street_address', 'home_address']);
+  const address = firstOf(row, ['addr_1_care', 'care_address_1', 'address', 'street_address', 'home_address']);
 
   const patientLabel = `${first_name} ${last_name}`.trim() + (medical_record_number ? ` (MRN ${medical_record_number})` : '') + ` [row ${rowNumber}]`;
 
@@ -212,6 +229,22 @@ function buildUploadKeys(patient) {
 
 // Resolve a parsed patient against the existing lookups.
 // Returns { match, matchedBy } or { error } when it can't be safely verified.
+// An MRN match must AGREE with the row's name when the row carries one — a
+// single typo'd MRN digit used to match (and discharge/archive) whichever
+// patient owned that MRN, name unchecked. Different last names are a conflict
+// unless the first names agree exactly (married-name change). Mirrors
+// patientImportUtils.js.
+const foldNamePart = (v) => String(v || '').toLowerCase().replace(/[^a-z]/g, '');
+function mrnNameConflict(row, rec) {
+  const rowLast = foldNamePart(row.last_name);
+  const recLast = foldNamePart(rec?.last_name);
+  if (!rowLast || !recLast) return false;
+  if (rowLast === recLast || rowLast.includes(recLast) || recLast.includes(rowLast)) return false;
+  const rowFirst = foldNamePart(row.first_name);
+  const recFirst = foldNamePart(rec?.first_name);
+  return !(rowFirst && recFirst && rowFirst === recFirst);
+}
+
 function resolveMatch(patient, existingByMrn, existingByNameDob) {
   const mrn = normalizeMrn(patient.medical_record_number);
   const nameDobKey = getNameDobKey(patient);
@@ -229,6 +262,11 @@ function resolveMatch(patient, existingByMrn, existingByNameDob) {
   if (mrnMatch && nameDobMatch && mrnMatch.id !== nameDobMatch.id) {
     return { error: 'MRN matched one patient, but name and DOB matched a different patient.' };
   }
+  if (mrnMatch && !nameDobMatch && mrnNameConflict(patient, mrnMatch)) {
+    return {
+      error: `MRN belongs to ${mrnMatch.first_name || ''} ${mrnMatch.last_name || ''} but this row names a different patient — verify the MRN before importing.`.trim(),
+    };
+  }
   if (!mrn && !nameDobKey) {
     return { error: 'Cannot safely verify this patient. Provide an MRN or a name with DOB.' };
   }
@@ -238,12 +276,11 @@ function resolveMatch(patient, existingByMrn, existingByNameDob) {
   };
 }
 
-// SSRF guard: only fetch https URLs on public hosts, never internal IPs /
-// metadata. Set FILE_URL_ALLOWED_HOSTS (comma-separated) to restrict to your
-// storage host(s). Set FILE_URL_STRICT=true to make that allowlist MANDATORY —
-// with strict on and no allowlist configured, all external fetches are rejected
-// (fully closes the SSRF surface) rather than allowing any public host.
+// SSRF guard: only fetch https URLs on the app's own storage/app hosts, never
+// internal IPs / metadata. The allowlist is hardcoded (always-on, fail-closed)
+// rather than env-configured; add a host here if file storage ever moves.
 // (Allowlisting also mitigates DNS rebinding.)
+const FILE_URL_ALLOWED_HOSTS = ['qtrypzzcjebvfcihiynt.supabase.co', 'base44.app', 'base44.io'];
 function isSafeFetchUrl(raw) {
   let u;
   try { u = new URL(String(raw)); } catch { return false; }
@@ -256,15 +293,30 @@ function isSafeFetchUrl(raw) {
     const a = +m[1], b = +m[2];
     if (a === 10 || a === 127 || (a === 169 && b === 254) || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168)) return false;
   }
-  const allow = Deno.env.get('FILE_URL_ALLOWED_HOSTS');
-  const hosts = (allow || '').split(',').map((h) => h.trim().toLowerCase()).filter(Boolean);
-  if (hosts.length > 0) {
-    if (!hosts.some((h) => host === h || host.endsWith('.' + h))) return false;
-  } else if (Deno.env.get('FILE_URL_STRICT') === 'true') {
-    // Strict mode with no allowlist configured: fail closed (allow nothing).
-    return false;
-  }
+  if (!FILE_URL_ALLOWED_HOSTS.some((h) => host === h || host.endsWith('.' + h))) return false;
   return true;
+}
+
+// Fetch that re-validates every redirect hop against isSafeFetchUrl. With the
+// default redirect:'follow' the guard only checks the FIRST URL, so an
+// allowlisted host that 3xx-redirects to an internal/metadata IP would still be
+// fetched (SSRF). Returns null if a hop resolves to a disallowed host.
+async function safeFetchFollow(initialUrl) {
+  let response;
+  let nextUrl = initialUrl;
+  for (let hop = 0; hop < 4; hop++) {
+    response = await fetch(nextUrl, { redirect: 'manual' });
+    if (response.status >= 300 && response.status < 400) {
+      const location = response.headers.get('location');
+      if (!location) break;
+      const resolved = new URL(location, nextUrl).toString();
+      if (!isSafeFetchUrl(resolved)) return null;
+      nextUrl = resolved;
+      continue;
+    }
+    break;
+  }
+  return response;
 }
 
 const runInBatches = async (items, batchSize, worker) => {
@@ -278,14 +330,28 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
+    if (isDeactivatedUser(user)) return DEACTIVATED_USER_RESPONSE();
 
     if (!user) {
       return Response.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    if (user.role !== 'admin') {
+    const isAdminLike = user.role === 'admin'
+      || user.account_type === 'agency_admin'
+      || user.account_type === 'super_admin';
+    if (!isAdminLike) {
       return Response.json({ success: false, error: 'Forbidden: Admin access required' }, { status: 403 });
     }
+    // agency_admin without agency_name must not fall through to platform-wide
+    // Patient.list/create (isAgencyScoped below requires a truthy agency_name).
+    if (user.account_type === 'agency_admin' && !user.agency_name) {
+      return Response.json({ success: false, error: 'Forbidden: agency_name is required.' }, { status: 403 });
+    }
+    // Facility admins with an agency may only import/match patients in their
+    // agency. Platform-wide: super_admin or role:admin without agency_name.
+    const isAgencyScoped = user.account_type !== 'super_admin'
+      && user.agency_name
+      && (user.account_type === 'agency_admin' || user.role === 'admin');
 
     const body = await req.json();
     const reportType = body.report_type === 'discharge_report' ? 'discharge_report' : 'active_census';
@@ -297,7 +363,10 @@ Deno.serve(async (req) => {
 
     if (!fileContent && body.file_url) {
       if (!isSafeFetchUrl(body.file_url)) return Response.json({ success: false, error: 'Invalid or disallowed file_url' }, { status: 400 });
-      const fileResponse = await fetch(body.file_url);
+      const fileResponse = await safeFetchFollow(body.file_url);
+      if (!fileResponse) {
+        return Response.json({ success: false, error: 'Redirect to a disallowed host blocked' }, { status: 400 });
+      }
       if (!fileResponse.ok) {
         return Response.json({ success: false, error: 'Failed to read the uploaded file' }, { status: 400 });
       }
@@ -321,8 +390,32 @@ Deno.serve(async (req) => {
       data: buildRowObject(headers, cols),
     }));
 
-    const existingPatients = await base44.asServiceRole.entities.Patient.list('-created_date', 2000);
-    const { existingByMrn, existingByNameDob } = buildExistingLookups(existingPatients);
+    // Build the dedup source from ALL patients, not just the newest page. A
+    // returning patient whose record isn't in the fetched window would otherwise
+    // miss the match and be re-created as a duplicate chart. Page through in
+    // 5000-row chunks (the SDK per-request max) until a short page ends the roster.
+    const PATIENT_PAGE = 5000;
+    const existingPatients = [];
+    for (let skip = 0; ; skip += PATIENT_PAGE) {
+      const page = await base44.asServiceRole.entities.Patient.list('-created_date', PATIENT_PAGE, skip);
+      if (!Array.isArray(page) || page.length === 0) break;
+      existingPatients.push(...page);
+      if (page.length < PATIENT_PAGE) break;
+    }
+    let scopedPatients = existingPatients;
+    if (isAgencyScoped) {
+      const agencyUsers = await base44.asServiceRole.entities.User.list('-created_date', 5000).catch(() => []);
+      const agencyEmails = new Set(
+        (agencyUsers || [])
+          .filter((u) => u.agency_name === user.agency_name && u.email)
+          .map((u) => u.email),
+      );
+      scopedPatients = existingPatients.filter((p) =>
+        (p.created_by && agencyEmails.has(p.created_by))
+        || (Array.isArray(p.assigned_nurses) && p.assigned_nurses.some((e) => agencyEmails.has(e)))
+      );
+    }
+    const { existingByMrn, existingByNameDob } = buildExistingLookups(scopedPatients);
 
     const results = {
       reportType,
@@ -396,11 +489,18 @@ Deno.serve(async (req) => {
         if (matchResult.match) {
           results.matchedExisting++;
           results.noChanges++;
+          // An ARCHIVED/discharged chart on an active-census row means the
+          // patient is back — silently reporting "already in system" hid the
+          // readmission. Flag it for review instead (this import never
+          // reactivates automatically).
+          const archivedMatch = matchResult.match.is_archived || matchResult.match.status === 'discharged';
           results.plan.push({
             row: rawRow.rowNumber,
-            action: 'matched',
+            action: archivedMatch ? 'needs_review' : 'matched',
             patient: patient.patientLabel,
-            detail: `Already in system — matched by ${matchResult.matchedBy} to ${existingLabel(matchResult.match)}`,
+            detail: archivedMatch
+              ? `On the active census but the chart is ${matchResult.match.status || 'archived'} (matched by ${matchResult.matchedBy} to ${existingLabel(matchResult.match)}) — possible readmission, restore/reactivate the chart manually`
+              : `Already in system — matched by ${matchResult.matchedBy} to ${existingLabel(matchResult.match)}`,
           });
           continue;
         }
@@ -425,6 +525,10 @@ Deno.serve(async (req) => {
             address: patient.address || undefined,
             care_type: 'home_health',
             is_archived: false,
+            // Bind new charts to the importing admin so agency-scoped RLS /
+            // function gates can attribute the patient to this tenant.
+            assigned_nurses: user.email ? [user.email] : undefined,
+            created_by: user.email || undefined,
           },
         });
         continue;
@@ -515,9 +619,10 @@ Deno.serve(async (req) => {
       results,
     });
   } catch (error) {
+    console.error('processPatientFileUpdate failed:', error);
     return Response.json({
       success: false,
-      error: error.message,
+      error: 'Internal server error',
     }, { status: 500 });
   }
 });

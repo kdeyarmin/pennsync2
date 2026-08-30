@@ -27,6 +27,7 @@ import {
   AlertTriangle
 } from "lucide-react";
 import { toast } from 'sonner';
+import { escapeHtml } from "@/lib/escapeHtml";
 
 export default function EducationMaterialGenerator({ patient, teachBackHistory = [], onMaterialGenerated }) {
   const [searchTopic, setSearchTopic] = useState("");
@@ -137,7 +138,7 @@ CULTURAL CONSIDERATIONS (${culturalBackground.replace(/_/g, ' ')}):
       }
 
       const result = await ai.run({
-        model: "claude_sonnet_4_6",
+        model: "automatic",
         prompt: `You are a patient education specialist creating PERSONALIZED, easy-to-understand health education materials for home health and hospice patients.
 
 TOPIC: ${topic}
@@ -238,16 +239,13 @@ Return JSON:
 
   const handlePrint = () => {
     if (generatedContent) {
-      const escapeHtml = (str) => {
-        if (str == null) return '';
-        return String(str)
-          .replace(/&/g, '&amp;')
-          .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;')
-          .replace(/"/g, '&quot;')
-          .replace(/'/g, '&#39;');
-      };
       const printWindow = window.open('', '_blank');
+      // Popup blockers and installed-app webviews (iOS standalone/WKWebView)
+      // return null here — bail with a hint instead of throwing on .document.
+      if (!printWindow) {
+        toast.error('Unable to open the print view. Please allow pop-ups, or copy the material instead.');
+        return;
+      }
       printWindow.document.write(`
         <html>
           <head>

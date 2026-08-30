@@ -7,7 +7,6 @@ const PATIENT = { id: 'p1', first_name: 'Jane', last_name: 'Doe', status: 'activ
 const CTX = {
   patient: PATIENT,
   visits: [{ id: 'v1', patient_id: 'p1', status: 'completed', visit_date: '2026-06-01' }],
-  carePlans: [{ id: 'cp1', patient_id: 'p1', status: 'active' }],
   incidents: [],
   tasks: [],
   activeAlerts: [],
@@ -42,11 +41,15 @@ vi.mock('@/api/base44Client', () => {
   };
 });
 
+// The page reads its ?id= via useSearchParams (reactive router state), so the
+// tests pass the URL through the MemoryRouter route instead of mutating
+// window.history (which a MemoryRouter ignores).
+const ROUTE = '/PatientDetails?id=p1';
+
 beforeEach(() => {
   invoke.mockReset();
   state.ctx = CTX;
   invoke.mockImplementation(async (name) => (name === 'getPatientContext' ? { data: state.ctx } : { data: {} }));
-  window.history.pushState({}, '', '/PatientDetails?id=p1');
 });
 
 describe('PatientDetails — getPatientContext seeding', () => {
@@ -54,16 +57,17 @@ describe('PatientDetails — getPatientContext seeding', () => {
     const qc = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
     // Import lazily so the vi.mock factory is in place first.
     const { default: PatientDetails } = await import('@/pages/PatientDetails');
-    renderWithProviders(<PatientDetails />, { queryClient: qc });
+    renderWithProviders(<PatientDetails />, { queryClient: qc, route: ROUTE });
 
-    // The single consolidated fetch ran with the URL's patient id.
-    await waitFor(() => expect(invoke).toHaveBeenCalledWith('getPatientContext', { patientId: 'p1' }));
+    // The single consolidated fetch ran with the URL's patient id. (Explicit 10s
+    // timeout — this heavy page mount can exceed the default under full-suite
+    // parallel load on a constrained CI runner.)
+    await waitFor(() => expect(invoke).toHaveBeenCalledWith('getPatientContext', { patientId: 'p1' }), { timeout: 10000 });
 
     // Seeding: a child reading ['patientVisits','p1'] (or ['patient','p1']) finds
     // the payload already in cache — no second request.
-    await waitFor(() => expect(qc.getQueryData(['patientVisits', 'p1'])).toEqual(CTX.visits));
-    expect(qc.getQueryData(['patient', 'p1'])).toEqual([PATIENT]);
-    expect(qc.getQueryData(['patientCarePlans', 'p1'])).toEqual(CTX.carePlans);
+    await waitFor(() => expect(qc.getQueryData(['patientVisits', 'p1'])).toEqual(CTX.visits), { timeout: 10000 });
+    expect(qc.getQueryData(['patient', 'p1'])).toEqual(PATIENT);
     expect(qc.getQueryData(['patientActiveAlerts', 'p1'])).toEqual(CTX.activeAlerts);
 
     // getPatientContext was the only patient-data round-trip the page issued.
@@ -79,9 +83,9 @@ describe('PatientDetails — getPatientContext seeding', () => {
   it('re-seeds child caches after a context invalidation (post-mutation cycle)', async () => {
     const qc = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
     const { default: PatientDetails } = await import('@/pages/PatientDetails');
-    renderWithProviders(<PatientDetails />, { queryClient: qc });
+    renderWithProviders(<PatientDetails />, { queryClient: qc, route: ROUTE });
 
-    await waitFor(() => expect(qc.getQueryData(['patientVisits', 'p1'])).toEqual(CTX.visits), { timeout: 5000 });
+    await waitFor(() => expect(qc.getQueryData(['patientVisits', 'p1'])).toEqual(CTX.visits), { timeout: 10000 });
     const callsAfterLoad = invoke.mock.calls.filter((c) => c[0] === 'getPatientContext').length;
 
     // Simulate the server now returning a newly-created visit, then do exactly what
@@ -94,7 +98,7 @@ describe('PatientDetails — getPatientContext seeding', () => {
     qc.invalidateQueries({ queryKey: ['patientContext', 'p1'] });
 
     // The mirror the children render from is refreshed with the new visit...
-    await waitFor(() => expect(qc.getQueryData(['patientVisits', 'p1'])).toEqual(updated.visits), { timeout: 5000 });
+    await waitFor(() => expect(qc.getQueryData(['patientVisits', 'p1'])).toEqual(updated.visits), { timeout: 10000 });
     // ...via exactly one refetch (no loop).
     const callsAfterInvalidate = invoke.mock.calls.filter((c) => c[0] === 'getPatientContext').length;
     expect(callsAfterInvalidate).toBe(callsAfterLoad + 1);

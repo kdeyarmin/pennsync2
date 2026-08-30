@@ -18,7 +18,7 @@ export default function AIICD10Suggester({ onCodesSelected }) {
     
     try {
       const result = await ai.run({
-        model: "claude_opus_4_8",
+        model: "automatic",
         prompt: `You are an expert in ICD-10 medical coding. Based on the following clinical description, suggest the most appropriate ICD-10 codes:
 
 CLINICAL DESCRIPTION:
@@ -132,7 +132,6 @@ Return 5-10 most relevant codes, prioritized by relevance and specificity.`,
                 <Button
                   size="sm"
                   onClick={applySelectedCodes}
-                  className="bg-green-600 hover:bg-green-700"
                 >
                   <CheckCircle2 className="w-3 h-3 mr-1" />
                   Apply Codes

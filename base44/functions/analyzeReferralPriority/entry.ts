@@ -1,5 +1,14 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
+// <<<BEGIN SHARED HELPER: requireActiveUser — generated, edit base44/_shared/backendHelpers.mjs>>>
+const isDeactivatedUser = (u) => !!u && u.is_active === false;
+const DEACTIVATED_USER_RESPONSE = () => Response.json(
+  { error: 'Unauthorized - account is deactivated' },
+  { status: 403 },
+);
+// <<<END SHARED HELPER: requireActiveUser>>>
+
+
 // Tolerant JSON extractor: we ask for strict JSON in-prompt instead of passing
 // response_json_schema, because the provider rejects deeply-nested object
 // schemas that lack an explicit `required` array at every level.
@@ -21,6 +30,7 @@ Deno.serve(async (req) => {
     try {
         const base44 = createClientFromRequest(req);
         const user = await base44.auth.me();
+        if (isDeactivatedUser(user)) return DEACTIVATED_USER_RESPONSE();
 
         if (!user) {
             return Response.json({ error: 'Unauthorized' }, { status: 401 });
@@ -30,7 +40,7 @@ Deno.serve(async (req) => {
 
         // Analyze referral and determine priority using AI
         const priorityAnalysis = await base44.integrations.Core.InvokeLLM({
-            model: "claude_opus_4_8",
+            model: "automatic",
             prompt: `You are a clinical triage AI specializing in home health referral prioritization with advanced Natural Language Processing (NLP) capabilities to extract crucial details from unstructured clinical notes.
 
 Analyze this referral and determine the urgency/priority level based on:
@@ -66,7 +76,7 @@ Return ONLY valid JSON, no prose or code fences, with this shape:
     } catch (error) {
         console.error('Error analyzing referral priority:', error);
         return Response.json({ 
-            error: error.message,
+            error: 'Internal server error',
             success: false
         }, { status: 500 });
     }

@@ -1,18 +1,24 @@
 import { lazy, Suspense, useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router";
 import { base44 } from "@/api/base44Client";
+import { toLocalISODate } from "@/lib/dateLocal";
+import { subMonths } from "date-fns";
+import { isAdminView } from "@/lib/roles";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AccessDeniedState from "@/components/ui/AccessDeniedState";
-import { BarChart3, Activity, Building2, Loader2 } from "lucide-react";
+import { BarChart3, Activity, Building2 } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import PageContainer from "@/components/ui/PageContainer";
 import EmbeddedPage from "@/components/ui/embeddedPage";
 import ReferralVolumeReport from "@/components/reports/ReferralVolumeReport";
+import FollowUpAnalytics from "@/components/reports/FollowUpAnalytics";
 import NursePerformanceReport from "@/components/reports/NursePerformanceReport";
 import OASISComplianceReport from "@/components/reports/OASISComplianceReport";
 import PDGMReimbursementReport from "@/components/reports/PDGMReimbursementReport";
 import KPIDashboard from "@/components/reports/KPIDashboard";
+import MetricDictionaryStrip from "@/components/reports/MetricDictionaryStrip";
+import LoadingState from "@/components/ui/LoadingState";
 
 const AdminReportsCenter = lazy(() => import("@/components/hub-tabs/AdminReportsCenter"));
 // Performance Analytics (documentation time / AI utilization / quality, with
@@ -25,23 +31,21 @@ const AnalyticsDashboard = lazy(() => import("@/pages/AnalyticsDashboard"));
 // redirect to the right tab.
 const TAB_KEYS = ["kpi", "perf-dashboard", "referrals", "performance", "oasis", "pdgm", "reports-center"];
 
-const tabLoader = (
-  <div className="flex justify-center py-12">
-    <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
-  </div>
-);
+const tabLoader = <LoadingState className="py-12" />;
 
 export default function ReportsAnalytics() {
   const [dateRange, _setDateRange] = useState({
-    start: new Date(new Date().setMonth(new Date().getMonth() - 3)).toISOString().split('T')[0],
-    end: new Date().toISOString().split('T')[0]
+    // subMonths clamps month-end overflow — raw setMonth on May 31 slid the
+    // window start to Mar 3, silently dropping Feb 28-Mar 2 from every tab.
+    start: toLocalISODate(subMonths(new Date(), 3)),
+    end: toLocalISODate()
   });
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
   });
 
-  const isAdmin = currentUser?.role === 'admin';
+  const isAdmin = isAdminView(currentUser);
 
   const [searchParams, setSearchParams] = useSearchParams();
   const requestedTab = searchParams.get("tab");
@@ -75,6 +79,8 @@ export default function ReportsAnalytics() {
         description="KPIs, documentation performance, outcomes, OASIS/PDGM, and agency reports"
         favoritePage="ReportsAnalytics"
       />
+
+      <MetricDictionaryStrip />
 
       <EmbeddedPage>
       <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
@@ -119,6 +125,7 @@ export default function ReportsAnalytics() {
 
         <TabsContent value="referrals">
           <ReferralVolumeReport dateRange={dateRange} />
+          <FollowUpAnalytics />
         </TabsContent>
 
         <TabsContent value="performance">

@@ -1,12 +1,22 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
+// <<<BEGIN SHARED HELPER: requireActiveUser — generated, edit base44/_shared/backendHelpers.mjs>>>
+const isDeactivatedUser = (u) => !!u && u.is_active === false;
+const DEACTIVATED_USER_RESPONSE = () => Response.json(
+  { error: 'Unauthorized - account is deactivated' },
+  { status: 403 },
+);
+// <<<END SHARED HELPER: requireActiveUser>>>
+
+
 const isAdminUser = (user) => user?.role === 'admin' || user?.account_type === 'agency_admin' || user?.account_type === 'super_admin';
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
-
+    if (isDeactivatedUser(user)) return DEACTIVATED_USER_RESPONSE();
+    
     if (!isAdminUser(user)) {
       return Response.json({ error: 'Unauthorized' }, { status: 403 });
     }
@@ -16,7 +26,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'courseId is required' }, { status: 400 });
     }
 
-    const [course] = await base44.asServiceRole.entities.TrainingCourse.filter({ id: courseId });
+    const [course] = await base44.asServiceRole.entities.TrainingCourse.filter({ id: courseId }, undefined, 5000);
     if (!course) {
       return Response.json({ error: 'Course not found' }, { status: 404 });
     }
@@ -75,6 +85,7 @@ Deno.serve(async (req) => {
 
     return Response.json({ success: true, course_id: duplicatedCourse.id, title: duplicatedCourse.title });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error('duplicateInService failed:', error);
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
 });

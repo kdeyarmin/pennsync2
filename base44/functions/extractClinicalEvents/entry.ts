@@ -1,9 +1,19 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
+// <<<BEGIN SHARED HELPER: requireActiveUser — generated, edit base44/_shared/backendHelpers.mjs>>>
+const isDeactivatedUser = (u) => !!u && u.is_active === false;
+const DEACTIVATED_USER_RESPONSE = () => Response.json(
+  { error: 'Unauthorized - account is deactivated' },
+  { status: 403 },
+);
+// <<<END SHARED HELPER: requireActiveUser>>>
+
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
+    if (isDeactivatedUser(user)) return DEACTIVATED_USER_RESPONSE();
 
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
@@ -15,17 +25,90 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // Authorize: only an assigned nurse (or admin) may write ClinicalEvent / Task
-    // / PatientAlert rows to this patient's chart. RLS-independent code check.
+    // Authorize: assigned nurse, platform admin, or agency-scoped admin for an
+    // in-agency patient. RLS-independent code check.
     const [evPatient] = await base44.asServiceRole.entities.Patient.filter({ id: patient_id }, '', 1);
     if (!evPatient) return Response.json({ error: 'Patient not found' }, { status: 404 });
-    if (user.role !== 'admin' && evPatient.created_by !== user.email && !(Array.isArray(evPatient.assigned_nurses) && evPatient.assigned_nurses.includes(user.email))) {
+    const isSuperAdmin = user.account_type === 'super_admin';
+    const isAgencyScopedAdmin =
+      user.account_type === 'agency_admin'
+      || (user.role === 'admin' && !!user.agency_name && !isSuperAdmin);
+    const isPlatformAdmin = isSuperAdmin || (user.role === 'admin' && !user.agency_name);
+    const isAssigned = evPatient.created_by === user.email
+      || (Array.isArray(evPatient.assigned_nurses) && evPatient.assigned_nurses.includes(user.email));
+    if (!isPlatformAdmin && !isAgencyScopedAdmin && !isAssigned) {
       return Response.json({ error: 'Forbidden' }, { status: 403 });
+    }
+    if (isAgencyScopedAdmin) {
+      if (!user.agency_name) return Response.json({ error: 'Forbidden' }, { status: 403 });
+      const agencyUsers = await base44.asServiceRole.entities.User.list('-created_date', 5000).catch(() => []);
+      const agencyEmails = new Set(
+        (agencyUsers || [])
+          .filter((u) => u.agency_name === user.agency_name && u.email)
+          .map((u) => u.email),
+      );
+      const inAgency = (evPatient.created_by && agencyEmails.has(evPatient.created_by))
+        || (Array.isArray(evPatient.assigned_nurses)
+          && evPatient.assigned_nurses.some((e) => agencyEmails.has(e)));
+      if (!inAgency) return Response.json({ error: 'Forbidden' }, { status: 403 });
+    }
+    // Bind visit_id to the authorized patient — otherwise ClinicalEvent/Task/
+    // PatientAlert rows can be attached to a foreign visit under an accessible patient.
+    if (visit_id) {
+      const [visit] = await base44.asServiceRole.entities.Visit
+        .filter({ id: visit_id }, '', 1).catch(() => []);
+      if (!visit || visit.patient_id !== patient_id) {
+        return Response.json({ error: 'Visit not found for this patient' }, { status: 404 });
+      }
+    }
+
+    // Claim BEFORE the LLM work. Without this, two concurrent extracts both see
+    // zero ClinicalEvent rows, both run InvokeLLM, then both create duplicate
+    // events/tasks/alerts. Claim + re-read mirrors processCompletedVisit /
+    // analyzeVisitForSupplyUsage (best-effort; not true CAS — docs/PLATFORM-CAS.md).
+    const claimToken = typeof crypto !== 'undefined' && crypto.randomUUID
+      ? crypto.randomUUID()
+      : `events-extract-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    try {
+      await base44.asServiceRole.entities.Visit.update(visit_id, {
+        events_extract_claimed_by: claimToken,
+      });
+    } catch {
+      return Response.json({ error: 'Could not claim visit for event extraction' }, { status: 409 });
+    }
+    const claimCheck = await base44.asServiceRole.entities.Visit
+      .filter({ id: visit_id }, '', 1).catch(() => []);
+    if (!claimCheck[0] || claimCheck[0].events_extract_claimed_by !== claimToken) {
+      return Response.json({
+        success: true,
+        already_processed: true,
+        events_extracted: 0,
+        events: [],
+        tasks_created: 0,
+        alerts_created: 0,
+        skipped: 'claimed by concurrent run',
+      });
+    }
+    // Idempotency: if a prior winner already persisted events for this visit,
+    // do not re-extract (claim alone does not prevent a later retry after success).
+    const existingEvents = await base44.asServiceRole.entities.ClinicalEvent
+      .filter({ visit_id }, undefined, 1)
+      .catch(() => []);
+    if (existingEvents && existingEvents.length > 0) {
+      return Response.json({
+        success: true,
+        already_processed: true,
+        events_extracted: 0,
+        events: [],
+        tasks_created: 0,
+        alerts_created: 0,
+        skipped: 'events already extracted for visit',
+      });
     }
 
     // Use AI to extract clinical events from the note
     const result = await base44.integrations.Core.InvokeLLM({
-      model: "claude_opus_4_8",
+      model: "automatic",
       prompt: `Extract ALL significant clinical events from this nursing note. Be thorough and capture everything that should be tracked.
 
 Visit Note:
@@ -128,7 +211,7 @@ IMPORTANT: For source_text, provide the EXACT verbatim text from the note, not a
 
     // Save extracted events to database with text anchors
     const savedEvents = [];
-    for (const event of result.events || []) {
+    for (const event of (Array.isArray(result?.events) ? result.events : [])) {
       // Coerce out-of-enum AI values to safe defaults before persisting
       event.event_type = ALLOWED_EVENT_TYPES.has(event.event_type) ? event.event_type : 'other';
       event.severity = ALLOWED_SEVERITIES.has(event.severity) ? event.severity : 'medium';
@@ -223,6 +306,16 @@ IMPORTANT: For source_text, provide the EXACT verbatim text from the note, not a
       }
     }
 
+    // Stamp completion after writes. Re-check claim so a concurrent overwrite of
+    // events_extract_claimed_by mid-LLM cannot leave us marking a visit we lost.
+    const preStamp = await base44.asServiceRole.entities.Visit
+      .filter({ id: visit_id }, '', 1).catch(() => []);
+    if (preStamp[0]?.events_extract_claimed_by === claimToken) {
+      await base44.asServiceRole.entities.Visit.update(visit_id, {
+        events_extracted_at: new Date().toISOString(),
+      }).catch(() => {});
+    }
+
     return Response.json({
       success: true,
       events_extracted: savedEvents.length,
@@ -234,7 +327,7 @@ IMPORTANT: For source_text, provide the EXACT verbatim text from the note, not a
   } catch (error) {
     console.error('Error extracting clinical events:', error);
     return Response.json({
-      error: error.message
+      error: 'Internal server error'
     }, { status: 500 });
   }
 });

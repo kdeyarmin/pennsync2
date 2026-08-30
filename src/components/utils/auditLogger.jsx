@@ -25,12 +25,7 @@ export const AuditActions = {
   VISIT_UPDATED: 'visit_updated',
   VISIT_COMPLETED: 'visit_completed',
   VISIT_CANCELLED: 'visit_cancelled',
-  
-  // Care Plan Actions
-  CARE_PLAN_CREATED: 'care_plan_created',
-  CARE_PLAN_UPDATED: 'care_plan_updated',
-  CARE_PLAN_COMPLETED: 'care_plan_completed',
-  
+
   // Task Actions
   TASK_CREATED: 'task_created',
   TASK_COMPLETED: 'task_completed',
@@ -153,80 +148,5 @@ export async function logOASISAction({
     },
     changes: oldValue && newValue ? { before: oldValue, after: newValue } : null,
     severity: action.includes('supervisor') ? 'critical' : 'info',
-  });
-}
-
-/**
- * Log patient record changes with field-level tracking
- */
-export async function logPatientAction({
-  action,
-  patientId,
-  patientName,
-  changedFields = {},
-  reason,
-}) {
-  return logAudit({
-    action,
-    entityType: 'Patient',
-    entityId: patientId,
-    details: {
-      patient_name: patientName,
-      changed_fields: Object.keys(changedFields),
-      reason,
-    },
-    changes: changedFields,
-    severity: action === AuditActions.PATIENT_DELETED ? 'critical' : 'info',
-  });
-}
-
-/**
- * Log task actions
- */
-export async function logTaskAction({
-  action,
-  taskId,
-  taskTitle,
-  patientId,
-  assignedTo,
-  completedBy,
-  completionNotes,
-}) {
-  return logAudit({
-    action,
-    entityType: 'Task',
-    entityId: taskId,
-    details: {
-      task_title: taskTitle,
-      patient_id: patientId,
-      assigned_to: assignedTo,
-      completed_by: completedBy,
-      completion_notes: completionNotes,
-    },
-  });
-}
-
-/**
- * Log incident actions
- */
-export async function logIncidentAction({
-  action,
-  incidentId,
-  patientId,
-  incidentType,
-  severity,
-  details,
-}) {
-  return logAudit({
-    action,
-    entityType: 'Incident',
-    entityId: incidentId,
-    details: {
-      patient_id: patientId,
-      incident_type: incidentType,
-      incident_severity: severity,
-      ...details,
-    },
-    severity: severity === 'high' ? 'critical' : 'warning',
   });
 }

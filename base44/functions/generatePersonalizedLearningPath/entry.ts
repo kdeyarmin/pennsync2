@@ -1,5 +1,23 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
+// <<<BEGIN SHARED HELPER: requireActiveUser — generated, edit base44/_shared/backendHelpers.mjs>>>
+const isDeactivatedUser = (u) => !!u && u.is_active === false;
+const DEACTIVATED_USER_RESPONSE = () => Response.json(
+  { error: 'Unauthorized - account is deactivated' },
+  { status: 403 },
+);
+// <<<END SHARED HELPER: requireActiveUser>>>
+
+// <<<BEGIN SHARED HELPER: requireAgencyAdminAgency — generated, edit base44/_shared/backendHelpers.mjs>>>
+function agencyAdminMissingAgencyResponse(user) {
+  if (user && user.account_type === 'agency_admin' && !String(user.agency_name || '').trim()) {
+    return Response.json({ error: 'Forbidden: agency_name is required.' }, { status: 403 });
+  }
+  return null;
+}
+// <<<END SHARED HELPER: requireAgencyAdminAgency>>>
+
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -8,21 +26,46 @@ Deno.serve(async (req) => {
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    if (isDeactivatedUser(user)) return DEACTIVATED_USER_RESPONSE();
 
+    {
+      const _agencyAdminGate = agencyAdminMissingAgencyResponse(user);
+      if (_agencyAdminGate) return _agencyAdminGate;
+    }
     const { nurse_email } = await req.json();
-    // Only admins may build a path from another nurse's PHI/performance data.
-    if (nurse_email && nurse_email !== user.email && user.role !== 'admin') {
-      return Response.json({ error: 'Forbidden' }, { status: 403 });
+    // Only admin-like callers may build a path from another nurse's
+    // PHI/performance data, and only within their agency.
+    if (nurse_email && nurse_email !== user.email) {
+      const isAdminLike = user.role === 'admin'
+        || user.account_type === 'agency_admin'
+        || user.account_type === 'super_admin';
+      if (!isAdminLike) {
+        return Response.json({ error: 'Forbidden' }, { status: 403 });
+      }
+      if (user.account_type !== 'super_admin' && user.agency_name) {
+        const [target] = await base44.asServiceRole.entities.User
+          .filter({ email: nurse_email }, '-created_date', 1).catch(() => []);
+        if (!target?.agency_name || target.agency_name !== user.agency_name) {
+          return Response.json({ error: 'Forbidden' }, { status: 403 });
+        }
+      }
     }
     const targetEmail = nurse_email || user.email;
 
     // Fetch nurse performance data
+    // Explicit limits: an unlimited filter() returns only the server's default
+    // page (~50 rows), so an established nurse's visit and audit history was
+    // truncated and the "gaps" below were computed from an arbitrary slice.
+    // The audits are also sorted newest-first — `audits.slice(0, 10)` below is
+    // labelled recentAudits, but without a sort it took the first 10 of an
+    // arbitrarily ordered page, so the compliance average and the weak-area
+    // tally could be built from the nurse's OLDEST audits.
     const [assignments, recommendations, audits, visits, skills] = await Promise.all([
-      base44.asServiceRole.entities.TrainingAssignment.filter({ assigned_to_user_id: targetEmail }),
-      base44.asServiceRole.entities.TrainingRecommendation.filter({ nurse_email: targetEmail }),
-      base44.asServiceRole.entities.ComplianceAudit.filter({ nurse_email: targetEmail }),
-      base44.asServiceRole.entities.Visit.filter({ created_by: targetEmail }),
-      base44.asServiceRole.entities.NurseSkill.filter({ nurse_email: targetEmail })
+      base44.asServiceRole.entities.TrainingAssignment.filter({ assigned_to_user_id: targetEmail }, '-created_date', 1000),
+      base44.asServiceRole.entities.TrainingRecommendation.filter({ nurse_email: targetEmail }, '-created_date', 1000),
+      base44.asServiceRole.entities.ComplianceAudit.filter({ nurse_email: targetEmail }, '-audit_date', 1000),
+      base44.asServiceRole.entities.Visit.filter({ created_by: targetEmail }, '-visit_date', 1000),
+      base44.asServiceRole.entities.NurseSkill.filter({ nurse_email: targetEmail }, undefined, 1000)
     ]);
 
     // Analyze performance and gaps
@@ -45,8 +88,10 @@ Deno.serve(async (req) => {
       });
     });
 
-    // Get all available training modules
-    const allModules = await base44.asServiceRole.entities.TrainingModule.filter({});
+    // Get all available training modules. Explicit limit — unlimited returns
+    // only the server's default page, so the path was recommended from a
+    // partial catalog once the library passed ~50 modules.
+    const allModules = await base44.asServiceRole.entities.TrainingModule.filter({}, undefined, 5000);
 
     // Use AI to generate personalized learning path
     const prompt = `
@@ -73,7 +118,7 @@ Return JSON format.
 `;
 
     const aiResponse = await base44.asServiceRole.integrations.Core.InvokeLLM({
-      model: "claude_opus_4_8",
+      model: "automatic",
       prompt,
       response_json_schema: {
         type: 'object',
@@ -122,6 +167,6 @@ Return JSON format.
 
   } catch (error) {
     console.error('Error generating learning path:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
 });

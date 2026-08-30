@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router";
 import {
   AlertTriangle, CheckCircle2, RotateCcw, Award, ChevronRight, ChevronLeft,
   BookOpen, Clock, Star, FileText, Send, Eye, RefreshCw, Home,
@@ -13,6 +13,8 @@ import { base44 } from "@/api/base44Client";
 import { createPageUrl } from "@/utils";
 import { gradeTrainingAttempt } from "@/functions/gradeTrainingAttempt";
 import { startTrainingAssignment } from "@/functions/startTrainingAssignment";
+import { getCoursePlayerQuestions } from "@/functions/getCoursePlayerQuestions";
+import { getRoleView, isAdminView } from "@/lib/roles";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -25,6 +27,8 @@ import TrainingModuleViewer from "@/components/training/TrainingModuleViewer";
 import TrainingQuestionRenderer from "@/components/training/TrainingQuestionRenderer";
 import CertificateDownloadButton from "@/components/training/CertificateDownloadButton";
 import CourseStepIndicator from "@/components/training/CourseStepIndicator";
+import { isSafeExternalUrl } from "@/components/utils/security";
+import { formatLocalDate } from "@/lib/dateLocal";
 
 // Fisher-Yates shuffle for unbiased randomization
 const shuffle = (items) => {
@@ -50,10 +54,15 @@ const formatElapsed = (ms) => {
 
 export default function TrainingCoursePlayer() {
   const navigate = useNavigate();
-  const params = new URLSearchParams(window.location.search);
-  const assignmentId = params.get("assignment");
-  const courseId = params.get("courseId");
-  const previewMode = params.get("preview") === "true";
+  // useSearchParams (not window.location.search read at render) so a
+  // same-route navigation to a different course/assignment re-renders with the
+  // new ids and the reset effect below actually fires — App.jsx memoizes route
+  // elements, so only location-context subscribers re-render on a query-only
+  // navigation.
+  const [searchParams] = useSearchParams();
+  const assignmentId = searchParams.get("assignment");
+  const courseId = searchParams.get("courseId");
+  const previewMode = searchParams.get("preview") === "true";
 
   const [step, setStep] = useState("objectives");
   const [completedModules, setCompletedModules] = useState([]);
@@ -63,12 +72,28 @@ export default function TrainingCoursePlayer() {
   const [signedName, setSignedName] = useState("");
   const [result, setResult] = useState(null);
   const [submitting, setSubmitting] = useState(false);
-  const [startTime] = useState(() => Date.now());
+  const [startTime, setStartTime] = useState(() => Date.now());
   const [elapsed, setElapsed] = useState(0);
   const [submitError, setSubmitError] = useState("");
   const topRef = useRef(null);
 
-  const startedAt = useMemo(() => new Date().toISOString(), []);
+  const [startedAt, setStartedAt] = useState(() => new Date().toISOString());
+
+  useEffect(() => {
+    setStep("objectives");
+    setCompletedModules([]);
+    setActiveModuleIndex(0);
+    setAnswers({});
+    setAttestationAccepted(false);
+    setSignedName("");
+    setResult(null);
+    setSubmitting(false);
+    setElapsed(0);
+    setSubmitError("");
+    const now = Date.now();
+    setStartTime(now);
+    setStartedAt(new Date(now).toISOString());
+  }, [assignmentId, courseId, previewMode]);
 
   useEffect(() => {
     if (assignmentId && !previewMode) startTrainingAssignment({ assignmentId });
@@ -104,9 +129,26 @@ export default function TrainingCoursePlayer() {
     enabled: !!(previewMode ? courseId : assignment?.course_id),
     initialData: [],
   });
+  // Preview is URL-derived (?preview=true), so it must NOT by itself unlock the raw
+  // question fetch — a learner could otherwise append ?preview=true to re-expose the
+  // answer key. Only a real admin/educator (facility_admin or super_admin) sees the
+  // full records; everyone else — including a forced-preview learner and the moment
+  // before the current user resolves — gets the answer-free server payload.
+  const canSeeAnswerKey = previewMode && getRoleView(currentUser) !== "nurse";
   const { data: questions = [] } = useQuery({
-    queryKey: ["training-questions", previewMode ? courseId : assignment?.course_id],
-    queryFn: () => base44.entities.TrainingQuestion.filter({ course_id: previewMode ? courseId : assignment?.course_id, active: true }, "order_index", 200),
+    queryKey: ["training-questions", previewMode ? courseId : assignment?.course_id, canSeeAnswerKey],
+    queryFn: async () => {
+      const cid = previewMode ? courseId : assignment?.course_id;
+      if (canSeeAnswerKey) {
+        // Admin/educator course preview may fetch full question data (incl. answers).
+        return base44.entities.TrainingQuestion.filter({ course_id: cid, active: true }, "order_index", 200);
+      }
+      // Learner test-taking (and non-admin preview): get answer-free questions from
+      // the server so the correct-answer key is never shipped to the browser
+      // (grading stays server-side).
+      const res = await getCoursePlayerQuestions({ course_id: cid });
+      return res?.data?.questions || [];
+    },
     enabled: !!(previewMode ? courseId : assignment?.course_id),
     initialData: [],
   });
@@ -129,16 +171,41 @@ export default function TrainingCoursePlayer() {
     }];
   }, [rawModules, course]);
 
-  const randomizedQuestions = useMemo(
-    () => shuffle(questions).map((q) => ({
-      ...q,
-      options_json: Array.isArray(q.options_json) ? shuffle(q.options_json) : q.options_json,
-    })),
-    [questions]
-  );
+  // Shuffle ONCE per question set and keep the order stable for the whole
+  // attempt. `questions` is a react-query result: any background refetch (e.g.
+  // network reconnect, cache invalidation) returns a fresh array reference, and
+  // re-shuffling on every new reference rearranged the questions AND their
+  // answer options under the learner mid-test. Cache the shuffled question-id
+  // order and each question's option permutation, keyed by the set of question
+  // ids, and re-apply them to the latest data — so refreshed content flows
+  // through without anything jumping around.
+  const shuffleOrderRef = useRef(null);
+  const randomizedQuestions = useMemo(() => {
+    const key = questions.map((q) => q.id).sort().join('|');
+    if (!shuffleOrderRef.current || shuffleOrderRef.current.key !== key) {
+      shuffleOrderRef.current = {
+        key,
+        questionOrder: shuffle(questions.map((q) => q.id)),
+        optionOrders: new Map(questions.map((q) => [
+          q.id,
+          Array.isArray(q.options_json) ? shuffle(q.options_json.map((_, i) => i)) : null,
+        ])),
+      };
+    }
+    const byId = new Map(questions.map((q) => [q.id, q]));
+    return shuffleOrderRef.current.questionOrder
+      .map((id) => byId.get(id))
+      .filter(Boolean)
+      .map((q) => {
+        const perm = shuffleOrderRef.current.optionOrders.get(q.id);
+        const applies =
+          Array.isArray(q.options_json) && Array.isArray(perm) && perm.length === q.options_json.length;
+        return { ...q, options_json: applies ? perm.map((i) => q.options_json[i]) : q.options_json };
+      });
+  }, [questions]);
 
   const passingScore = assignment?.passing_score_required || course?.passing_score || 80;
-  const isAdmin = currentUser?.role === "admin";
+  const isAdmin = isAdminView(currentUser);
   const answeredCount = Object.keys(answers).length;
   const totalQuestions = randomizedQuestions.length;
 
@@ -184,7 +251,15 @@ export default function TrainingCoursePlayer() {
       setResult(response.data || response);
       setStep("result");
     } catch (err) {
-      setSubmitError(err?.message || "Failed to submit quiz. Please try again.");
+      // The SDK throws on non-2xx with the body under response.data, so
+      // `err.message` alone is the generic "Request failed with status code N".
+      // gradeTrainingAttempt's messages are the ones the learner needs — whether
+      // their attempt was consumed, why it could not be scored, when a retake
+      // opens — so read them the way the rest of the app does.
+      setSubmitError(
+        err?.response?.data?.error || err?.data?.error || err?.message
+          || "Failed to submit quiz. Please try again.",
+      );
     } finally {
       setSubmitting(false);
     }
@@ -280,7 +355,7 @@ export default function TrainingCoursePlayer() {
               )}
               <span className="flex items-center gap-1"><Target className="w-3.5 h-3.5" /> Pass at {passingScore}%</span>
               {!previewMode && assignment?.due_date && (
-                <span>Due {new Date(assignment.due_date).toLocaleDateString()}</span>
+                <span>Due {formatLocalDate(assignment.due_date) || assignment.due_date}</span>
               )}
               {!previewMode && (
                 <span>Attempt #{(assignment?.latest_attempt_number || 0) + 1}</span>
@@ -356,6 +431,50 @@ export default function TrainingCoursePlayer() {
               ))}
             </div>
 
+            {/* Course outline — the lessons the learner will work through */}
+            {modules.length > 0 && modules[0].id !== "fallback" && (
+              <div className="rounded-xl border border-slate-200 bg-white p-4">
+                <p className="font-semibold text-slate-800 mb-2 text-sm flex items-center gap-2">
+                  <BookOpen className="w-4 h-4 text-blue-600" /> Course outline
+                </p>
+                <ol className="space-y-1.5">
+                  {modules.map((m, i) => (
+                    <li key={m.id || i} className="flex items-start gap-2.5 text-sm">
+                      <span className="w-5 h-5 rounded-full bg-slate-100 text-slate-600 text-xs font-semibold flex items-center justify-center flex-shrink-0 mt-0.5">
+                        {i + 1}
+                      </span>
+                      <span className="text-slate-700">{m.title}</span>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            )}
+
+            {/* What you'll be tested on */}
+            {totalQuestions > 0 && (() => {
+              const TYPE_LABELS = {
+                mcq: "Multiple choice",
+                multi_select: "Select all that apply",
+                true_false: "True/False",
+                short_answer: "Short answer",
+                scenario_based: "Scenario",
+                matching: "Matching",
+              };
+              const formats = [...new Set(questions.map((q) => q.type))].map((t) => TYPE_LABELS[t] || t);
+              return (
+                <div className="rounded-xl border border-indigo-200 bg-indigo-50/50 p-4">
+                  <p className="font-semibold text-indigo-900 mb-2 text-sm flex items-center gap-2">
+                    <Target className="w-4 h-4 text-indigo-600" /> What you&rsquo;ll be tested on
+                  </p>
+                  <ul className="space-y-1 text-sm text-indigo-900/90">
+                    <li>• A {totalQuestions}-question test at the end, {formats.join(", ")}.</li>
+                    <li>• You need <strong>{passingScore}%</strong> to pass{assignment?.max_attempts ? `, with up to ${assignment.max_attempts} attempt${assignment.max_attempts === 1 ? "" : "s"}` : ""}.</li>
+                    {course.enable_certificate !== false && <li>• Pass to earn your certificate of completion.</li>}
+                  </ul>
+                </div>
+              );
+            })()}
+
             {/* Attachments */}
             {(course.attachment_urls || []).length > 0 && (
               <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
@@ -364,10 +483,12 @@ export default function TrainingCoursePlayer() {
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {course.attachment_urls.map((url, i) => (
-                    <a key={i} href={url} target="_blank" rel="noreferrer"
-                      className="text-sm text-blue-600 underline hover:text-blue-800">
-                      {course.attachment_names?.[i] || `Resource ${i + 1}`}
-                    </a>
+                    url && isSafeExternalUrl(url) ? (
+                      <a key={i} href={url} target="_blank" rel="noopener noreferrer"
+                        className="text-sm text-blue-600 underline hover:text-blue-700">
+                        {course.attachment_names?.[i] || `Resource ${i + 1}`}
+                      </a>
+                    ) : null
                   ))}
                 </div>
               </div>
@@ -453,7 +574,16 @@ export default function TrainingCoursePlayer() {
           {/* Active module */}
           {modules[activeModuleIndex] && (
             <div className="space-y-4">
-              <TrainingModuleViewer module={modules[activeModuleIndex]} />
+              {/* Keyed on the module: the viewer's `viewedSections` progress
+                  ("N/M sections read") and each section's expanded state are
+                  per-module. Without a remount, advancing to the next module
+                  carried the previous module's read count over — showing a
+                  full progress bar (or "5/3 sections read") on a module the
+                  learner had not opened. */}
+              <TrainingModuleViewer
+                key={modules[activeModuleIndex].id || activeModuleIndex}
+                module={modules[activeModuleIndex]}
+              />
 
               {/* Module attachments */}
               {(modules[activeModuleIndex].attachment_urls || []).length > 0 && (
@@ -463,10 +593,12 @@ export default function TrainingCoursePlayer() {
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {modules[activeModuleIndex].attachment_urls.map((url, i) => (
-                      <a key={i} href={url} target="_blank" rel="noreferrer"
-                        className="text-sm text-blue-600 underline hover:text-blue-800">
-                        {modules[activeModuleIndex].attachment_names?.[i] || `File ${i + 1}`}
-                      </a>
+                      url && isSafeExternalUrl(url) ? (
+                        <a key={i} href={url} target="_blank" rel="noopener noreferrer"
+                          className="text-sm text-blue-600 underline hover:text-blue-700">
+                          {modules[activeModuleIndex].attachment_names?.[i] || `File ${i + 1}`}
+                        </a>
+                      ) : null
                     ))}
                   </div>
                 </div>
@@ -485,7 +617,6 @@ export default function TrainingCoursePlayer() {
 
                 <Button
                   onClick={() => markModuleDone(modules[activeModuleIndex].id)}
-                  className={completedModules.includes(modules[activeModuleIndex].id) ? "bg-emerald-600 hover:bg-emerald-700" : ""}
                 >
                   {completedModules.includes(modules[activeModuleIndex].id) ? (
                     <><Check className="w-4 h-4 mr-1" /> Done — Next</>
@@ -544,7 +675,10 @@ export default function TrainingCoursePlayer() {
               onClick={() => setStep("test")}
               className="w-full sm:w-auto"
             >
-              Proceed to Quiz <ChevronRight className="w-4 h-4 ml-1" />
+              {/* An attestation-only in-service has no questions; calling the
+                  next step a quiz sent the learner looking for one. */}
+              {totalQuestions > 0 ? "Proceed to Quiz" : "Finish In-Service"}
+              <ChevronRight className="w-4 h-4 ml-1" />
             </Button>
           </CardContent>
         </Card>
@@ -557,9 +691,13 @@ export default function TrainingCoursePlayer() {
           <Card className="border-0 shadow-sm bg-blue-50 border border-blue-100">
             <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center gap-3">
               <div className="flex-1">
-                <h2 className="font-bold text-blue-900">Competency Assessment</h2>
+                <h2 className="font-bold text-blue-900">
+                  {totalQuestions > 0 ? "Competency Assessment" : "Complete This In-Service"}
+                </h2>
                 <p className="text-sm text-blue-700 mt-0.5">
-                  Answer all {totalQuestions} questions to submit. You need {passingScore}% to pass.
+                  {totalQuestions > 0
+                    ? `Answer all ${totalQuestions} questions to submit. You need ${passingScore}% to pass.`
+                    : "This in-service has no competency test — submit to record your completion."}
                 </p>
               </div>
               <div className="flex items-center gap-3">
@@ -618,7 +756,7 @@ export default function TrainingCoursePlayer() {
               <div className="flex-1 text-sm text-slate-600">
                 {answeredCount < totalQuestions
                   ? <span className="text-amber-600 font-medium flex items-center gap-1.5"><AlertTriangle className="w-4 h-4" />{totalQuestions - answeredCount} question(s) unanswered</span>
-                  : <span className="text-emerald-600 font-medium flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4" />All questions answered — ready to submit!</span>
+                  : <span className="text-emerald-600 font-medium flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4" />{totalQuestions > 0 ? "All questions answered — ready to submit!" : "Ready to submit."}</span>
                 }
               </div>
               <Button
@@ -630,7 +768,7 @@ export default function TrainingCoursePlayer() {
                 {submitting ? (
                   <><RefreshCw className="w-4 h-4 mr-2 animate-spin" />Submitting...</>
                 ) : (
-                  <><Send className="w-4 h-4 mr-2" />Submit Quiz</>
+                  <><Send className="w-4 h-4 mr-2" />{totalQuestions > 0 ? "Submit Quiz" : "Submit"}</>
                 )}
               </Button>
             </div>
@@ -667,7 +805,7 @@ export default function TrainingCoursePlayer() {
                     <p className="font-bold text-emerald-900">Certificate Issued</p>
                     <p className="text-sm text-emerald-700">
                       ID: {result.certificate.certificate_id}
-                      {result.certificate.expiration_date && ` · Expires ${new Date(result.certificate.expiration_date).toLocaleDateString()}`}
+                      {result.certificate.expiration_date && ` · Expires ${formatLocalDate(result.certificate.expiration_date) || result.certificate.expiration_date}`}
                     </p>
                     {result.certificate.hours && (
                       <p className="text-sm text-emerald-700">{result.certificate.hours} CEU hours awarded</p>
@@ -730,6 +868,8 @@ export default function TrainingCoursePlayer() {
                   setActiveModuleIndex(0);
                   setAttestationAccepted(false);
                   setSignedName("");
+                  setStartTime(Date.now());
+                  setStartedAt(new Date().toISOString());
                 }}
               >
                 <RefreshCw className="w-4 h-4 mr-2" /> Review Content & Retake

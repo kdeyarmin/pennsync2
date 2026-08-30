@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,39 +11,60 @@ import PageContainer from "@/components/ui/PageContainer";
 import PageHeader from "@/components/ui/PageHeader";
 import { toast } from "sonner";
 import { createPageUrl } from "@/utils";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router";
 import SignatureCanvas from "../components/documents/SignatureCanvas";
-import { sanitizeHtml } from "@/components/utils/security";
+import { sanitizeHtml, isSafeExternalUrl } from "@/components/utils/security";
 
 export default function SignDocument() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const urlParams = new URLSearchParams(window.location.search);
-  const signatureId = urlParams.get('signature_id');
-  const patientId = urlParams.get('patient_id');
+  // useSearchParams (not window.location.search read at render) so a
+  // same-route navigation to a different ?signature_id re-renders with the new
+  // id — App.jsx memoizes route elements, so only location-context subscribers
+  // re-render on a query-only navigation.
+  const [searchParams] = useSearchParams();
+  const signatureId = searchParams.get('signature_id');
+  // URL patient_id is a legacy fallback for records with no patient_id of
+  // their own — it must never OVERRIDE the record: a crafted link could show
+  // one patient's name beside another patient's document.
+  const urlPatientId = searchParams.get('patient_id');
 
   const [showSignatureDialog, setShowSignatureDialog] = useState(false);
   const [currentSignerIndex, setCurrentSignerIndex] = useState(0);
   const [signatures, setSignatures] = useState({});
+
+  // A same-route id change shows a different document — partially collected
+  // signatures from the previous one must never carry over.
+  useEffect(() => {
+    setSignatures({});
+    setCurrentSignerIndex(0);
+    setShowSignatureDialog(false);
+  }, [signatureId]);
 
   const { data: _currentUser } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
   });
 
-  const { data: signatureRecord } = useQuery({
+  const { data: signatureRecord, isLoading: recordLoading, isFetched: recordFetched } = useQuery({
     queryKey: ['signature-record', signatureId],
     queryFn: () => base44.entities.DocumentSignature.filter({ id: signatureId }),
     select: (data) => data[0],
     enabled: !!signatureId
   });
 
-  const effectivePatientId = patientId || signatureRecord?.patient_id || "";
+  const effectivePatientId = signatureRecord?.patient_id || urlPatientId || "";
 
-  const { data: patient } = useQuery({
+  const { data: patient, isLoading: patientLoading } = useQuery({
     queryKey: ['patient', effectivePatientId],
-    queryFn: () => base44.entities.Patient.filter({ id: effectivePatientId }),
-    select: (data) => data[0],
+    queryFn: async () => {
+      const rows = await base44.entities.Patient.filter({ id: effectivePatientId });
+      return rows[0] || null;
+    },
+    // Cache may already hold an object seeded by PatientDetails — accept both
+    // shapes during the transition so select([row]) never turns an object into
+    // undefined demographics beside the document.
+    select: (data) => (Array.isArray(data) ? data[0] : data) || null,
     enabled: !!effectivePatientId
   });
 
@@ -54,10 +75,13 @@ export default function SignDocument() {
     // DocumentSignature.update keyed only on the URL id, so any authenticated user
     // with an id could blanket-complete a document they had no relationship to.
     mutationFn: async ({ signatures }) => {
-      return await base44.functions.invoke('submitDocumentSignatures', {
+      const res = await base44.functions.invoke('submitDocumentSignatures', {
         signature_id: signatureId,
         signatures,
       });
+      const data = res?.data ?? res;
+      if (data?.error) throw new Error(data.error);
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['signature-record'] });
@@ -70,13 +94,19 @@ export default function SignDocument() {
     setShowSignatureDialog(true);
   };
 
+  // Stable per-row key even for legacy signer rows without an id — id-less
+  // rows all collided on `undefined`, attaching a signature to the wrong
+  // signer on multi-signer documents. Must match submitDocumentSignatures'
+  // fallback keying.
+  const signerKey = (signer, index) => signer?.id ?? `idx_${index}`;
+
   const handleSaveSignature = (dataUrl, method) => {
     const signer = signatureRecord?.signers[currentSignerIndex];
     if (!signer) return;
 
     setSignatures(prev => ({
       ...prev,
-      [signer.id]: { dataUrl, method, timestamp: new Date().toISOString() }
+      [signerKey(signer, currentSignerIndex)]: { dataUrl, method, timestamp: new Date().toISOString() }
     }));
 
     setShowSignatureDialog(false);
@@ -87,9 +117,16 @@ export default function SignDocument() {
     if (!signatureRecord) return;
 
     // Client-side completeness check for fast feedback; the server re-validates.
-    const allRequiredSigned = signatureRecord.signers
-      .filter(s => s.required)
-      .every(s => signatures[s.id]?.dataUrl || s.signature);
+    // Walk the ORIGINAL signers array so idx_<n> keys stay aligned with
+    // handleSaveSignature / submitDocumentSignatures. Filtering first then
+    // using the filtered index remapped id-less optional-before-required
+    // documents onto the wrong key (e.g. required signer at index 1 looked up
+    // as idx_0). Treat missing `required` as required — matches the server's
+    // `required !== false` rule.
+    const allRequiredSigned = signatureRecord.signers.every((s, i) => {
+      if (s.required === false) return true;
+      return !!(signatures[signerKey(s, i)]?.dataUrl || s.signature);
+    });
 
     if (!allRequiredSigned) {
       toast.error("Please complete all required signatures");
@@ -113,15 +150,36 @@ export default function SignDocument() {
       setTimeout(() => {
         navigate(createPageUrl("DocumentSignatures"));
       }, 1500);
-    } catch {
-      toast.error("Failed to save signatures");
+    } catch (error) {
+      toast.error(error?.message || "Failed to save signatures");
     }
   };
+
+  // With no ?signature_id the record query is disabled and never resolves, and a
+  // deleted/stale id resolves to nothing — both used to fall into the loading
+  // card below and sit on "Loading document..." forever. Say so instead.
+  if (!signatureId || (recordFetched && !signatureRecord)) {
+    return (
+      <div className="p-8 max-w-4xl mx-auto">
+        <Card>
+          <CardContent className="p-12 text-center">
+            <FileText className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+            <p className="text-slate-600 mb-4">
+              {signatureId ? "This signature request no longer exists." : "No document selected."}
+            </p>
+            <Button onClick={() => navigate(createPageUrl("DocumentHub?tab=signatures"))}>
+              Go to Documents
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   // Guard on `signers` too: the render and submit handlers call
   // signatureRecord.signers.map/.filter/.every, which throw if the entity has no
   // signers array. Treat a record without signers as not-yet-ready.
-  if (!signatureRecord || (effectivePatientId && !patient) || !Array.isArray(signatureRecord.signers)) {
+  if (recordLoading || (effectivePatientId && patientLoading) || !signatureRecord || !Array.isArray(signatureRecord.signers)) {
     return (
       <div className="p-8 max-w-4xl mx-auto">
         <Card>
@@ -134,8 +192,8 @@ export default function SignDocument() {
     );
   }
 
-  const getSignerStatus = (signer) => {
-    if (signatures[signer.id]) {
+  const getSignerStatus = (signer, index) => {
+    if (signatures[signerKey(signer, index)]) {
       return { label: "Signed", color: "bg-emerald-600" };
     }
     if (signer.signed_date) {
@@ -160,7 +218,7 @@ export default function SignDocument() {
           <CardTitle className="text-lg">Document Preview</CardTitle>
         </CardHeader>
         <CardContent>
-          {signatureRecord.document_url ? (
+          {signatureRecord.document_url && isSafeExternalUrl(signatureRecord.document_url) ? (
             <div className="border rounded-lg overflow-hidden">
               <iframe
                 src={signatureRecord.document_url}
@@ -188,11 +246,11 @@ export default function SignDocument() {
         <CardContent>
           <div className="space-y-3">
             {signatureRecord.signers.map((signer, index) => {
-              const status = getSignerStatus(signer);
+              const status = getSignerStatus(signer, index);
               
               return (
                 <div
-                  key={signer.id}
+                  key={signerKey(signer, index)}
                   className="flex items-center justify-between p-4 border rounded-lg"
                 >
                   <div className="flex items-center gap-3">
@@ -200,7 +258,7 @@ export default function SignDocument() {
                     <div>
                       <p className="font-medium">{signer.name}</p>
                       <p className="text-sm text-slate-600">
-                        {signer.role} {signer.required && <span className="text-red-600">*</span>}
+                        {signer.role} {signer.required !== false && <span className="text-red-600">*</span>}
                       </p>
                     </div>
                   </div>
@@ -219,10 +277,10 @@ export default function SignDocument() {
                       </Button>
                     )}
                     
-                    {signatures[signer.id] && (
+                    {signatures[signerKey(signer, index)] && (
                       <div className="border rounded-lg p-1 bg-white">
                         <img 
-                          src={signatures[signer.id].dataUrl} 
+                          src={signatures[signerKey(signer, index)].dataUrl} 
                           alt="Signature"
                           className="h-8 w-24 object-contain"
                         />
@@ -247,7 +305,6 @@ export default function SignDocument() {
         <Button
           onClick={handleSubmitAll}
           disabled={updateSignatureMutation.isPending}
-          className="bg-emerald-600 hover:bg-emerald-700"
         >
           <CheckCircle2 className="w-4 h-4 mr-2" />
           {updateSignatureMutation.isPending ? "Submitting..." : "Submit All Signatures"}

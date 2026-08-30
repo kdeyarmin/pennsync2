@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useAICall } from "@/hooks/useAICall";
+import { formatAge } from "@/lib/age";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -26,12 +27,12 @@ import {
   History
 } from "lucide-react";
 import { format, differenceInDays, isValid } from "date-fns";
+import { parseLocalDate } from "@/lib/dateLocal";
 import PatientRiskStratification from "./PatientRiskStratification";
 
 export default function AIPatientHistorySummary({
   patient,
   visits = [],
-  carePlans = [],
   incidents = [],
   onInsertSummary,
   autoGenerate = true,
@@ -41,23 +42,20 @@ export default function AIPatientHistorySummary({
   const ai = useAICall();
   const [isExpanded, setIsExpanded] = useState(true);
   const [copied, setCopied] = useState(false);
+  // Tracks the currently-displayed patient so an in-flight AI call that resolves
+  // after the user has switched patients can't write another patient's summary
+  // into this (persistent, not remounted) component — a wrong-patient PHI hazard.
+  const patientIdRef = useRef(patient?.id);
 
-  const calculateAge = useCallback((dob) => {
-    const today = new Date();
-    const birthDate = new Date(dob);
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const m = today.getMonth() - birthDate.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
-    return age;
-  }, []);
+  const calculateAge = useCallback((dob) => formatAge(dob), []);
 
   const generateSummary = useCallback(async () => {
     if (!patient) return;
+    const requestedPatientId = patient.id;
 
     try {
       const completedVisits = visits.filter(v => v.status === 'completed');
       const recentVisits = completedVisits.slice(0, 10);
-      const activeCarePlans = carePlans.filter(cp => cp.status === 'active');
       const recentIncidents = incidents.slice(0, 5);
 
       // Extract vital trends from visits
@@ -78,7 +76,7 @@ export default function AIPatientHistorySummary({
         }));
 
       const result = await ai.run({
-        model: "claude_opus_4_8",
+        model: "automatic",
         prompt: `You are an expert clinical summarization AI. Generate a comprehensive yet concise patient history summary that gives nurses immediate context before a visit.
 
 PATIENT DEMOGRAPHICS:
@@ -99,15 +97,6 @@ VISIT STATISTICS:
 
 VITAL SIGNS HISTORY (Last ${vitalHistory.length} readings):
 ${JSON.stringify(vitalHistory, null, 2)}
-
-ACTIVE CARE PLANS (${activeCarePlans.length}):
-${activeCarePlans.map(cp => `
-- Problem: ${cp.problem}
-  Goal: ${cp.goal}
-  Target Date: ${cp.target_date || 'Ongoing'}
-  Baseline: ${cp.baseline_measurement || 'Not documented'}
-  Frequency: ${cp.frequency || 'Each visit'}
-`).join('\n') || 'No active care plans'}
 
 RECENT CLINICAL NOTES (Last ${visitNotes.length} visits):
 ${visitNotes.map(v => `
@@ -191,13 +180,24 @@ Return JSON:
         }
       });
 
-      setSummary(result);
+      // Drop the result if the user has navigated to a different patient while
+      // this call was in flight — otherwise B's chart would show A's summary.
+      if (patientIdRef.current === requestedPatientId) {
+        setSummary(result);
+      }
     } catch (error) {
       console.error("Error generating patient history summary:", error);
       toast.error("The AI request didn't complete. Please try again.");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- AI hook object is intentionally omitted; its run() is stable, and including it would re-fire the call every render
-  }, [patient, visits, carePlans, incidents, calculateAge]);
+  }, [patient, visits, incidents, calculateAge]);
+
+  // On patient change, point the guard at the new patient and drop the previous
+  // patient's summary so a stale one can never render against the new chart.
+  useEffect(() => {
+    patientIdRef.current = patient?.id;
+    setSummary(null);
+  }, [patient?.id]);
 
   // Auto-generate on patient selection
   useEffect(() => {
@@ -340,7 +340,7 @@ Return JSON:
               </div>
               <div className="bg-white p-2 rounded-lg border text-center">
                 <Target className="w-4 h-4 mx-auto mb-1 text-navy-500" />
-                <p className="text-lg font-bold text-slate-900">{summary.stats?.active_care_plans || carePlans.filter(cp => cp.status === 'active').length}</p>
+                <p className="text-lg font-bold text-slate-900">{summary.stats?.active_care_plans || 0}</p>
                 <p className="text-xs text-slate-500">Goals</p>
               </div>
               <div className="bg-white p-2 rounded-lg border text-center">
@@ -350,7 +350,10 @@ Return JSON:
               </div>
               <div className="bg-white p-2 rounded-lg border text-center">
                 <FileText className="w-4 h-4 mx-auto mb-1 text-green-500" />
-                <p className="text-sm font-bold text-slate-900">{summary.stats?.last_visit_date && isValid(new Date(summary.stats.last_visit_date)) ? format(new Date(summary.stats.last_visit_date), 'MM/dd') : '—'}</p>
+                <p className="text-sm font-bold text-slate-900">{(() => {
+                  const d = parseLocalDate(summary.stats?.last_visit_date);
+                  return d && isValid(d) ? format(d, 'MM/dd') : '—';
+                })()}</p>
                 <p className="text-xs text-slate-500">Last Visit</p>
               </div>
             </div>
@@ -442,7 +445,6 @@ Return JSON:
             <PatientRiskStratification
               patient={patient}
               visits={visits}
-              carePlans={carePlans}
               incidents={incidents}
               compact={true}
               autoCalculate={true}

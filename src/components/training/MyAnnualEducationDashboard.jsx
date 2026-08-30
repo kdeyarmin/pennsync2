@@ -1,10 +1,11 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { Award, Printer, CheckCircle2, AlertTriangle, BookOpen, RefreshCcw } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { base44 } from "@/api/base44Client";
 import { createPageUrl } from "@/utils";
-import { generateTrainingCertificate } from "@/functions/generateTrainingCertificate";
+import { createCertificateBlobUrl } from "@/components/learning/certificatePdf";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -13,8 +14,18 @@ import { Progress } from "@/components/ui/progress";
 import LoadingState from "@/components/ui/LoadingState";
 import LearningPathProgress from "./LearningPathProgress";
 import { HideWhenEmbedded } from "@/components/ui/embeddedPage";
+import { formatLocalDate, isPastLocalDueDate } from "@/lib/dateLocal";
 
-const formatDate = (value) => value ? new Date(value).toLocaleDateString() : "—";
+function isAssignmentOverdue(a) {
+  if (!a || a.status === 'completed' || a.pass_fail_result === 'passed') return false;
+  return a.status === 'overdue' || isPastLocalDueDate(a.due_date);
+}
+
+function isAssignmentCompleted(a) {
+  return a?.status === 'completed' || a?.pass_fail_result === 'passed';
+}
+
+const formatDate = (value) => formatLocalDate(value) || "—";
 
 export default function MyAnnualEducationDashboard() {
   const currentYear = new Date().getFullYear();
@@ -29,7 +40,11 @@ export default function MyAnnualEducationDashboard() {
     initialData: []
   });
   const { data: courses = [] } = useQuery({
-    queryKey: ["annual-courses"],
+    // Distinct key from the unfiltered ["annual-courses"] query in
+    // AnnualMandatoryEducationHub — sharing it let the hub mount onto this
+    // annual_mandatory-only subset and silently lose the rest of the library.
+    // Prefix invalidation of ["annual-courses"] still refreshes both entries.
+    queryKey: ["annual-courses", "mandatory-only"],
     queryFn: async () => {
       const all = await base44.entities.TrainingCourse.list('-updated_date', 500);
       return all.filter((course) => course.training_type === 'annual_mandatory');
@@ -49,7 +64,7 @@ export default function MyAnnualEducationDashboard() {
     queryKey: ["annual-plan-enrollments", currentUser?.email],
     queryFn: async () => {
       const all = await base44.entities.PlanEnrollment.filter({ user_id: currentUser?.email }, '-enrolled_at', 100);
-      return all.filter((enrollment) => enrollment.plan_name?.includes(String(currentYear)) || enrollment.status);
+      return all.filter((enrollment) => enrollment.plan_name?.includes(String(currentYear)));
     },
     enabled: !!currentUser?.email,
     initialData: []
@@ -58,29 +73,25 @@ export default function MyAnnualEducationDashboard() {
   const courseMap = useMemo(() => Object.fromEntries(courses.map((course) => [course.id, course])), [courses]);
   const stats = {
     assigned: assignments.length,
-    completed: assignments.filter((a) => a.status === 'completed').length,
-    overdue: assignments.filter((a) => a.status === 'overdue').length,
+    completed: assignments.filter((a) => isAssignmentCompleted(a)).length,
+    overdue: assignments.filter((a) => isAssignmentOverdue(a)).length,
     failed: assignments.filter((a) => a.pass_fail_result === 'failed').length,
   };
 
-  const certificateBlobUrl = async (certificate) => {
-    const response = await generateTrainingCertificate({
-      moduleName: certificate.course_title,
-      completionDate: certificate.completion_date || certificate.issued_at,
-      score: certificate.score
-    });
-    const blob = new Blob([response.data], { type: 'application/pdf' });
-    return window.URL.createObjectURL(blob);
-  };
-
   const printCertificate = async (certificate) => {
-    const url = await certificateBlobUrl(certificate);
+    const url = await createCertificateBlobUrl(certificate);
     const printWindow = window.open(url, '_blank');
-    setTimeout(() => printWindow?.print(), 600);
+    // Popup blockers and installed-app webviews (iOS standalone/WKWebView)
+    // return null — surface a hint instead of failing silently.
+    if (!printWindow) {
+      toast.error('Unable to open the certificate. Please allow pop-ups, or use Download instead.');
+      return;
+    }
+    setTimeout(() => printWindow.print(), 600);
   };
 
   const downloadCertificate = async (certificate) => {
-    const url = await certificateBlobUrl(certificate);
+    const url = await createCertificateBlobUrl(certificate);
     const anchor = document.createElement('a');
     anchor.href = url;
     anchor.download = `${certificate.course_title.replace(/\s+/g, '_')}_annual_certificate.pdf`;
@@ -91,9 +102,9 @@ export default function MyAnnualEducationDashboard() {
   return (
     <div className="max-w-6xl mx-auto space-y-6">
       <HideWhenEmbedded>
-        <div className="rounded-3xl bg-gradient-to-r from-slate-900 via-blue-800 to-indigo-700 text-white p-6 shadow-xl">
+        <div className="page-header-gradient">
           <h1 className="text-2xl sm:text-3xl font-bold mb-2">My Annual Education — {currentYear}</h1>
-          <p className="text-blue-100">Track required yearly education, annual bundles, scores, certificates, and renewal dates.</p>
+          <p className="relative text-navy-100">Track required yearly education, annual bundles, scores, certificates, and renewal dates.</p>
         </div>
       </HideWhenEmbedded>
 
@@ -155,7 +166,7 @@ export default function MyAnnualEducationDashboard() {
           ) : (
             assignments.map((assignment) => {
               const course = courseMap[assignment.course_id] || {};
-              const isOverdue = assignment.status === 'overdue';
+              const isOverdue = isAssignmentOverdue(assignment);
               const isCompleted = assignment.status === 'completed';
               const isFailed = assignment.pass_fail_result === 'failed';
               return (

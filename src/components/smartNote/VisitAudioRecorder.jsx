@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { configNotReadyMessage } from "@/lib/aiFeatureError";
+import { formatTime } from "@/lib/formatTime";
 import { Button } from "@/components/ui/button";
 import { base44 } from "@/api/base44Client";
 import { Mic, MicOff, X, CheckCircle2, AlertCircle, Loader2, FileAudio } from "lucide-react";
@@ -26,6 +27,11 @@ export default function VisitAudioRecorder({ onTranscribed, disabled = false }) 
   const [error, setError] = useState(null);
   const [transcript, setTranscript] = useState(null);
   const [showMapper, setShowMapper] = useState(false);
+  // Advisory-only structured SOAP shown for reference. It is NEVER the saved /
+  // grounded source — the raw transcript is, so the Step-2 value-guard + grounding
+  // verify the final note against what was actually said (not an AI structuring
+  // that could have invented a value).
+  const [soapPreview, setSoapPreview] = useState(null);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
   const streamRef = useRef(null);
@@ -38,6 +44,11 @@ export default function VisitAudioRecorder({ onTranscribed, disabled = false }) 
   const startRecording = async () => {
     try {
       setError(null);
+      // Clear any prior result so a new recording starts clean — otherwise a stale
+      // SOAP preview / mapper from a previous take could linger under the new one.
+      setSoapPreview(null);
+      setTranscript(null);
+      setShowMapper(false);
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
       const mediaRecorder = new MediaRecorder(stream);
@@ -49,7 +60,11 @@ export default function VisitAudioRecorder({ onTranscribed, disabled = false }) 
         if (modeRef.current === "soap") {
           await processSOAP();
         } else {
-          const blob = new Blob(audioChunksRef.current, { type: "audio/mp3" });
+          // Use the recorder's actual container type. MediaRecorder with no
+          // explicit mimeType produces audio/webm (Opus) in Chromium, so
+          // labeling it audio/mp3 makes Whisper mis-decode by extension.
+          const type = mediaRecorderRef.current?.mimeType || "audio/webm";
+          const blob = new Blob(audioChunksRef.current, { type });
           setAudioUrl(URL.createObjectURL(blob));
           await processNarrative(blob);
         }
@@ -78,7 +93,9 @@ export default function VisitAudioRecorder({ onTranscribed, disabled = false }) 
   const processNarrative = async (blob) => {
     setProcessing(true);
     try {
-      const audioFile = new File([blob], `recording-${Date.now()}.mp3`, { type: "audio/mp3" });
+      const mime = blob.type || "audio/webm";
+      const ext = mime.split(";")[0].split("/")[1] || "webm";
+      const audioFile = new File([blob], `recording-${Date.now()}.${ext}`, { type: mime });
       const response = await base44.functions.invoke("transcribeAudioWithWhisper", { file: audioFile });
       const enhanced = enhanceTranscription(response.data?.text || "");
       setTranscript(enhanced);
@@ -111,8 +128,21 @@ export default function VisitAudioRecorder({ onTranscribed, disabled = false }) 
       });
       if (res.data && res.data.success) {
         const soap = res.data.data;
-        const formatted = `
-[SOAP Note Generated from Audio]
+        const rawTranscript = (soap.raw_transcript || "").trim();
+        if (rawTranscript) {
+          // Feed the TRANSCRIPT (what was actually said) into the draft as the
+          // grounding source of truth; the structured SOAP is kept only as an
+          // advisory reference card. The constrained scribe in Step 2 re-voices
+          // and grounds this transcript, so a backend AI fabrication can't slip
+          // into the chart unverified.
+          onTranscribed?.(enhanceTranscription(rawTranscript));
+          setSoapPreview(soap);
+          toast.success("Transcribed — review and generate a verified note in the next step.");
+        } else {
+          // No transcript came back: fall back to the structured block so the
+          // recording isn't lost. It still passes through Step-2 verification.
+          const formatted = `
+[SOAP draft from audio — verify every detail in the next step]
 Subjective: ${soap.subjective || "N/A"}
 
 Objective: ${soap.objective || "N/A"}
@@ -121,8 +151,9 @@ Assessment: ${soap.assessment || "N/A"}
 
 Plan: ${soap.plan || "N/A"}
 `.trim();
-        onTranscribed?.(formatted);
-        toast.success("SOAP note generated!");
+          onTranscribed?.(formatted);
+          toast.success("SOAP draft generated — verify it in the next step.");
+        }
       } else {
         toast.error("Failed to generate SOAP note.");
       }
@@ -141,12 +172,7 @@ Plan: ${soap.plan || "N/A"}
     setError(null);
     setTranscript(null);
     setShowMapper(false);
-  };
-
-  const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, "0")}`;
+    setSoapPreview(null);
   };
 
   // Release the mic, recorder, and timer on unmount mid-recording. Detach onstop
@@ -250,6 +276,23 @@ Plan: ${soap.plan || "N/A"}
               />
             </div>
           )}
+        </div>
+      )}
+
+      {/* Advisory SOAP structure. Rendered OUTSIDE the audioUrl branch: the SOAP
+          path deliberately never keeps the PHI audio blob (audioUrl stays null),
+          so if this card lived inside that branch it could never appear. */}
+      {soapPreview && (
+        <div className="border-t border-slate-200 pt-3 mt-3">
+          <p className="text-xs font-semibold text-slate-600 mb-1.5 flex items-center gap-1.5">
+            <FileAudio className="w-3.5 h-3.5" /> AI SOAP structure — reference only (not saved)
+          </p>
+          <div className="text-xs text-slate-600 bg-slate-50 border border-slate-200 rounded-md p-2 space-y-1 leading-relaxed">
+            {["subjective", "objective", "assessment", "plan"].map((k) => (
+              <p key={k}><span className="font-semibold capitalize text-slate-700">{k}:</span> {soapPreview[k] || "N/A"}</p>
+            ))}
+          </div>
+          <p className="text-[11px] text-slate-400 mt-1">Your transcript was added to the note. Generate a verified note in the next step — every value is checked against what was said.</p>
         </div>
       )}
     </div>

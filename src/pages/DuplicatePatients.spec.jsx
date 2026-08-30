@@ -10,7 +10,17 @@ const { patientList, patientUpdate, visitFilter } = vi.hoisted(() => ({
 }));
 
 vi.mock('@/api/base44Client', () => {
-  const patient = { list: patientList, filter: vi.fn(async () => []), update: patientUpdate };
+  const patient = {
+    list: patientList,
+    // mergePatientInto validates the survivor with Patient.filter({ id }) —
+    // answer from the same roster the list mock serves.
+    filter: vi.fn(async (query) => {
+      const rows = await patientList();
+      if (query && 'id' in query) return (rows || []).filter((r) => r.id === query.id);
+      return [];
+    }),
+    update: patientUpdate,
+  };
   const visit = { list: vi.fn(async () => []), filter: visitFilter, update: vi.fn(async () => ({})) };
   const generic = { list: vi.fn(async () => []), filter: vi.fn(async () => []), update: vi.fn(async () => ({})) };
   const entities = new Proxy(
@@ -64,8 +74,9 @@ describe('DuplicatePatients page', () => {
     await user.click(await screen.findByRole('button', { name: 'Merge' }));
 
     await waitFor(() => {
-      // p2's visit was reassigned to the survivor p1...
-      expect(visitFilter).toHaveBeenCalledWith({ patient_id: 'p2' });
+      // p2's visit was reassigned to the survivor p1... (fetched with an explicit
+      // page-size limit so more than the SDK's default 50 records follow the patient).
+      expect(visitFilter).toHaveBeenCalledWith({ patient_id: 'p2' }, undefined, expect.any(Number));
       // ...and p2 was soft-archived (not hard-deleted) and pointed at p1.
       expect(patientUpdate).toHaveBeenCalledWith(
         'p2',

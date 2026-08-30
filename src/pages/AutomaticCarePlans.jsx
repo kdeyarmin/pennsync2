@@ -51,6 +51,8 @@ import {
 } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import PageContainer from "@/components/ui/PageContainer";
+import { ALL_ROWS } from '@/lib/queryLimits';
+import { isAdminView } from "@/lib/roles";
 
 export default function AutomaticCarePlans() {
 
@@ -80,12 +82,12 @@ export default function AutomaticCarePlans() {
     queryFn: () => base44.auth.me(),
   });
 
-  const isAdmin = currentUser?.role === 'admin';
+  const isAdmin = isAdminView(currentUser);
 
   // Fetch all automatic care plan triggers
   const { data: triggers = [], isLoading } = useQuery({
     queryKey: ['automaticCarePlanTriggers'],
-    queryFn: () => base44.entities.AutomaticCarePlanTrigger.list('-created_date'),
+    queryFn: () => base44.entities.AutomaticCarePlanTrigger.list('-created_date', ALL_ROWS),
     initialData: [],
     enabled: isAdmin,
   });

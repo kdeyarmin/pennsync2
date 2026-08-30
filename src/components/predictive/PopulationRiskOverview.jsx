@@ -1,4 +1,6 @@
 import { useMemo } from "react";
+import { Link } from "react-router";
+import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -6,7 +8,8 @@ import {
   Users,
   AlertTriangle,
   Activity,
-  Brain
+  Brain,
+  ChevronRight
 } from "lucide-react";
 import {
   PieChart,
@@ -20,6 +23,7 @@ import {
   Tooltip,
   ResponsiveContainer
 } from "recharts";
+import { isWithinLastDays } from "@/lib/dateLocal";
 
 const RISK_COLORS = {
   high: '#ef4444',
@@ -79,12 +83,7 @@ export default function PopulationRiskOverview({
       }
 
       // Visit frequency changes
-      const recentVisits = patientVisits.filter(v => {
-        const visitDate = new Date(v.visit_date);
-        const weekAgo = new Date();
-        weekAgo.setDate(weekAgo.getDate() - 14);
-        return visitDate >= weekAgo;
-      });
+      const recentVisits = patientVisits.filter(v => isWithinLastDays(v.visit_date, 14));
       if (recentVisits.length === 0 && patientVisits.length > 0) {
         riskScore += 10;
         riskFactors.push('No recent visits');
@@ -262,14 +261,16 @@ export default function PopulationRiskOverview({
               .sort((a, b) => b.riskScore - a.riskScore)
               .slice(0, 20)
               .map(patient => (
-                <div 
+                <Link
                   key={patient.id}
-                  className="flex items-center justify-between p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors"
+                  to={`${createPageUrl("PatientDetails")}?id=${patient.id}`}
+                  title={`Open ${patient.first_name} ${patient.last_name}'s record`}
+                  className="flex items-center justify-between p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors no-underline outline-none focus-visible:ring-2 focus-visible:ring-navy-500"
                 >
                   <div className="flex items-center gap-3">
                     <div className={`w-3 h-3 rounded-full`} style={{ backgroundColor: RISK_COLORS[patient.riskLevel] }} />
                     <div>
-                      <p className="text-sm font-medium">{patient.first_name} {patient.last_name}</p>
+                      <p className="text-sm font-medium text-slate-900">{patient.first_name} {patient.last_name}</p>
                       <p className="text-xs text-slate-500">
                         {patient.riskFactors.slice(0, 2).join(' • ')}
                       </p>
@@ -277,10 +278,10 @@ export default function PopulationRiskOverview({
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="w-24">
-                      <Progress 
-                        value={patient.riskScore} 
+                      <Progress
+                        value={patient.riskScore}
                         className="h-2"
-                        style={{ 
+                        style={{
                           '--progress-background': RISK_COLORS[patient.riskLevel]
                         }}
                       />
@@ -292,8 +293,9 @@ export default function PopulationRiskOverview({
                     }`}>
                       {patient.riskScore}%
                     </Badge>
+                    <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
                   </div>
-                </div>
+                </Link>
               ))}
           </div>
         </CardContent>

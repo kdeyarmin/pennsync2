@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { agencyQueryKey } from '@/lib/agencyRoster';
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { configNotReadyMessage } from "@/lib/aiFeatureError";
 import { distributePolicyAcknowledgment } from "@/functions/distributePolicyAcknowledgment";
@@ -12,7 +13,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { FileCheck2, Loader2, Download, ClipboardList } from "lucide-react";
 import AssignmentWizard from "@/components/training/AssignmentWizard";
 import AccessDeniedState from "@/components/ui/AccessDeniedState";
+import { escapeCsvField } from "@/components/admin/csvExport";
 import { toast } from "sonner";
+import { isPastLocalDueDate } from '@/lib/dateLocal';
+import { isSafeExternalUrl } from "@/components/utils/security";
 
 export default function PolicyAcknowledgmentManager() {
   const queryClient = useQueryClient();
@@ -24,7 +28,11 @@ export default function PolicyAcknowledgmentManager() {
   const { data: currentUser } = useQuery({ queryKey: ["currentUser"], queryFn: () => base44.auth.me() });
   const isAdminUser = currentUser?.role === "admin" || currentUser?.account_type === "agency_admin" || currentUser?.account_type === "super_admin";
 
-  const { data: users = [] } = useQuery({ queryKey: ["policy-users"], queryFn: () => base44.entities.User.list("-created_date", 500), initialData: [], enabled: isAdminUser });
+  const { data: users = [] } = useQuery({ queryKey: ["policy-users", agencyQueryKey(currentUser)], queryFn: async () => {
+      const _rows = await base44.entities.User.list("-created_date", 500);
+      const { filterUsersByCallerAgency } = await import('@/lib/agencyScope');
+      return filterUsersByCallerAgency(_rows, currentUser);
+    }, initialData: [], enabled: isAdminUser });
   const { data: policies = [] } = useQuery({ queryKey: ["policy-library"], queryFn: () => base44.entities.PolicyLibrary.list("-created_date", 200), initialData: [], enabled: isAdminUser });
   // Read org-wide acknowledgments through the service-role `list` action so
   // account_type admins (agency_admin/super_admin) see all rows, not just their
@@ -49,7 +57,7 @@ export default function PolicyAcknowledgmentManager() {
       const version = policy.version || "1";
       const rows = acks.filter((a) => a.policy_id === policy.id && a.policy_version === version);
       const acknowledged = rows.filter((a) => a.acknowledged).length;
-      const overdue = rows.filter((a) => !a.acknowledged && a.due_date && new Date(a.due_date) < new Date()).length;
+      const overdue = rows.filter((a) => !a.acknowledged && isPastLocalDueDate(a.due_date)).length;
       byPolicy[policy.id] = { total: rows.length, acknowledged, overdue, version, rows };
     }
     return byPolicy;
@@ -71,6 +79,7 @@ export default function PolicyAcknowledgmentManager() {
       });
       setResult(res?.data || res);
       queryClient.invalidateQueries({ queryKey: ["policy-acks"] });
+      queryClient.invalidateQueries({ queryKey: ["my-policy-acks"] });
     } catch (error) {
       setResult({ error: configNotReadyMessage(error) || error?.message || "Failed to distribute policy." });
     } finally {
@@ -84,10 +93,13 @@ export default function PolicyAcknowledgmentManager() {
       toast.error("No acknowledgments to export yet");
       return;
     }
-    const escape = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+    // Use the shared escaper so user-controlled name/signed-name cells beginning
+    // with = + - @ are neutralized against spreadsheet formula injection (RFC
+    // quoting alone does not prevent Excel/Sheets from evaluating them).
+    const escape = escapeCsvField;
     const header = ["Staff", "Email", "Version", "Status", "Signed Name", "Acknowledged At", "Due Date"];
     const lines = stats.rows.map((r) =>
-      [r.user_name || "", r.user_id || "", r.policy_version || "", r.acknowledged ? "Acknowledged" : (r.due_date && new Date(r.due_date) < new Date() ? "Overdue" : "Pending"), r.signed_name || "", r.acknowledged_at ? new Date(r.acknowledged_at).toISOString() : "", r.due_date || ""].map(escape).join(",")
+      [r.user_name || "", r.user_id || "", r.policy_version || "", r.acknowledged ? "Acknowledged" : (isPastLocalDueDate(r.due_date) ? "Overdue" : "Pending"), r.signed_name || "", r.acknowledged_at ? new Date(r.acknowledged_at).toISOString() : "", r.due_date || ""].map(escape).join(",")
     );
     const csv = [`Policy Acknowledgment — ${policy.title} (v${stats.version})`, header.map(escape).join(","), ...lines].join("\n");
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
@@ -136,7 +148,7 @@ export default function PolicyAcknowledgmentManager() {
           {selectedPolicy && (
             <p className="text-sm text-slate-500">
               {selectedPolicy.policy_number ? `${selectedPolicy.policy_number} · ` : ""}Version {selectedPolicy.version || "1"}
-              {selectedPolicy.doc_url ? <> · <a className="text-blue-600 underline" href={selectedPolicy.doc_url} target="_blank" rel="noopener noreferrer">Document</a></> : null}
+              {selectedPolicy.doc_url && isSafeExternalUrl(selectedPolicy.doc_url) ? <> · <a className="text-blue-600 underline hover:text-blue-700" href={selectedPolicy.doc_url} target="_blank" rel="noopener noreferrer">Document</a></> : null}
             </p>
           )}
           {result && !result.error && (

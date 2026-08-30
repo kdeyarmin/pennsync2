@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAgencyScopedQuery } from '@/hooks/useAgencyScopedQuery';
+import { useScopedPatients } from '@/hooks/useScopedPatients';
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -9,6 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { Search, FileText, Download, Trash2, Eye, Calendar, User, Tag, Filter, Grid, List, Brain, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { parseLocalDate } from "@/lib/dateLocal";
+import { openExternalUrl } from "@/components/utils/security";
 import DocumentAIAnalysis from "./DocumentAIAnalysis";
 import {
   AlertDialog,
@@ -76,7 +80,7 @@ const DocumentCard = ({ doc, onDocumentClick, getPatientName, getCategoryLabel, 
           {doc.document_date && (
             <div className="flex items-center gap-1 text-sm text-slate-600">
               <Calendar className="w-3 h-3" />
-              {format(new Date(doc.document_date), 'MMM d, yyyy')}
+              {format(parseLocalDate(doc.document_date), 'MMM d, yyyy')}
             </div>
           )}
           {doc.tags?.length > 0 && (
@@ -109,7 +113,7 @@ const DocumentCard = ({ doc, onDocumentClick, getPatientName, getCategoryLabel, 
             variant="outline"
             size="sm"
             className="flex-1"
-            onClick={() => onDocumentClick ? onDocumentClick(doc) : window.open(doc.file_url, '_blank')}
+            onClick={() => onDocumentClick ? onDocumentClick(doc) : openExternalUrl(doc.file_url)}
           >
             <Eye className="w-4 h-4 mr-1" />
             View
@@ -163,26 +167,32 @@ const DocumentCard = ({ doc, onDocumentClick, getPatientName, getCategoryLabel, 
   );
 };
 
-export default function DocumentList({ patientId, showPatientInfo = true, onDocumentClick }) {
+export default function DocumentList({ patientId, showPatientInfo = true, onDocumentClick, assignment }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [viewMode, setViewMode] = useState("grid");
 
   const queryClient = useQueryClient();
 
-  const { data: documents = [], isLoading } = useQuery({
-    queryKey: patientId ? ['patient-documents', patientId] : ['documents'],
-    queryFn: () => patientId
+  const { data: documents = [], isLoading } = useAgencyScopedQuery({
+    // Row limit is part of the identity — DocumentFaxSender reads 100 rows
+    // under the same roots (see its comment).
+    queryKey: patientId ? ['patient-documents', patientId, 500] : ['documents', 500],
+    fetch: () => patientId
       ? base44.entities.Document.filter({ patient_id: patientId }, '-created_date', 500)
       : base44.entities.Document.list('-created_date', 500),
+    // Only the unpinned branch reads across charts. The patient_id branch is
+    // already narrower than agency, and scoping it would hide a document on
+    // THIS chart uploaded by a co-treating clinician from another agency.
+    scoped: !patientId,
+    authorOf: (d) => d.uploaded_by || d.created_by,
     initialData: []
   });
 
-  const { data: allPatients = [] } = useQuery({
-    queryKey: ['patients'],
-    queryFn: () => base44.entities.Patient.list('-updated_date', 2000),
-    initialData: [],
-    enabled: showPatientInfo && !patientId
+  const { data: allPatients = [] } = useScopedPatients({
+    sort: '-updated_date',
+    limit: 2000,
+    enabled: showPatientInfo && !patientId,
   });
 
   const deleteMutation = useMutation({
@@ -207,7 +217,12 @@ export default function DocumentList({ patientId, showPatientInfo = true, onDocu
 
     const matchesCategory = categoryFilter === "all" || doc.category === categoryFilter;
 
-    return matchesSearch && matchesCategory;
+    const matchesAssignment =
+      assignment === "with_patient" ? !!doc.patient_id
+        : assignment === "unassigned" ? !doc.patient_id
+        : true;
+
+    return matchesSearch && matchesCategory && matchesAssignment;
   });
 
   const getCategoryLabel = (category) => {

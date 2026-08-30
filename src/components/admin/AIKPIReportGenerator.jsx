@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { useAgencyScopedQuery } from '@/hooks/useAgencyScopedQuery';
+import { useScopedPatients } from '@/hooks/useScopedPatients';
 import { useAICall } from "@/hooks/useAICall";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
@@ -27,21 +29,18 @@ import {
 } from "lucide-react";
 
 export default function AIKPIReportGenerator() {
+
   const [timeframe, setTimeframe] = useState("30");
   const [report, setReport] = useState(null);
   const ai = useAICall();
 
-  const { data: visits = [] } = useQuery({
+  const { data: visits = [] } = useAgencyScopedQuery({
     queryKey: ['visitsForKPI'],
-    queryFn: () => base44.entities.Visit.list('-created_date', 500),
+    fetch: () => base44.entities.Visit.list('-created_date', 500),
     initialData: [],
   });
 
-  const { data: patients = [] } = useQuery({
-    queryKey: ['patientsForKPI'],
-    queryFn: () => base44.entities.Patient.list('-updated_date', 2000),
-    initialData: [],
-  });
+  const { data: patients = [] } = useScopedPatients({ sort: '-updated_date', limit: 2000 });
 
   const { data: complianceAudits = [] } = useQuery({
     queryKey: ['complianceAuditsForKPI'],
@@ -49,9 +48,9 @@ export default function AIKPIReportGenerator() {
     initialData: [],
   });
 
-  const { data: incidents = [] } = useQuery({
+  const { data: incidents = [] } = useAgencyScopedQuery({
     queryKey: ['incidentsForKPI'],
-    queryFn: () => base44.entities.Incident.list('-created_date', 200),
+    fetch: () => base44.entities.Incident.list('-created_date', 200),
     initialData: [],
   });
 
@@ -90,8 +89,8 @@ DATA SUMMARY:
 
 TOP DIAGNOSES (from visits):
 ${[...new Set(recentVisits.map(v => visits.find(all => all.id === v.id)).filter(v => v?.nurse_notes).map(v => {
-  const match = v.nurse_notes.match(/diagnosis|dx|condition:?\s*([^.]+)/i);
-  return match ? match[1].trim() : null;
+  const match = v.nurse_notes.match(/(?:diagnosis|dx|condition):?\s*([^.\n]+)/i);
+  return match?.[1] ? match[1].trim() : null;
 }).filter(Boolean))].slice(0, 5).map((dx, i) => `${i + 1}. ${dx}`).join('\n') || 'Not available'}
 
 Analyze and provide:
@@ -159,7 +158,7 @@ Return as JSON:
 }`;
 
       const result = await ai.run({
-        model: "claude_opus_4_8",
+        model: "automatic",
         prompt,
         response_json_schema: {
           type: "object",

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { formatEastern } from "../utils/timezone";
 import { toast } from 'sonner';
+import { isAdminView } from "@/lib/roles";
 
 export default function SecurityAnomalyDetector() {
   const [analyzing, setAnalyzing] = useState(false);
@@ -31,13 +32,13 @@ export default function SecurityAnomalyDetector() {
   const { data: securityLogs = [] } = useQuery({
     queryKey: ['recentSecurityLogs'],
     queryFn: () => base44.entities.SecurityLog.list('-timestamp', 500),
-    enabled: currentUser?.role === 'admin'
+    enabled: isAdminView(currentUser)
   });
 
   const { data: userActivities = [] } = useQuery({
     queryKey: ['recentUserActivities'],
     queryFn: () => base44.entities.UserActivity.list('-created_date', 1000),
-    enabled: currentUser?.role === 'admin'
+    enabled: isAdminView(currentUser)
   });
 
   const analyzeSecurityPatterns = async () => {
@@ -57,7 +58,11 @@ export default function SecurityAnomalyDetector() {
       // 1. Check for repeated failed actions by user
       const failedByUser = {};
       recentLogs.forEach(log => {
-        if (log.action?.includes('FAILED') || log.action?.includes('DENIED')) {
+        // Case-insensitive: logged action values are not consistently uppercase
+        // (most are lowercase snake_case), so uppercase substring tests silently
+        // matched nothing.
+        const action = log.action?.toUpperCase() || '';
+        if (action.includes('FAILED') || action.includes('DENIED')) {
           failedByUser[log.user_email] = (failedByUser[log.user_email] || 0) + 1;
         }
       });
@@ -77,11 +82,13 @@ export default function SecurityAnomalyDetector() {
       // 2. Check for unusual access patterns
       const accessByHour = Array(24).fill(0);
       recentActivities.forEach(activity => {
-        const hour = new Date(activity.created_date).getHours();
-        accessByHour[hour]++;
+        // Bucket by the Eastern-Time hour (not the browser's local zone) so the
+        // off-hours window is consistent regardless of the client's timezone.
+        const hour = Number(formatEastern(activity.created_date, 'H'));
+        if (hour >= 0 && hour < 24) accessByHour[hour]++;
       });
       accessByHour.forEach((count, hour) => {
-        if ((hour < 6 || hour > 22) && count > 10) {
+        if ((hour < 6 || hour >= 22) && count > 10) {
           detectedAnomalies.push({
             type: 'after_hours_activity',
             severity: 'warning',
@@ -93,8 +100,8 @@ export default function SecurityAnomalyDetector() {
       });
 
       // 3. Check for bulk operations
-      const bulkOps = recentLogs.filter(log => 
-        log.action?.includes('BULK') && log.details?.record_count > 20
+      const bulkOps = recentLogs.filter(log =>
+        log.action?.toUpperCase().includes('BULK') && log.details?.record_count > 20
       );
       bulkOps.forEach(op => {
         detectedAnomalies.push({

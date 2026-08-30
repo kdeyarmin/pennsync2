@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { severitySolidClass } from "@/lib/severityStyles";
 
 
 import {
@@ -20,6 +21,7 @@ import {
   ListChecks,
   Activity
 } from "lucide-react";
+import { ALL_ROWS } from '@/lib/queryLimits';
 
 export default function ClinicalPathwayTrigger({ pdgmData, _analysisResults, patientId, onTasksCreated, onPathwaysTriggered }) {
   const [triggeredPathways, setTriggeredPathways] = useState([]);
@@ -35,9 +37,10 @@ export default function ClinicalPathwayTrigger({ pdgmData, _analysisResults, pat
 
   // Fetch all active clinical pathways
   const { data: pathways = [] } = useQuery({
-    queryKey: ['clinicalPathways'],
+    // Active-only — see AIPathwayRecommender.jsx.
+    queryKey: ['clinicalPathways', 'active'],
     queryFn: async () => {
-      const result = await base44.entities.ClinicalPathway.filter({ is_active: true });
+      const result = await base44.entities.ClinicalPathway.filter({ is_active: true }, undefined, ALL_ROWS);
       return result;
     }
   });
@@ -55,10 +58,10 @@ export default function ClinicalPathwayTrigger({ pdgmData, _analysisResults, pat
     const valueLower = (value || '').toLowerCase();
 
     switch (type) {
-      case 'diagnosis_code':
+      case 'diagnosis_code': {
         const primaryCode = (data.primary_diagnosis_code || '').toLowerCase();
         const allCodes = (data.comorbidities || []).map(c => c.toLowerCase());
-        
+
         if (operator === 'equals') {
           return primaryCode === valueLower || allCodes.some(c => c.includes(valueLower));
         } else if (operator === 'starts_with') {
@@ -67,32 +70,37 @@ export default function ClinicalPathwayTrigger({ pdgmData, _analysisResults, pat
           return primaryCode.includes(valueLower) || allCodes.some(c => c.includes(valueLower));
         }
         break;
+      }
 
-      case 'diagnosis_keyword':
+      case 'diagnosis_keyword': {
         const primaryDx = (data.primary_diagnosis || data.primary_diagnosis_description || '').toLowerCase();
         const comorbidityText = (data.comorbidities || []).join(' ').toLowerCase();
         const searchText = primaryDx + ' ' + comorbidityText;
-        
-        return searchText.includes(valueLower);
 
-      case 'clinical_condition':
+        return searchText.includes(valueLower);
+      }
+
+      case 'clinical_condition': {
         const clinicalItems = JSON.stringify(data.clinical_items || {}).toLowerCase();
         return clinicalItems.includes(valueLower);
+      }
 
-      case 'functional_score':
+      case 'functional_score': {
         const functionalScores = data.functional_scores || {};
         const totalScore = Object.values(functionalScores).reduce((sum, val) => sum + (parseInt(val) || 0), 0);
-        
+
         if (operator === 'greater_than') {
           return totalScore > parseInt(value);
         } else if (operator === 'less_than') {
           return totalScore < parseInt(value);
         }
         break;
+      }
 
-      case 'comorbidity':
+      case 'comorbidity': {
         const comorbidities = (data.comorbidities || []).map(c => c.toLowerCase());
         return comorbidities.some(c => c.includes(valueLower));
+      }
 
       default:
         return false;
@@ -100,6 +108,16 @@ export default function ClinicalPathwayTrigger({ pdgmData, _analysisResults, pat
 
     return false;
   }, []);
+
+  // Keep the latest onPathwaysTriggered in a ref so checkPathwayTriggers does not
+  // depend on its identity. Call sites pass an inline arrow that stores the
+  // freshly-built `triggered` array in parent state (see OASISAnalyzer.jsx), so
+  // depending on the prop directly rebuilt the callback on every render, re-ran
+  // the effect below, and handed the parent a new array identity each time —
+  // React never bails out on a new reference, so it looped until "Maximum update
+  // depth exceeded".
+  const onPathwaysTriggeredRef = useRef(onPathwaysTriggered);
+  useEffect(() => { onPathwaysTriggeredRef.current = onPathwaysTriggered; }, [onPathwaysTriggered]);
 
   const checkPathwayTriggers = useCallback(() => {
     const triggered = [];
@@ -121,10 +139,8 @@ export default function ClinicalPathwayTrigger({ pdgmData, _analysisResults, pat
     setTriggeredPathways(triggered);
 
     // Notify parent component
-    if (onPathwaysTriggered) {
-      onPathwaysTriggered(triggered);
-    }
-  }, [pathways, pdgmData, onPathwaysTriggered, evaluateCondition]);
+    onPathwaysTriggeredRef.current?.(triggered);
+  }, [pathways, pdgmData, evaluateCondition]);
 
   // Check for pathway triggers when data changes
   useEffect(() => {
@@ -157,20 +173,19 @@ export default function ClinicalPathwayTrigger({ pdgmData, _analysisResults, pat
       return createTaskMutation.mutateAsync(taskData);
     });
 
-    await Promise.all(taskPromises);
-    
-    if (onTasksCreated) {
-      onTasksCreated(pathway.recommended_tasks.length);
-    }
-  };
+    // allSettled (not all): a partial failure was previously an unhandled rejection
+    // with no user feedback. Report how many succeeded and surface the rest.
+    const results = await Promise.allSettled(taskPromises);
+    const succeeded = results.filter(r => r.status === 'fulfilled').length;
+    const failed = results.length - succeeded;
 
-  const getPriorityColor = (priority) => {
-    switch (priority) {
-      case 'critical': return 'bg-red-600 text-white';
-      case 'high': return 'bg-orange-500 text-white';
-      case 'medium': return 'bg-yellow-500 text-white';
-      case 'low': return 'bg-blue-500 text-white';
-      default: return 'bg-slate-500 text-white';
+    if (onTasksCreated && succeeded > 0) {
+      onTasksCreated(succeeded);
+    }
+    if (failed > 0) {
+      toast.error(`Created ${succeeded} of ${results.length} pathway task(s); ${failed} failed. Please retry the failed one(s).`);
+    } else {
+      toast.success(`Created ${succeeded} pathway task(s).`);
     }
   };
 
@@ -205,7 +220,7 @@ export default function ClinicalPathwayTrigger({ pdgmData, _analysisResults, pat
             <div className="bg-gradient-to-r from-indigo-100 to-navy-100 p-4">
               <div className="flex items-center justify-between mb-2">
                 <h3 className="font-bold text-indigo-900 text-lg">{pathway.pathway_name}</h3>
-                <Badge className={getPriorityColor(pathway.priority_level)}>
+                <Badge className={severitySolidClass(pathway.priority_level)}>
                   {pathway.priority_level} priority
                 </Badge>
               </div>
@@ -232,7 +247,7 @@ export default function ClinicalPathwayTrigger({ pdgmData, _analysisResults, pat
                       <div key={pIdx} className="bg-white p-2 rounded border">
                         <div className="flex items-center justify-between mb-1">
                           <span className="text-sm font-medium text-slate-800">{prompt.category}</span>
-                          <Badge className={`text-xs ${getPriorityColor(prompt.priority)}`}>
+                          <Badge className={`text-xs ${severitySolidClass(prompt.priority)}`}>
                             {prompt.priority}
                           </Badge>
                         </div>
@@ -343,7 +358,7 @@ export default function ClinicalPathwayTrigger({ pdgmData, _analysisResults, pat
                         <div className="flex items-center justify-between mb-1">
                           <span className="text-sm font-medium text-slate-800">{task.task_title}</span>
                           <div className="flex gap-1">
-                            <Badge className={`text-xs ${getPriorityColor(task.priority)}`}>
+                            <Badge className={`text-xs ${severitySolidClass(task.priority)}`}>
                               {task.priority}
                             </Badge>
                             <Badge variant="outline" className="text-xs">
@@ -397,13 +412,3 @@ export default function ClinicalPathwayTrigger({ pdgmData, _analysisResults, pat
     </Card>
   );
 }
-
-const _getPriorityColor = (priority) => {
-  switch (priority) {
-    case 'critical': return 'bg-red-600 text-white';
-    case 'high': return 'bg-orange-500 text-white';
-    case 'medium': return 'bg-yellow-500 text-white';
-    case 'low': return 'bg-blue-500 text-white';
-    default: return 'bg-slate-500 text-white';
-  }
-};

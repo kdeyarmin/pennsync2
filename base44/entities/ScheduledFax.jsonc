@@ -54,6 +54,15 @@
     "claimed_at": {
       "type": "string",
       "format": "date-time"
+    },
+    "canceled_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the scheduled fax was canceled (survives claim races; claim must not clear this)"
+    },
+    "canceled_by": {
+      "type": "string",
+      "description": "Email of the user who canceled the scheduled fax"
     }
   },
   "required": [
@@ -65,14 +74,26 @@
   "rls": {
     "read": {
       "$or": [
-        { "created_by": "{{user.email}}" },
-        { "user_condition": { "role": "admin" } }
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
       ]
     },
     "write": {
       "$or": [
-        { "created_by": "{{user.email}}" },
-        { "user_condition": { "role": "admin" } }
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
       ]
     }
   }

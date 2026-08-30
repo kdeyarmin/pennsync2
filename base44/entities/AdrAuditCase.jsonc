@@ -1,10 +1,17 @@
 {
   "name": "AdrAuditCase",
   "type": "object",
+  // One Medicare ADR / audit response case, end to end: the uploaded ADR
+  // letter, its AI analysis, the CMS-grounded requirement checklist
+  // (src/components/adr/adrRequirements.js), the uploaded response packet, the
+  // page-by-page verification summary (src/components/adr/adrPacketReview.js),
+  // and the generated submission-ready packet (base44/functions/
+  // generateAdrPacket). Created and driven by the admin-only ADR Center page
+  // (src/pages/ADRCenter.jsx).
   "properties": {
     "case_name": {
       "type": "string",
-      "description": "Display name for the case, e.g. 'Palmetto TPE \u2014 J. Smith \u2014 DOS 01/2026'"
+      "description": "Display name for the case, e.g. 'Palmetto TPE — J. Smith — DOS 01/2026'"
     },
     "status": {
       "type": "string",
@@ -18,7 +25,7 @@
         "closed"
       ],
       "default": "letter_uploaded",
-      "description": "Workflow stage. letter_uploaded \u2192 checklist_ready (letter analyzed) \u2192 packet_uploaded \u2192 packet_verified \u2192 packet_generated (final packet built) \u2192 submitted/closed."
+      "description": "Workflow stage. letter_uploaded → checklist_ready (letter analyzed) → packet_uploaded → packet_verified → packet_generated (final packet built) → submitted/closed."
     },
     "audit_type": {
       "type": "string",
@@ -84,48 +91,19 @@
       "items": {
         "type": "object",
         "properties": {
-          "id": {
-            "type": "string"
-          },
-          "seq": {
-            "type": "number"
-          },
-          "source": {
-            "type": "string"
-          },
-          "title": {
-            "type": "string"
-          },
-          "letter_text": {
-            "type": "string"
-          },
-          "letter_details": {
-            "type": "string"
-          },
-          "category": {
-            "type": "string"
-          },
-          "severity": {
-            "type": "string"
-          },
-          "citation": {
-            "type": "string"
-          },
-          "what_to_include": {
-            "type": "string"
-          },
-          "verification_points": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "when": {
-            "type": "string"
-          },
-          "audit_type": {
-            "type": "string"
-          }
+          "id": { "type": "string" },
+          "seq": { "type": "number" },
+          "source": { "type": "string" },
+          "title": { "type": "string" },
+          "letter_text": { "type": "string" },
+          "letter_details": { "type": "string" },
+          "category": { "type": "string" },
+          "severity": { "type": "string" },
+          "citation": { "type": "string" },
+          "what_to_include": { "type": "string" },
+          "verification_points": { "type": "array", "items": { "type": "string" } },
+          "when": { "type": "string" },
+          "audit_type": { "type": "string" }
         }
       },
       "description": "Merged requirement checklist from adrRequirements.js buildAdrChecklist (letter items + CMS baseline, each with citation and reviewer verification points)"
@@ -155,15 +133,9 @@
       "items": {
         "type": "object",
         "properties": {
-          "date": {
-            "type": "string"
-          },
-          "note": {
-            "type": "string"
-          },
-          "created_by": {
-            "type": "string"
-          }
+          "date": { "type": "string" },
+          "note": { "type": "string" },
+          "created_by": { "type": "string" }
         }
       },
       "description": "Chronological case notes"
@@ -171,12 +143,8 @@
     "deadline_reminders": {
       "type": "object",
       "properties": {
-        "last_notified_date": {
-          "type": "string"
-        },
-        "last_days_left": {
-          "type": "number"
-        }
+        "last_notified_date": { "type": "string" },
+        "last_days_left": { "type": "number" }
       },
       "description": "Idempotency marker for the checkAdrDeadlines scheduled job (one reminder notification per case per calendar day)"
     },
@@ -185,21 +153,11 @@
       "items": {
         "type": "object",
         "properties": {
-          "date": {
-            "type": "string"
-          },
-          "to_number": {
-            "type": "string"
-          },
-          "to_name": {
-            "type": "string"
-          },
-          "fax_id": {
-            "type": "string"
-          },
-          "sent_by": {
-            "type": "string"
-          }
+          "date": { "type": "string" },
+          "to_number": { "type": "string" },
+          "to_name": { "type": "string" },
+          "fax_id": { "type": "string" },
+          "sent_by": { "type": "string" }
         }
       },
       "description": "Record of final-packet fax submissions queued through sendFax (delivery status lives on FaxLog)"
@@ -233,30 +191,26 @@
       "description": "Denial reasons / decision details recorded by staff"
     }
   },
+  // Cases are always created from the ADR Center with a letter in hand, but no
+  // field is universally required (metadata arrives from AI analysis after
+  // create), mirroring Referral's create-shape flexibility.
   "required": [],
+  // PHI read-scoping: cases carry beneficiary name/MBI/claim identifiers, so an
+  // unscoped read would let any authenticated user bulk-.list() them (the
+  // guardrail-7 class). ADR response work is an office/admin workflow — reads
+  // are limited to the case creator and admins; writes the same (there is no
+  // cross-user assignment flow for ADR cases today, so no assigned_to clause).
   "rls": {
     "read": {
       "$or": [
-        {
-          "created_by": "{{user.email}}"
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
+        { "created_by": "{{user.email}}" },
+        { "user_condition": { "role": "admin" } }
       ]
     },
     "write": {
       "$or": [
-        {
-          "created_by": "{{user.email}}"
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
+        { "created_by": "{{user.email}}" },
+        { "user_condition": { "role": "admin" } }
       ]
     }
   }

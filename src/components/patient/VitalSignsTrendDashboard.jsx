@@ -4,10 +4,14 @@ import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendingUp, TrendingDown, Activity } from "lucide-react";
+import { formatLocalDate } from "@/lib/dateLocal";
 
 export default function VitalSignsTrendDashboard({ patientId }) {
   const { data: visits = [], isLoading } = useQuery({
-    queryKey: ["patientVisits", patientId],
+    // Distinct key: the bare ["patientVisits", patientId] key is shared by other
+    // components (PatientDetails seeds it with the full list) — reusing it here
+    // with a 10-record slice would corrupt what those siblings read.
+    queryKey: ["patientVisits", patientId, "recent10"],
     queryFn: () =>
       patientId
         ? base44.entities.Visit.filter({ patient_id: patientId }, "-visit_date", 10)
@@ -17,13 +21,13 @@ export default function VitalSignsTrendDashboard({ patientId }) {
 
   // Parse and format vitals data for charts
   const chartData = useMemo(() => {
-    return visits
+    return [...visits]
       .sort((a, b) => new Date(a.visit_date) - new Date(b.visit_date))
       .map((visit, idx) => {
         const v = visit.vital_signs || {};
         return {
           visit: idx + 1,
-          date: new Date(visit.visit_date).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+          date: formatLocalDate(visit.visit_date, { month: "short", day: "numeric" }),
           visitType: visit.visit_type?.replace(/_/g, " ") || "—",
           systolic: v.blood_pressure_systolic || null,
           diastolic: v.blood_pressure_diastolic || null,
@@ -118,7 +122,7 @@ export default function VitalSignsTrendDashboard({ patientId }) {
                 <Tooltip
                   contentStyle={{ backgroundColor: "#fff", border: "1px solid #ddd", borderRadius: "6px" }}
                   formatter={(value) => (value ? value.toFixed(0) : "—")}
-                  labelFormatter={(label) => `Visit ${label}`}
+                  labelFormatter={(label) => label}
                 />
                 <Legend wrapperStyle={{ paddingTop: "10px" }} />
                 <Line type="monotone" dataKey="systolic" stroke="#dc2626" strokeWidth={2.5} name="Systolic" isAnimationActive={false} />
@@ -146,7 +150,7 @@ export default function VitalSignsTrendDashboard({ patientId }) {
                 <Tooltip
                   contentStyle={{ backgroundColor: "#fff", border: "1px solid #ddd", borderRadius: "6px" }}
                   formatter={(value) => (value ? `${value.toFixed(1)}%` : "—")}
-                  labelFormatter={(label) => `Visit ${label}`}
+                  labelFormatter={(label) => label}
                 />
                 <Line type="monotone" dataKey="o2" stroke="#264491" strokeWidth={2.5} name="O₂ Sat" isAnimationActive={false} />
               </LineChart>
@@ -173,7 +177,7 @@ export default function VitalSignsTrendDashboard({ patientId }) {
                 <Tooltip
                   contentStyle={{ backgroundColor: "#fff", border: "1px solid #ddd", borderRadius: "6px" }}
                   formatter={(value) => (value ? value.toFixed(1) : "—")}
-                  labelFormatter={(label) => `Visit ${label}`}
+                  labelFormatter={(label) => label}
                 />
                 <Legend wrapperStyle={{ paddingTop: "10px" }} />
                 <Line yAxisId="left" type="monotone" dataKey="hr" stroke="#7c3aed" strokeWidth={2.5} name="HR (bpm)" isAnimationActive={false} />

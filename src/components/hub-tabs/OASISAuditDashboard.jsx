@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { agencyQueryKey } from '@/lib/agencyRoster';
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -39,6 +40,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import OASISAuditReportGenerator from "@/components/oasis/OASISAuditReportGenerator";
+import { ALL_ROWS } from '@/lib/queryLimits';
 
 export default function OASISAuditDashboard() {
   const [statusFilter, setStatusFilter] = useState("all");
@@ -56,6 +58,9 @@ export default function OASISAuditDashboard() {
     queryFn: () => base44.auth.me(),
   });
 
+  // Gate on role === 'admin' to match OASISAudit read RLS (all-row access is
+  // role-admin only; others are limited to created_by/assigned_to), so this
+  // dashboard isn't shown empty/partial to account_type-only admins.
   const isAdmin = currentUser?.role === 'admin';
 
   // Fetch audits
@@ -65,14 +70,18 @@ export default function OASISAuditDashboard() {
     enabled: isAdmin
   });
 
-  // Fetch admins for assignment
+  // Fetch admins for assignment (agency-scoped for facility admins)
   const { data: admins = [] } = useQuery({
-    queryKey: ['adminUsers'],
+    queryKey: ['adminUsers', agencyQueryKey(currentUser)],
     queryFn: async () => {
-      const users = await base44.entities.User.list();
-      return users.filter(u => u.role === 'admin');
+      const users = await base44.entities.User.list(undefined, ALL_ROWS);
+      const { filterUsersByCallerAgency } = await import('@/lib/agencyScope');
+      const scoped = filterUsersByCallerAgency(users, currentUser);
+      return scoped.filter((u) =>
+        u.role === 'admin' || u.account_type === 'agency_admin',
+      );
     },
-    enabled: isAdmin
+    enabled: isAdmin && !!currentUser,
   });
 
   // Update audit mutation
@@ -303,7 +312,10 @@ export default function OASISAuditDashboard() {
               className={`hover:shadow-md transition-shadow cursor-pointer ${
                 audit.priority === 'critical' ? 'border-red-300' : ''
               }`}
-              onClick={() => setSelectedAudit(audit)}
+              onClick={() => {
+                setReviewNotes(audit.auditor_findings || '');
+                setSelectedAudit(audit);
+              }}
             >
               <CardContent className="p-4">
                 <div className="flex items-start justify-between">
@@ -354,7 +366,7 @@ export default function OASISAuditDashboard() {
       )}
 
       {/* Audit Detail Dialog */}
-      <Dialog open={!!selectedAudit && !showReportDialog} onOpenChange={() => setSelectedAudit(null)}>
+      <Dialog open={!!selectedAudit && !showReportDialog} onOpenChange={() => { setSelectedAudit(null); setReviewNotes(""); }}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           {selectedAudit && (
             <>
@@ -444,7 +456,7 @@ export default function OASISAuditDashboard() {
                 <div>
                   <p className="text-sm font-semibold mb-2">Auditor Findings</p>
                   <Textarea
-                    value={reviewNotes || selectedAudit.auditor_findings || ''}
+                    value={reviewNotes}
                     onChange={(e) => setReviewNotes(e.target.value)}
                     placeholder="Enter your audit findings and recommendations..."
                     className="min-h-[100px]"
@@ -509,7 +521,7 @@ export default function OASISAuditDashboard() {
               </div>
 
               <DialogFooter className="gap-2">
-                <Button variant="outline" onClick={() => setSelectedAudit(null)}>
+                <Button variant="outline" onClick={() => { setSelectedAudit(null); setReviewNotes(""); }}>
                   Close
                 </Button>
                 <Button 
@@ -526,7 +538,6 @@ export default function OASISAuditDashboard() {
                 )}
                 {selectedAudit.status === 'in_review' && (
                   <Button 
-                    className="bg-green-600 hover:bg-green-700"
                     onClick={handleCompleteReview}
                   >
                     <CheckCircle2 className="w-4 h-4 mr-2" />

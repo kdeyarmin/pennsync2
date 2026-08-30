@@ -1,10 +1,11 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useAICall } from "@/hooks/useAICall";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import AICaveat from "@/components/ui/AICaveat";
 import {
   Sparkles,
   TrendingUp,
@@ -15,39 +16,70 @@ import {
   FileText,
   Activity,
   RefreshCw,
-  Loader2
+  Loader2,
+  Copy
 } from "lucide-react";
-import { isValid } from "date-fns";
+import { isWithinLastDays, parseLocalDate, startOfLocalDay } from "@/lib/dateLocal";
 
-export default function AIPatientDashboardSummary({ 
-  patient, 
-  visits = [], 
-  carePlans = [],
+// Flatten the structured AI summary into plain text a clinician can paste into
+// a note (headings + bullets), so the summary isn't trapped in the widget.
+function summaryToText(summary, patient) {
+  if (!summary) return "";
+  const lines = [];
+  const name = patient ? `${patient.first_name || ""} ${patient.last_name || ""}`.trim() : "";
+  if (name) lines.push(`AI Patient Summary — ${name}`);
+  if (summary.overall_status) lines.push(`Overall status: ${summary.overall_status}${summary.status_reason ? ` — ${summary.status_reason}` : ""}`);
+  const section = (title, arr) => {
+    if (Array.isArray(arr) && arr.length) {
+      lines.push("", title);
+      arr.forEach((item) => lines.push(`- ${typeof item === "string" ? item : item?.concern || JSON.stringify(item)}`));
+    }
+  };
+  section("Red flags:", summary.red_flags);
+  section("Key highlights:", summary.key_highlights);
+  section("Priority concerns:", summary.priority_concerns);
+  if (summary.recent_activity_summary) lines.push("", `Recent activity: ${summary.recent_activity_summary}`);
+  if (summary.care_plan_progress) lines.push("", `Care plan progress: ${summary.care_plan_progress}`);
+  section("Next visit priorities:", summary.next_visit_priorities);
+  section("Recommendations:", summary.recommendations);
+  lines.push("", "AI-generated — verify before clinical use.");
+  return lines.join("\n");
+}
+
+export default function AIPatientDashboardSummary({
+  patient,
+  visits = [],
   tasks = [],
   incidents = []
 }) {
   const [summary, setSummary] = useState(null);
+  const [generatedAt, setGeneratedAt] = useState(null);
   const ai = useAICall();
+  const patientIdRef = useRef(patient?.id);
+  patientIdRef.current = patient?.id;
+
+  // Clear sticky dashboard summary when the chart switches patients.
+  useEffect(() => {
+    setSummary(null);
+    setGeneratedAt(null);
+  }, [patient?.id]);
 
   const generateSummary = useCallback(async () => {
+    const requestPatientId = patient?.id;
     try {
       // Get recent visits (last 30 days)
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      const recentVisits = visits.filter(v => {
-        const visitDate = new Date(v.visit_date);
-        return isValid(visitDate) && visitDate >= thirtyDaysAgo;
-      }).slice(0, 10);
+      const recentVisits = visits.filter(v => isWithinLastDays(v.visit_date, 30)).slice(0, 10);
 
-      // Get upcoming visits
-      const today = new Date();
+      // Get upcoming visits. The bound is local MIDNIGHT, not `new Date()`:
+      // visit_date is date-only, so a visit scheduled for TODAY parsed to
+      // midnight and compared against the current time of day sorted BEFORE
+      // "now" — today's scheduled visit vanished from the nurse's upcoming list
+      // for the whole working day.
+      const startOfToday = startOfLocalDay();
       const upcomingVisits = visits.filter(v => {
-        const visitDate = new Date(v.visit_date);
-        return v.status === 'scheduled' && isValid(visitDate) && visitDate >= today;
+        const visitDate = parseLocalDate(v.visit_date);
+        return v.status === 'scheduled' && visitDate != null && visitDate >= startOfToday;
       }).slice(0, 5);
-
-      // Get active care plans
-      const activeCarePlans = carePlans.filter(cp => cp.status === 'active');
 
       // Get pending tasks
       const pendingTasks = tasks.filter(t => t.status === 'pending');
@@ -69,9 +101,6 @@ ${recentVisits.length > 0 ? recentVisits.map(v => `- ${v.visit_date}: ${v.visit_
 
 UPCOMING APPOINTMENTS:
 ${upcomingVisits.length > 0 ? upcomingVisits.map(v => `- ${v.visit_date} at ${v.visit_time || 'TBD'}: ${v.visit_type}`).join('\n') : '- No scheduled visits'}
-
-ACTIVE CARE PLANS (${activeCarePlans.length}):
-${activeCarePlans.length > 0 ? activeCarePlans.map(cp => `- ${cp.problem}: ${cp.goal}`).join('\n') : '- None'}
 
 PENDING TASKS (${pendingTasks.length}):
 ${pendingTasks.length > 0 ? pendingTasks.slice(0, 5).map(t => `- ${t.title} (${t.priority} priority)`).join('\n') : '- None'}
@@ -104,7 +133,7 @@ Provide a comprehensive yet concise dashboard summary in JSON:
 }`;
 
       const result = await ai.run({
-        model: "claude_opus_4_8",
+        model: "automatic",
         prompt,
         response_json_schema: {
           type: "object",
@@ -124,19 +153,20 @@ Provide a comprehensive yet concise dashboard summary in JSON:
         }
       });
 
+      // Drop stale results if the chart switched patients while the AI ran.
+      if (patientIdRef.current !== requestPatientId) return;
       setSummary(result);
+      setGeneratedAt(new Date());
     } catch (error) {
       console.error("Error generating summary:", error);
       toast.error("The AI request didn't complete. Please try again.");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- AI hook object is intentionally omitted; its run() is stable, and including it would re-fire the call every render
-  }, [patient, visits, carePlans, tasks, incidents]);
+  }, [patient, visits, tasks, incidents]);
 
-  useEffect(() => {
-    if (patient) {
-      generateSummary();
-    }
-  }, [patient, patient?.id, generateSummary]);
+  // Manual generate only — auto-firing on chart open (and again whenever visits/
+  // tasks/incidents settle) burned paid AI calls and sent PHI to the LLM without
+  // an explicit clinician action. The Generate / Regenerate buttons remain.
 
   const getStatusColor = (status) => {
     const colors = {
@@ -187,9 +217,27 @@ Provide a comprehensive yet concise dashboard summary in JSON:
             <Sparkles className="w-5 h-5 text-navy-600" />
             AI Patient Dashboard Summary
           </CardTitle>
-          <Button size="sm" variant="outline" onClick={generateSummary}>
-            <RefreshCw className="w-4 h-4" />
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              aria-label="Copy summary to clipboard"
+              title="Copy summary to clipboard"
+              onClick={async () => {
+                try {
+                  await navigator.clipboard.writeText(summaryToText(summary, patient));
+                  toast.success("Summary copied to clipboard");
+                } catch {
+                  toast.error("Couldn't copy — please select the text and copy manually.");
+                }
+              }}
+            >
+              <Copy className="w-4 h-4" />
+            </Button>
+            <Button size="sm" variant="outline" aria-label="Regenerate summary" title="Regenerate summary" onClick={generateSummary}>
+              <RefreshCw className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -334,6 +382,8 @@ Provide a comprehensive yet concise dashboard summary in JSON:
             </ul>
           </div>
         )}
+
+        <AICaveat generatedAt={generatedAt} className="pt-1" />
       </CardContent>
     </Card>
   );

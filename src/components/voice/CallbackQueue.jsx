@@ -11,6 +11,7 @@ import { buildCallbackQueue } from "@/components/voice/callbackQueue";
 import PhoneTopBar from "@/components/phone/PhoneTopBar";
 import ContactAvatar from "@/components/phone/ContactAvatar";
 import { PhoneEmptyState } from "@/components/phone/PhoneFrame";
+import { isSafeExternalUrl } from "@/components/utils/security";
 
 const REASON_STYLES = {
   "Callback requested": "bg-navy-100 text-navy-800",
@@ -58,7 +59,15 @@ export default function CallbackQueue() {
   const queue = useMemo(() => buildCallbackQueue(calls), [calls]);
 
   const callBack = useMutation({
-    mutationFn: ({ patient_id, to_number }) => base44.functions.invoke("startMaskedCall", { patient_id: patient_id || undefined, to_number: to_number || undefined }),
+    mutationFn: async ({ patient_id, to_number }) => {
+      const res = await base44.functions.invoke("startMaskedCall", {
+        patient_id: patient_id || undefined,
+        to_number: to_number || undefined,
+      });
+      const data = res?.data ?? res;
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
     onSuccess: () => toast.success("Connecting… your phone will ring shortly, then we'll dial the patient."),
     onError: (err) => toast.error(err?.message || "Failed to start call"),
   });
@@ -111,7 +120,7 @@ export default function CallbackQueue() {
                       </span>
                     </div>
                     {call.note && <p className="mt-1 text-xs text-slate-600">{call.note}</p>}
-                    {call.has_voicemail && call.voicemail_url && (
+                    {call.has_voicemail && call.voicemail_url && isSafeExternalUrl(call.voicemail_url) && (
                       <audio controls preload="none" src={call.voicemail_url} className="mt-2 h-8 w-full" />
                     )}
                     <div className="mt-2 flex items-center gap-2">

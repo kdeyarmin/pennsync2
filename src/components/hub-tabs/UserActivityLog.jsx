@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { agencyQueryKey } from '@/lib/agencyRoster';
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -37,21 +38,32 @@ import {
   Send
 } from "lucide-react";
 import { formatEastern } from "@/components/utils/timezone";
+import { ALL_ROWS } from '@/lib/queryLimits';
 
 export default function UserActivityLog() {
+  const { data: currentUser } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me(),
+  });
+
+
   const [searchQuery, setSearchQuery] = useState("");
   const [actionFilter, setActionFilter] = useState("all");
   const [userFilter, setUserFilter] = useState("all");
   const [dateRange, setDateRange] = useState("7");
 
   const { data: activities = [], isLoading } = useQuery({
-    queryKey: ['userActivities'],
+    queryKey: ['userActivities', 500],
     queryFn: () => base44.entities.UserActivity.list('-created_date', 500),
   });
 
   const { data: users = [] } = useQuery({
-    queryKey: ['users'],
-    queryFn: () => base44.entities.User.list(),
+    queryKey: ['users', agencyQueryKey(currentUser)],
+    queryFn: async () => {
+      const _rows = await base44.entities.User.list(undefined, ALL_ROWS);
+      const { filterUsersByCallerAgency } = await import('@/lib/agencyScope');
+      return filterUsersByCallerAgency(_rows, currentUser);
+    },
   });
 
   // Filter activities
@@ -146,15 +158,15 @@ export default function UserActivityLog() {
       'page_visit': 'bg-slate-100 text-slate-800',
       'login': 'bg-navy-100 text-navy-800',
       'oasis_upload': 'bg-navy-100 text-navy-800',
-      'oasis_analyze': 'bg-teal-100 text-teal-800',
+      'oasis_analyze': 'bg-sky-100 text-sky-800',
       'oasis_save': 'bg-emerald-100 text-emerald-800',
       'patient_match': 'bg-navy-100 text-navy-800',
       'dispute_match': 'bg-orange-100 text-orange-800',
       'visit_document': 'bg-navy-100 text-navy-800',
       'visit_start': 'bg-green-100 text-green-800',
       'visit_complete': 'bg-emerald-100 text-emerald-800',
-      'care_plan_create': 'bg-lime-100 text-lime-800',
-      'care_plan_update': 'bg-lime-100 text-lime-800',
+      'care_plan_create': 'bg-emerald-100 text-emerald-800',
+      'care_plan_update': 'bg-emerald-100 text-emerald-800',
       'task_create': 'bg-amber-100 text-amber-800',
       'task_complete': 'bg-green-100 text-green-800',
       'incident_report': 'bg-red-100 text-red-800',

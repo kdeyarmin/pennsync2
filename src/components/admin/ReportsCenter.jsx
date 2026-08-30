@@ -32,6 +32,8 @@ import { formatEastern, todayEastern } from "@/components/utils/timezone";
 import { useQuery } from "@tanstack/react-query";
 import { escapeCsvField } from "@/components/admin/csvExport";
 import { toast } from 'sonner';
+import { safePercent } from "@/lib/safePercent";
+import { startOfLocalDay } from "@/lib/dateLocal";
 
 export default function ReportsCenter({ users: allUsers, patients: allPatients, visits, incidents }) {
   const [reportType, setReportType] = useState("productivity");
@@ -67,7 +69,7 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
         previewData = generateDetailedFinancialData(filteredVisits, allPatients);
         break;
       case 'trend_analysis':
-        previewData = generateTrendAnalysisData(visits, incidents, allPatients);
+        previewData = generateTrendAnalysisData(visits, incidents);
         break;
       default:
         break;
@@ -100,7 +102,7 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
         let reportTitle = '';
 
         switch (reportType) {
-          case 'productivity':
+          case 'productivity': {
             reportTitle = 'Productivity Report';
             const prodData = generateProductivityReportData(filteredVisits, allUsers);
             pdfContent = [
@@ -144,8 +146,9 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
               }
             ];
             break;
+          }
 
-          case 'quality':
+          case 'quality': {
             reportTitle = 'Quality Metrics Report';
             const qualityData = generateQualityReportData(filteredVisits, filteredIncidents, allPatients);
             pdfContent = [
@@ -177,8 +180,9 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
               }
             ];
             break;
+          }
 
-          case 'financial':
+          case 'financial': {
             reportTitle = 'Financial Report';
             const finData = generateDetailedFinancialData(filteredVisits, allPatients);
             pdfContent = [
@@ -195,7 +199,7 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
                 ])
               },
               { type: 'spacer', height: 10 },
-              { type: 'heading', text: 'Penn Sync ROI', size: 14 },
+              { type: 'heading', text: 'PennSync by CareMetric ROI', size: 14 },
               { type: 'spacer', height: 5 },
               {
                 type: 'table',
@@ -208,8 +212,9 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
               }
             ];
             break;
+          }
 
-          case 'staff_comparison':
+          case 'staff_comparison': {
             reportTitle = 'Staff Performance Comparison';
             const staffData = generateStaffComparisonData(filteredVisits, allUsers);
             pdfContent = [
@@ -229,9 +234,10 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
               }
             ];
             break;
+          }
 
           default:
-            reportTitle = 'Penn Sync Report';
+            reportTitle = 'PennSync by CareMetric Report';
             pdfContent = [
               { type: 'text', text: 'Report data not available for PDF export in this format.' }
             ];
@@ -313,7 +319,7 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
 
   // Fetch note enhancements for productivity reports (backend entity: NoteConversion)
   const { data: allNoteEnhancements = [] } = useQuery({
-    queryKey: ['allNoteConversions'],
+    queryKey: ['allNoteConversions', 1000],
     queryFn: () => base44.entities.NoteConversion.list('-created_date', 1000),
     initialData: [],
   });
@@ -354,13 +360,17 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
     const days = parseInt(dateRange, 10);
     const dailyEnhancements = [];
     for (let i = days - 1; i >= 0; i--) {
-      const date = format(subDays(new Date(), i), 'yyyy-MM-dd');
+      // Label off the local Date, not a re-parse of the yyyy-MM-dd string:
+      // new Date('2026-08-05') is UTC midnight, which renders as the previous
+      // day in Eastern and shifts every point one day earlier.
+      const day = subDays(new Date(), i);
+      const date = format(day, 'yyyy-MM-dd');
       const dayEnhancements = filteredEnhancements.filter(nc => {
         const createdDate = nc.created_date ? nc.created_date.split('T')[0] : null;
         return createdDate === date;
       });
       dailyEnhancements.push({
-        date: format(new Date(date), 'MM/dd'),
+        date: format(day, 'MM/dd'),
         count: dayEnhancements.length
       });
     }
@@ -410,7 +420,7 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
   const generateProductivityReport = (visits, allUsers, startDate, endDate) => {
     const data = generateProductivityReportData(visits, allUsers);
 
-    let content = `Penn Sync Productivity Report\n`;
+    let content = `PennSync by CareMetric Productivity Report\n`;
     content += `Date Range: ${startDate} to ${endDate}\n`;
     content += `Generated: ${formatEastern(new Date(), 'MMM d, yyyy hh:mm a')}\n\n`;
     content += `Nurse,Note Enhancements,Time Saved (hours)\n`;
@@ -433,7 +443,7 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
   const generateQualityReport = (visits, incidents, allPatients, startDate, endDate) => {
     const data = generateQualityReportData(visits, incidents, allPatients);
 
-    let content = `Penn Sync Quality Metrics Report\n`;
+    let content = `PennSync by CareMetric Quality Metrics Report\n`;
     content += `Date Range: ${startDate} to ${endDate}\n`;
     content += `Generated: ${formatEastern(new Date(), 'MMM d, yyyy hh:mm a')}\n\n`;
     content += `OVERALL METRICS\n`;
@@ -481,7 +491,7 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
     const timeSavedHours = visits.filter(v => v.status === 'completed').length * 95 / 60;
     const costSavings = timeSavedHours * 40; // Avg nurse hourly cost
 
-    let content = `Penn Sync Financial Report\n`;
+    let content = `PennSync by CareMetric Financial Report\n`;
     content += `Date Range: ${startDate} to ${endDate}\n`;
     content += `Generated: ${formatEastern(new Date(), 'MMM d, yyyy hh:mm a')}\n\n`;
     content += `REVENUE ANALYSIS\n`;
@@ -514,14 +524,18 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
       ? Math.round((visitsWithNotes.length / completedVisits.length) * 100)
       : 0;
 
+    // Both sides on LOCAL calendar days. visit_date is date-only, so parsing it
+    // with `new Date()` put it at UTC midnight while created_date is a real
+    // timestamp — comparing the two mixed day boundaries and could land this
+    // "documented within 7 days" compliance count on the wrong side of the line.
     const visitsWithinTimeframe = completedVisits.filter(v => {
-      if (!v.visit_date || !v.created_date) return false;
-      const visitDate = new Date(v.visit_date);
-      const docDate = new Date(v.created_date);
+      const visitDate = startOfLocalDay(v.visit_date);
+      const docDate = startOfLocalDay(v.created_date);
+      if (!visitDate || !docDate) return false;
       return differenceInDays(docDate, visitDate) <= 7;
     });
 
-    let content = `Penn Sync Medicare Compliance Report\n`;
+    let content = `PennSync by CareMetric Medicare Compliance Report\n`;
     content += `Date Range: ${startDate} to ${endDate}\n`;
     content += `Generated: ${formatEastern(new Date(), 'MMM d, yyyy hh:mm a')}\n\n`;
     content += `DOCUMENTATION COMPLIANCE\n`;
@@ -547,24 +561,27 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
       }
     });
 
-    // Analyze vital signs trends
+    // Analyze vital signs trends. Vitals are recorded field-by-field, so a visit
+    // can carry a heart rate with no BP; dividing by "visits with any vitals"
+    // understates every average. Count each measurement separately.
     const vitalsTrends = {};
-    visits.filter(v => v.vital_signs).forEach(v => {
-      if (v.vital_signs.blood_pressure_systolic) {
-        vitalsTrends.avgBPSystolic = (vitalsTrends.avgBPSystolic || 0) + v.vital_signs.blood_pressure_systolic;
+    let bpSum = 0, bpCount = 0, hrSum = 0, hrCount = 0;
+    visits.forEach(v => {
+      const vs = v.vital_signs;
+      if (!vs) return;
+      if (vs.blood_pressure_systolic) {
+        bpSum += Number(vs.blood_pressure_systolic);
+        bpCount += 1;
       }
-      if (v.vital_signs.heart_rate) {
-        vitalsTrends.avgHeartRate = (vitalsTrends.avgHeartRate || 0) + v.vital_signs.heart_rate;
+      if (vs.heart_rate) {
+        hrSum += Number(vs.heart_rate);
+        hrCount += 1;
       }
     });
+    if (bpCount > 0) vitalsTrends.avgBPSystolic = Math.round(bpSum / bpCount);
+    if (hrCount > 0) vitalsTrends.avgHeartRate = Math.round(hrSum / hrCount);
 
-    const visitsWithVitals = visits.filter(v => v.vital_signs && Object.keys(v.vital_signs).length > 0).length;
-    if (visitsWithVitals > 0) {
-      vitalsTrends.avgBPSystolic = Math.round(vitalsTrends.avgBPSystolic / visitsWithVitals);
-      vitalsTrends.avgHeartRate = Math.round(vitalsTrends.avgHeartRate / visitsWithVitals);
-    }
-
-    let content = `Penn Sync Clinical Report\n`;
+    let content = `PennSync by CareMetric Clinical Report\n`;
     content += `Date Range: ${startDate} to ${endDate}\n`;
     content += `Generated: ${formatEastern(new Date(), 'MMM d, yyyy hh:mm a')}\n\n`;
     content += `DIAGNOSIS DISTRIBUTION\n`;
@@ -610,7 +627,7 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
       };
     });
 
-    let content = `Penn Sync Staff Performance Report\n`;
+    let content = `PennSync by CareMetric Staff Performance Report\n`;
     content += `Date Range: ${startDate} to ${endDate}\n`;
     content += `Generated: ${formatEastern(new Date(), 'MMM d, yyyy hh:mm a')}\n\n`;
     content += `Nurse,Credentials,Care Scope,Total Assigned,Completed,Completion Rate %,Documentation Quality %\n`;
@@ -632,7 +649,7 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
       value: 'productivity',
       label: 'Productivity Report',
       icon: TrendingUp,
-      description: 'Visit counts, completion rates, documentation time, Penn Sync time savings'
+      description: 'Visit counts, completion rates, documentation time, PennSync AI time savings'
     },
     {
       value: 'quality',
@@ -644,7 +661,7 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
       value: 'financial',
       label: 'Financial Report',
       icon: DollarSign,
-      description: 'Revenue analysis by visit type, ROI from Penn Sync efficiency'
+      description: 'Revenue analysis by visit type, ROI from PennSync AI efficiency'
     },
     {
       value: 'compliance',
@@ -749,7 +766,7 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
         completed: completed.length,
         completionRate: nurseVisits.length > 0 ? Math.round((completed.length / nurseVisits.length) * 100) : 0,
         docQuality: completed.length > 0 ? Math.round((withCompleteDoc.length / completed.length) * 100) : 0,
-        avgVisitsPerDay: Math.round(nurseVisits.length / parseInt(dateRange, 10))
+        avgVisitsPerDay: Number((nurseVisits.length / Math.max(parseInt(dateRange, 10), 1)).toFixed(1))
       };
     }).sort((a, b) => b.completionRate - a.completionRate);
   };
@@ -791,12 +808,16 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
     const trends = [];
 
     for (let i = days - 1; i >= 0; i--) {
-      const date = format(subDays(new Date(), i), 'yyyy-MM-dd');
+      // Label off the local Date, not a re-parse of the yyyy-MM-dd string:
+      // new Date('2026-08-05') is UTC midnight, which renders as the previous
+      // day in Eastern and shifts every point one day earlier.
+      const day = subDays(new Date(), i);
+      const date = format(day, 'yyyy-MM-dd');
       const dayVisits = visitsData.filter(v => v.visit_date === date);
       const dayIncidents = incidentsData.filter(inc => inc.incident_date === date);
 
       trends.push({
-        date: format(new Date(date), 'MM/dd'),
+        date: format(day, 'MM/dd'),
         visits: dayVisits.length,
         completed: dayVisits.filter(v => v.status === 'completed').length,
         incidents: dayIncidents.length
@@ -892,7 +913,7 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-2xl font-bold mb-2">Penn Sync Reports Center</h2>
+              <h2 className="text-2xl font-bold mb-2">PennSync by CareMetric Reports Center</h2>
               <p className="text-blue-100">
                 Generate comprehensive reports and analytics for your agency
               </p>
@@ -1155,7 +1176,9 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
                         labelLine={true}
                         label={(entry) => {
                           const name = (entry.type || '').replace(/_/g, ' ');
-                          const percent = ((entry.revenue / reportPreview.totalRevenue) * 100).toFixed(0);
+                          // A window with no billable revenue made this render
+                          // "(NaN%)" on every slice; safePercent yields 0 instead.
+                          const percent = safePercent(entry.revenue, reportPreview.totalRevenue);
                           return `${name} (${percent}%)`;
                         }}
                       >

@@ -1,5 +1,6 @@
 import { lazy } from 'react';
 import { NAV_MANIFEST } from '@/lib/nav.manifest';
+import { logger } from '@/lib/logger';
 
 // Single source of truth for the app's authenticated routes.
 //
@@ -20,8 +21,18 @@ import { NAV_MANIFEST } from '@/lib/nav.manifest';
 import Dashboard from '@/pages/Dashboard';
 
 // Lazy factory per page file. Keys look like './pages/Patients.jsx'.
-const pageModules = import.meta.glob('./pages/*.jsx');
+// Spec/test files live alongside the pages and are never routed, but an
+// unfiltered glob still emits a chunk for each one — publishing test code and
+// fixtures to the asset host. Exclude them from the glob.
+const pageModules = import.meta.glob(['./pages/*.jsx', '!./pages/*.spec.jsx', '!./pages/*.test.jsx']);
 const factoryFor = (name) => pageModules[`./pages/${name}.jsx`];
+
+// NOTE: stale-chunk auto-recovery (the "Failed to fetch dynamically imported
+// module" error after a Vite dev-server restart) is handled centrally by the
+// ErrorBoundary in App.jsx, which is always loaded as part of the app shell.
+// Do NOT add a second reload mechanism here — using the same sessionStorage
+// key as the ErrorBoundary creates a reload loop (each layer removes the key
+// the other set). Plain lazy() lets the error bubble to the single boundary.
 
 // Pages that are NOT authenticated, manifest-driven routes:
 //  - Dashboard is added eagerly above.
@@ -36,18 +47,15 @@ const NON_MANIFEST_ROUTES = new Set(['Dashboard']);
  * case-insensitively, so createPageUrl()'s lowercase output still resolves here.
  */
 export const ROUTES = [
-  { name: 'Dashboard', Component: Dashboard, adminOnly: false, superAdminOnly: false, access: 'general' },
+  { name: 'Dashboard', Component: Dashboard, adminOnly: false, superAdminOnly: false },
   ...NAV_MANIFEST
     .filter((entry) => !NON_MANIFEST_ROUTES.has(entry.page))
-    .map((entry) => ({ name: entry.page, factory: factoryFor(entry.page), adminOnly: !!entry.adminOnly, superAdminOnly: !!entry.superAdminOnly, access: entry.access || 'general' }))
+    .map((entry) => ({ name: entry.page, factory: factoryFor(entry.page), adminOnly: !!entry.adminOnly, superAdminOnly: !!entry.superAdminOnly }))
     .filter((entry, index, all) => {
       // Guard against a manifest entry whose page file does not exist (lazy()
       // would crash). Surface it in dev so the mismatch is fixed at the source.
       if (!entry.factory) {
-        if (import.meta.env?.DEV) {
-          // eslint-disable-next-line no-console
-          console.warn(`[routes] manifest page "${entry.name}" has no src/pages/${entry.name}.jsx — skipping route`);
-        }
+        logger.debug(`[routes] manifest page "${entry.name}" has no src/pages/${entry.name}.jsx — skipping route`);
         return false;
       }
       // De-dupe defensively in case a page appears twice in the manifest.
@@ -56,7 +64,7 @@ export const ROUTES = [
     // `adminOnly` mirrors the manifest so App.jsx can gate admin routes at the
     // router level (non-admins typing the URL get blocked, not just hidden from
     // the sidebar). Client-side defense in depth; server RLS is the real gate.
-    .map((entry) => ({ name: entry.name, Component: lazy(entry.factory), adminOnly: entry.adminOnly, superAdminOnly: entry.superAdminOnly, access: entry.access })),
+    .map((entry) => ({ name: entry.name, Component: lazy(entry.factory), adminOnly: entry.adminOnly, superAdminOnly: entry.superAdminOnly })),
 ];
 
 /**
@@ -163,15 +171,15 @@ export const REDIRECTS = [
 
   // ─── Feature-audit consolidation ─────────────────────────────────────────────
   // Redundant standalone pages folded into their canonical homes — see
-  // docs/feature-audit.md. Most page files remain on disk (reachable via the
-  // targets below or as embedded components) so the redirect is reversible.
+  // docs/feature-audit.md. The redirects below are kept so old links/bookmarks
+  // resolve to the current home. (Some page files — ClinicalChart, MyLearning,
+  // ClinicalInsightsDashboard, NurseEducationVideos — were re-ported from the
+  // live PENNSync app for content parity but stay unrouted, mirroring the live
+  // app, which also redirects these paths; route one by adding a manifest entry.)
   //   ClinicalChart       → its vitals / care-plan / OASIS tabs already live in
   //                          PatientDetails; sent to the patient list (no id ctx).
   //   MedicalScribe       → same record→transcribe→review pipeline as the Clinical
-  //                          Notes "Visit Scribe" choice (a strict superset). The
-  //                          dead page file + its scribe-only components were
-  //                          removed once the consolidation proved stable; the
-  //                          redirect below is kept so old links/bookmarks resolve.
+  //                          Notes "Visit Scribe" choice (a strict superset).
   //   ClinicalInsights    → population/risk views duplicated by Predictive Analytics.
   //   DocumentationTraining / NurseEducationVideos → consolidated under the Nurse
   //                          Training Hub. (See doc for the unique-content caveat.)
@@ -179,7 +187,7 @@ export const REDIRECTS = [
   // DocumentVisit (the separate visit-bound page with its own manual/AI-workflow
   // tabs) retired in favor of the unified Clinical Notes hub's Smart Note / Visit
   // Scribe choice. The hub selects the patient/visit itself, so the old ?visitId
-  // binding and DocumentVisit's vitals/template/offline extras are not carried over.
+  // binding and DocumentVisit's vitals/template extras are not carried over.
   // The dead page file and its ~40 single-use components were removed once the
   // consolidation proved stable; the redirect below is kept so old links resolve.
   { from: '/DocumentVisit', to: '/ClinicalDocumentation' },
@@ -188,12 +196,31 @@ export const REDIRECTS = [
   { from: '/DocumentationTraining', to: '/NurseTrainingHub?tab=documentation' },
   { from: '/NurseEducationVideos', to: '/NurseTrainingHub' },
 
-  { from: '/OfflineVisitDocumentation', to: '/OfflineMode?tab=visit' },
-  { from: '/OfflineDocumentation', to: '/OfflineMode?tab=pending' },
+  // Offline mode was removed. Its retired paths, and the two even older ones
+  // that used to forward into it, land on Clinical Notes — the documentation
+  // home that replaces them.
+  { from: '/OfflineMode', to: '/ClinicalDocumentation' },
+  { from: '/OfflineVisitDocumentation', to: '/ClinicalDocumentation' },
+  { from: '/OfflineDocumentation', to: '/ClinicalDocumentation' },
   { from: '/UserActivityLog', to: '/UserActivityReport?tab=log' },
   { from: '/PDFTemplateLibrary', to: '/TemplateManagement?tab=pdf' },
+
+  // NOTE: the Care Plans feature (CarePlanManagement, CarePlanBuilder,
+  // AutomaticCarePlans, their components, backend functions and data entities)
+  // was ported back from the live PENNSync app, so those paths are real
+  // manifest-derived routes again — their former removal redirects are gone.
 ];
 
 export const MAIN_PAGE = 'Dashboard';
 
 export const PAGE_NAMES = ROUTES.map((route) => route.name);
+
+export const ROUTER_PATHS = [
+  '/',
+  '/join',
+  '/signer',
+  '/followup',
+  '/privacy',
+  ...PAGE_NAMES.map((name) => `/${name}`),
+  ...REDIRECTS.map(({ from }) => from),
+];

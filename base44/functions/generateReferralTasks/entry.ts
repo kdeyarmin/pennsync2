@@ -1,5 +1,14 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
+// <<<BEGIN SHARED HELPER: requireActiveUser — generated, edit base44/_shared/backendHelpers.mjs>>>
+const isDeactivatedUser = (u) => !!u && u.is_active === false;
+const DEACTIVATED_USER_RESPONSE = () => Response.json(
+  { error: 'Unauthorized - account is deactivated' },
+  { status: 403 },
+);
+// <<<END SHARED HELPER: requireActiveUser>>>
+
+
 Deno.serve(async (req) => {
     try {
         const base44 = createClientFromRequest(req);
@@ -8,11 +17,12 @@ Deno.serve(async (req) => {
         if (!user) {
             return Response.json({ error: 'Unauthorized' }, { status: 401 });
         }
+        if (isDeactivatedUser(user)) return DEACTIVATED_USER_RESPONSE();
 
         const { referralData, priorityAnalysis } = await req.json();
 
         const tasks = await base44.integrations.Core.InvokeLLM({
-            model: "claude_opus_4_8",
+            model: "automatic",
             prompt: `You are an expert home health intake coordinator. Based on the following referral data and AI priority analysis, generate a comprehensive list of actionable tasks that need to be completed by office staff and clinical staff for this referral.
 
 Prioritize tasks based on the referral's urgency. Ensure tasks are specific, measurable, achievable, relevant, and time-bound (SMART).
@@ -71,12 +81,12 @@ Return a JSON array of 5-12 tasks ordered by priority and due date.`,
             }
         });
 
-        return Response.json({ success: true, tasks: tasks.tasks || [] });
+        return Response.json({ success: true, tasks: Array.isArray(tasks?.tasks) ? tasks.tasks : [] });
 
     } catch (error) {
         console.error('Error generating referral tasks:', error);
         return Response.json({ 
-            error: error.message,
+            error: 'Internal server error',
             success: false
         }, { status: 500 });
     }

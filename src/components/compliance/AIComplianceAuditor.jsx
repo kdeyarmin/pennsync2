@@ -24,6 +24,7 @@ import {
 import { trackRecommendation } from "../training/RecommendationTracker";
 import { logActivity, ActivityActions } from "../utils/activityLogger";
 import { buildComprehensivePatientHistory, formatHistoryForAI, extractKeyInsights } from "../utils/patientHistoryAnalyzer";
+import { PATIENT_HISTORY_ROWS } from '@/lib/queryLimits';
 
 export default function AIComplianceAuditor({ 
   patientId, 
@@ -39,32 +40,30 @@ export default function AIComplianceAuditor({
 
   const { data: patient } = useQuery({
     queryKey: ['patient', patientId],
-    queryFn: () => base44.entities.Patient.filter({ id: patientId }),
-    select: (data) => data[0],
+    queryFn: async () => {
+      const rows = await base44.entities.Patient.filter({ id: patientId });
+      return rows[0] || null;
+    },
+    // PatientDetails may have seeded an object under this key — accept both.
+    select: (data) => (Array.isArray(data) ? data[0] : data) || null,
     enabled: !!patientId,
   });
 
   const { data: visits = [] } = useQuery({
-    queryKey: ['patientVisits', patientId],
+    queryKey: ['patientVisits', patientId, 10],
     queryFn: () => base44.entities.Visit.filter({ patient_id: patientId }, '-visit_date', 10),
     enabled: !!patientId,
   });
 
-  const { data: carePlans = [] } = useQuery({
-    queryKey: ['patientCarePlans', patientId],
-    queryFn: () => base44.entities.CarePlan.filter({ patient_id: patientId }),
-    enabled: !!patientId,
-  });
-
   const { data: oasisData = [] } = useQuery({
-    queryKey: ['patientOASIS', patientId],
+    queryKey: ['patientOASIS', patientId, 1],
     queryFn: () => base44.entities.OASISUpload.filter({ patient_id: patientId }, '-created_date', 1),
     enabled: !!patientId,
   });
 
   const { data: incidents = [] } = useQuery({
-    queryKey: ['patientIncidents', patientId],
-    queryFn: () => base44.entities.Incident.filter({ patient_id: patientId }),
+    queryKey: ['patientIncidents', patientId, PATIENT_HISTORY_ROWS],
+    queryFn: () => base44.entities.Incident.filter({ patient_id: patientId }, undefined, PATIENT_HISTORY_ROWS),
     enabled: !!patientId,
   });
 
@@ -84,8 +83,17 @@ export default function AIComplianceAuditor({
 
       const _targetVisit = visitId ? visits.find(v => v.id === visitId) : visits[0];
       const latestOASIS = oasisData[0];
+      // The regulatory frame must follow the patient's care type: hospice is
+      // surveyed under 42 CFR 418 (no OASIS, no homebound requirement); home
+      // health under 42 CFR 484. Auditing a hospice chart against 484/OASIS
+      // produces wrong-regulation findings presented as fact.
+      const isHospice = String(patient.care_type || 'home_health').toLowerCase() === 'hospice';
 
       const prompt = `You are an expert healthcare compliance auditor specializing in home health and hospice regulations. Perform a comprehensive compliance audit of this patient record WITH EMPHASIS ON CONTINUITY OF CARE AND TREND ANALYSIS.
+
+REGULATORY FRAME: ${isHospice
+  ? 'This is a HOSPICE patient — audit under 42 CFR Part 418 (hospice Conditions of Participation). OASIS and homebound status do NOT apply to hospice; do not cite 42 CFR Part 484.'
+  : 'This is a HOME HEALTH patient — audit under 42 CFR Part 484 (home health Conditions of Participation).'}
 
 ${historyContext}
 
@@ -191,14 +199,6 @@ Notes Length: ${v.nurse_notes?.length || 0} characters
 ${v.nurse_notes ? 'Has documentation' : 'Missing documentation'}
 `).join('\n')}
 
-ACTIVE CARE PLANS (${carePlans.filter(cp => cp.status === 'active').length}):
-${carePlans.filter(cp => cp.status === 'active').map(cp => `
-- Problem: ${cp.problem}
-- Goal: ${cp.goal}
-- Interventions: ${cp.interventions?.join(', ')}
-- Status: ${cp.status}
-`).join('\n')}
-
 OASIS DATA:
 ${latestOASIS ? `
 Assessment Date: ${latestOASIS.created_date}
@@ -213,7 +213,7 @@ ${incidents.map(i => `${i.incident_date}: ${i.incident_type} - ${i.severity} sev
 COMPLIANCE AUDIT REQUIREMENTS:
 Analyze this comprehensive patient record against the following compliance areas:
 
-1. DOCUMENTATION COMPLETENESS (CMS CoP 484.50)
+1. DOCUMENTATION COMPLETENESS (CMS CoP ${isHospice ? '418.104 — clinical records' : '484.50'})
    - Is admission documentation complete?
    - Are baseline assessments documented?
    - Are all required patient demographics captured?
@@ -221,7 +221,7 @@ Analyze this comprehensive patient record against the following compliance areas
    - Are advance directives documented?
    - Is insurance information complete?
 
-2. CLINICAL ASSESSMENT (CMS CoP 484.55)
+2. CLINICAL ASSESSMENT (CMS CoP ${isHospice ? '418.54 — initial and comprehensive assessment' : '484.55'})
    - Are baseline vitals documented?
    - Is functional status properly assessed?
    - Is pain assessed and managed?
@@ -229,51 +229,48 @@ Analyze this comprehensive patient record against the following compliance areas
    - Is mental health screening completed?
    - Are social determinants addressed?
 
-3. MEDICATION MANAGEMENT (CMS CoP 484.60)
+3. MEDICATION MANAGEMENT (CMS CoP ${isHospice ? '418.56 — IDG care planning and coordination' : '484.60'})
    - Is current medication list complete and accurate?
    - Are medication reconciliation processes followed?
    - Are high-risk medications identified?
    - Are medication side effects monitored?
 
-4. CARE PLANNING (CMS CoP 484.60) ${carePlans?.length > 0 ? '- Care plans exist, assess alignment:' : '- No care plans on file (may be appropriate for some patients):'}
-   ${carePlans?.length > 0 ? `- Are care plans based on comprehensive assessment?
-   - Do care plans address all identified problems?
-   - Are patient/family goals documented?
-   - Are interventions specific and measurable?` : '- Assess if care plan development is warranted based on patient needs'}
-
-5. VISIT DOCUMENTATION (Medicare Guidelines)
+4. VISIT DOCUMENTATION (Medicare Guidelines)
    - Are skilled nursing interventions documented?
-   - Is homebound status justified?
+   ${isHospice
+     ? '- Does documentation support the terminal prognosis (decline or continued eligibility)?'
+     : '- Is homebound status justified?'}
    - Is patient response documented?
    - Are teaching efforts and comprehension noted?
    - Are vital signs trended and compared to baseline?
 
-6. OASIS COMPLIANCE (OASIS-E Requirements) ${latestOASIS ? '- OASIS exists, verify alignment:' : '- No OASIS data (skip if not required for this patient/visit):'}
+5. ${isHospice
+  ? 'OASIS COMPLIANCE — NOT APPLICABLE: OASIS does not apply to hospice. Skip this area entirely; do not report OASIS findings.'
+  : `OASIS COMPLIANCE (OASIS-E Requirements) ${latestOASIS ? '- OASIS exists, verify alignment:' : '- No OASIS data (skip if not required for this patient/visit):'}
    ${latestOASIS ? `- Is OASIS assessment current (within 5 days of SOC)?
    - Does clinical documentation support OASIS answers?
-   - Are discrepancies between OASIS and clinical notes identified?` : '- OASIS not applicable - skip this compliance area'}
+   - Are discrepancies between OASIS and clinical notes identified?` : '- OASIS not applicable - skip this compliance area'}`}
 
-7. SAFETY AND RISK MANAGEMENT
+6. SAFETY AND RISK MANAGEMENT
    - Is fall risk assessed and addressed?
    - Are infection prevention measures documented?
    - Are emergency procedures established?
    - Are caregiver training needs identified?
 
-8. REGULATORY COMPLIANCE
+7. REGULATORY COMPLIANCE
    - Are CoP (Conditions of Participation) requirements met?
    - Are state-specific regulations followed?
    - Are privacy (HIPAA) standards maintained?
    - Are coordination of care requirements met?
 
-9. CONTINUITY OF CARE (Critical Focus):
+8. CONTINUITY OF CARE (Critical Focus):
    - Are trends from patient history addressed?
    - Are changes from baseline vitals documented?
    - Are previous visit concerns followed up?
    - Is patient response to interventions tracked?
-   - Are care plan goals progressing appropriately?
    - Are recurring issues identified and managed?
 
-10. CONTEXTUAL COMPLIANCE:
+9. CONTEXTUAL COMPLIANCE:
    - Does documentation reflect understanding of patient trajectory?
    - Are concerning trends escalated appropriately?
    - Is historical context referenced where relevant?
@@ -344,7 +341,7 @@ For each area, provide:
 }`;
 
       const result = await ai.run({
-        model: "claude_opus_4_8",
+        model: "automatic",
         prompt,
         response_json_schema: {
           type: "object",
@@ -500,10 +497,25 @@ For each area, provide:
         visit_id: resolvedVisitId,
         nurse_email: currentUser?.email || 'system',
         patient_id: patientId,
+        // Without audit_date the record is silently excluded from the Medicare
+        // compliance report (ComplianceReportGenerator drops rows lacking it).
+        // Mirror AIProactiveOASISAssistant.jsx which sets it explicitly.
+        audit_date: new Date().toISOString(),
         compliance_score: result.overall_compliance_score,
-        status: result.compliance_level === 'compliant' ? 'passed' : 
+        status: result.compliance_level === 'compliant' ? 'passed' :
                 result.compliance_level === 'critical_issues' ? 'critical' : 'flagged',
-        issues: [...(result.critical_findings || []), ...(result.minor_findings || [])],
+        // Map findings to the ComplianceAudit.issues schema shape
+        // ({element, severity, problem, suggestion}); the raw finding shape
+        // ({category, regulation, issue, risk_level, ...}) is not what the
+        // report reads (it keys gaps/critical issues off issue.element/severity).
+        issues: [...(result.critical_findings || []), ...(result.minor_findings || [])].map((f) => ({
+          element: f.category,
+          severity: f.risk_level,
+          problem: f.issue,
+          suggestion: Array.isArray(f.actionable_steps) && f.actionable_steps.length
+            ? f.actionable_steps.join('; ')
+            : (f.required_state || '')
+        })),
         compliant_elements: result.compliance_strengths || [],
         audit_type: 'automated'
       });
@@ -517,7 +529,7 @@ For each area, provide:
       toast.error("The AI request didn't complete. Please try again.");
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps -- AI hook object is intentionally omitted; its run() is stable, and including it would re-fire the call every render
-  }, [patient, visits, carePlans, oasisData, incidents, currentUser, patientId, visitId, onIssuesFound, queryClient]);
+  }, [patient, visits, oasisData, incidents, currentUser, patientId, visitId, onIssuesFound, queryClient]);
 
   useEffect(() => {
     if (autoRun && patient && !auditResults && !ai.loading) {

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { useScopedPatients } from '@/hooks/useScopedPatients';
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import EmptyState from "@/components/ui/empty-state";
@@ -17,10 +18,14 @@ import {
   Search
 } from "lucide-react";
 import { createPageUrl } from "@/utils";
-import { useNavigate } from "react-router-dom";
+import { openExternalUrl } from "@/components/utils/security";
+import { formatLocalDate } from "@/lib/dateLocal";
+import { useNavigate } from "react-router";
 import { toast } from "sonner";
 import SearchablePatientSelect from "@/components/ui/SearchablePatientSelect";
 import { getNormalizedSignatureStatus, isSignatureOverdue } from "@/components/signature/signatureUtils";
+import { PATIENT_HISTORY_ROWS } from '@/lib/queryLimits';
+import { isAdminLike } from '@/lib/superAdmin';
 
 export default function DocumentSignatures() {
   const navigate = useNavigate();
@@ -36,7 +41,7 @@ export default function DocumentSignatures() {
     queryKey: ['all-signatures', selectedPatient],
     queryFn: () => {
       if (selectedPatient) {
-        return base44.entities.DocumentSignature.filter({ patient_id: selectedPatient });
+        return base44.entities.DocumentSignature.filter({ patient_id: selectedPatient }, undefined, PATIENT_HISTORY_ROWS);
       }
       return base44.entities.DocumentSignature.list('-created_date', 200);
     },
@@ -44,22 +49,24 @@ export default function DocumentSignatures() {
     refetchInterval: 5000
   });
 
-  const { data: patients = [] } = useQuery({
-    queryKey: ['patients-list'],
-    queryFn: () => base44.entities.Patient.list('-created_date', 500),
-    initialData: []
-  });
+  const { data: patients = [] } = useScopedPatients({ sort: '-created_date', limit: 500 });
 
   const handleSignDocument = (sig) => {
-    const url = createPageUrl(`SignDocument?pdf_url=${encodeURIComponent(sig.document_url || sig.original_pdf_url || '')}&signature_id=${sig.id}&patient_id=${sig.patient_id}`);
-    navigate(url);
+    // SignDocument loads the PDF from the DocumentSignature entity by id —
+    // never put document_url / signed-PDF paths in the query string (browser
+    // history, Referer, analytics, and screenshots would retain PHI URLs).
+    const params = new URLSearchParams({ signature_id: sig.id });
+    if (sig.patient_id) params.set('patient_id', sig.patient_id);
+    navigate(createPageUrl(`SignDocument?${params.toString()}`));
   };
 
   const handleSendReminder = async (sig) => {
     try {
-      await base44.functions.invoke('sendSignatureReminder', {
+      const res = await base44.functions.invoke('sendSignatureReminder', {
         signature_id: sig.id
       });
+      const data = res?.data ?? res;
+      if (data?.error) throw new Error(data.error);
       toast.success("Reminder sent successfully!");
     } catch (error) {
       toast.error(`Failed to send reminder: ${error.message}`);
@@ -140,6 +147,7 @@ export default function DocumentSignatures() {
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="flex-1">
               <SearchablePatientSelect
+                patients={patients}
                 value={selectedPatient}
                 onChange={setSelectedPatient}
                 placeholder="Filter by patient (optional)"
@@ -198,7 +206,7 @@ export default function DocumentSignatures() {
                           )}
                           {sig.due_date && (
                             <span className="text-xs text-slate-500">
-                              Due: {new Date(sig.due_date).toLocaleDateString()}
+                              Due: {formatLocalDate(sig.due_date)}
                             </span>
                           )}
                         </div>
@@ -213,7 +221,7 @@ export default function DocumentSignatures() {
                         <Pen className="w-4 h-4 mr-2" />
                         Sign
                       </Button>
-                      {currentUser?.role === 'admin' && (
+                      {isAdminLike(currentUser) && (
                         <Button
                           variant="outline"
                           size="sm"
@@ -268,7 +276,9 @@ export default function DocumentSignatures() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => window.open(sig.signed_pdf_url, '_blank')}
+                        // Bare window.open gets no implicit noopener and no scheme check;
+                        // signed_pdf_url is entity-supplied, so route it through the helper.
+                        onClick={() => openExternalUrl(sig.signed_pdf_url)}
                         className="w-full sm:w-auto"
                       >
                         <Eye className="w-4 h-4 mr-2" />

@@ -1,11 +1,21 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
-import { jsPDF } from 'npm:jspdf@2.5.1';
+import { jsPDF } from 'npm:jspdf@2.5.2';
+
+// <<<BEGIN SHARED HELPER: requireActiveUser — generated, edit base44/_shared/backendHelpers.mjs>>>
+const isDeactivatedUser = (u) => !!u && u.is_active === false;
+const DEACTIVATED_USER_RESPONSE = () => Response.json(
+  { error: 'Unauthorized - account is deactivated' },
+  { status: 403 },
+);
+// <<<END SHARED HELPER: requireActiveUser>>>
+
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
-
+    if (isDeactivatedUser(user)) return DEACTIVATED_USER_RESPONSE();
+    
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -344,9 +354,9 @@ Guide for managing patient risk alerts:
 9. Predictive analytics
 10. Alert history and trends`,
 
-      all_features: `PENN SYNC - COMPLETE USER GUIDE
+      all_features: `PENNSYNC - COMPLETE USER GUIDE
 
-Comprehensive guide covering all features of the Penn Sync Healthcare platform:
+Comprehensive guide covering all features of the PennSync Healthcare platform:
 
 **CORE MODULES:**
 
@@ -478,12 +488,18 @@ Comprehensive guide covering all features of the Penn Sync Healthcare platform:
 - Feedback submission`
     };
 
-    // Get the appropriate prompt
-    const promptText = guidePrompts[guide_type] || guidePrompts.all_features;
+    // Resolve to a KNOWN guide type up front so an unknown/crafted guide_type
+    // can neither silently mislabel the download nor inject into the
+    // Content-Disposition header (it flows into the filename below).
+    const resolvedGuideType = Object.prototype.hasOwnProperty.call(guidePrompts, guide_type)
+      ? guide_type
+      : 'all_features';
+    const promptText = guidePrompts[resolvedGuideType];
 
-    // Generate guide content using AI
+    // Generate guide content using AI — the default model is sufficient for
+    // formatting a structured user guide and avoids the 120s timeout that
+    // claude_sonnet_4_6 hits on the large all_features prompt.
     const guideContent = await base44.integrations.Core.InvokeLLM({
-      model: "claude_sonnet_4_6",
       prompt: `Generate a comprehensive, step-by-step user guide for healthcare staff.
 
 ${promptText}
@@ -656,7 +672,7 @@ Keep language simple and non-technical. Include specific button names and field 
       doc.setFontSize(8);
       doc.setTextColor(156, 163, 175);
       doc.text(
-        `Penn Sync Healthcare - ${guideContent.title} | Page ${i} of ${totalPages}`,
+        `PennSync - ${guideContent.title} | Page ${i} of ${totalPages}`,
         pageWidth / 2,
         pageHeight - 10,
         { align: 'center' }
@@ -671,7 +687,7 @@ Keep language simple and non-technical. Include specific button names and field 
       // Copyright notice
       doc.setFontSize(7);
       doc.text(
-        '© Copyright Kevin Deyarmin 2025. All rights reserved.',
+        `© ${new Date().getFullYear()} PennSync. All rights reserved.`,
         pageWidth / 2,
         pageHeight - 5,
         { align: 'center' }
@@ -684,14 +700,14 @@ Keep language simple and non-technical. Include specific button names and field 
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="${guide_type}_guide.pdf"`
+        'Content-Disposition': `attachment; filename="${resolvedGuideType}_guide.pdf"`
       }
     });
 
   } catch (error) {
     console.error('Error generating user guide:', error);
     return Response.json({ 
-      error: error.message,
+      error: 'Internal server error',
     }, { status: 500 });
   }
 });

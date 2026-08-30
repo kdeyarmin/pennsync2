@@ -1,8 +1,18 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
 
-// SSRF guard: only fetch https URLs on public hosts, never internal IPs /
-// metadata. Set FILE_URL_ALLOWED_HOSTS (comma-separated) to restrict to your
-// storage host(s).
+// <<<BEGIN SHARED HELPER: requireActiveUser — generated, edit base44/_shared/backendHelpers.mjs>>>
+const isDeactivatedUser = (u) => !!u && u.is_active === false;
+const DEACTIVATED_USER_RESPONSE = () => Response.json(
+  { error: 'Unauthorized - account is deactivated' },
+  { status: 403 },
+);
+// <<<END SHARED HELPER: requireActiveUser>>>
+
+
+// SSRF guard: only fetch https URLs on the app's own storage/app hosts, never
+// internal IPs / metadata. The allowlist is hardcoded (always-on, fail-closed)
+// rather than env-configured; add a host here if file storage ever moves.
+const FILE_URL_ALLOWED_HOSTS = ['qtrypzzcjebvfcihiynt.supabase.co', 'base44.app', 'base44.io'];
 function isSafeFetchUrl(raw) {
   let u;
   try { u = new URL(String(raw)); } catch { return false; }
@@ -15,11 +25,7 @@ function isSafeFetchUrl(raw) {
     const a = +m[1], b = +m[2];
     if (a === 10 || a === 127 || (a === 169 && b === 254) || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168)) return false;
   }
-  const allow = Deno.env.get('FILE_URL_ALLOWED_HOSTS');
-  if (allow) {
-    const hosts = allow.split(',').map((h) => h.trim().toLowerCase()).filter(Boolean);
-    if (!hosts.some((h) => host === h || host.endsWith('.' + h))) return false;
-  }
+  if (!FILE_URL_ALLOWED_HOSTS.some((h) => host === h || host.endsWith('.' + h))) return false;
   return true;
 }
 
@@ -27,6 +33,7 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
+    if (isDeactivatedUser(user)) return DEACTIVATED_USER_RESPONSE();
 
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
@@ -39,19 +46,17 @@ Deno.serve(async (req) => {
     }
 
     // Get the document
-    const documents = await base44.entities.Document.filter({ id: document_id });
+    const documents = await base44.entities.Document.filter({ id: document_id }, undefined, 5000);
     if (documents.length === 0) {
       return Response.json({ error: 'Document not found' }, { status: 404 });
     }
 
     const document = documents[0];
 
-    // Fetch document content
+    // Validate document file URL
     if (!isSafeFetchUrl(document.file_url)) {
       return Response.json({ error: 'Document has an invalid or disallowed file URL' }, { status: 400 });
     }
-    const docResponse = await fetch(document.file_url);
-    const docText = await docResponse.text();
 
     // Analyze with AI
     const analysisPrompt = `Analyze this medical document and provide:
@@ -64,8 +69,6 @@ Deno.serve(async (req) => {
 
 Document title: ${document.title}
 Current category: ${document.category}
-Content:
-${docText.substring(0, 50000)}
 
 Return a JSON object with this structure:
 {
@@ -90,8 +93,9 @@ Return a JSON object with this structure:
 }`;
 
     const aiResponse = await base44.integrations.Core.InvokeLLM({
-      model: "claude_opus_4_8",
+      model: "automatic",
       prompt: analysisPrompt,
+      file_urls: [document.file_url],
       response_json_schema: {
         type: "object",
         properties: {
@@ -135,7 +139,7 @@ Return a JSON object with this structure:
   } catch (error) {
     console.error('Document analysis error:', error);
     return Response.json({ 
-      error: error.message 
+      error: 'Internal server error' 
     }, { status: 500 });
   }
 });

@@ -14,7 +14,7 @@ test("classifyFaxFailure flags permanent failures", () => {
   assert.equal(classifyFaxFailure("", "Number not in service"), "permanent");
 });
 
-test("isFaxRetryDue stops at retry_count === maxRetries (no extra send/charge)", () => {
+test("isFaxRetryDue allows retry_count === maxRetries (last attempt) then stops", () => {
   const now = Date.now();
   const fax = (retry_count) => ({
     status: "failed",
@@ -24,8 +24,11 @@ test("isFaxRetryDue stops at retry_count === maxRetries (no extra send/charge)",
   });
   const cfg = { max_retries: 3 };
   assert.equal(isFaxRetryDue(fax(2), now, cfg), true);  // budget remains
-  assert.equal(isFaxRetryDue(fax(3), now, cfg), false); // budget spent at == max
-  assert.equal(isFaxRetryDue(fax(4), now, cfg), false);
+  assert.equal(isFaxRetryDue(fax(3), now, cfg), true);  // last allowed send
+  assert.equal(isFaxRetryDue(fax(4), now, cfg), false); // over budget
+  // max_retries=1 must still schedule/send exactly one retry
+  assert.equal(isFaxRetryDue(fax(1), now, { max_retries: 1 }), true);
+  assert.equal(isFaxRetryDue(fax(2), now, { max_retries: 1 }), false);
 });
 
 test("classifyFaxFailure treats busy/no-answer/unknown as transient", () => {
@@ -33,6 +36,16 @@ test("classifyFaxFailure treats busy/no-answer/unknown as transient", () => {
   assert.equal(classifyFaxFailure("7208", "No answer from remote"), "transient");
   assert.equal(classifyFaxFailure(null, "Temporary network error"), "transient");
   assert.equal(classifyFaxFailure("", ""), "transient");
+});
+
+test("classifyFaxFailure lets a busy/no-answer signal win over 'rejected'", () => {
+  // Regression: Telnyx reports a busy line as "rejected - line busy"; a raw
+  // /rejected/i classified it permanent, so the fax never auto-retried even
+  // though a busy line clears on the next attempt.
+  assert.equal(classifyFaxFailure(null, "rejected - line busy"), "transient");
+  assert.equal(classifyFaxFailure(null, "Call rejected - no answer"), "transient");
+  // A genuine hard rejection with no transient signal stays permanent.
+  assert.equal(classifyFaxFailure(null, "rejected - number blocked"), "permanent");
 });
 
 test("faxRetryConfig applies safe defaults and honors overrides", () => {
@@ -123,4 +136,33 @@ test("faxRetryConfig coerces numeric-string config values", () => {
   const c = faxRetryConfig({ max_retries: "5", retry_delay_minutes: "10" });
   assert.equal(c.maxRetries, 5);
   assert.equal(c.baseDelayMinutes, 10);
+});
+
+test("faxRetryConfig treats an UNSET numeric field as the default, not zero", () => {
+  // Number(null) and Number("") are both 0, so a FaxRetryConfig row saved
+  // without touching max_retries used to resolve to maxRetries: 0 — silently
+  // turning auto-retry off with no setting anywhere reflecting it.
+  for (const unset of [null, undefined, "", "   "]) {
+    const c = faxRetryConfig({ max_retries: unset, retry_delay_minutes: unset });
+    assert.equal(c.maxRetries, 3, `max_retries: ${JSON.stringify(unset)}`);
+    assert.equal(c.baseDelayMinutes, 15, `retry_delay_minutes: ${JSON.stringify(unset)}`);
+    assert.equal(c.enabled, true);
+  }
+
+  // A fax that failed once still retries under an unset budget.
+  const plan = planFaxRetry({ retryCount: 0, errorMessage: "line busy", config: { max_retries: null } });
+  assert.equal(plan.willRetry, true);
+  assert.equal(plan.exhausted, false);
+});
+
+test("faxRetryConfig still honors an EXPLICIT zero retry budget", () => {
+  const c = faxRetryConfig({ max_retries: 0 });
+  assert.equal(c.maxRetries, 0);
+  assert.equal(planFaxRetry({ retryCount: 0, errorMessage: "line busy", config: { max_retries: 0 } }).willRetry, false);
+});
+
+test("faxRetryConfig falls back to defaults for non-numeric junk", () => {
+  const c = faxRetryConfig({ max_retries: "many", retry_delay_minutes: "soon" });
+  assert.equal(c.maxRetries, 3);
+  assert.equal(c.baseDelayMinutes, 15);
 });

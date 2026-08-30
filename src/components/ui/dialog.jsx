@@ -14,19 +14,19 @@ const DialogPortal = DialogPrimitive.Portal
 
 const DialogClose = DialogPrimitive.Close
 
-const DialogOverlay = React.forwardRef((props, ref) => (
+const DialogOverlay = React.forwardRef(({ className, ...props }, ref) => (
   <DialogPrimitive.Overlay
     ref={ref}
     className={cn(
       "fixed inset-0 z-[9999] bg-slate-950/50 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
-      props.className
+      className
     )}
     {...props}
   />
 ))
 DialogOverlay.displayName = DialogPrimitive.Overlay.displayName
 
-const DialogContent = React.forwardRef((props, ref) => (
+const DialogContent = React.forwardRef(({ className, ...props }, ref) => (
   <DialogPortal container={document.body}>
     <DialogOverlay />
     <DialogPrimitive.Content
@@ -42,13 +42,13 @@ const DialogContent = React.forwardRef((props, ref) => (
       }}
       className={cn(
         "w-[calc(100vw-1rem)] max-w-3xl max-h-[92vh] overflow-visible bg-transparent border-0 p-0 shadow-none sm:w-full",
-        props.className
+        className
       )}
       {...props}
     >
-      <div className="relative grid gap-4 overflow-y-auto rounded-2xl border border-slate-200 bg-white p-5 pt-14 pr-14 shadow-[0_24px_80px_rgba(15,23,42,0.22)] max-h-[92vh] sm:p-8 sm:pt-10 sm:pr-16">
+      <div className="relative grid gap-4 overflow-y-auto rounded-2xl border border-slate-200 bg-white p-5 pt-14 pr-14 text-slate-900 shadow-[0_24px_80px_rgba(15,23,42,0.22)] max-h-[92vh] dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 sm:p-8 sm:pt-10 sm:pr-16">
         {props.children}
-        <DialogPrimitive.Close className="absolute right-4 top-4 z-10 rounded-full border border-slate-200 bg-white p-2 text-slate-500 opacity-100 shadow-sm transition-colors hover:bg-slate-50 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-300 focus:ring-offset-2 disabled:pointer-events-none">
+        <DialogPrimitive.Close className="absolute right-4 top-4 z-10 rounded-full border border-slate-200 bg-white p-2 text-slate-500 opacity-100 shadow-sm transition-colors hover:bg-slate-50 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-300 focus:ring-offset-2 disabled:pointer-events-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-white dark:focus:ring-slate-600">
           <X className="h-4 w-4" />
           <span className="sr-only">Close</span>
         </DialogPrimitive.Close>
@@ -58,44 +58,44 @@ const DialogContent = React.forwardRef((props, ref) => (
 ))
 DialogContent.displayName = DialogPrimitive.Content.displayName
 
-const DialogHeader = (props) => (
+const DialogHeader = ({ className, ...props }) => (
   <div
     className={cn(
       "flex flex-col space-y-1.5 text-center sm:text-left",
-      props.className
+      className
     )}
     {...props}
   />
 )
 DialogHeader.displayName = "DialogHeader"
 
-const DialogFooter = (props) => (
+const DialogFooter = ({ className, ...props }) => (
   <div
     className={cn(
       "flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2",
-      props.className
+      className
     )}
     {...props}
   />
 )
 DialogFooter.displayName = "DialogFooter"
 
-const DialogTitle = React.forwardRef((props, ref) => (
+const DialogTitle = React.forwardRef(({ className, ...props }, ref) => (
   <DialogPrimitive.Title
     ref={ref}
     className={cn(
-      "text-lg font-semibold leading-none tracking-tight",
-      props.className
+      "text-lg font-semibold leading-none tracking-tight text-slate-900 dark:text-slate-100", 
+      className
     )}
     {...props}
   />
 ))
 DialogTitle.displayName = DialogPrimitive.Title.displayName
 
-const DialogDescription = React.forwardRef((props, ref) => (
+const DialogDescription = React.forwardRef(({ className, ...props }, ref) => (
   <DialogPrimitive.Description
     ref={ref}
-    className={cn("text-sm text-slate-500", props.className)}
+    className={cn("text-sm text-slate-500 dark:text-slate-400", className)}
     {...props}
   />
 ))

@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
   DollarSign,
   TrendingUp,
@@ -26,7 +27,8 @@ import {
   GitCompare
 } from "lucide-react";
 import { calculatePDGM } from "@/functions/calculatePDGM";
-import { generatePDGMComparisonPDF } from "@/functions/generatePDGMComparisonPDF";
+import { base44 } from "@/api/base44Client";
+import { toLocalISODate } from "@/lib/dateLocal";
 import { Tooltip, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts';
 import PDGMWhatIfBuilder from "./PDGMWhatIfBuilder";
 import TopOptimizationOpportunities from "./TopOptimizationOpportunities";
@@ -228,119 +230,119 @@ function _CaseMixBreakdown({ original, corrected }) {
 
       {/* Component Details Table */}
       <div className="border rounded-lg overflow-hidden">
-        <table className="w-full text-xs">
-          <thead className="bg-slate-100">
-            <tr>
-              <th className="text-left p-2 font-medium">Component</th>
-              <th className="text-center p-2 font-medium">Original</th>
-              {hasChanges && <th className="text-center p-2 font-medium">Corrected</th>}
-              <th className="text-center p-2 font-medium">Weight</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            <tr className="bg-blue-50">
-              <td className="p-2 font-medium">Clinical Group</td>
-              <td className="p-2 text-center">
+        <Table className="text-xs">
+          <TableHeader>
+            <TableRow>
+              <TableHead>Component</TableHead>
+              <TableHead className="text-center">Original</TableHead>
+              {hasChanges && <TableHead className="text-center">Corrected</TableHead>}
+              <TableHead className="text-center">Weight</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            <TableRow className="bg-blue-50">
+              <TableCell className="px-2 py-2 font-medium">Clinical Group</TableCell>
+              <TableCell className="px-2 py-2 text-center">
                 <span className="block text-slate-600">{original.clinicalGroup?.replace('MMTA_', '')}</span>
                 <span className="text-slate-400">{original.clinicalWeight?.toFixed(4)}</span>
-              </td>
+              </TableCell>
               {hasChanges && (
-                <td className="p-2 text-center">
+                <TableCell className="px-2 py-2 text-center">
                   <span className="block text-green-600">{corrected.clinicalGroup?.replace('MMTA_', '')}</span>
                   <span className="text-green-500">{corrected.clinicalWeight?.toFixed(4)}</span>
-                </td>
+                </TableCell>
               )}
-              <td className="p-2 text-center font-mono text-blue-700">
+              <TableCell className="px-2 py-2 text-center font-mono text-blue-700">
                 {(hasChanges ? corrected : original).clinicalWeight?.toFixed(4)}
-              </td>
-            </tr>
-            <tr>
-              <td className="p-2 font-medium">
+              </TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell className="px-2 py-2 font-medium">
                 Functional Level
                 <span className="block text-slate-400 font-normal">Points: {original.functionalPoints || 0}{hasChanges && corrected.functionalPoints !== original.functionalPoints ? ` → ${corrected.functionalPoints}` : ''}</span>
-              </td>
-              <td className="p-2 text-center">
+              </TableCell>
+              <TableCell className="px-2 py-2 text-center">
                 <span className="block text-slate-600 capitalize">{original.functionalLevel}</span>
                 <span className="text-slate-400">×{original.functionalMultiplier?.toFixed(2)}</span>
-              </td>
+              </TableCell>
               {hasChanges && (
-                <td className="p-2 text-center">
+                <TableCell className="px-2 py-2 text-center">
                   <span className={`block capitalize ${corrected.functionalLevel !== original.functionalLevel ? 'text-green-600' : 'text-slate-600'}`}>
                     {corrected.functionalLevel}
                   </span>
                   <span className={corrected.functionalMultiplier !== original.functionalMultiplier ? 'text-green-500' : 'text-slate-400'}>
                     ×{corrected.functionalMultiplier?.toFixed(2)}
                   </span>
-                </td>
+                </TableCell>
               )}
-              <td className="p-2 text-center font-mono text-blue-700">
+              <TableCell className="px-2 py-2 text-center font-mono text-blue-700">
                 ×{(hasChanges ? corrected : original).functionalMultiplier?.toFixed(2)}
-              </td>
-            </tr>
-            <tr className="bg-blue-50">
-              <td className="p-2 font-medium">
+              </TableCell>
+            </TableRow>
+            <TableRow className="bg-blue-50">
+              <TableCell className="px-2 py-2 font-medium">
                 Comorbidity Adj.
                 <span className="block text-slate-400 font-normal">Count: {original.comorbidityCount || 0}{hasChanges && corrected.comorbidityCount !== original.comorbidityCount ? ` → ${corrected.comorbidityCount}` : ''}</span>
-              </td>
-              <td className="p-2 text-center">
+              </TableCell>
+              <TableCell className="px-2 py-2 text-center">
                 <span className="block text-slate-600 capitalize">{original.comorbidityLevel}</span>
                 <span className="text-slate-400">×{original.comorbidityMultiplier?.toFixed(2)}</span>
-              </td>
+              </TableCell>
               {hasChanges && (
-                <td className="p-2 text-center">
+                <TableCell className="px-2 py-2 text-center">
                   <span className={`block capitalize ${corrected.comorbidityLevel !== original.comorbidityLevel ? 'text-green-600' : 'text-slate-600'}`}>
                     {corrected.comorbidityLevel}
                   </span>
                   <span className={corrected.comorbidityMultiplier !== original.comorbidityMultiplier ? 'text-green-500' : 'text-slate-400'}>
                     ×{corrected.comorbidityMultiplier?.toFixed(2)}
                   </span>
-                </td>
+                </TableCell>
               )}
-              <td className="p-2 text-center font-mono text-blue-700">
+              <TableCell className="px-2 py-2 text-center font-mono text-blue-700">
                 ×{(hasChanges ? corrected : original).comorbidityMultiplier?.toFixed(2)}
-              </td>
-            </tr>
-            <tr>
-              <td className="p-2 font-medium">Admission Source</td>
-              <td className="p-2 text-center">
+              </TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell className="px-2 py-2 font-medium">Admission Source</TableCell>
+              <TableCell className="px-2 py-2 text-center">
                 <span className="block text-slate-600 capitalize">{original.admissionSource}</span>
                 <span className="text-slate-400">×{original.admissionMultiplier?.toFixed(2)}</span>
-              </td>
+              </TableCell>
               {hasChanges && (
-                <td className="p-2 text-center">
+                <TableCell className="px-2 py-2 text-center">
                   <span className={`block capitalize ${corrected.admissionSource !== original.admissionSource ? 'text-green-600' : 'text-slate-600'}`}>
                     {corrected.admissionSource}
                   </span>
                   <span className={corrected.admissionMultiplier !== original.admissionMultiplier ? 'text-green-500' : 'text-slate-400'}>
                     ×{corrected.admissionMultiplier?.toFixed(2)}
                   </span>
-                </td>
+                </TableCell>
               )}
-              <td className="p-2 text-center font-mono text-blue-700">
+              <TableCell className="px-2 py-2 text-center font-mono text-blue-700">
                 ×{(hasChanges ? corrected : original).admissionMultiplier?.toFixed(2)}
-              </td>
-            </tr>
-            <tr className="bg-blue-50">
-              <td className="p-2 font-medium">Episode Timing</td>
-              <td className="p-2 text-center">
+              </TableCell>
+            </TableRow>
+            <TableRow className="bg-blue-50">
+              <TableCell className="px-2 py-2 font-medium">Episode Timing</TableCell>
+              <TableCell className="px-2 py-2 text-center">
                 <span className="block text-slate-600 capitalize">{original.episodeTiming}</span>
                 <span className="text-slate-400">×{original.timingMultiplier?.toFixed(2)}</span>
-              </td>
+              </TableCell>
               {hasChanges && (
-                <td className="p-2 text-center">
+                <TableCell className="px-2 py-2 text-center">
                   <span className={`block capitalize ${corrected.episodeTiming !== original.episodeTiming ? 'text-green-600' : 'text-slate-600'}`}>
                     {corrected.episodeTiming}
                   </span>
                   <span className={corrected.timingMultiplier !== original.timingMultiplier ? 'text-green-500' : 'text-slate-400'}>
                     ×{corrected.timingMultiplier?.toFixed(2)}
                   </span>
-                </td>
+                </TableCell>
               )}
-              <td className="p-2 text-center font-mono text-blue-700">
+              <TableCell className="px-2 py-2 text-center font-mono text-blue-700">
                 ×{(hasChanges ? corrected : original).timingMultiplier?.toFixed(2)}
-              </td>
-            </tr>
-          </tbody>
+              </TableCell>
+            </TableRow>
+          </TableBody>
           <tfoot className="bg-indigo-100">
             <tr>
               <td className="p-2 font-semibold">Final Case-Mix Weight</td>
@@ -357,7 +359,7 @@ function _CaseMixBreakdown({ original, corrected }) {
               </td>
             </tr>
           </tfoot>
-        </table>
+        </Table>
       </div>
 
       {/* Weight Calculation Formula */}
@@ -506,16 +508,6 @@ export default function PDGMRevenueComparison({ analysisResults, pdgmData, onPay
     corrected.functional_scores = corrected.functional_scores || {};
     corrected.comorbidities = corrected.comorbidities || [];
 
-    const maxValues = {
-      m1800_grooming: 3,
-      m1810_dress_upper: 3,
-      m1820_dress_lower: 3,
-      m1830_bathing: 6,
-      m1840_toilet_transfer: 4,
-      m1850_transferring: 5,
-      m1860_ambulation: 6
-    };
-
     const itemMap = {
       '1800': 'm1800_grooming',
       '1810': 'm1810_dress_upper',
@@ -531,27 +523,13 @@ export default function PDGMRevenueComparison({ analysisResults, pdgmData, onPay
     // 1. Apply revenue tips corrections
     if (analysis?.revenue_tips?.length > 0) {
       analysis.revenue_tips.forEach(tip => {
-        const impact = tip.potential_impact || 'low';
-        const impactMultiplier = impact === 'high' ? 2 : impact === 'medium' ? 1 : 1;
-
         if (tip.category === 'Functional Status') {
-          // Parse specific M-item from tip text
-          const mItemMatch = (tip.specific_action + ' ' + tip.opportunity).match(/M18(\d{2})/i);
-          if (mItemMatch) {
-            const key = itemMap[`18${mItemMatch[1]}`];
-            if (key) {
-              const newVal = Math.min(maxValues[key], (corrected.functional_scores[key] || 0) + impactMultiplier);
-              corrected.functional_scores[key] = newVal;
-              appliedCorrections.push({ type: 'functional', item: key, change: `+${impactMultiplier}` });
-            }
-          } else {
-            // General functional improvement - apply to most impactful items
-            ['m1830_bathing', 'm1860_ambulation', 'm1850_transferring'].forEach(key => {
-              const newVal = Math.min(maxValues[key], (corrected.functional_scores[key] || 0) + impactMultiplier);
-              corrected.functional_scores[key] = newVal;
-            });
-            appliedCorrections.push({ type: 'functional', item: 'multiple', change: `+${impactMultiplier}` });
-          }
+          // Documentation opportunity only — do not fabricate higher functional scores
+          appliedCorrections.push({
+            type: 'documentation',
+            item: tip.opportunity || tip.specific_action || 'functional status',
+            note: 'Review only — functional score not auto-adjusted',
+          });
         }
 
         if (tip.category === 'Diagnosis' || tip.category === 'Clinical Condition') {
@@ -563,15 +541,19 @@ export default function PDGMRevenueComparison({ analysisResults, pdgmData, onPay
         }
 
         if (tip.category === 'Therapy') {
-          corrected.functional_scores.m1860_ambulation = Math.min(6, (corrected.functional_scores.m1860_ambulation || 0) + impactMultiplier);
-          corrected.functional_scores.m1850_transferring = Math.min(5, (corrected.functional_scores.m1850_transferring || 0) + 1);
-          appliedCorrections.push({ type: 'therapy', change: 'ambulation/transfer adjusted' });
+          appliedCorrections.push({
+            type: 'documentation',
+            item: tip.opportunity || tip.specific_action || 'therapy needs',
+            note: 'Review only — functional score not auto-adjusted',
+          });
         }
 
-        if (tip.category === 'Other' && impact === 'high') {
-          // High-impact other category - likely affects multiple areas
-          corrected.functional_scores.m1840_toilet_transfer = Math.min(4, (corrected.functional_scores.m1840_toilet_transfer || 0) + 1);
-          appliedCorrections.push({ type: 'other', change: 'toilet transfer adjusted' });
+        if (tip.category === 'Other' && (tip.potential_impact || 'low') === 'high') {
+          appliedCorrections.push({
+            type: 'documentation',
+            item: tip.opportunity || tip.specific_action || 'other opportunity',
+            note: 'Review only — functional score not auto-adjusted',
+          });
         }
       });
     }
@@ -583,16 +565,28 @@ export default function PDGMRevenueComparison({ analysisResults, pdgmData, onPay
         if (mItemMatch) {
           const key = itemMap[`18${mItemMatch[1]}`];
           if (key) {
-            const severityAdd = issue.severity === 'high' ? 2 : issue.severity === 'medium' ? 1 : 1;
-            const newVal = Math.min(maxValues[key], (corrected.functional_scores[key] || 0) + severityAdd);
-            corrected.functional_scores[key] = newVal;
-            appliedCorrections.push({ type: 'accuracy', item: key, severity: issue.severity });
+            // Accuracy flags are documentation review items — do not invent higher scores
+            appliedCorrections.push({
+              type: 'documentation',
+              item: key,
+              note: 'Review only — functional score not auto-adjusted',
+              severity: issue.severity,
+            });
           }
         }
 
         // Check for diagnosis-related accuracy issues
         if (issue.item?.toLowerCase().includes('diagnosis') || issue.recommendation?.toLowerCase().includes('diagnosis')) {
-          const diagMatch = issue.recommendation?.match(/add|include|document[:\s]+([^.]+)/i);
+          // Group the alternation: `/add|include|document[:\s]+(...)/` binds the
+          // capture to the `document` branch alone, so recommendations phrased
+          // "Add ..." / "Include ..." matched but left group 1 undefined and the
+          // diagnosis was silently dropped from the corrected scenario.
+          // `\.(?=\d)` keeps ICD-10 decimals: a bare [^.]+ stopped at the first
+          // period, so "Add E11.22 diabetic CKD" pushed only "E11" into the
+          // corrected scenario — dropping the specific high-value comorbidity
+          // that the correction existed to capture. A period followed by a digit
+          // is part of the code; any other period still ends the capture.
+          const diagMatch = issue.recommendation?.match(/(?:add|include|document)[:\s]+((?:[^.;\n]|\.(?=\d))+)/i);
           if (diagMatch && diagMatch[1]) {
             corrected.comorbidities.push(diagMatch[1].trim());
             appliedCorrections.push({ type: 'accuracy_diagnosis', item: diagMatch[1].trim() });
@@ -609,48 +603,51 @@ export default function PDGMRevenueComparison({ analysisResults, pdgmData, onPay
       });
     }
 
-    // 3. Apply documentation improvement suggestions
+    // 3. Documentation improvements are review opportunities — do not invent
+    // higher functional scores or fabricate a placeholder comorbidity. Only
+    // surface them in the corrections list for clinician review.
     if (analysis?.documentation_improvements?.length > 0) {
       analysis.documentation_improvements.forEach(imp => {
         const mItemMatch = imp.item?.match(/M?18(\d{2})/i);
         if (mItemMatch) {
           const key = itemMap[`18${mItemMatch[1]}`];
           if (key) {
-            const improvedMatch = imp.improved_state?.match(/(\d+)/);
-            if (improvedMatch) {
-              const suggestedVal = parseInt(improvedMatch[1]);
-              if (suggestedVal > (corrected.functional_scores[key] || 0)) {
-                corrected.functional_scores[key] = Math.min(maxValues[key], suggestedVal);
-                appliedCorrections.push({ type: 'documentation', item: key, value: suggestedVal });
-              }
-            }
+            appliedCorrections.push({
+              type: 'documentation',
+              item: key,
+              note: 'Review only — functional score not auto-adjusted',
+            });
           }
-        }
-
-        if (imp.rationale?.toLowerCase().includes('case-mix') || imp.rationale?.toLowerCase().includes('pdgm')) {
-          if (!corrected.comorbidities.includes('case-mix relevant condition')) {
-            corrected.comorbidities.push('case-mix relevant condition');
-            appliedCorrections.push({ type: 'documentation_casemix' });
-          }
+        } else if (imp.item || imp.rationale) {
+          appliedCorrections.push({
+            type: 'documentation',
+            item: imp.item || imp.rationale,
+            note: 'Review only — score/comorbidity not auto-adjusted',
+          });
         }
       });
     }
 
-    // 4. Apply validation issue corrections
+    // 4. Validation issues: record for review; do not write suggested digits
+    // into functional scores (that fabricates a higher case-mix).
     if (analysis?.validation_summary?.issues?.length > 0) {
       analysis.validation_summary.issues.forEach(issue => {
-        if (issue.suggested_correction) {
-          const mItemMatch = issue.item?.match(/M?18(\d{2})/i);
-          if (mItemMatch) {
-            const key = itemMap[`18${mItemMatch[1]}`];
-            if (key) {
-              const valMatch = issue.suggested_correction.match(/(\d+)/);
-              if (valMatch) {
-                corrected.functional_scores[key] = Math.min(maxValues[key], parseInt(valMatch[1]));
-                appliedCorrections.push({ type: 'validation', item: key });
-              }
-            }
+        const mItemMatch = issue.item?.match(/M?18(\d{2})/i);
+        if (mItemMatch) {
+          const key = itemMap[`18${mItemMatch[1]}`];
+          if (key) {
+            appliedCorrections.push({
+              type: 'validation',
+              item: key,
+              note: 'Review only — functional score not auto-adjusted',
+            });
           }
+        } else if (issue.item) {
+          appliedCorrections.push({
+            type: 'validation',
+            item: issue.item,
+            note: 'Review only — value not auto-adjusted',
+          });
         }
       });
     }
@@ -667,17 +664,23 @@ export default function PDGMRevenueComparison({ analysisResults, pdgmData, onPay
 
     setIsDownloading(true);
     try {
-      const response = await generatePDGMComparisonPDF({
-        revenueData,
-        analysisResults,
-        pdgmData
+      // Fetch the PDF as binary. The axios-based functions.invoke wrapper uses
+      // responseType 'json' and decodes the PDF bytes as UTF-8 text, which
+      // corrupts the binary (replacement characters shift xref offsets).
+      const response = await base44.functions.fetch('generatePDGMComparisonPDF', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ revenueData, analysisResults, pdgmData })
       });
+      if (!response.ok) {
+        throw new Error(`PDF generation failed (${response.status})`);
+      }
 
-      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const blob = new Blob([await response.arrayBuffer()], { type: 'application/pdf' });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `PDGM_Revenue_Comparison_${new Date().toISOString().split('T')[0]}.pdf`;
+      a.download = `PDGM_Revenue_Comparison_${toLocalISODate()}.pdf`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -725,7 +728,7 @@ export default function PDGMRevenueComparison({ analysisResults, pdgmData, onPay
             <Button
               onClick={calculateRevenue}
               disabled={isCalculating || !pdgmData}
-              className="w-full bg-green-600 hover:bg-green-700"
+              className="w-full"
             >
               <Calculator className="w-4 h-4 mr-2" /> Calculate Revenue Impact
             </Button>
@@ -792,13 +795,26 @@ export default function PDGMRevenueComparison({ analysisResults, pdgmData, onPay
                                 )}
 
                                 {/* Wage Index Display */}
+                                {revenueData.rateBasis?.isEstimate && (
+                                  <Alert className="bg-amber-50 border-amber-300">
+                                    <AlertTriangle className="w-4 h-4 text-amber-600" />
+                                    <AlertDescription className="text-amber-800 text-xs">
+                                      {revenueData.original?.estimateDisclaimer
+                                        || 'Estimate only — based on approximate case-mix weights, not confirmed official CMS PDGM rates. These dollar figures are not billable amounts. Set your official numbers in Admin → PDGM Rate Settings and mark them official.'}
+                                    </AlertDescription>
+                                  </Alert>
+                                )}
+
                                 {revenueData.wageIndexApplied && revenueData.wageIndexApplied !== 1.0 && (
                                   <Alert className="bg-blue-50 border-blue-200">
                                     <Info className="w-4 h-4 text-blue-600" />
                                     <AlertDescription className="text-blue-800 text-xs">
                                       <strong>Wage Index Applied: {revenueData.wageIndexApplied.toFixed(4)}</strong>
                                       <br />
-                                      National Base: ${revenueData.original?.basePayment?.toFixed(2)} × {revenueData.wageIndexApplied.toFixed(4)} = ${revenueData.original?.adjustedBasePayment?.toFixed(2)} (Adjusted Base)
+                                      {/* CMS applies the wage index to the labor share only, so the
+                                          adjusted base is NOT base × wage index. Show the base and the
+                                          resulting adjusted base without a contradictory equation. */}
+                                      National Base ${revenueData.original?.basePayment?.toFixed(2)} → Adjusted Base ${revenueData.original?.adjustedBasePayment?.toFixed(2)} (wage index applied to labor share per CMS)
                                     </AlertDescription>
                                   </Alert>
                                 )}
@@ -959,12 +975,12 @@ export default function PDGMRevenueComparison({ analysisResults, pdgmData, onPay
                               'Adjusted ambulation/transfer scores for therapy needs'}
                             {correction.type === 'admission' && 
                               `Changed admission source to ${correction.change}`}
-                            {correction.type === 'documentation' && 
-                              `Updated ${correction.item} per documentation improvement`}
+                            {correction.type === 'documentation' &&
+                              (correction.note || `Updated ${correction.item} per documentation improvement`)}
                             {correction.type === 'documentation_casemix' && 
                               'Added case-mix relevant condition from documentation'}
-                            {correction.type === 'validation' && 
-                              `Applied validation correction to ${correction.item}`}
+                            {correction.type === 'validation' &&
+                              (correction.note || `Applied validation correction to ${correction.item}`)}
                             {correction.type === 'other' && 
                               'Applied additional optimization adjustment'}
                           </p>

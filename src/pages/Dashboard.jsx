@@ -1,17 +1,17 @@
 import { useMemo, lazy, Suspense, useEffect, useRef, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
-import { Clock, User, CheckCircle2, FileText, Mic, Send, Home, Heart, AlertTriangle, Loader2, Calendar, Target } from "lucide-react";
+import { Link } from "react-router";
+import { Clock, User, FileText, Mic, Send, Home, Heart, AlertTriangle, Calendar } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import PageHeader from "@/components/ui/PageHeader";
 import StatCard from "@/components/ui/stat-card";
+import LoadingState from "@/components/ui/LoadingState";
 import { toast } from "sonner";
 import { formatEastern } from "@/components/utils/timezone";
 import CareScopeSelector from "@/components/profile/CareScopeSelector";
-import { isClinicalUser, canViewPatients, getStaffRole, staffRoleLabel } from "@/lib/roles";
 import PullToRefresh from "@/components/mobile/PullToRefresh";
-import { GraduationCap, CalendarDays, Mail, BookOpen, Users as UsersIcon } from "lucide-react";
+import { BRAND_LOGO_URL } from "@/lib/brand";
 
 
 // Critical above-the-fold — eager loaded
@@ -19,6 +19,8 @@ import SmartRouteOptimizer from "@/components/scheduling/SmartRouteOptimizer";
 import ProactiveClinicalSupport from "@/components/clinical/ProactiveClinicalSupport";
 import AnnouncementsWidget from "@/components/dashboard/AnnouncementsWidget";
 import UpcomingTelehealthWidget from "@/components/dashboard/UpcomingTelehealthWidget";
+import TodayPriorities from "@/components/dashboard/TodayPriorities";
+import CoreWorkQueuesStrip from "@/components/dashboard/CoreWorkQueuesStrip";
 import DashboardSkeleton from "@/components/loading/DashboardSkeleton";
 import { logActivity, ActivityActions } from "@/components/utils/activityLogger";
 import { calculateNurseStats } from "@/components/utils/statsCalculator";
@@ -27,10 +29,10 @@ import ProfileCompletenessAlert from "@/components/profile/ProfileCompletenessAl
 // Non-critical below-the-fold — lazy loaded
 const HighRiskPatientsWidget    = lazy(() => import("@/components/dashboard/HighRiskPatientsWidget"));
 const PendingReferralsWidget    = lazy(() => import("@/components/referral/PendingReferralsWidget"));
+const OverdueFollowUpsWidget    = lazy(() => import("@/components/dashboard/OverdueFollowUpsWidget"));
 const RealTimePatientAlerts     = lazy(() => import("@/components/dashboard/RealTimePatientAlerts"));
 const TopTemplatesWidget        = lazy(() => import("@/components/clinical/TopTemplatesWidget"));
 const HospitalizationRiskWidget = lazy(() => import("@/components/dashboard/HospitalizationRiskWidget"));
-const CarePlanProposalReviewer = lazy(() => import("@/components/carePlan/CarePlanProposalReviewer"));
 
 
 export default function Dashboard() {
@@ -96,17 +98,42 @@ export default function Dashboard() {
   });
   const visits = useMemo(() => dashboardData.visits || [], [dashboardData.visits]);
   const patients = dashboardData.patients || [];
-  const carePlans = dashboardData.carePlans || [];
   const incidents = dashboardData.incidents || [];
+  // Alert widgets need historical completed visits + care plans — today's visits
+  // alone make "No visit in N days" / goal-deadline alerts impossible.
+  const alertVisits = useMemo(() => {
+    const today = dashboardData.visits || [];
+    const recent = dashboardData.recentCompletedVisits || [];
+    const byId = new Map();
+    for (const v of [...today, ...recent]) {
+      if (v?.id) byId.set(v.id, v);
+    }
+    return [...byId.values()];
+  }, [dashboardData.visits, dashboardData.recentCompletedVisits]);
+  const carePlans = useMemo(
+    () => dashboardData.carePlans || [],
+    [dashboardData.carePlans],
+  );
   const visitsError = dashboardError;
   const patientsError = dashboardError;
 
   const { data: noteConversions = [] } = useQuery({
     queryKey: ['myNoteConversions', currentUser?.email],
-    queryFn: () => base44.entities.NoteConversion.filter({ nurse_email: currentUser.email }, '-created_date', 100), // reduced from 200
+    queryFn: () => base44.entities.NoteConversion.filter({ nurse_email: currentUser.email }, '-created_date', 5000),
     initialData: [],
     staleTime: 600000,
     gcTime: 900000,
+    enabled: !!currentUser?.email,
+  });
+
+  // NOT agency-scoped: messages addressed TO this user. Filtering by the
+  // SENDER's agency would hide a message someone outside it sent them.
+  const { data: messages = [] } = useQuery({
+    queryKey: ['unreadMessages', currentUser?.email],
+    queryFn: () => base44.entities.Message.filter({ recipients: currentUser.email }, '-created_date', 50),
+    initialData: [],
+    staleTime: 60000,
+    gcTime: 300000,
     enabled: !!currentUser?.email,
   });
 
@@ -121,7 +148,7 @@ export default function Dashboard() {
 
   const stats = useMemo(() => {
     if (!currentUser?.email) {
-      return { noteConversions: 0, timeSavedDisplay: '0 hrs', noteEnhancements: { total: 0 } };
+      return { noteConversions: 0, timeSavedDisplay: '0 hrs', timeSavedDisplayInRange: '0 hrs', noteEnhancements: { total: 0 } };
     }
 
     // Filter for current user's enhancements
@@ -150,33 +177,40 @@ export default function Dashboard() {
     ? "Home Health & Hospice"
     : "Home Health";
 
-  // Staff discipline drives which surfaces the dashboard shows. `clinical` =
-  // nurse or admin (nursing tools); `patientAccess` = everyone except office
-  // staff. Non-nurses get a streamlined, non-clinical dashboard.
-  const clinical = isClinicalUser(currentUser);
-  const patientAccess = canViewPatients(currentUser);
-  const eyebrow = clinical ? careScopeLabel : staffRoleLabel(getStaffRole(currentUser));
+  // Map app roles onto the pure work-queue summarizer vocabulary.
+  const workQueueRole = useMemo(() => {
+    const role = String(currentUser?.role || 'nurse').toLowerCase();
+    const account = String(currentUser?.account_type || '').toLowerCase();
+    if (role === 'admin' || ['agency_admin', 'super_admin', 'facility_admin', 'manager', 'qa'].includes(account)) {
+      return role === 'admin' ? 'admin' : (account || 'admin');
+    }
+    return 'nurse';
+  }, [currentUser?.role, currentUser?.account_type]);
+
+  // NoteConversion statuses used by buildCoreWorkQueues pending-review filter.
+  const notesForQueues = useMemo(
+    () => noteConversions.map((n) => ({
+      status: n.status || (n.submitted_at ? 'submitted' : 'draft'),
+    })),
+    [noteConversions]
+  );
 
   if (isLoading) {
     return <DashboardSkeleton />;
   }
 
-  // Onboarding — care scope ("what type of nurse"). Only nurses/admins have a
-  // care scope; non-nurse staff skip straight to their dashboard. The staff
-  // discipline itself is admin-assigned (set at registration / in User
-  // Management), not self-selected here.
-  if (currentUser && clinical && !careScope) {
+  // If user hasn't set their care scope yet, prompt them
+  if (currentUser && !careScope) {
     return (
       <div className="max-w-lg mx-auto pt-8 px-4">
         <div className="text-center mb-6">
           <div className="mb-4 inline-flex items-center gap-2">
-            <img
-              src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ee80d98929370f9e8f2932/02eed9872_pennsynclogoupdated.png"
-              alt="PennSync"
-              className="h-10 w-10 rounded-lg"
-            />
-            <span className="text-2xl font-bold tracking-tight text-navy-900">
-              Penn<span className="text-gold-600">Sync</span>
+            <img src={BRAND_LOGO_URL} alt="" className="h-10 w-10 rounded-lg" />
+            <span className="flex flex-col items-start leading-none">
+              <span className="text-2xl font-bold tracking-tight text-navy-900">
+                Penn<span className="text-gold-600">Sync</span>
+              </span>
+              <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-slate-400">by CareMetric</span>
             </span>
           </div>
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gold-600">Welcome aboard</p>
@@ -193,9 +227,9 @@ export default function Dashboard() {
 
   return (
     <PullToRefresh onRefresh={handleRefresh} containerRef={containerRef}>
-    <div ref={containerRef} className="max-w-7xl mx-auto">
+    <div ref={containerRef} className="mx-auto w-full max-w-7xl space-y-6">
       {hasDataError && (
-        <Card className="mb-4 border-red-200 bg-white">
+        <Card className="border-red-200 bg-white">
           <CardContent className="p-4">
             <div className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-red-600" />
@@ -212,18 +246,33 @@ export default function Dashboard() {
 
       {/* Welcome header — personalized, but rendered through the standard PageHeader */}
       <PageHeader
-        className="mb-4 sm:mb-6"
         icon={careScope === "hospice" ? Heart : Home}
-        eyebrow={eyebrow}
+        eyebrow={careScopeLabel}
         title={`${greeting}, ${firstName}!`}
         description={formatEastern(new Date(), 'EEEE, MMMM d, yyyy') || new Date().toLocaleDateString()}
         favoritePage="Dashboard"
       />
 
+      <TodayPriorities
+        currentUser={currentUser}
+        visits={visits}
+        patients={patients}
+        incidents={incidents}
+        noteConversions={noteConversions}
+        messages={messages}
+        dashboardError={dashboardError}
+      />
 
+      {/* Role-aware work queues (pure helper). Referrals/credentials/tasks stay empty
+          until a scoped multi-entity feed is available; incidents + notes still surface. */}
+      <CoreWorkQueuesStrip
+        role={workQueueRole}
+        incidents={incidents}
+        notes={notesForQueues}
+      />
 
       {/* Quick Navigation Hint */}
-      <div className="mb-3 flex items-center justify-center">
+      <div className="flex items-center justify-center">
         <button
           onClick={() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true }))}
           className="text-xs text-slate-400 hover:text-slate-600 transition-colors flex items-center gap-1.5"
@@ -232,73 +281,27 @@ export default function Dashboard() {
         </button>
       </div>
 
-      {/* Admin Announcements — relevant to everyone */}
+      {/* Admin Announcements */}
       <AnnouncementsWidget />
 
-      {/* Non-clinical roles (office staff, social work, spiritual care) get a
-          streamlined launchpad instead of the nurse stat cards / clinical widgets,
-          which wouldn't apply to them. Patient-access roles also keep a Patients tile. */}
-      {!clinical && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
-          {[
-            ...(patientAccess ? [{ page: "Patients", label: "Patients", Icon: UsersIcon }] : []),
-            { page: "LearningCenter", label: "Learning Center", Icon: GraduationCap },
-            { page: "TimeOff", label: "Time Off", Icon: CalendarDays },
-            { page: "Messages", label: "Messages", Icon: Mail },
-            { page: "SendFax", label: "Send Fax", Icon: Send },
-            { page: "ResourceLibrary", label: "Library", Icon: BookOpen },
-            { page: "Incidents", label: "Incidents", Icon: AlertTriangle },
-          ].map((item) => {
-            const ItemIcon = item.Icon;
-            return (
-              <Link key={item.page} to={`/${item.page}`} className="group">
-                <Card className="h-full transition-all duration-300 hover:-translate-y-1 hover:shadow-md hover:border-navy-200 bg-white/50 hover:bg-white">
-                  <CardContent className="p-4 sm:p-6 flex flex-col items-center justify-center text-center gap-3 min-h-[110px]">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-50 text-slate-500 ring-1 ring-inset ring-slate-200 transition-all group-hover:bg-navy-50 group-hover:text-navy-700 group-hover:ring-navy-200 shadow-sm">
-                      <ItemIcon className="h-6 w-6" />
-                    </div>
-                    <h3 className="text-sm font-semibold leading-tight text-slate-600 transition-colors group-hover:text-navy-900">{item.label}</h3>
-                  </CardContent>
-                </Card>
-              </Link>
-            );
-          })}
-        </div>
-      )}
-
-      {/* Everything below is clinical (nurse/admin only) — care-scope-driven stats,
-          nursing quick actions, and patient/clinical widgets. */}
-      {clinical && (
-      <>
       {/* Scheduled Telehealth reminders */}
-      <div className="mb-6">
-        <UpcomingTelehealthWidget />
-      </div>
+      <UpcomingTelehealthWidget />
 
       {/* Nurse Stats Cards — shared StatCard treatment (clean white + accent + icon chip).
           The first three deep-link into their domain so the metrics are actionable. */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
+      <div className="grid grid-cols-3 gap-4 sm:gap-6">
         <Link to="/ClinicalDocumentation" className="block">
           <StatCard
             label="Today's Visits"
             value={visits.filter(v => v.status === 'scheduled').length}
-            sub={`${visits.filter(v => v.status === 'completed').length} completed`}
+            sub={`${visits.filter(v => v.status === 'completed').length} done`}
             icon={Calendar}
             tone="emerald"
           />
         </Link>
-        <Link to="/CarePlanManagement" className="block">
-          <StatCard
-            label="Active Care Plans"
-            value={carePlans.length}
-            sub={`${patients.length} patients`}
-            icon={Target}
-            tone="navy"
-          />
-        </Link>
         <Link to="/SmartNoteAssistant" className="block">
           <StatCard
-            label="Note Enhancements"
+            label="Notes"
             value={noteConversions.length}
             sub="AI-assisted"
             icon={FileText}
@@ -307,26 +310,27 @@ export default function Dashboard() {
         </Link>
         <StatCard
           label="Time Saved"
-          value={stats.timeSavedDisplay}
-          sub="last 30 days"
+          value={stats.timeSavedDisplayInRange}
+          sub="30 days"
           icon={Clock}
           tone="gold"
         />
       </div>
 
       {/* Quick Action Buttons — consistent navy hover accent (no rainbow). */}
-      <div className="grid grid-cols-3 sm:grid-cols-6 gap-4 sm:gap-6 mb-8">
+      <div className="grid grid-cols-3 sm:grid-cols-6 gap-4 sm:gap-6">
         {[
-          { page: "SmartNoteAssistant", label: "Smart Notes",   Icon: FileText },
-          { page: "SendFax",            label: "Send Fax",      Icon: Send },
-          { page: "CarePlanManagement", label: "Care Plans",    Icon: CheckCircle2 },
-          { page: "PatientEducationHub",label: "Pt. Education",  Icon: User },
-          { page: "VisitScribe",        label: "Visit Scribe",  Icon: Mic },
-          { page: "Incidents",          label: "Incidents",     Icon: AlertTriangle },
+          { page: "SmartNoteAssistant",  to: "/SmartNoteAssistant",                    label: "Smart Notes",   Icon: FileText },
+          { page: "SendFax",             to: "/SendFax",                               label: "Send Fax",      Icon: Send },
+          { page: "PatientEducationHub", to: "/PatientEducationHub",                   label: "Pt. Education", Icon: User },
+          // Visit Scribe was folded into the Clinical Notes hub — link straight to
+          // its tab instead of the retired /VisitScribe redirect hop.
+          { page: "VisitScribe",         to: "/ClinicalDocumentation?tab=visit-scribe", label: "Visit Scribe",  Icon: Mic },
+          { page: "Incidents",           to: "/Incidents",                             label: "Incidents",     Icon: AlertTriangle },
         ].map((item) => {
           const ItemIcon = item.Icon;
           return (
-            <Link key={item.page} to={`/${item.page}`} className="group">
+            <Link key={item.page} to={item.to} className="group">
               <Card className="h-full transition-all duration-300 hover:-translate-y-1 hover:shadow-md hover:border-navy-200 bg-white/50 hover:bg-white">
                 <CardContent className="p-4 sm:p-6 flex flex-col items-center justify-center text-center gap-3 min-h-[110px]">
                   <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-50 text-slate-500 ring-1 ring-inset ring-slate-200 transition-all group-hover:bg-navy-50 group-hover:text-navy-700 group-hover:ring-navy-200 shadow-sm">
@@ -342,7 +346,7 @@ export default function Dashboard() {
 
       {/* Route Optimizer */}
       {visits.length > 0 && (
-        <div className="mb-8">
+        <div>
           <SmartRouteOptimizer
             visits={visits.filter(v => v.status === 'scheduled')}
             patients={patients}
@@ -356,7 +360,7 @@ export default function Dashboard() {
 
       {/* Proactive Clinical Support - Show for first scheduled patient */}
       {visits.length > 0 && visits[0]?.patient_id && (
-        <div className="mb-6">
+        <div>
           <ProactiveClinicalSupport
             patientId={visits[0].patient_id}
             compact={true}
@@ -366,32 +370,24 @@ export default function Dashboard() {
 
 
 
-      <Suspense fallback={<div className="flex items-center justify-center py-12 text-slate-400"><Loader2 className="w-6 h-6 animate-spin mr-2" />Loading...</div>}>
-        {/* AI Care Plan Proposals - Nurse Review */}
-        <div className="mb-8">
-          <CarePlanProposalReviewer compact={true} />
-        </div>
-
+      <Suspense fallback={<LoadingState className="py-12" />}>
         {/* Hospitalization Risk Monitor */}
-        <div className="mb-8">
-          <HospitalizationRiskWidget autoAnalyze={false} />
-        </div>
+        <HospitalizationRiskWidget autoAnalyze={false} />
 
         {/* High-Risk Patients Alert */}
-        <div className="mb-8">
-          <HighRiskPatientsWidget />
-        </div>
+        <HighRiskPatientsWidget />
 
         {/* Pending Referrals */}
-        <div className="mb-8">
-          <PendingReferralsWidget />
-        </div>
+        <PendingReferralsWidget />
+
+        {/* Provider follow-up requests needing attention (renders for admins only) */}
+        <OverdueFollowUpsWidget />
 
         {/* Real-time Patient Alerts */}
-        <div className="mb-8">
+        <div>
           <RealTimePatientAlerts
             patients={patients}
-            visits={visits}
+            visits={alertVisits}
             carePlans={carePlans}
             incidents={incidents}
             currentUser={currentUser}
@@ -399,12 +395,8 @@ export default function Dashboard() {
         </div>
 
         {/* Top Clinical Templates */}
-         <div className="mb-8">
-           <TopTemplatesWidget />
-         </div>
+        <TopTemplatesWidget />
         </Suspense>
-      </>
-      )}
 
     </div>
     </PullToRefresh>

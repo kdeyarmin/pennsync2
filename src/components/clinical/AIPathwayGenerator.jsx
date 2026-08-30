@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, Sparkles, Brain, CheckCircle2, AlertCircle } from "lucide-react";
+import AICaveat from "@/components/ui/AICaveat";
 
 export default function AIPathwayGenerator({ onPathwayGenerated }) {
   const [diagnosis, setDiagnosis] = useState("");
@@ -65,7 +66,7 @@ Base recommendations on current Medicare guidelines, evidence-based practice, an
 Return ONLY valid JSON without any markdown formatting or explanations.`;
 
       const response = await ai.run({
-        model: "claude_opus_4_8",
+        model: "automatic",
         prompt,
         response_json_schema: {
           type: "object",
@@ -233,6 +234,7 @@ Return ONLY valid JSON without any markdown formatting or explanations.`;
               <CheckCircle2 className="w-4 h-4 text-green-600" />
               Generated Pathways ({generatedPathways.length})
             </h3>
+            <AICaveat label="AI-generated — review clinically before creating these pathways" />
             {generatedPathways.map((pathway, idx) => (
               <Card key={idx} className="border-green-200 bg-white">
                 <CardContent className="p-4 space-y-3">
@@ -272,7 +274,7 @@ Return ONLY valid JSON without any markdown formatting or explanations.`;
                   <Button
                     onClick={() => handleSavePathway(pathway)}
                     size="sm"
-                    className="w-full bg-green-600 hover:bg-green-700"
+                    className="w-full"
                   >
                     <CheckCircle2 className="w-4 h-4 mr-2" />
                     Save This Pathway

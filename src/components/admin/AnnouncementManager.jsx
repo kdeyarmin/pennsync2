@@ -41,6 +41,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { ALL_ROWS } from '@/lib/queryLimits';
 
 export default function AnnouncementManager() {
   const queryClient = useQueryClient();
@@ -61,7 +62,7 @@ export default function AnnouncementManager() {
     queryKey: ['announcements'],
     queryFn: async () => {
       try {
-        const result = await base44.entities.Announcement.list('-created_date');
+        const result = await base44.entities.Announcement.list('-created_date', ALL_ROWS);
         return result || [];
       } catch (error) {
         console.error('❌ Error fetching announcements:', error);
@@ -171,13 +172,11 @@ export default function AnnouncementManager() {
       priority: 0
     };
 
-    // Only add dates if they exist
-    if (formData.scheduled_for) {
-      dataToSubmit.scheduled_for = formData.scheduled_for.toISOString();
-    }
-    if (formData.expires_at) {
-      dataToSubmit.expires_at = formData.expires_at.toISOString();
-    }
+    // Always include the date fields, sending null to clear. Base44 updates are
+    // partial, so omitting a cleared field would leave its previous stored value
+    // in place — the announcement would stay scheduled/expiring after Clear+Save.
+    dataToSubmit.scheduled_for = formData.scheduled_for ? formData.scheduled_for.toISOString() : null;
+    dataToSubmit.expires_at = formData.expires_at ? formData.expires_at.toISOString() : null;
     
     
     if (editingId) {

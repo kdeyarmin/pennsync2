@@ -115,16 +115,22 @@ export default function InteractiveDocumentationScenarios({ nurseEmail, _recomme
   const [feedback, setFeedback] = useState(null);
   const ai = useAICall();
   const [showHint, setShowHint] = useState(false);
+  // Latch the scenario we've already auto-selected so clearing selectedScenario
+  // (via "Choose Different Scenario") can't re-fire the effect and bounce back to
+  // the initial scenario — the scenario picker must be reachable.
+  const autoSelectedScenarioRef = React.useRef(null);
 
-  // Auto-select scenario if provided
+  // Auto-select scenario if provided (once per initialScenarioId value)
   React.useEffect(() => {
-    if (initialScenarioId && !selectedScenario) {
+    if (initialScenarioId && autoSelectedScenarioRef.current !== initialScenarioId) {
       const scenario = scenarioTemplates.find(s => s.id === initialScenarioId);
       if (scenario) {
+        autoSelectedScenarioRef.current = initialScenarioId;
         handleStartScenario(scenario);
       }
     }
-  }, [initialScenarioId, selectedScenario]);
+  // Run-once auto-select per initialScenarioId; a ref latch prevents re-fire when selection is cleared
+  }, [initialScenarioId]);
 
   const savePracticeMutation = useMutation({
     mutationFn: async (practiceData) => {
@@ -170,7 +176,7 @@ Provide detailed feedback in JSON format:
 }`;
 
       const result = await ai.run({
-        model: "claude_opus_4_8",
+        model: "automatic",
         prompt,
         response_json_schema: {
           type: "object",

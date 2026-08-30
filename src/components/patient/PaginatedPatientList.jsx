@@ -10,14 +10,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  ChevronLeft,
-  ChevronRight,
-  Search
-} from "lucide-react";
-import { Link } from "react-router-dom";
+import { Search } from "lucide-react";
+import { Link } from "react-router";
 import { createPageUrl } from "@/utils";
-import { getPatientDisplayName, getPatientInitials } from "@/components/patient/patientDisplay";
+import { getPatientDisplayName, getPatientInitials, getPatientDisplayParts } from "@/components/patient/patientDisplay";
+import { clampPageSize, paginateRows } from "@/lib/pagination";
+import ListPaginationControls from "@/components/ui/ListPaginationControls";
+
+// Sort on the normalized name the rows render (getPatientDisplayName), not the
+// raw fields: `${first_name} ${last_name}` put the literal "undefined" in the key
+// for a chart missing either half, so it sorted under "u" instead of with its
+// neighbours — and the visible order disagreed with the visible names.
+const nameSortKey = (patient) => {
+  const { first, last } = getPatientDisplayParts(patient);
+  return `${first} ${last}`.trim().toLowerCase();
+};
 
 export default function PaginatedPatientList({ 
   patients = [], 
@@ -25,14 +32,19 @@ export default function PaginatedPatientList({
   showCheckboxes = false,
   selectedPatients = [],
   onSelectionChange,
-  showSearch = true
+  showSearch = true,
+  // When the caller owns ordering (it has its own sort control), this list must
+  // NOT re-sort: it used to always apply its own "name" sort to the prop, which
+  // silently discarded the caller's order — a page-level "Newest"/"Most visits"
+  // choice was reordered back to name and the control looked dead.
+  sortable = true
 }) {
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(20);
   const [sortBy, setSortBy] = useState("name");
 
-  // Filter and sort patients
+  // Filter and sort patients (search/sort stay local; page window uses pure helper).
   const filteredAndSortedPatients = useMemo(() => {
     let filtered = patients.filter(p => {
       const searchLower = search.toLowerCase();
@@ -41,41 +53,37 @@ export default function PaginatedPatientList({
       return fullName.includes(searchLower) || mrn.includes(searchLower);
     });
 
-    // Sort
-    filtered.sort((a, b) => {
-      if (sortBy === 'name') {
-        return `${a.first_name} ${a.last_name}`.localeCompare(`${b.first_name} ${b.last_name}`);
-      } else if (sortBy === 'status') {
-        return (a.status || '').localeCompare(b.status || '');
-      } else if (sortBy === 'created') {
-        return (new Date(b.created_date).getTime() || 0) - (new Date(a.created_date).getTime() || 0);
-      }
-      return 0;
-    });
+    if (sortable) {
+      filtered.sort((a, b) => {
+        if (sortBy === 'name') {
+          return nameSortKey(a).localeCompare(nameSortKey(b));
+        } else if (sortBy === 'status') {
+          return (a.status || '').localeCompare(b.status || '');
+        } else if (sortBy === 'created') {
+          return (new Date(b.created_date).getTime() || 0) - (new Date(a.created_date).getTime() || 0);
+        }
+        return 0;
+      });
+    }
 
     return filtered;
-  }, [patients, search, sortBy]);
+  }, [patients, search, sortBy, sortable]);
 
-  // Pagination
-  const totalPages = Math.ceil(filteredAndSortedPatients.length / itemsPerPage);
+  const pageSize = clampPageSize(itemsPerPage, { max: 100, fallback: 20 });
 
-  // Clamp the current page when the result set shrinks (filtering, deletion, or a
-  // smaller page size). Without this, being on e.g. page 5 and narrowing results
-  // to 1 page leaves startIndex past the end → an empty list with the pagination
-  // controls hidden, stranding the user with no visible rows.
+  const pageWindow = useMemo(
+    () => paginateRows(filteredAndSortedPatients, { page: currentPage, pageSize, maxPageSize: 100 }),
+    [filteredAndSortedPatients, currentPage, pageSize],
+  );
+
+  // Keep page in range when filters shrink the result set (same contract as paginateRows).
   useEffect(() => {
-    if (totalPages > 0 && currentPage > totalPages) {
-      setCurrentPage(totalPages);
+    if (currentPage !== pageWindow.page) {
+      setCurrentPage(pageWindow.page);
     }
-  }, [totalPages, currentPage]);
+  }, [currentPage, pageWindow.page]);
 
-  const safePage = totalPages > 0 ? Math.min(currentPage, totalPages) : 1;
-  const startIndex = (safePage - 1) * itemsPerPage;
-  const paginatedPatients = filteredAndSortedPatients.slice(startIndex, startIndex + itemsPerPage);
-
-  const handlePageChange = (newPage) => {
-    setCurrentPage(Math.max(1, Math.min(newPage, totalPages)));
-  };
+  const paginatedPatients = pageWindow.items;
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -105,18 +113,20 @@ export default function PaginatedPatientList({
           </div>
         ) : <div className="flex-1" />}
         <div className="flex flex-col sm:flex-row gap-3 sm:justify-end">
-          <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="w-full sm:w-40">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="name">Name (A-Z)</SelectItem>
-              <SelectItem value="status">Status</SelectItem>
-              <SelectItem value="created">Recently Added</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={String(itemsPerPage)} onValueChange={(v) => {
-            setItemsPerPage(Number(v));
+          {sortable && (
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="w-full sm:w-40">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="name">Name (A-Z)</SelectItem>
+                <SelectItem value="status">Status</SelectItem>
+                <SelectItem value="created">Recently Added</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
+          <Select value={String(pageSize)} onValueChange={(v) => {
+            setItemsPerPage(clampPageSize(v, { max: 100, fallback: 20 }));
             setCurrentPage(1);
           }}>
             <SelectTrigger className="w-full sm:w-32">
@@ -135,9 +145,9 @@ export default function PaginatedPatientList({
       {/* Results Summary */}
       <div className="flex items-center justify-between text-sm text-slate-600">
         <span>
-          {filteredAndSortedPatients.length === 0
+          {pageWindow.totalItems === 0
             ? 'No patients'
-            : `Showing ${startIndex + 1}-${Math.min(startIndex + itemsPerPage, filteredAndSortedPatients.length)} of ${filteredAndSortedPatients.length} patients`}
+            : `Showing ${pageWindow.startIndex + 1}-${pageWindow.endIndex + 1} of ${pageWindow.totalItems} patients`}
         </span>
         {search && (
           <Button variant="ghost" size="sm" onClick={() => setSearch("")}>
@@ -147,9 +157,9 @@ export default function PaginatedPatientList({
       </div>
 
       {/* Patient Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="flex flex-wrap justify-center gap-4">
         {paginatedPatients.map((patient) => (
-          <Card key={patient.id} className="hover:shadow-lg transition-shadow">
+          <Card key={patient.id} className="w-full md:w-[calc(50%-0.5rem)] lg:w-[calc(33.333%-0.75rem)] hover:shadow-lg transition-shadow">
             <CardContent className="relative p-5 flex flex-col items-center text-center">
               {showCheckboxes && (
                 <input
@@ -176,7 +186,7 @@ export default function PaginatedPatientList({
                 <p className="mt-0.5 text-xs text-slate-500">MRN: {patient.medical_record_number}</p>
               )}
 
-              <div className="mt-3 flex flex-wrap justify-center gap-1.5">
+              <div className="mt-3 flex flex-wrap items-center justify-center gap-1.5">
                 <Badge variant="outline" className={getStatusColor(patient.status)}>
                   {patient.status || 'active'}
                 </Badge>
@@ -187,9 +197,9 @@ export default function PaginatedPatientList({
                 )}
               </div>
 
-              <div className="mt-4 flex justify-center gap-2 w-full">
+              <div className="mt-4 flex items-center justify-center gap-2 w-full">
                 <Link to={createPageUrl("PatientDetails") + `?id=${patient.id}`}>
-                  <Button size="sm" variant="outline" className="text-xs">
+                  <Button size="sm" variant="outline" className="text-xs h-9">
                     View Details
                   </Button>
                 </Link>
@@ -197,7 +207,7 @@ export default function PaginatedPatientList({
                   <Button
                     size="sm"
                     onClick={() => onPatientSelect(patient.id)}
-                    className="text-xs"
+                    className="text-xs h-9"
                   >
                     Select
                   </Button>
@@ -208,57 +218,17 @@ export default function PaginatedPatientList({
         ))}
       </div>
 
-      {/* Pagination Controls */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between pt-4 border-t">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handlePageChange(safePage - 1)}
-            disabled={safePage === 1}
-          >
-            <ChevronLeft className="w-4 h-4 mr-1" />
-            Previous
-          </Button>
-          
-          <div className="flex items-center gap-2">
-            {[...Array(Math.min(5, totalPages))].map((_, idx) => {
-              let pageNum;
-              if (totalPages <= 5) {
-                pageNum = idx + 1;
-              } else if (safePage <= 3) {
-                pageNum = idx + 1;
-              } else if (safePage >= totalPages - 2) {
-                pageNum = totalPages - 4 + idx;
-              } else {
-                pageNum = safePage - 2 + idx;
-              }
-              
-              return (
-                <Button
-                  key={pageNum}
-                  variant={safePage === pageNum ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => handlePageChange(pageNum)}
-                  className="w-8 h-8 p-0"
-                >
-                  {pageNum}
-                </Button>
-              );
-            })}
-          </div>
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handlePageChange(safePage + 1)}
-            disabled={safePage === totalPages}
-          >
-            Next
-            <ChevronRight className="w-4 h-4 ml-1" />
-          </Button>
-        </div>
-      )}
+      <ListPaginationControls
+        page={pageWindow.page}
+        totalPages={pageWindow.totalPages}
+        totalItems={pageWindow.totalItems}
+        startIndex={pageWindow.startIndex}
+        endIndex={pageWindow.endIndex}
+        hasPreviousPage={pageWindow.hasPreviousPage}
+        hasNextPage={pageWindow.hasNextPage}
+        onPageChange={setCurrentPage}
+        itemLabel="patients"
+      />
     </div>
   );
 }

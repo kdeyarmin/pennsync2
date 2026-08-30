@@ -1,5 +1,14 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
+// <<<BEGIN SHARED HELPER: requireActiveUser — generated, edit base44/_shared/backendHelpers.mjs>>>
+const isDeactivatedUser = (u) => !!u && u.is_active === false;
+const DEACTIVATED_USER_RESPONSE = () => Response.json(
+  { error: 'Unauthorized - account is deactivated' },
+  { status: 403 },
+);
+// <<<END SHARED HELPER: requireActiveUser>>>
+
+
 // Records (or updates) the current user's rating for a published course.
 // One feedback record per user/course — re-submitting updates the existing row.
 
@@ -7,6 +16,7 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
+    if (isDeactivatedUser(user)) return DEACTIVATED_USER_RESPONSE();
     if (!user?.email) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -20,7 +30,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'rating must be between 1 and 5' }, { status: 400 });
     }
 
-    const [course] = await base44.asServiceRole.entities.TrainingCourse.filter({ id: courseId });
+    const [course] = await base44.asServiceRole.entities.TrainingCourse.filter({ id: courseId }, undefined, 5000);
     if (!course) {
       return Response.json({ error: 'Course not found' }, { status: 404 });
     }
@@ -79,6 +89,7 @@ Deno.serve(async (req) => {
 
     return Response.json({ success: true, feedback_id: record.id, updated: !!existing[0] });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error('submitCourseFeedback failed:', error);
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
 });

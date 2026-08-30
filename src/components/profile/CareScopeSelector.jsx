@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Heart, Home, Users, CheckCircle2 } from "lucide-react";
@@ -37,16 +38,32 @@ const OPTIONS = [
 
 export default function CareScopeSelector({ currentUser, onSaved }) {
   const queryClient = useQueryClient();
-  const [selected, setSelected] = useState(currentUser?.care_scope || "");
+  const savedScope = currentUser?.care_scope || "";
+  const [selected, setSelected] = useState(savedScope);
   const [saving, setSaving] = useState(false);
+
+  // On the settings page this renders before `currentUser` resolves, so the
+  // initial state above is "" and the user's saved scope was never
+  // pre-selected — the card said "Current setting: Hospice" above a group with
+  // nothing highlighted. Re-seed when the SAVED value changes (not on every
+  // currentUser refetch), so an in-progress selection is never clobbered.
+  useEffect(() => {
+    setSelected(savedScope);
+  }, [savedScope]);
 
   const handleSave = async () => {
     if (!selected) return;
     setSaving(true);
     try {
       await base44.auth.updateMe({ care_scope: selected });
-      queryClient.invalidateQueries({ queryKey: ["currentUser"] });
+      // Await the refetch so the fresh care_scope is in the cache BEFORE onSaved
+      // runs — otherwise the Dashboard's "set your care scope" gate can linger on
+      // stale data and appear to swallow the user's next navigation.
+      await queryClient.refetchQueries({ queryKey: ["currentUser"] });
       if (onSaved) onSaved(selected);
+    } catch (error) {
+      console.error('Error saving care scope:', error);
+      toast.error('Failed to save. Please try again.');
     } finally {
       setSaving(false);
     }

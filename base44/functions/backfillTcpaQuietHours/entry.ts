@@ -1,9 +1,17 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
-// Operational logs are gated behind FUNCTIONS_DEBUG so they don't run in
-// production by default. console.error/warn remain ungated for visibility.
-const DEBUG = !!Deno.env.get('FUNCTIONS_DEBUG');
-const debugLog = (...args) => { if (DEBUG) console.log(...args); };
+// <<<BEGIN SHARED HELPER: requireActiveUser — generated, edit base44/_shared/backendHelpers.mjs>>>
+const isDeactivatedUser = (u) => !!u && u.is_active === false;
+const DEACTIVATED_USER_RESPONSE = () => Response.json(
+  { error: 'Unauthorized - account is deactivated' },
+  { status: 403 },
+);
+// <<<END SHARED HELPER: requireActiveUser>>>
+
+
+// Operational debug logs are compiled out in production (the FUNCTIONS_DEBUG
+// secret was retired). console.error/warn remain ungated for visibility.
+const debugLog = (..._args) => {};
 
 // One-time, idempotent backfill: turn TCPA quiet hours ON for existing agencies
 // that never configured it, so the legally-safer default enforces immediately in
@@ -13,9 +21,12 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
-
-    if (!user || user.role !== 'admin') {
-      return Response.json({ error: 'Admin access required' }, { status: 403 });
+    if (isDeactivatedUser(user)) return DEACTIVATED_USER_RESPONSE();
+    
+    // Platform-wide TCPA default backfill — only super_admin. Facility admins
+    // must not flip every tenant's AgencySettings via service role.
+    if (!user || user.account_type !== 'super_admin') {
+      return Response.json({ error: 'Super admin access required' }, { status: 403 });
     }
 
     const settingsList = await base44.asServiceRole.entities.AgencySettings.list('-created_date', 500);
@@ -36,6 +47,6 @@ Deno.serve(async (req) => {
     return Response.json({ success: true, updated_count: updated, total: settingsList.length });
   } catch (error) {
     console.error('backfillTcpaQuietHours failed:', error?.message);
-    return Response.json({ error: error.message }, { status: 500 });
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
 });

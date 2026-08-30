@@ -4,9 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-export default function AssignmentWizard({ users = [], onAssign }) {
+export default function AssignmentWizard({ users = [], onAssign, initialFilters }) {
   const [selectedUsers, setSelectedUsers] = useState([]);
-  const [filters, setFilters] = useState({ role: 'all', discipline: 'all', department: 'all', business_line: 'all', location: 'all' });
+  const [filters, setFilters] = useState({
+    role: 'all', discipline: 'all', department: 'all', business_line: 'all', location: 'all',
+    ...(initialFilters || {}),
+  });
   const filteredUsers = useMemo(() => users.filter((user) => {
     if (!user.email || user.role === 'admin') return false;
     if (filters.role !== 'all' && (user.job_title || user.credential_type || user.role) !== filters.role) return false;
@@ -21,7 +24,7 @@ export default function AssignmentWizard({ users = [], onAssign }) {
   const toggle = (email) => setSelectedUsers((prev) => prev.includes(email) ? prev.filter((item) => item !== email) : [...prev, email]);
 
   return (
-    <div className="grid grid-cols-1 xl:grid-cols-[320px_minmax(0,1fr)] gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-[300px_minmax(0,1fr)] gap-6">
       <Card>
         <CardHeader><CardTitle>Assignment Wizard</CardTitle></CardHeader>
         <CardContent className="space-y-3">
@@ -30,7 +33,7 @@ export default function AssignmentWizard({ users = [], onAssign }) {
           <Select value={filters.department} onValueChange={(value) => setFilters({ ...filters, department: value })}><SelectTrigger><SelectValue placeholder="Department" /></SelectTrigger><SelectContent><SelectItem value="all">All departments</SelectItem>{unique(users.map((user) => user.department)).map((value) => <SelectItem key={value} value={value}>{value}</SelectItem>)}</SelectContent></Select>
           <Select value={filters.business_line} onValueChange={(value) => setFilters({ ...filters, business_line: value })}><SelectTrigger><SelectValue placeholder="Business line" /></SelectTrigger><SelectContent><SelectItem value="all">All business lines</SelectItem>{unique(users.map((user) => user.business_line)).map((value) => <SelectItem key={value} value={value}>{value}</SelectItem>)}</SelectContent></Select>
           <Select value={filters.location} onValueChange={(value) => setFilters({ ...filters, location: value })}><SelectTrigger><SelectValue placeholder="Location" /></SelectTrigger><SelectContent><SelectItem value="all">All locations</SelectItem>{unique(users.map((user) => user.location)).map((value) => <SelectItem key={value} value={value}>{value}</SelectItem>)}</SelectContent></Select>
-          <Button className="w-full" onClick={() => onAssign?.({ userEmails: selectedUsers, filters })}>Use {selectedUsers.length || filteredUsers.length} Employees</Button>
+          <Button className="w-full" onClick={() => onAssign?.({ userEmails: selectedUsers.length ? selectedUsers : filteredUsers.map((user) => user.email), filters })}>Use {selectedUsers.length || filteredUsers.length} Employees</Button>
         </CardContent>
       </Card>
       <Card>

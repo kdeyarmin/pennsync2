@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useAICall } from "@/hooks/useAICall";
 import { isSafeExternalUrl } from "@/components/utils/security";
@@ -17,10 +17,16 @@ import {
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from 'sonner';
+import { formatAge } from "@/lib/age";
 
 export default function PersonalizedEducationGenerator({ patient, complianceData, visits }) {
   const ai = useAICall();
   const [educationMaterials, setEducationMaterials] = useState(null);
+
+  // Clear sticky AI output when the parent chart switches patients.
+  useEffect(() => {
+    setEducationMaterials(null);
+  }, [patient?.id]);
 
   const generateMaterials = async () => {
     try {
@@ -28,12 +34,12 @@ export default function PersonalizedEducationGenerator({ patient, complianceData
       const recentVisit = visits?.[0];
 
       const result = await ai.run({
-        model: "claude_sonnet_4_6",
+        model: "automatic",
         prompt: `Generate personalized patient education materials for this patient:
 
 PATIENT INFORMATION:
 - Name: ${patient.first_name} ${patient.last_name}
-- Age: ${patient.date_of_birth ? new Date().getFullYear() - new Date(patient.date_of_birth).getFullYear() : 'Unknown'}
+- Age: ${formatAge(patient.date_of_birth)}
 - Primary Diagnosis: ${patient.primary_diagnosis}
 - Secondary Diagnoses: ${patient.secondary_diagnoses?.join(', ') || 'None'}
 - Current Medications: ${patient.current_medications?.map(m => m.name).join(', ') || 'None'}
@@ -226,7 +232,7 @@ ${educationMaterials.key_takeaways?.map(k => `• ${k}`).join('\n')}
               Generate customized education materials based on patient's diagnosis, medications, compliance status, and reading level
             </AlertDescription>
           </Alert>
-          <Button onClick={generateMaterials} className="bg-green-600 hover:bg-green-700">
+          <Button onClick={generateMaterials} >
             <Sparkles className="w-4 h-4 mr-2" />
             Generate Education Materials
           </Button>
@@ -349,7 +355,7 @@ ${educationMaterials.key_takeaways?.map(k => `• ${k}`).join('\n')}
                           href={isSafeExternalUrl(resource.link) ? resource.link : undefined}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="ml-2 text-blue-600 hover:text-blue-800"
+                          className="ml-2 text-blue-600 hover:text-blue-700"
                         >
                           <Badge variant="outline" className="cursor-pointer">Visit</Badge>
                         </a>

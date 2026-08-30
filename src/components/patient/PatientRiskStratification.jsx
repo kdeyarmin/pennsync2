@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAICall } from "@/hooks/useAICall";
+import { formatAge } from "@/lib/age";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -36,7 +37,6 @@ import {
 export default function PatientRiskStratification({
   patient,
   visits = [],
-  carePlans = [],
   incidents = [],
   compact = false,
   onRiskCalculated,
@@ -47,15 +47,7 @@ export default function PatientRiskStratification({
   const [isExpanded, setIsExpanded] = useState(!compact);
   const [lastCalculated, setLastCalculated] = useState(null);
 
-  const calculateAge = useCallback((dob) => {
-    if (!dob) return 'Unknown';
-    const today = new Date();
-    const birthDate = new Date(dob);
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const m = today.getMonth() - birthDate.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
-    return age;
-  }, []);
+  const calculateAge = useCallback((dob) => formatAge(dob), []);
 
   const calculateRisk = useCallback(async () => {
     if (!patient) return;
@@ -63,7 +55,6 @@ export default function PatientRiskStratification({
     try {
       // Gather comprehensive patient data
       const recentVisits = visits.slice(0, 10);
-      const activeCarePlans = carePlans.filter(cp => cp.status === 'active');
       const recentIncidents = incidents.slice(0, 5);
 
       // Extract vital trends
@@ -90,9 +81,6 @@ ${recentVisits.map(v => `- ${v.visit_date}: ${v.visit_type} - ${v.nurse_notes?.s
 
 VITAL SIGN TRENDS:
 ${vitalTrends.length > 0 ? vitalTrends.map(v => `${v.date}: BP ${v.vitals?.blood_pressure_systolic || v.vitals?.bp || '?'}/${v.vitals?.blood_pressure_diastolic || '?'}, HR ${v.vitals?.heart_rate || v.vitals?.hr || '?'}, O2 ${v.vitals?.oxygen_saturation || v.vitals?.o2 || '?'}%`).join('\n') : 'No vital data available'}
-
-ACTIVE CARE PLANS (${activeCarePlans.length}):
-${activeCarePlans.map(cp => `- ${cp.problem}: ${cp.goal} (Status: ${cp.status})`).join('\n') || 'None'}
 
 INCIDENT HISTORY (${recentIncidents.length} recent):
 ${recentIncidents.map(i => `- ${i.incident_date}: ${i.incident_type} - Severity: ${i.severity}`).join('\n') || 'No incidents'}
@@ -160,7 +148,7 @@ Return JSON:
 }`;
 
       const result = await ai.run({
-        model: "claude_opus_4_8",
+        model: "automatic",
         prompt,
         response_json_schema: {
           type: "object",
@@ -185,7 +173,14 @@ Return JSON:
       toast.error("The AI request didn't complete. Please try again.");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- AI hook object is intentionally omitted; its run() is stable, and including it would re-fire the call every render
-  }, [patient, visits, carePlans, incidents, onRiskCalculated, calculateAge]);
+  }, [patient, visits, incidents, onRiskCalculated, calculateAge]);
+
+  useEffect(() => {
+    // Clear sticky risk scores when the chart switches patients so autoCalculate
+    // re-fires for Patient B instead of permanently showing Patient A's scores.
+    setRiskData(null);
+    setLastCalculated(null);
+  }, [patient?.id]);
 
   useEffect(() => {
     if (autoCalculate && patient && !riskData) {

@@ -1,18 +1,36 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
+// <<<BEGIN SHARED HELPER: requireActiveUser — generated, edit base44/_shared/backendHelpers.mjs>>>
+const isDeactivatedUser = (u) => !!u && u.is_active === false;
+const DEACTIVATED_USER_RESPONSE = () => Response.json(
+  { error: 'Unauthorized - account is deactivated' },
+  { status: 403 },
+);
+// <<<END SHARED HELPER: requireActiveUser>>>
+
+// <<<BEGIN SHARED HELPER: isAdminLike — generated, edit base44/_shared/backendHelpers.mjs>>>
+const isAdminLike = (u) => !!u && (
+  u.role === 'admin' || u.account_type === 'agency_admin' ||
+  u.account_type === 'super_admin'
+);
+// <<<END SHARED HELPER: isAdminLike>>>
+
+
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     
     // Verify admin access
     const user = await base44.auth.me();
-    if (!user || user.role !== 'admin') {
+    if (isDeactivatedUser(user)) return DEACTIVATED_USER_RESPONSE();
+    if (!user || !isAdminLike(user)) {
       return Response.json({ error: 'Unauthorized - Admin access required' }, { status: 403 });
     }
 
     // Fetch latest CMS regulations from internet with AI analysis
     const regulationsUpdate = await base44.integrations.Core.InvokeLLM({
-      model: "claude_opus_4_8",
+      model: "gemini_3_1_pro",
       prompt: `You are a Medicare home health compliance expert. Search the internet for the LATEST CMS regulations and updates for home health agencies as of December 2025.
 
 Focus on:
@@ -134,7 +152,7 @@ Return comprehensive, actionable compliance information.`,
     console.error('CMS regulations sync error:', error);
     return Response.json({
       success: false,
-      error: error.message || 'Failed to sync CMS regulations'
+      error: 'Failed to sync CMS regulations'
     }, { status: 500 });
   }
 });

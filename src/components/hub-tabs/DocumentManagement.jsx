@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
+import { useAgencyScopedQuery } from '@/hooks/useAgencyScopedQuery';
+import { useScopedPatients } from '@/hooks/useScopedPatients';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -12,17 +13,15 @@ export default function DocumentManagement() {
   const [isUploaderOpen, setIsUploaderOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("all");
 
-  const { data: documents = [] } = useQuery({
-    queryKey: ['documents'],
-    queryFn: () => base44.entities.Document.list('-created_date', 500),
-    initialData: []
+  const { data: documents = [] } = useAgencyScopedQuery({
+    queryKey: ['documents', 500],
+    fetch: () => base44.entities.Document.list('-created_date', 500),
+    initialData: [],
+    // Document records its author under uploaded_by, falling back to created_by.
+    authorOf: (d) => d.uploaded_by || d.created_by,
   });
 
-  const { data: _patients = [] } = useQuery({
-    queryKey: ['patients'],
-    queryFn: () => base44.entities.Patient.list('-updated_date', 2000),
-    initialData: []
-  });
+  const { data: _patients = [] } = useScopedPatients({ sort: '-updated_date', limit: 2000 });
 
   const stats = {
     total: documents.length,
@@ -123,10 +122,10 @@ export default function DocumentManagement() {
               <DocumentList showPatientInfo={true} />
             </TabsContent>
             <TabsContent value="with-patient" className="mt-6">
-              <DocumentList showPatientInfo={true} />
+              <DocumentList showPatientInfo={true} assignment="with_patient" />
             </TabsContent>
             <TabsContent value="unassigned" className="mt-6">
-              <DocumentList showPatientInfo={false} />
+              <DocumentList showPatientInfo={false} assignment="unassigned" />
             </TabsContent>
           </Tabs>
         </CardContent>

@@ -1,11 +1,11 @@
 import { useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { X, LogOut, Shield } from "lucide-react";
 import FeedbackButton from "@/components/feedback/FeedbackButton";
-import { userRoleLabel } from "@/lib/roles";
+import { BRAND_LOGO_URL } from "@/lib/brand";
 
 function navItemClasses(active) {
   return `group relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
@@ -26,7 +26,15 @@ export default function MobileMenu({ open, onClose, navCategories, adminItems, i
       if (e.key === "Escape") onClose();
     };
     document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
+    // Lock the page behind the full-screen menu so a scroll gesture over the
+    // drawer doesn't scroll the underlying page (and leave the user lost when
+    // the menu closes). Restore the prior overflow on close/unmount.
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = prevOverflow;
+    };
   }, [open, onClose]);
 
   if (!open) return null;
@@ -37,12 +45,11 @@ export default function MobileMenu({ open, onClose, navCategories, adminItems, i
         {/* Header */}
         <div className="h-16 flex items-center justify-between px-4 border-b border-slate-200 flex-shrink-0">
           <div className="flex items-center gap-2">
-            <img
-              src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ee80d98929370f9e8f2932/02eed9872_pennsynclogoupdated.png"
-              alt="Penn Sync"
-              className="w-7 h-7 rounded-md"
-            />
-            <span className="font-bold text-base text-navy-900 tracking-tight">Penn<span className="text-gold-600">Sync</span></span>
+            <img src={BRAND_LOGO_URL} alt="" className="w-7 h-7 rounded-md" />
+            <span className="flex flex-col leading-none">
+              <span className="font-bold text-base text-navy-900 tracking-tight">Penn<span className="text-gold-600">Sync</span></span>
+              <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-slate-400">by CareMetric</span>
+            </span>
           </div>
           <Button variant="ghost" size="icon" onClick={onClose} className="text-slate-400 hover:text-navy-700 hover:bg-slate-100" aria-label="Close menu">
             <X className="w-5 h-5" />
@@ -143,7 +150,7 @@ export default function MobileMenu({ open, onClose, navCategories, adminItems, i
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-slate-900 truncate">{currentUser?.full_name}</p>
-              <p className="text-xs text-slate-500 truncate">{userRoleLabel(currentUser)}</p>
+              <p className="text-xs text-slate-500 truncate capitalize">{currentUser?.role || 'user'}</p>
             </div>
             <Button
               variant="ghost" size="icon"

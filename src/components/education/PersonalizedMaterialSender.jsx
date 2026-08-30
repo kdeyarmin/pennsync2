@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
+import { useScopedPatients } from '@/hooks/useScopedPatients';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -9,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Send, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { toast } from 'sonner';
+import { ALL_ROWS } from '@/lib/queryLimits';
 
 export default function PersonalizedMaterialSender({ material, onClose, onSent }) {
   const [selectedPatientId, setSelectedPatientId] = useState('');
@@ -21,11 +23,7 @@ export default function PersonalizedMaterialSender({ material, onClose, onSent }
     queryFn: () => base44.auth.me()
   });
 
-  const { data: patients = [] } = useQuery({
-    queryKey: ['patients-active'],
-    queryFn: () => base44.entities.Patient.filter({ status: 'active' }, 'last_name'),
-    initialData: []
-  });
+  const { data: patients = [] } = useScopedPatients({ status: 'active', sort: 'last_name', limit: ALL_ROWS });
 
   const { data: selectedPatient } = useQuery({
     queryKey: ['patient-detail', selectedPatientId],

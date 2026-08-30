@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAICall } from "@/hooks/useAICall";
+import { getScoreBg } from "@/components/oasis/oasisScoreColors";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -99,7 +100,7 @@ export default function AIDocumentationQualityAnalyzer({ analysisResults, pdgmDa
       };
 
       const response = await ai.run({
-        model: "claude_opus_4_8",
+        model: "automatic",
         prompt: `You are an expert OASIS documentation reviewer and home health compliance specialist. Analyze the following OASIS assessment data for documentation quality, focusing on narrative clarity, completeness, and consistency with coded data.
 
 OASIS DATA CONTEXT:
@@ -209,10 +210,10 @@ Return JSON:
 
   // Auto-analyze when results are available
   useEffect(() => {
-    if (analysisResults && !qualityAnalysis && !ai.loading) {
+    if (analysisResults && !qualityAnalysis && !ai.loading && !error) {
       runQualityAnalysis();
     }
-  }, [analysisResults, qualityAnalysis, ai.loading, runQualityAnalysis]);
+  }, [analysisResults, qualityAnalysis, ai.loading, error, runQualityAnalysis]);
 
   const copyToClipboard = (text, exampleKey) => {
     navigator.clipboard.writeText(text);
@@ -224,12 +225,6 @@ Return JSON:
     if (score >= 80) return "text-green-600";
     if (score >= 60) return "text-yellow-600";
     return "text-red-600";
-  };
-
-  const getScoreBg = (score) => {
-    if (score >= 80) return "bg-green-100 border-green-300";
-    if (score >= 60) return "bg-yellow-100 border-yellow-300";
-    return "bg-red-100 border-red-300";
   };
 
   const getSeverityBadge = (severity) => {

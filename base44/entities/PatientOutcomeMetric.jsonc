@@ -81,26 +81,14 @@
       "items": {
         "type": "object",
         "properties": {
-          "measure": {
-            "type": "string"
-          },
+          "measure": { "type": "string" },
           "status": {
             "type": "string",
-            "enum": [
-              "improved",
-              "not_improved",
-              "excluded"
-            ]
+            "enum": ["improved", "not_improved", "excluded"]
           },
-          "start_value": {
-            "type": "number"
-          },
-          "discharge_value": {
-            "type": "number"
-          },
-          "reason": {
-            "type": "string"
-          }
+          "start_value": { "type": "number" },
+          "discharge_value": { "type": "number" },
+          "reason": { "type": "string" }
         }
       }
     },
@@ -112,27 +100,12 @@
       "type": "object",
       "description": "Within-Stay Potentially Preventable Hospitalization prevention: captured risk, interventions delivered, and the outcome (from the PPH worklist engine)",
       "properties": {
-        "risk_score": {
-          "type": "number"
-        },
-        "risk_level": {
-          "type": "string"
-        },
-        "within_dtc_pac_window": {
-          "type": "boolean"
-        },
-        "interventions": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "rehospitalized": {
-          "type": "boolean"
-        },
-        "measure": {
-          "type": "string"
-        }
+        "risk_score": { "type": "number" },
+        "risk_level": { "type": "string" },
+        "within_dtc_pac_window": { "type": "boolean" },
+        "interventions": { "type": "array", "items": { "type": "string" } },
+        "rehospitalized": { "type": "boolean" },
+        "measure": { "type": "string" }
       }
     },
     "care_plan_goals_achieved": {

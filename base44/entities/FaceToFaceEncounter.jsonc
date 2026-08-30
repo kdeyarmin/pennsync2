@@ -1,6 +1,11 @@
 {
   "name": "FaceToFaceEncounter",
   "type": "object",
+  // Lightweight Face-to-Face (F2F) encounter record for the home-health
+  // certification requirement (42 CFR 424.22). Created and validated by the
+  // REFERRAL analyzer from the uploaded referral document only — F2F is
+  // intentionally NOT part of the nurse's Smart Note or anywhere else in the
+  // patient chart. Nothing is required so a partial extraction still persists.
   "properties": {
     "referral_id": {
       "type": "string",
@@ -33,9 +38,7 @@
     },
     "documented_conditions": {
       "type": "array",
-      "items": {
-        "type": "string"
-      },
+      "items": { "type": "string" },
       "description": "Conditions documented at the encounter"
     },
     "primary_diagnosis": {
@@ -61,19 +64,13 @@
     },
     "validation_status": {
       "type": "string",
-      "enum": [
-        "valid",
-        "invalid",
-        "needs_review"
-      ],
+      "enum": ["valid", "invalid", "needs_review"],
       "default": "needs_review",
       "description": "Overall F2F validation outcome"
     },
     "validation_reasons": {
       "type": "array",
-      "items": {
-        "type": "string"
-      },
+      "items": { "type": "string" },
       "description": "Human-readable reasons behind the validation status"
     },
     "source": {

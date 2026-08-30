@@ -2,13 +2,13 @@
   "name": "Incident",
   "type": "object",
   "properties": {
+    "client_request_id": {
+      "type": "string",
+      "description": "Offline idempotency key (queue id) used to dedupe incidents created from the offline sync queue"
+    },
     "patient_id": {
       "type": "string",
       "description": "Reference to Patient entity"
-    },
-    "patient_name": {
-      "type": "string",
-      "description": "Patient display name"
     },
     "visit_id": {
       "type": "string",
@@ -25,8 +25,8 @@
         "refusal_of_care",
         "pressure_injury",
         "emergency_visit",
-        "safety_event",
         "wound_concern",
+        "safety_event",
         "other"
       ],
       "description": "Type of incident"
@@ -61,13 +61,6 @@
       "type": "string",
       "description": "Full incident report text"
     },
-    "photo_urls": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "description": "Uploaded wound or event photos"
-    },
     "physician_notified": {
       "type": "boolean",
       "default": false,
@@ -78,31 +71,14 @@
       "default": false,
       "description": "Whether office was notified"
     },
-    "alert_triggered": {
-      "type": "boolean",
-      "default": false,
-      "description": "Whether an urgent admin alert was triggered"
-    },
-    "state_reportable": {
-      "type": "boolean",
-      "default": false,
-      "description": "Whether this incident is a state-reportable event (drives the admin State Reportable folder/filter)"
-    },
-    "state_reportable_pdf_url": {
-      "type": "string",
-      "description": "URL of the retained PDF copy of the state-reportable report"
-    },
-    "state_reportable_alert_sent_at": {
-      "type": "string",
-      "format": "date-time",
-      "description": "When the immediate admin email alert was sent for a state-reportable incident"
-    },
     "status": {
       "type": "string",
       "enum": [
         "reported",
         "under_review",
-        "resolved"
+        "corrective_action",
+        "resolved",
+        "archived"
       ],
       "default": "reported",
       "description": "Incident status"
@@ -111,21 +87,86 @@
       "type": "string",
       "description": "Notes on how incident was resolved"
     },
+    "investigator_email": {
+      "type": "string",
+      "description": "Admin or supervisor assigned to investigate this incident"
+    },
+    "reviewed_by": {
+      "type": "string",
+      "description": "Reviewer email for the latest review action"
+    },
+    "reviewed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp of the latest review action"
+    },
+    "corrective_action_plan": {
+      "type": "string",
+      "description": "Corrective action plan or prevention steps required before closure"
+    },
+    "corrective_action_due_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Due date for corrective action follow-up"
+    },
+    "closed_by": {
+      "type": "string",
+      "description": "Admin or supervisor who closed the incident"
+    },
+    "closed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp when the incident was closed"
+    },
     "ai_tags": {
       "type": "array",
       "items": {
         "type": "string"
       },
       "description": "AI-generated tags for categorization and trend analysis"
+    },
+    "is_sample": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this is sample data visible to all users"
+    },
+    "patient_name": {
+      "type": "string",
+      "description": "Patient display name captured on the incident (denormalized for reporting)"
+    },
+    "photo_urls": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "URLs of photos uploaded with the incident report"
+    },
+    "alert_triggered": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether an automated alert was triggered for this incident"
+    },
+    "state_reportable": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this incident is a state-reportable event (read top-level by the review queue and reporting module)"
+    },
+    "state_reportable_pdf_url": {
+      "type": "string",
+      "description": "URL of the generated state-reportable incident PDF"
+    },
+    "state_reportable_alert_sent_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO timestamp when the state-reportable alert was sent"
     }
   },
   "required": [
     "patient_id",
     "incident_type",
-    "incident_date",
-    "severity",
-    "report"
+    "incident_date"
   ],
+  "//write-note": "Writes are service-role-only. The corrective-action-plan lifecycle is a compliance control, but it was enforced only in IncidentReviewQueue while write RLS admitted the record's creator and any admin -- so the nurse who filed an incident could PATCH status:'resolved' straight through the entity API and skip the CAP requirement. All mutations now go through the updateIncident function (transition/patch), and creation through submitIncidentReport / submitStateReportableIncident. Reads are unchanged.",
   "rls": {
     "read": {
       "$or": [
@@ -136,20 +177,16 @@
           "user_condition": {
             "role": "admin"
           }
+        },
+        {
+          "is_sample": true
         }
       ]
     },
     "write": {
-      "$or": [
-        {
-          "created_by": "{{user.email}}"
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      ]
+      "user_condition": {
+        "role": "__service_role_only__"
+      }
     }
   }
 }

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useAICall } from "@/hooks/useAICall";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,17 +19,26 @@ import {
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Progress } from "@/components/ui/progress";
 import { toast } from 'sonner';
+import { severityBadgeClass } from "@/lib/severityStyles";
 
 export default function RealTimeDocumentationReviewer({ 
   noteContent, 
   noteType = "soap", // soap, admission, discharge, etc.
   patientData,
-  _onApplySuggestion,
+  // Underscore-prefixed, this never matched the `onApplySuggestion` the caller
+  // passes, so the handler silently landed nowhere and the only way to act on a
+  // suggestion was the clipboard.
+  onApplySuggestion,
   autoAnalyze = false
 }) {
   const ai = useAICall();
   const [analysis, setAnalysis] = useState(null);
   const [_complianceScore, setComplianceScore] = useState(0);
+  // Monotonic id of the latest analysis request. The debounced auto-analyze can
+  // dispatch overlapping LLM calls for different note versions; if an older call
+  // resolves last it would overwrite the panel with stale compliance guidance
+  // for a note that has since changed. We apply only the newest request's result.
+  const requestIdRef = useRef(0);
 
   const analyzeDocumentation = useCallback(async () => {
     if (!noteContent || noteContent.length < 50) {
@@ -37,10 +46,11 @@ export default function RealTimeDocumentationReviewer({
       return;
     }
 
+    const requestId = ++requestIdRef.current;
 
     try {
       const result = await ai.run({
-        model: "claude_opus_4_8",
+        model: "automatic",
         prompt: `You are an expert Medicare compliance auditor and clinical documentation specialist with 20+ years of experience reviewing home health nursing documentation.
 
 Analyze the following nursing note for completeness, accuracy, Medicare/OASIS compliance, and PDGM optimization:
@@ -234,6 +244,9 @@ Be thorough, specific, and actionable. Provide actual example text for suggestio
         }
       });
 
+      // Ignore a stale response: a newer analysis was requested while this one
+      // was in flight, so this result describes an older version of the note.
+      if (requestId !== requestIdRef.current) return;
       setAnalysis(result);
       setComplianceScore(result.scores?.compliance_score || 0);
     } catch (error) {
@@ -251,15 +264,6 @@ Be thorough, specific, and actionable. Provide actual example text for suggestio
       return () => clearTimeout(debounceTimer);
     }
   }, [noteContent, autoAnalyze, analyzeDocumentation]);
-
-  const getSeverityColor = (severity) => {
-    const colors = {
-      critical: "bg-red-100 text-red-800 border-red-300",
-      high: "bg-orange-100 text-orange-800 border-orange-300",
-      medium: "bg-yellow-100 text-yellow-800 border-yellow-300"
-    };
-    return colors[severity] || colors.medium;
-  };
 
   const getScoreColor = (score) => {
     if (score >= 90) return "text-green-600";
@@ -418,7 +422,7 @@ Be thorough, specific, and actionable. Provide actual example text for suggestio
                 <AccordionItem key={index} value={`compliance-${index}`} className="border rounded-lg">
                   <AccordionTrigger className="px-3 hover:no-underline">
                     <div className="flex items-center gap-2">
-                      <Badge className={getSeverityColor(issue.severity)}>
+                      <Badge className={severityBadgeClass(issue.severity)}>
                         {issue.severity}
                       </Badge>
                       <span className="font-medium text-sm text-left">{issue.section}: {issue.issue}</span>
@@ -435,14 +439,26 @@ Be thorough, specific, and actionable. Provide actual example text for suggestio
                       <div className="bg-green-50 p-3 rounded border border-green-200">
                         <div className="flex items-start justify-between gap-2 mb-1">
                           <p className="text-xs font-semibold text-green-900">Suggested Fix:</p>
-                          <Button 
-                            size="sm" 
-                            variant="ghost" 
-                            onClick={() => copySuggestion(issue.suggestion)}
-                            className="h-6 px-2"
-                          >
-                            <Copy className="w-3 h-3" />
-                          </Button>
+                          <div className="flex items-center gap-1">
+                            {onApplySuggestion && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => onApplySuggestion(issue.suggestion)}
+                                className="h-6 px-2"
+                              >
+                                Apply
+                              </Button>
+                            )}
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => copySuggestion(issue.suggestion)}
+                              className="h-6 px-2"
+                            >
+                              <Copy className="w-3 h-3" />
+                            </Button>
+                          </div>
                         </div>
                         <p className="text-sm text-slate-900">{issue.suggestion}</p>
                       </div>
@@ -614,10 +630,9 @@ Be thorough, specific, and actionable. Provide actual example text for suggestio
           <CardContent>
             <div className="space-y-2">
               {analysis.oasis_alignment.map((item, index) => (
-                <div key={index} className="p-3 rounded-lg border" style={{
-                  backgroundColor: item.alignment_status === 'supports' ? '#f0fdf4' : item.alignment_status === 'conflicts' ? '#fef2f2' : '#fffbeb',
-                  borderColor: item.alignment_status === 'supports' ? '#86efac' : item.alignment_status === 'conflicts' ? '#fca5a5' : '#fde047'
-                }}>
+                <div key={index} className={`p-3 rounded-lg border ${
+                  item.alignment_status === 'supports' ? 'bg-green-50 border-green-300' : item.alignment_status === 'conflicts' ? 'bg-red-50 border-red-300' : 'bg-amber-50 border-amber-300'
+                }`}>
                   <div className="flex items-start gap-2">
                     {item.alignment_status === 'supports' ? (
                       <CheckCircle2 className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />

@@ -7,6 +7,14 @@ import pluginJsxA11y from "eslint-plugin-jsx-a11y";
 
 export default [
   {
+    ignores: [
+      "dist/**",
+      "dist-ssr/**",
+      "node_modules/**",
+      "coverage/**",
+    ],
+  },
+  {
     files: [
       "src/components/**/*.{js,mjs,cjs,jsx}",
       "src/pages/**/*.{js,mjs,cjs,jsx}",
@@ -16,9 +24,17 @@ export default [
       "src/hooks/**/*.{js,mjs,cjs,jsx}",
       "src/api/**/*.{js,mjs,cjs,jsx}",
       "src/Layout.jsx",
+      // The app root, its entrypoint, and the remaining top-level modules were
+      // the last unlinted source files — App.jsx holds the auth gate and the
+      // route table, which is exactly where an unused/undefined identifier
+      // matters most.
+      "src/App.jsx",
+      "src/main.jsx",
+      "src/routes.jsx",
+      "src/utils/**/*.{js,mjs,cjs,jsx}",
+      "src/constants/**/*.{js,mjs,cjs,jsx}",
+      "src/functions/**/*.{js,mjs,cjs,jsx}",
     ],
-    ...pluginJs.configs.recommended,
-    ...pluginReact.configs.flat.recommended,
     languageOptions: {
       globals: globals.browser,
       parserOptions: {
@@ -31,7 +47,7 @@ export default [
     },
     settings: {
       react: {
-        version: "detect",
+        version: "19.2.0",
       },
     },
     plugins: {
@@ -41,6 +57,13 @@ export default [
       "jsx-a11y": pluginJsxA11y,
     },
     rules: {
+      // Merge the recommended rulesets explicitly. Spreading the whole config
+      // objects at the top level (as before) was a no-op: the `rules` key below
+      // replaced their `rules` wholesale, so no-undef/no-dupe-keys/no-unreachable/
+      // no-const-assign/react/jsx-key etc. never ran. Merging their `rules` here
+      // (under the project overrides below) actually enforces them.
+      ...pluginJs.configs.recommended.rules,
+      ...pluginReact.configs.flat.recommended.rules,
       "no-unused-vars": "off",
       "react/jsx-uses-vars": "error",
       "unused-imports/no-unused-imports": "error",
@@ -83,6 +106,17 @@ export default [
       "jsx-a11y/role-has-required-aria-props": "warn",
       "jsx-a11y/label-has-associated-control": "warn",
       "jsx-a11y/no-redundant-roles": "warn",
+      // Recommended rules now actually run (see the merge above). The high-value
+      // correctness checks (no-undef, no-const-assign, no-dupe-keys, no-unreachable,
+      // react/jsx-key, …) pass clean and stay as errors to catch future regressions.
+      // These lower-value stylistic/backlog rules are demoted to warn (or off for the
+      // purely cosmetic one) so the 0-error CI gate stays green, matching the a11y
+      // convention above rather than churning ~300 pre-existing cosmetic sites.
+      "react/no-unescaped-entities": "off",
+      "no-case-declarations": "warn",
+      "no-empty": "warn",
+      "no-empty-pattern": "warn",
+      "no-prototype-builtins": "warn",
     },
   },
 ];

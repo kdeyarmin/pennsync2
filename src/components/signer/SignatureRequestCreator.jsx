@@ -7,8 +7,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Upload, Plus, Trash2, Send, FileText, LayoutTemplate, Bell, BookOpen } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
-import { generateSecureToken } from '@/components/utils/security';
 import { toast } from 'sonner';
+import { hostedAbsoluteUrl } from '@/lib/assetPath';
+import { ROUTER_PATHS } from '@/routes';
+import { isSafeExternalUrl } from '@/components/utils/security';
+
+const isSafePreviewUrl = (url) =>
+  typeof url === 'string' && (url.startsWith('blob:') || isSafeExternalUrl(url));
 
 export default function SignatureRequestCreator({ onCancel }) {
   const [step, setStep] = useState(1);
@@ -30,13 +35,14 @@ export default function SignatureRequestCreator({ onCancel }) {
   const [isSending, setIsSending] = useState(false);
 
   const { data: libraryDocs = [] } = useQuery({
-    queryKey: ['libraryDocuments'],
+    // Distinct limit from TemplateLibrary (100) — avoid stale/truncated collisions.
+    queryKey: ['libraryDocuments', '-created_date', 50],
     queryFn: () => base44.entities.LibraryDocument.list('-created_date', 50),
     initialData: []
   });
 
   const { data: pdfTemplates = [] } = useQuery({
-    queryKey: ['pdfTemplates'],
+    queryKey: ['pdfTemplates', '-created_date', 50],
     queryFn: () => base44.entities.PDFTemplate.list('-created_date', 50),
     initialData: []
   });
@@ -164,7 +170,13 @@ export default function SignatureRequestCreator({ onCancel }) {
         required: true
       }));
 
-      // 3. Create DocumentSignature record
+      // 3. Create DocumentSignature record.
+      // The placed fields (position/size/signerId/type/label) now PERSIST —
+      // DocumentSignature.signature_fields exists in the schema, so step 3's
+      // placement is no longer silently dropped on send. Still outstanding for
+      // an end-to-end feature: the signer portal must render these boxes and the
+      // PDF stamping must honour their positions. Until then a request behaves as
+      // it does today (whole-document signing) but the placement survives.
       const docSig = await base44.entities.DocumentSignature.create({
         document_title: finalFileName,
         document_type: 'custom_request',
@@ -173,6 +185,7 @@ export default function SignatureRequestCreator({ onCancel }) {
         patient_id: "none",
         status: "pending",
         signers: mappedSigners,
+        signature_fields: fields,
         created_by_email: 'system',
         sent_date: new Date().toISOString()
       });
@@ -191,19 +204,24 @@ export default function SignatureRequestCreator({ onCancel }) {
           reminder_days_before: parseInt(reminderInterval)
         });
 
-        // Security: signing tokens are bearer credentials for PHI document access.
-        // Use a CSPRNG (~190 bits), not the predictable Math.random().
-        const token = generateSecureToken(32);
-        await base44.entities.DocumentPackageToken.create({
+        // Security: signing tokens are bearer credentials for PHI document
+        // access. Mint them through the backend generateSignerToken function,
+        // which stores ONLY the SHA-256 hash at rest (plus expiry clamping) —
+        // a client-side DocumentPackageToken.create persisted the PLAINTEXT
+        // token, re-opening the at-rest signing-link exposure the backend was
+        // written to close (and its write RLS is service-role-only anyway).
+        const tokenResponse = await base44.functions.invoke('generateSignerToken', {
           package_id: pkg.id,
-          token: token,
           signer_email: signer.email,
           signer_name: signer.name,
-          expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+          expires_in_days: 7,
         });
+        const token = tokenResponse?.data?.token;
+        if (!token) {
+          throw new Error(tokenResponse?.data?.error || 'Failed to create the signing link');
+        }
 
-        const origin = window.location.origin;
-        const signingUrl = `${origin}/signer?token=${token}`;
+        const signingUrl = hostedAbsoluteUrl(`/signer?token=${token}`, { routerPaths: ROUTER_PATHS });
         
         await base44.integrations.Core.SendEmail({
           to: signer.email,
@@ -293,7 +311,7 @@ export default function SignatureRequestCreator({ onCancel }) {
                       className="cursor-pointer hover:shadow-md transition-shadow border-slate-200"
                       onClick={() => {
                         setSelectedLibraryDoc(item);
-                        setPreviewUrl(item.file_url);
+                        setPreviewUrl(isSafePreviewUrl(item.file_url) ? item.file_url : null);
                         setStep(2);
                       }}
                     >
@@ -396,7 +414,7 @@ export default function SignatureRequestCreator({ onCancel }) {
                 </div>
                 {remindersEnabled && (
                   <div className="flex items-center gap-3 text-sm pt-2">
-                    <span className="text-slate-600">Remind every</span>
+                    <span className="text-slate-600">Send reminder</span>
                     <Select value={reminderInterval} onValueChange={setReminderInterval}>
                       <SelectTrigger className="w-24 bg-white">
                         <SelectValue />
@@ -408,7 +426,7 @@ export default function SignatureRequestCreator({ onCancel }) {
                         <SelectItem value="7">7 days</SelectItem>
                       </SelectContent>
                     </Select>
-                    <span className="text-slate-600">until signed</span>
+                    <span className="text-slate-600">before due date</span>
                   </div>
                 )}
               </CardContent>
@@ -493,7 +511,7 @@ export default function SignatureRequestCreator({ onCancel }) {
                 <Button 
                   onClick={handleSend} 
                   disabled={isSending || fields.length === 0}
-                  className="w-full bg-green-600 hover:bg-green-700 gap-2"
+                  className="w-full gap-2"
                 >
                   {isSending ? (
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -512,16 +530,16 @@ export default function SignatureRequestCreator({ onCancel }) {
                 style={{
                   width: '800px', 
                   height: '1131px', // ~ letter aspect ratio
-                  backgroundImage: previewUrl ? `url(${previewUrl})` : 'none'
+                  backgroundImage: isSafePreviewUrl(previewUrl) ? `url(${previewUrl})` : 'none'
                 }}
                 ref={containerRef}
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={handleDrop}
               >
                 {/* Fallback visual if previewUrl is just a generic blob that can't be rendered as bg */}
-                {!previewUrl?.match(/\.(jpeg|jpg|gif|png)$/i) && (
+                {isSafePreviewUrl(previewUrl) && !previewUrl?.match(/\.(jpeg|jpg|gif|png)$/i) && (
                   <div className="absolute inset-0 opacity-20 pointer-events-none">
-                    <iframe src={previewUrl} className="w-full h-full" scrolling="no" />
+                    <iframe src={previewUrl} className="w-full h-full" scrolling="no" title="Document preview" />
                     <div className="absolute inset-0 bg-white/50 backdrop-blur-[1px]"></div>
                   </div>
                 )}

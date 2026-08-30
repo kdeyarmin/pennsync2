@@ -1,11 +1,21 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 import { jsPDF } from 'npm:jspdf@2.5.2';
 
+// <<<BEGIN SHARED HELPER: requireActiveUser — generated, edit base44/_shared/backendHelpers.mjs>>>
+const isDeactivatedUser = (u) => !!u && u.is_active === false;
+const DEACTIVATED_USER_RESPONSE = () => Response.json(
+  { error: 'Unauthorized - account is deactivated' },
+  { status: 403 },
+);
+// <<<END SHARED HELPER: requireActiveUser>>>
+
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
-
+    if (isDeactivatedUser(user)) return DEACTIVATED_USER_RESPONSE();
+    
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -215,10 +225,10 @@ Deno.serve(async (req) => {
 
     // Convert to buffer and upload
     const pdfBytes = doc.output('arraybuffer');
-    const pdfBlob = new Blob([pdfBytes], { type: 'application/pdf' });
-    
-    const file_url_result = await base44.integrations.Core.UploadFile({ 
-      file: pdfBlob 
+    const file = new File([pdfBytes], 'fax_cover_sheet.pdf', { type: 'application/pdf' });
+
+    const file_url_result = await base44.integrations.Core.UploadFile({
+      file
     });
 
     return Response.json({
@@ -229,9 +239,10 @@ Deno.serve(async (req) => {
 
   } catch (error) {
     console.error('Cover sheet generation error:', error);
-    return Response.json({ 
-      error: error.message,
-      details: error.toString() 
+    // Generic detail only — error.toString() leaked the raw exception text.
+    return Response.json({
+      error: 'Internal server error',
+      details: 'Failed to generate cover sheet'
     }, { status: 500 });
   }
 });

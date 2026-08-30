@@ -10,6 +10,7 @@ import { FileText, Search, Download, CheckCircle, XCircle, Clock, Send, AlertCir
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { retryFailedFax } from "@/functions/retryFailedFax";
+import { faxRetryConfig } from "@/components/fax/faxRetry";
 
 export default function EnhancedFaxHistory({ patientId }) {
   const [searchTerm, setSearchTerm] = useState("");
@@ -24,8 +25,32 @@ export default function EnhancedFaxHistory({ patientId }) {
     refetchInterval: 15000
   });
 
+  const { data: currentUser } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me(),
+  });
+
+  // Gate the manual Retry button on the admin-configured budget the backend
+  // actually enforces. Resolve by caller agency — never global newest-row.
+  const { data: retryConfig = null } = useQuery({
+    queryKey: ['fax-retry-config', currentUser?.agency_name || null],
+    queryFn: async () => {
+      const { fetchCallerFaxRetryConfig } = await import('@/lib/agencySettings');
+      return fetchCallerFaxRetryConfig(currentUser?.agency_name);
+    },
+    enabled: !!currentUser,
+    initialData: null,
+  });
+  const maxRetries = faxRetryConfig(retryConfig).maxRetries;
+
   const retryMutation = useMutation({
-    mutationFn: (faxLogId) => retryFailedFax({ fax_log_id: faxLogId }),
+    mutationFn: async (faxLogId) => {
+      const res = await retryFailedFax({ fax_log_id: faxLogId });
+      const data = res?.data ?? res;
+      if (data?.error) throw new Error(data.error);
+      if (data?.success === false) throw new Error(data?.message || 'Fax retry was not started');
+      return data;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['fax-logs'] });
       toast.success("Fax retry initiated");
@@ -178,7 +203,7 @@ export default function EnhancedFaxHistory({ patientId }) {
                           <Download className="w-4 h-4" />
                         </Button>
                       )}
-                      {log.status === 'failed' && log.retry_count < 3 && (
+                      {log.status === 'failed' && (Number(log.retry_count) || 0) < maxRetries && (
                         <Button
                           variant="outline"
                           size="sm"

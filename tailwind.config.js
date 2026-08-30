@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
+    darkMode: 'class',
     content: ["./index.html", "./src/**/*.{ts,tsx,js,jsx}"],
   theme: {
   	extend: {
@@ -10,7 +11,7 @@ module.exports = {
   		},
   		fontFamily: {
   			sans: [
-  				'"InterVariable"',
+  				'"Inter Variable"',
   				'Inter',
   				'ui-sans-serif',
   				'system-ui',

@@ -1,6 +1,6 @@
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -18,8 +18,13 @@ export default function UpcomingTelehealthWidget() {
     initialData: [],
   });
 
+  // Nothing ever transitions a no-show out of "scheduled", so without a time
+  // bound those stale rows sort to the front (ascending) and permanently fill
+  // the four visible slots and the count. Keep live calls regardless, and give
+  // a just-started scheduled visit an hour of grace.
+  const cutoff = Date.now() - 60 * 60 * 1000;
   const upcoming = sessions
-    .filter((s) => s.status === "scheduled" || s.status === "active")
+    .filter((s) => s.status === "active" || (s.status === "scheduled" && s.scheduled_at && Date.parse(s.scheduled_at) >= cutoff))
     .sort((a, b) => new Date(a.scheduled_at || 0) - new Date(b.scheduled_at || 0));
 
   if (upcoming.length === 0) return null;

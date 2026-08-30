@@ -9,22 +9,22 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router";
 import { createPageUrl } from "@/utils";
-import { ArrowLeft, Calendar, Plus, User, FileText, AlertTriangle, Phone, MapPin, Heart, Stethoscope, Activity, ClipboardList, ExternalLink, Users } from "lucide-react";
-import { format, isValid, parseISO } from "date-fns";
+import { ArrowLeft, Calendar, Plus, User, FileText, AlertTriangle, Phone, MapPin, Heart, Stethoscope, Activity, ClipboardList, ExternalLink, Users, Sparkles, Send } from "lucide-react";
+import { format } from "date-fns";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import PageContainer from "@/components/ui/PageContainer";
 import PageHeader from "@/components/ui/PageHeader";
+import { formatLocalDate } from "@/lib/dateLocal";
 
 import { logSecurityEvent, sanitizeInput } from "@/components/utils/security";
 import { logActivity, ActivityActions } from "@/components/utils/activityLogger";
 
 import ProactiveClinicalTaskGenerator from "../components/tasks/ProactiveClinicalTaskGenerator";
 import AIPatientHistorySummary from "../components/patient/AIPatientHistorySummary";
-import AICarePlanSuggestions from "../components/carePlan/AICarePlanSuggestions";
 import PatientRiskStratification from "../components/patient/PatientRiskStratification";
 import DischargeSummaryGenerator from "../components/discharge/DischargeSummaryGenerator";
 import AIPatientDashboardSummary from "../components/patient/AIPatientDashboardSummary";
@@ -34,32 +34,38 @@ import PredictiveRiskAnalyzer from "../components/analytics/PredictiveRiskAnalyz
 import RiskAlertWidget from "../components/alerts/RiskAlertWidget";
 import ReferralLetterGenerator from "../components/documents/ReferralLetterGenerator";
 import PatientDeteriorationPredictor from "../components/predictive/PatientDeteriorationPredictor";
-import CarePlanGapAnalyzer from "../components/carePlan/CarePlanGapAnalyzer";
 import InterdisciplinaryTeamCoordinator from "../components/coordination/InterdisciplinaryTeamCoordinator";
 import OptimalCommunicationAdvisor from "../components/coordination/OptimalCommunicationAdvisor";
 import ProgressReportGenerator from "../components/documents/ProgressReportGenerator";
 import PersonalizedEducationGenerator from "../components/patient/PersonalizedEducationGenerator";
-import { Sparkles } from "lucide-react";
 import AIPatientAnalyzer from "../components/patient/AIPatientAnalyzer";
 import PatientSummaryGenerator from "../components/patient/PatientSummaryGenerator";
 import AIProactiveOASISAssistant from "../components/oasis/AIProactiveOASISAssistant";
 import AIGeneratedOASISAssessment from "../components/oasis/AIGeneratedOASISAssessment";
+import OASISQuickUpdate from "../components/clinical/OASISQuickUpdate";
 import ReferralDocumentViewer from "../components/documents/ReferralDocumentViewer";
 import HealthHistorySection from "../components/patient/HealthHistorySection";
 import ClinicalEventsTimeline from "../components/patient/ClinicalEventsTimeline";
 import DocumentUploader from "../components/documents/DocumentUploader";
 import DocumentList from "../components/documents/DocumentList";
+import PatientDocumentRecordFax from "../components/fax/PatientDocumentRecordFax";
+import PatientFaxDocumentDialog from "../components/fax/PatientFaxDocumentDialog";
 import VitalSignsTrendDashboard from "../components/patient/VitalSignsTrendDashboard";
-import CarePlanProposalReviewer from "../components/carePlan/CarePlanProposalReviewer";
 import PatientTelehealthPanel from "../components/telehealth/PatientTelehealthPanel";
 import CareTeamMessaging from "../components/messaging/CareTeamMessaging";
 import PatientContactActions from "../components/voice/PatientContactActions";
 
+// [Force recompile: 2026-06-29 12:15:00 UTC]
 export default function PatientDetails() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const urlParams = new URLSearchParams(window.location.search);
-  const patientId = urlParams.get('id') || urlParams.get('patientId');
+  // useSearchParams (not window.location.search read at render) so navigating
+  // between two patients on the same route (/PatientDetails?id=A -> ?id=B,
+  // e.g. via sidebar favorites) re-renders with the new id — App.jsx memoizes
+  // route elements, so only location-context subscribers re-render on a
+  // query-only navigation.
+  const [searchParams] = useSearchParams();
+  const patientId = searchParams.get('id') || searchParams.get('patientId');
 
   const [showVisitForm, setShowVisitForm] = useState(false);
   const [showOASISPrompt, setShowOASISPrompt] = useState(false);
@@ -67,12 +73,27 @@ export default function PatientDetails() {
   const [activeTab, setActiveTab] = useState("overview");
   const [aiToolsTab, setAiToolsTab] = useState("analysis");
   const [isDocumentUploaderOpen, setIsDocumentUploaderOpen] = useState(false);
+  const [isFaxDialogOpen, setIsFaxDialogOpen] = useState(false);
   const [newVisit, setNewVisit] = useState({
     visit_date: format(new Date(), 'yyyy-MM-dd'),
     visit_time: '',
     visit_type: 'routine_visit',
     status: 'scheduled'
   });
+
+  // Same-route patient switch (?id=A → ?id=B): clear sticky OASIS prompt/visit
+  // and visit form so Patient B never inherits Patient A's trigger state.
+  React.useEffect(() => {
+    setShowOASISPrompt(false);
+    setOasisTriggerVisit(null);
+    setShowVisitForm(false);
+    setNewVisit({
+      visit_date: format(new Date(), 'yyyy-MM-dd'),
+      visit_time: '',
+      visit_type: 'routine_visit',
+      status: 'scheduled'
+    });
+  }, [patientId]);
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -102,9 +123,8 @@ export default function PatientDetails() {
     queryKey: ['patientContext', patientId],
     queryFn: async () => {
       const data = (await base44.functions.invoke('getPatientContext', { patientId }))?.data || {};
-      queryClient.setQueryData(['patient', patientId], data.patient ? [data.patient] : []);
+      queryClient.setQueryData(['patient', patientId], data.patient || null);
       queryClient.setQueryData(['patientVisits', patientId], data.visits || []);
-      queryClient.setQueryData(['patientCarePlans', patientId], data.carePlans || []);
       queryClient.setQueryData(['patientIncidents', patientId], data.incidents || []);
       queryClient.setQueryData(['patientTasks', patientId], data.tasks || []);
       queryClient.setQueryData(['patientActiveAlerts', patientId], data.activeAlerts || []);
@@ -115,33 +135,12 @@ export default function PatientDetails() {
 
   const patient = ctx.patient ?? null;
   const visits = ctx.visits ?? [];
-  const carePlans = ctx.carePlans ?? [];
   const incidents = ctx.incidents ?? [];
   const tasks = ctx.tasks ?? [];
   const activeAlerts = ctx.activeAlerts ?? [];
 
-  const [_detectedCarePlanGaps, _setDetectedCarePlanGaps] = useState(null);
-
   // Critical alerts drive the banner styling below the header.
   const hasCriticalAlerts = activeAlerts.some(a => a.severity === 'critical');
-
-  const createCarePlanMutation = useMutation({
-    mutationFn: (carePlanData) => base44.entities.CarePlan.create({ ...carePlanData, patient_id: patientId }),
-    onSuccess: (newPlan) => {
-      // Refetch the consolidated context (re-seeds the care-plan mirror the page
-      // renders from); also invalidate the per-key cache for any mounted child.
-      queryClient.invalidateQueries({ queryKey: ['patientContext', patientId] });
-      queryClient.invalidateQueries({ queryKey: ['patientCarePlans', patientId] });
-      logActivity(ActivityActions.CARE_PLAN_CREATE, {
-        entity_type: 'CarePlan',
-        entity_id: newPlan.id,
-        patient_id: patientId,
-        problem: newPlan.problem,
-        page: 'PatientDetails'
-      });
-    },
-    onError: () => toast.error('Failed to create care plan. Please try again.'),
-  });
 
   const createVisitMutation = useMutation({
     mutationFn: (visitData) => base44.entities.Visit.create({ ...visitData, patient_id: patientId }),
@@ -217,18 +216,24 @@ export default function PatientDetails() {
         icon={Users}
         eyebrow="Patient Care"
         title={`${sanitizeInput(patient.first_name)} ${sanitizeInput(patient.last_name)}`}
-        description={`MRN: ${sanitizeInput(patient.medical_record_number) || 'N/A'} · DOB: ${patient.date_of_birth && isValid(new Date(patient.date_of_birth)) ? format(new Date(patient.date_of_birth), 'MM/dd/yyyy') : 'N/A'}`}
+        description={`MRN: ${sanitizeInput(patient.medical_record_number) || 'N/A'} · DOB: ${formatLocalDate(patient.date_of_birth, { month: '2-digit', day: '2-digit', year: 'numeric' }) || 'N/A'}`}
         favoritePage="PatientDetails"
         actions={
-          <Button
-            variant="outline"
-            onClick={() => navigate(createPageUrl("Patients"))}
-            size="sm"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            <span className="hidden sm:inline">Back to Patients</span>
-            <span className="sm:hidden">Back</span>
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button size="sm" onClick={() => setIsFaxDialogOpen(true)}>
+              <Send className="w-4 h-4 mr-2" />
+              Fax Document
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => navigate(createPageUrl("Patients"))}
+              size="sm"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              <span className="hidden sm:inline">Back to Patients</span>
+              <span className="sm:hidden">Back</span>
+            </Button>
+          </div>
         }
       />
 
@@ -259,9 +264,9 @@ export default function PatientDetails() {
               { value: "vitals-trends", label: "Vitals"    },
               { value: "health-history",label: "History"   },
               { value: "clinical",      label: "Clinical"  },
+              { value: "oasis",         label: "OASIS"     },
               { value: "events",        label: "Events"    },
               { value: "ai-tools",      label: "AI Tools"  },
-              { value: "care",          label: "Care Plans"},
               { value: "telehealth",    label: "Telehealth"},
               { value: "documents",     label: "Docs"      },
               { value: "messaging",     label: "Messaging" },
@@ -295,9 +300,9 @@ export default function PatientDetails() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2">
               <AIPatientDashboardSummary
+                key={patientId}
                 patient={patient}
                 visits={visits}
-                carePlans={carePlans}
                 tasks={tasks}
                 incidents={incidents}
               />
@@ -308,7 +313,6 @@ export default function PatientDetails() {
                 patient={patient}
                 recentVisits={visits.filter(v => v.status === 'completed').slice(0, 5)}
                 upcomingVisits={visits.filter(v => v.status === 'scheduled')}
-                activeCarePlans={carePlans.filter(cp => cp.status === 'active')}
                 pendingTasks={tasks.filter(t => t.status === 'pending')}
               />
             </div>
@@ -320,6 +324,13 @@ export default function PatientDetails() {
         {/* Clinical Events Tab */}
         <TabsContent value="events" className="space-y-4 mt-4">
           <ClinicalEventsTimeline patientId={patient.id} limit={30} />
+        </TabsContent>
+
+        {/* OASIS Tab — quick functional-status entry. Uses per-item OASIS-E
+            response scales (oasisScales) so each M-item offers only its valid
+            codes, and saves a draft OASISAssessment for review. */}
+        <TabsContent value="oasis" className="space-y-4 mt-4">
+          <OASISQuickUpdate patient={patient} />
         </TabsContent>
 
         {/* Clinical Info Tab */}
@@ -496,7 +507,7 @@ export default function PatientDetails() {
                               <div className="flex justify-between items-start mb-2">
                                 <div>
                                   <p className="font-semibold text-slate-900">
-                                    {visit.visit_date && isValid(parseISO(visit.visit_date)) ? format(parseISO(visit.visit_date), 'MMM d, yyyy') : 'Invalid date'}
+                                    {formatLocalDate(visit.visit_date, { month: 'short', day: 'numeric', year: 'numeric' }) || 'Invalid date'}
                                   </p>
                                   <Badge variant="outline" className="text-xs mt-1">
                                     {(visit.visit_type || '').replace(/_/g, ' ')}
@@ -531,7 +542,7 @@ export default function PatientDetails() {
         </TabsContent>
 
         {/* AI Tools Tab */}
-        <TabsContent value="ai-tools" className="space-y-6">
+        <TabsContent value="ai-tools" className="space-y-6" key={`ai-tools-${patientId}`}>
           <Tabs value={aiToolsTab} onValueChange={setAiToolsTab} className="w-full">
             <div className="overflow-x-auto scrollbar-hide">
               <TabsList className="inline-flex w-max min-w-full gap-1 h-auto p-1">
@@ -554,14 +565,12 @@ export default function PatientDetails() {
               <AIPatientHistorySummary
                 patient={patient}
                 visits={visits}
-                carePlans={carePlans}
                 incidents={incidents}
                 autoGenerate={false}
               />
               <AIPatientAnalyzer
                 patient={patient}
                 visits={visits}
-                carePlans={carePlans}
                 incidents={incidents}
               />
             </TabsContent>
@@ -570,7 +579,6 @@ export default function PatientDetails() {
               <PatientRiskStratification
                 patient={patient}
                 visits={visits}
-                carePlans={carePlans}
                 incidents={incidents}
                 autoCalculate={false}
               />
@@ -597,7 +605,6 @@ export default function PatientDetails() {
                 <InterdisciplinaryTeamCoordinator
                   patientId={patientId}
                   patientData={patient}
-                  carePlans={carePlans}
                   recentVisits={visits?.filter(v => v.status === 'completed').slice(0, 5)}
                   incidents={incidents}
                   alerts={activeAlerts}
@@ -618,7 +625,7 @@ export default function PatientDetails() {
                 <AIGeneratedOASISAssessment
                   patientId={patientId}
                   visitId={oasisTriggerVisit.id}
-                  visitType={oasisTriggerVisit.visit_type === 'admission' ? 'Start of Care' : oasisTriggerVisit.visit_type === 'recertification' ? 'Recertification' : 'Start of Care'}
+                  visitType={oasisTriggerVisit.visit_type === 'admission' ? 'Start of Care' : oasisTriggerVisit.visit_type === 'recertification' ? 'Recertification' : oasisTriggerVisit.visit_type === 'discharge' ? 'Discharge' : 'Start of Care'}
                   onSaved={() => {
                     queryClient.invalidateQueries({ queryKey: ['oasisAssessments', patientId] });
                     setOasisTriggerVisit(null);
@@ -634,80 +641,14 @@ export default function PatientDetails() {
               <PatientSummaryGenerator
                 patient={patient}
                 visits={visits}
-                carePlans={carePlans}
                 incidents={incidents}
               />
             </TabsContent>
           </Tabs>
         </TabsContent>
 
-        {/* Care Plans Tab */}
-        <TabsContent value="care" className="space-y-6">
-          <CarePlanProposalReviewer patientId={patientId} />
-          
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <AICarePlanSuggestions 
-              patient={patient} 
-              existingCarePlans={carePlans}
-              onAddCarePlan={(data) => createCarePlanMutation.mutate(data)}
-            />
-            <div className="space-y-6">
-              <CarePlanGapAnalyzer
-                patientId={patientId}
-                diagnosis={patient?.primary_diagnosis}
-                carePlans={carePlans}
-                recentVisits={visits?.filter(v => v.status === 'completed').slice(0, 5)}
-                patientData={patient}
-                autoAnalyze={false}
-              />
-            </div>
-          </div>
-
-          {carePlans.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Active Care Plans</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ScrollArea className="max-h-[500px]">
-                  <div className="space-y-3">
-                    {carePlans.map((plan) => (
-                      <Card key={plan.id} className={`border-l-4 ${
-                        plan.status === 'met' ? 'border-l-emerald-500' :
-                        plan.status === 'not_met' ? 'border-l-red-500' :
-                        plan.status === 'revised' ? 'border-l-amber-500' :
-                        'border-l-navy-500'
-                      }`}>
-                        <CardContent className="p-4">
-                          <div className="flex justify-between items-start mb-2">
-                            <p className="font-semibold text-slate-900">{sanitizeInput(plan.problem)}</p>
-                            <Badge className={
-                              plan.status === 'met' ? 'bg-emerald-500' :
-                              plan.status === 'not_met' ? 'bg-red-500' :
-                              plan.status === 'revised' ? 'bg-amber-500' :
-                              'bg-navy-500'
-                            }>
-                              {(plan.status || '').replace('_', ' ')}
-                            </Badge>
-                          </div>
-                          <p className="text-sm text-slate-600">{sanitizeInput(plan.goal)}</p>
-                          {plan.target_date && (
-                            <p className="text-xs text-slate-500 mt-2">
-                              Target: {format(new Date(plan.target_date), 'MMM d, yyyy')}
-                            </p>
-                          )}
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                </ScrollArea>
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
-
         <TabsContent value="telehealth" className="space-y-6">
-          <PatientTelehealthPanel patient={patient} currentUser={currentUser} />
+          <PatientTelehealthPanel key={patientId} patient={patient} currentUser={currentUser} />
         </TabsContent>
 
         {/* Documents Tab */}
@@ -739,6 +680,7 @@ export default function PatientDetails() {
                   <DocumentList patientId={patientId} showPatientInfo={false} />
                 </CardContent>
               </Card>
+              <PatientDocumentRecordFax patient={patient} />
             </TabsContent>
 
             <TabsContent value="referral-docs">
@@ -881,6 +823,12 @@ export default function PatientDetails() {
           </CardContent>
         )}
       </Card>
+
+      <PatientFaxDocumentDialog
+        patient={patient}
+        open={isFaxDialogOpen}
+        onOpenChange={setIsFaxDialogOpen}
+      />
 
       <DocumentUploader
         patientId={patientId}

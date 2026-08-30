@@ -11,7 +11,10 @@ import AdminCredentialApproval from "@/components/personnel/AdminCredentialAppro
 import CredentialComplianceReport from "@/components/admin/CredentialComplianceReport";
 import PageContainer from "@/components/ui/PageContainer";
 import PageHeader from "@/components/ui/PageHeader";
-import { Users } from "lucide-react";
+import EmptyState from "@/components/ui/empty-state";
+import { FolderOpen, Users } from "lucide-react";
+import { isSafeExternalUrl } from "@/components/utils/security";
+import { formatLocalDate } from "@/lib/dateLocal";
 
 const isAgencyAdmin = (user) => user?.role === 'admin' || user?.account_type === 'agency_admin' || user?.account_type === 'super_admin';
 
@@ -56,14 +59,19 @@ export default function PersonnelFile() {
             <Card>
               <CardHeader><CardTitle>{editingItem ? 'Update Personnel File Item' : 'Add Personnel File Item'}</CardTitle></CardHeader>
               <CardContent>
-                <PersonnelCredentialForm currentUser={currentUser} existingItem={editingItem} onDone={() => { setShowForm(false); setEditingItem(null); }} />
+                {/* Keyed on the target item: the form seeds its fields from
+                    `existingItem` once. "Upload New Copy" sets editingItem
+                    while the form is already open, so without a remount the
+                    fields kept the previous (or blank) item's values and the
+                    save wrote those onto the newly targeted credential. */}
+                <PersonnelCredentialForm key={editingItem?.id || 'new'} currentUser={currentUser} existingItem={editingItem} onDone={() => { setShowForm(false); setEditingItem(null); }} />
               </CardContent>
             </Card>
           )}
 
           <div className="space-y-4">
             {myItems.length === 0 ? (
-              <Card><CardContent className="p-10 text-center text-slate-500">No personnel file items added yet.</CardContent></Card>
+              <EmptyState icon={FolderOpen} title="No personnel file items added yet." description="" />
             ) : (
               myItems.map((item) => (
                 <Card key={item.id}>
@@ -73,9 +81,9 @@ export default function PersonnelFile() {
                         <h3 className="font-semibold text-slate-900">{item.title}</h3>
                         <PersonnelStatusBadge status={item.status} />
                       </div>
-                      <p className="text-sm text-slate-500">{item.item_type} • expires {new Date(item.expiration_date).toLocaleDateString()}</p>
+                      <p className="text-sm text-slate-500">{item.item_type} • expires {formatLocalDate(item.expiration_date)}</p>
                       {item.issuing_organization && <p className="text-sm text-slate-500">{item.issuing_organization}</p>}
-                      {item.uploaded_file_url && <a href={item.uploaded_file_url} target="_blank" rel="noreferrer" className="text-sm text-indigo-600 underline">Open uploaded document</a>}
+                      {item.uploaded_file_url && isSafeExternalUrl(item.uploaded_file_url) && <a href={item.uploaded_file_url} target="_blank" rel="noopener noreferrer" className="text-sm text-indigo-600 underline hover:text-indigo-700">Open uploaded document</a>}
                       {item.rejection_reason && <p className="text-sm text-red-600 mt-2">Rejection reason: {item.rejection_reason}</p>}
                     </div>
                     <div className="flex gap-2">

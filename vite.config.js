@@ -5,6 +5,11 @@ import { defineConfig } from 'vite'
 // https://vite.dev/config/
 export default defineConfig(({ command }) => ({
   logLevel: 'error', // Suppress warnings, only show errors
+  // Production bundles must be relocatable: Base44/App Store installs can mount
+  // the same build under arbitrary subpaths, so emitted JS/CSS/icon/manifest
+  // URLs need to be relative instead of rooted at `/`. Dev stays root-based so
+  // Vite's local server and HMR keep their normal behavior.
+  base: command === 'build' ? './' : '/',
   // HIPAA: strip all console.* and debugger statements from PRODUCTION builds.
   // The app logs entities/responses/transcripts in many places, and anything left
   // in the shipped bundle executes in the clinician/patient browser (devtools,
@@ -25,7 +30,7 @@ export default defineConfig(({ command }) => ({
           if (!id.includes('node_modules')) return;
           if (id.includes('pdfjs-dist')) return 'vendor-pdfjs';
           if (id.includes('jspdf') || id.includes('html2canvas')) return 'vendor-pdf-export';
-          if (id.includes('twilio-video')) return 'vendor-twilio';
+          if (id.includes('@telnyx/video')) return 'vendor-telnyx';
           if (id.includes('recharts') || id.includes('/d3-') || id.includes('victory-vendor')) return 'vendor-charts';
           if (id.includes('framer-motion')) return 'vendor-motion';
         },

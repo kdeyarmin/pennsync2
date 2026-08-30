@@ -1,5 +1,11 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
+async function sha256Hex(input) {
+  const data = new TextEncoder().encode(String(input));
+  const digest = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
 /**
  * submitSignerSignature — the ONLY authorized path for an external signer to
  * record a signature from the public /signer portal.
@@ -22,9 +28,20 @@ Deno.serve(async (req) => {
     }
 
     // 1) Validate the token (mirror validateSignerToken): exists, active, unexpired.
-    const tokenRecords = await base44.asServiceRole.entities.DocumentPackageToken.filter(
-      { token }, '-created_date', 1
+    //    Tokens are stored hashed; look up by hash, fall back to plaintext for
+    //    legacy tokens issued before hashing.
+    const tokenHash = await sha256Hex(token);
+    let tokenRecords = await base44.asServiceRole.entities.DocumentPackageToken.filter(
+      { token: tokenHash }, '-created_date', 1
     );
+    if (!tokenRecords || tokenRecords.length === 0) {
+      // Legacy-plaintext fallback, excluding hashed rows so a leaked stored hash
+      // can't be replayed as a bearer token (see validateSignerToken).
+      const legacy = await base44.asServiceRole.entities.DocumentPackageToken.filter(
+        { token }, '-created_date', 1
+      );
+      tokenRecords = (legacy || []).filter((r) => r?.token_hashed !== true);
+    }
     const tokenRecord = tokenRecords?.[0];
     if (!tokenRecord || tokenRecord.is_active === false) {
       return Response.json({ error: 'Invalid or inactive token' }, { status: 401 });
@@ -42,7 +59,12 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Document package is no longer available' }, { status: 404 });
     }
     const memberIds = Array.isArray(pkg.document_signatures) ? pkg.document_signatures : [];
-    if (!memberIds.includes(document_id)) {
+    // Empty [] is a valid mint-time snapshot — do not treat it as "no snapshot".
+    const snapshot = Array.isArray(tokenRecord.document_ids) ? tokenRecord.document_ids : null;
+    const allowedIds = snapshot !== null
+      ? memberIds.filter((id) => snapshot.includes(id))
+      : memberIds;
+    if (!allowedIds.includes(document_id)) {
       return Response.json({ error: 'This document is not part of the signer\'s package' }, { status: 403 });
     }
 
@@ -69,27 +91,30 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'This document is assigned to a different signer' }, { status: 403 });
     }
 
-    // 5) Record the signature INSIDE the signers[] array (schema shape) with the
-    //    SERVER-derived identity (from the token) — never a client-supplied
-    //    signer name. There are no flat signer_* fields on the schema.
+    // 5) Record the signature INSIDE the signers[] array with merge-and-retry so
+    //    concurrent required signers do not clobber each other's completed rows.
+    //    Pattern mirrors appendPatientNoteHistory: re-read → merge this signer →
+    //    write → verify our row still holds → bounded retry.
     const signedAt = new Date().toISOString();
-    let updatedSigners;
-    if (matchIndex >= 0) {
-      updatedSigners = existingSigners.map((s, i) =>
-        i === matchIndex
-          ? {
-              ...s,
-              status: 'completed',
-              signed_date: signedAt,
-              signature: signature_image_url || s.signature || null,
-            }
-          : s
-      );
-    } else {
-      // No declared signer row to update — append the token's signer so the
-      // signature is still recorded in the schema-defined array.
-      updatedSigners = [
-        ...existingSigners,
+    const applySigner = (signers) => {
+      const list = Array.isArray(signers) ? signers : [];
+      const idx = signerEmail
+        ? list.findIndex((s) => String(s?.email || '').toLowerCase() === signerEmail)
+        : matchIndex;
+      if (idx >= 0) {
+        return list.map((s, i) =>
+          i === idx
+            ? {
+                ...s,
+                status: 'completed',
+                signed_date: signedAt,
+                signature: signature_image_url || s.signature || null,
+              }
+            : s
+        );
+      }
+      return [
+        ...list,
         {
           name: tokenRecord.signer_name || typed_name || '',
           email: tokenRecord.signer_email || '',
@@ -101,24 +126,76 @@ Deno.serve(async (req) => {
           signature_method: signature_image_url ? 'signature_image' : 'digital_signature',
         },
       ];
-    }
-
-    // Completion = every REQUIRED signer in the array is completed. The row only
-    // becomes 'completed' when all required signatures are in; otherwise it is
-    // 'in_progress'.
-    const requiredSigners = updatedSigners.filter((s) => s?.required !== false);
-    const allSigned = requiredSigners.length > 0 &&
-      requiredSigners.every((s) => s?.status === 'completed' || s?.signed_date);
-    const rowStatus = allSigned ? 'completed' : 'in_progress';
-
-    const updatePayload = {
-      status: rowStatus,
-      signers: updatedSigners,
     };
-    if (allSigned) {
-      updatePayload.completed_date = signedAt;
+    const ourSignerSettled = (signers) => {
+      const list = Array.isArray(signers) ? signers : [];
+      if (!signerEmail) {
+        return list.some((s) => s?.signed_date === signedAt || s?.status === 'completed');
+      }
+      const row = list.find((s) => String(s?.email || '').toLowerCase() === signerEmail);
+      return !!(row && (row.signed_date || row.status === 'completed'));
+    };
+
+    let updatedSigners = applySigner(existingSigners);
+    let allSigned = false;
+    let rowStatus = 'in_progress';
+    const MAX_ATTEMPTS = 3;
+    for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+      const latest = attempt === 0
+        ? signature
+        : await base44.asServiceRole.entities.DocumentSignature.get(document_id).catch(() => null);
+      if (!latest) {
+        return Response.json({ error: 'Document not found' }, { status: 404 });
+      }
+      if (latest.status === 'completed') {
+        return Response.json({ error: 'This document has already been signed', already_signed: true }, { status: 409 });
+      }
+      updatedSigners = applySigner(latest.signers);
+      const requiredSigners = updatedSigners.filter((s) => s?.required !== false);
+      allSigned = requiredSigners.length > 0 &&
+        requiredSigners.every((s) => s?.status === 'completed' || s?.signed_date);
+      rowStatus = allSigned ? 'completed' : 'in_progress';
+      const updatePayload = {
+        status: rowStatus,
+        signers: updatedSigners,
+      };
+      if (allSigned) {
+        updatePayload.completed_date = signedAt;
+      }
+      await base44.asServiceRole.entities.DocumentSignature.update(document_id, updatePayload);
+      const verify = await base44.asServiceRole.entities.DocumentSignature.get(document_id).catch(() => null);
+      if (verify && ourSignerSettled(verify.signers)) {
+        updatedSigners = Array.isArray(verify.signers) ? verify.signers : updatedSigners;
+        const req = updatedSigners.filter((s) => s?.required !== false);
+        allSigned = req.length > 0 && req.every((s) => s?.status === 'completed' || s?.signed_date);
+        rowStatus = allSigned ? 'completed' : 'in_progress';
+        break;
+      }
+      if (attempt === MAX_ATTEMPTS - 1) {
+        return Response.json({
+          error: 'Could not persist signature due to a concurrent update. Please try again.',
+        }, { status: 409 });
+      }
     }
-    await base44.asServiceRole.entities.DocumentSignature.update(document_id, updatePayload);
+
+    // 5a-bis) Stamp tamper-evidence over the now-completed record, exactly as
+    //     submitDocumentSignatures does for the in-app path. Without this a
+    //     document e-signed through the public signer portal carried no MAC at
+    //     all and its Certificate of Completion always printed "NOT SEALED".
+    //     Best-effort: never fail the signer's submit over it.
+    if (allSigned) {
+      try {
+        await base44.asServiceRole.functions.invoke('signatureIntegrity', {
+          action: 'stamp',
+          signature_id: document_id,
+          // Public signer portal has no user session; authorize the nested
+          // stamp via the shared internal secret (same as stampSignatureOnPDF).
+          internal_secret: Deno.env.get('INTERNAL_FN_SECRET') || '',
+        });
+      } catch (stampError) {
+        console.error('submitSignerSignature: integrity stamp failed (non-fatal):', stampError?.message);
+      }
+    }
 
     // 5b) Once the document is fully signed, produce a stamped/archived PDF
     //     artifact best-effort. Never fail the submit if embedding fails — log
@@ -135,6 +212,9 @@ Deno.serve(async (req) => {
           const embedResult = await base44.asServiceRole.functions.invoke('stampSignatureOnPDF', {
             pdf_url: sourcePdf,
             signature_data_url: stampImage,
+            // Public signer portal has no user session; authorize the nested
+            // stamp via the shared internal secret.
+            internal_secret: Deno.env.get('INTERNAL_FN_SECRET') || '',
           });
           const signedUrl = embedResult?.data?.file_url;
           if (signedUrl) {

@@ -1,23 +1,42 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
-import { jsPDF } from 'npm:jspdf@2.5.1';
+import { jsPDF } from 'npm:jspdf@2.5.2';
+
+// <<<BEGIN SHARED HELPER: requireActiveUser — generated, edit base44/_shared/backendHelpers.mjs>>>
+const isDeactivatedUser = (u) => !!u && u.is_active === false;
+const DEACTIVATED_USER_RESPONSE = () => Response.json(
+  { error: 'Unauthorized - account is deactivated' },
+  { status: 403 },
+);
+// <<<END SHARED HELPER: requireActiveUser>>>
 
 Deno.serve(async (req) => {
     try {
         const base44 = createClientFromRequest(req);
-        const user = await base44.auth.me();
-
-        if (!user) {
+        const user = await base44.auth.me().catch(() => null);
+        const body = await req.json();
+        const expectedSecret = String(Deno.env.get('INTERNAL_FN_SECRET') || '').trim();
+        const providedSecret = String(body?.internal_secret || '').trim();
+        let internalOk = false;
+        if (expectedSecret && providedSecret.length === expectedSecret.length) {
+          let mismatch = 0;
+          for (let i = 0; i < expectedSecret.length; i++) {
+            mismatch |= expectedSecret.charCodeAt(i) ^ providedSecret.charCodeAt(i);
+          }
+          internalOk = mismatch === 0;
+        }
+        if (!user && !internalOk) {
             return Response.json({ error: 'Unauthorized' }, { status: 401 });
         }
+        if (user && isDeactivatedUser(user)) return DEACTIVATED_USER_RESPONSE();
 
-        const { certificate_id } = await req.json();
+        const { certificate_id } = body;
 
         if (!certificate_id) {
             return Response.json({ error: 'certificate_id is required' }, { status: 400 });
         }
 
-        // Fetch certificate record
-        const certificates = await base44.entities.TrainingCertificate.filter({ certificate_id });
+        // Fetch certificate record (service-role for nested issueCertificate path)
+        const certificates = await base44.asServiceRole.entities.TrainingCertificate.filter({ certificate_id }, undefined, 5000);
         
         if (!certificates || certificates.length === 0) {
             return Response.json({ error: 'Certificate not found' }, { status: 404 });
@@ -25,9 +44,30 @@ Deno.serve(async (req) => {
 
         const certificate = certificates[0];
 
-        // Verify user owns this certificate or is admin
-        if (certificate.user_id !== user.email && user.role !== 'admin') {
-            return Response.json({ error: 'Forbidden' }, { status: 403 });
+        // Verify user owns this certificate or is admin (skip when trusted internal invoke)
+        if (!internalOk) {
+            const isSuperAdmin = user.account_type === 'super_admin';
+            const isAgencyScopedAdmin =
+              user.account_type === 'agency_admin'
+              || (user.role === 'admin' && !!user.agency_name && !isSuperAdmin);
+            const isPlatformAdmin = isSuperAdmin || (user.role === 'admin' && !user.agency_name);
+            const ownsCert = certificate.user_id === user.email;
+            if (!ownsCert && !isPlatformAdmin && !isAgencyScopedAdmin) {
+                return Response.json({ error: 'Forbidden' }, { status: 403 });
+            }
+            // Agency-scoped admins may only generate PDFs for certificates of
+            // staff in their own agency (TrainingCertificate has no agency_name).
+            if (!ownsCert && isAgencyScopedAdmin) {
+                if (!user.agency_name) {
+                    return Response.json({ error: 'Forbidden' }, { status: 403 });
+                }
+                const owners = await base44.asServiceRole.entities.User
+                    .filter({ email: certificate.user_id }, undefined, 1)
+                    .catch(() => []);
+                if (!owners?.[0] || owners[0].agency_name !== user.agency_name) {
+                    return Response.json({ error: 'Forbidden: certificate owner is outside your agency' }, { status: 403 });
+                }
+            }
         }
 
         // Generate PDF
@@ -178,7 +218,12 @@ Deno.serve(async (req) => {
         const blob = new Blob([pdfBytes], { type: 'application/pdf' });
         const file = new File([blob], fileName, { type: 'application/pdf' });
 
-        const uploadResult = await base44.integrations.Core.UploadFile({ file });
+        // Service-role upload, like the other 10 PDF generators. issueCertificate
+        // invokes this on the internal path where auth.me() is null, so the plain
+        // RLS client had no identity to upload as and the eager PDF generation at
+        // issuance failed silently (certificate_pdf_url stayed unset until a user
+        // later clicked download).
+        const uploadResult = await base44.asServiceRole.integrations.Core.UploadFile({ file });
 
         // Update certificate with PDF URL
         await base44.asServiceRole.entities.TrainingCertificate.update(certificate.id, {
@@ -195,7 +240,7 @@ Deno.serve(async (req) => {
         console.error('Certificate generation error:', error);
         return Response.json({ 
             error: 'Failed to generate certificate',
-            details: error.message 
+            details: 'Internal server error' 
         }, { status: 500 });
     }
 });

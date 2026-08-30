@@ -22,6 +22,8 @@ import {
   Database
 } from "lucide-react";
 import { toast } from "sonner";
+import { escapeHtml } from "@/lib/escapeHtml";
+import { openExternalUrl } from "@/components/utils/security";
 
 export default function PDFSearchInterface() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -34,7 +36,9 @@ export default function PDFSearchInterface() {
   const { data: indexedCount = 0 } = useQuery({
     queryKey: ['pdf-index-count'],
     queryFn: async () => {
-      const docs = await base44.entities.PDFIndex.list('-created_date', 1);
+      // Second arg is the SDK `limit`; use a realistic cap so the badge reflects
+      // the true indexed count instead of being capped at 1.
+      const docs = await base44.entities.PDFIndex.list('-created_date', 1000);
       return docs.length;
     }
   });
@@ -71,28 +75,29 @@ export default function PDFSearchInterface() {
     }
   };
 
+  // Match on the RAW text and escape each piece afterwards. Escaping first and
+  // then searching for the raw term meant a term containing an HTML-significant
+  // character ("Smith & Sons", "<3", "O'Brien") could never match the escaped
+  // text and silently failed to highlight. Highlighting term-by-term over an
+  // accumulating string also let a later term match inside markup a previous one
+  // had inserted, so searching for "mark", "bg" or "yellow" corrupted the output.
+  // Splitting once on a combined pattern avoids both, and dropping the replacement
+  // string means a "$&" in a search term can no longer inject the match back in.
   const highlightText = (text, terms) => {
     if (!text) return '';
-    // Escape HTML entities first to prevent XSS from snippet content
-    const escapeHtml = (str) =>
-      str.replace(/&/g, '&amp;')
-         .replace(/</g, '&lt;')
-         .replace(/>/g, '&gt;')
-         .replace(/"/g, '&quot;')
-         .replace(/'/g, '&#39;');
+    const pattern = (terms || [])
+      .filter((t) => t != null && String(t) !== '')
+      .map((t) => String(t).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+      .join('|');
+    if (!pattern) return escapeHtml(text);
 
-    let highlighted = escapeHtml(text);
-    if (!terms || terms.length === 0) return highlighted;
-
-    terms.forEach(term => {
-      // Escape regex metacharacters in the search term
-      const escapedTerm = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      const escapedHtmlTerm = escapeHtml(term);
-      const regex = new RegExp(`(${escapedTerm})`, 'gi');
-      highlighted = highlighted.replace(regex, `<mark class="bg-yellow-200">${escapedHtmlTerm}</mark>`);
-    });
-
-    return highlighted;
+    const regex = new RegExp(`(${pattern})`, 'gi');
+    return String(text)
+      .split(regex)
+      .map((part, i) => (i % 2 === 1
+        ? `<mark class="bg-yellow-200">${escapeHtml(part)}</mark>`
+        : escapeHtml(part)))
+      .join('');
   };
 
   return (
@@ -250,7 +255,7 @@ export default function PDFSearchInterface() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => window.open(result.pdf_url, '_blank')}
+                        onClick={() => openExternalUrl(result.pdf_url)}
                       >
                         <Eye className="w-4 h-4 mr-1" />
                         View

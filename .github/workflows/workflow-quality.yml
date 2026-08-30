@@ -4,6 +4,8 @@ on:
   workflow_dispatch:
   pull_request:
     paths:
+      - 'base44/_shared/**'
+      - 'base44/functions/**'
       - 'src/components/oasis/**'
       - 'src/components/fax/**'
       - 'src/components/voice/**'
@@ -19,12 +21,14 @@ on:
       - 'src/components/hub-tabs/ReferralAdmissionNote.jsx'
       - 'src/components/admin/ReportsCenter.jsx'
       - 'package.json'
-      - 'package-lock.json'
+      - 'pnpm-lock.yaml'
       - '.github/workflows/workflow-quality.yml'
   push:
     branches:
       - main
     paths:
+      - 'base44/_shared/**'
+      - 'base44/functions/**'
       - 'src/components/oasis/**'
       - 'src/components/fax/**'
       - 'src/components/voice/**'
@@ -40,7 +44,7 @@ on:
       - 'src/components/hub-tabs/ReferralAdmissionNote.jsx'
       - 'src/components/admin/ReportsCenter.jsx'
       - 'package.json'
-      - 'package-lock.json'
+      - 'pnpm-lock.yaml'
       - '.github/workflows/workflow-quality.yml'
 
 concurrency:
@@ -54,42 +58,57 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: 11.9.0
+          run_install: false
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
-          node-version: '20'
-          cache: npm
+          node-version-file: '.nvmrc'
+          cache: pnpm
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Lint workflow target files
-        run: npm run lint:workflow-targets
+        run: pnpm run lint:workflow-targets
 
       - name: Typecheck utility modules
-        run: npm run typecheck:utils
+        run: pnpm run typecheck:utils
 
       - name: Run utility unit tests
-        run: npm run test:utils
+        run: pnpm run test:utils
 
       - name: Run schema-contract tests
-        run: npm run test:contracts
+        run: pnpm run test:contracts
 
       - name: Run security guardrail tests
-        run: npm run test:security
+        run: pnpm run test:security
+
+      - name: Check Base44 functions transpile (syntax)
+        run: pnpm run check:backend-transpile
+
+      - name: Check inlined shared helpers are in sync
+        run: pnpm run check:shared-helpers
 
       - name: Run component tests
-        run: npm run test:components
+        run: pnpm run test:components
+
+      - name: High-signal typecheck
+        run: pnpm run typecheck:signal
 
       - name: Typecheck (informational baseline)
-        run: npm run typecheck
+        run: pnpm run typecheck
         continue-on-error: true
 
       - name: Build app
-        run: npm run build
+        run: pnpm run build
 
       - name: Production audit (informational baseline)
-        run: npm run audit:prod
+        run: pnpm run audit:prod
         continue-on-error: true

@@ -1,21 +1,64 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
+// <<<BEGIN SHARED HELPER: requireActiveUser — generated, edit base44/_shared/backendHelpers.mjs>>>
+const isDeactivatedUser = (u) => !!u && u.is_active === false;
+const DEACTIVATED_USER_RESPONSE = () => Response.json(
+  { error: 'Unauthorized - account is deactivated' },
+  { status: 403 },
+);
+// <<<END SHARED HELPER: requireActiveUser>>>
+
+// <<<BEGIN SHARED HELPER: isAdminLike — generated, edit base44/_shared/backendHelpers.mjs>>>
+const isAdminLike = (u) => !!u && (
+  u.role === 'admin' || u.account_type === 'agency_admin' ||
+  u.account_type === 'super_admin'
+);
+// <<<END SHARED HELPER: isAdminLike>>>
+
+
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     
     // Verify admin access
     const user = await base44.auth.me();
-    if (!user || user.role !== 'admin') {
+    if (isDeactivatedUser(user)) return DEACTIVATED_USER_RESPONSE();
+    if (!user || !isAdminLike(user)) {
       return Response.json({ error: 'Admin access required' }, { status: 403 });
     }
 
     const { min_feedback_count = 10 } = await req.json();
 
-    // Get unapplied feedback
-    const allFeedback = await base44.asServiceRole.entities.OCRFeedback.filter({
+    // Scope the feedback cohort to the caller's agency unless they are a platform
+    // admin. Without this an agency_admin trained on — and consumed the
+    // applied_to_training flag of — EVERY tenant's OCRFeedback, sending other
+    // agencies' OCR'd fax content (PHI) to the LLM and starving their own
+    // training runs. Fail closed for an agency-scoped admin with no agency_name.
+    const isSuperAdmin = user.account_type === 'super_admin';
+    // A user who is BOTH account_type agency_admin AND role admin with no
+    // agency_name must NOT be promoted to platform-wide via the bare-role:admin
+    // path — an agency_admin without an agency_name fails closed by design.
+    const isPlatformAdmin = isSuperAdmin
+      || (user.role === 'admin' && user.account_type !== 'agency_admin' && !String(user.agency_name || '').trim());
+    let agencyEmails = null;
+    if (!isPlatformAdmin) {
+      const agency = String(user.agency_name || '').trim();
+      if (!agency) {
+        return Response.json({ error: 'Forbidden: agency membership required' }, { status: 403 });
+      }
+      const agencyUsers = await base44.asServiceRole.entities.User
+        .filter({ agency_name: agency }, '-created_date', 5000).catch(() => []);
+      agencyEmails = new Set((agencyUsers || []).map((u) => u?.email).filter(Boolean));
+    }
+
+    // Get unapplied feedback (agency-scoped for non-platform admins).
+    const rawFeedback = await base44.asServiceRole.entities.OCRFeedback.filter({
       applied_to_training: false
     }, '-created_date', 500);
+    const allFeedback = agencyEmails
+      ? rawFeedback.filter((f) => f && f.user_email && agencyEmails.has(f.user_email))
+      : rawFeedback;
 
     if (allFeedback.length < min_feedback_count) {
       return Response.json({
@@ -80,7 +123,7 @@ Analyze and return insights:
 Return structured insights as JSON.`;
 
       const learningResult = await base44.asServiceRole.integrations.Core.InvokeLLM({
-        model: "claude_opus_4_8",
+        model: "automatic",
         prompt: learningPrompt,
         response_json_schema: {
           type: "object",
@@ -171,6 +214,6 @@ Return structured insights as JSON.`;
 
   } catch (error) {
     console.error('OCR retraining error:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
 });

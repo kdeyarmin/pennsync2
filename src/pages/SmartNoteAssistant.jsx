@@ -1,11 +1,12 @@
 import { useState, useRef, useEffect, useMemo } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router";
 import { base44 } from "@/api/base44Client";
+import { agencyQueryKey, scopePatientsForCurrentCaller } from "@/lib/agencyRoster";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import {
   CheckCircle2, Loader2, ArrowRight, ClipboardList, User,
-  Mic, Square, AlertTriangle
+  Mic, Square, AlertTriangle, Sparkles
 } from "lucide-react";
 import { todayEastern } from "../components/utils/timezone";
 import { logActivity, ActivityActions } from "../components/utils/activityLogger";
@@ -21,84 +22,89 @@ import VitalsTrendAnalysis from "../components/smartNote/VitalsTrendAnalysis";
 import FinalNoteDisplay from "../components/smartNote/FinalNoteDisplay";
 import FollowUpTasksPanel from "../components/smartNote/FollowUpTasksPanel";
 import ComplianceChecklist from "../components/smartNote/ComplianceChecklist";
+import QuickPhraseTextarea from "../components/smartNote/QuickPhraseTextarea";
+import FacilityRequirementsChecklist from "../components/smartNote/FacilityRequirementsChecklist";
 import ConstrainedNoteReviewer from "../components/smartNote/ConstrainedNoteReviewer";
+import NoteReadinessBar from "../components/smartNote/NoteReadinessBar";
 import { persistVisitNote } from "../components/smartNote/persistVisitNote";
 import { getPriorNote, parseNoteSections } from "../components/smartNote/noteHelpers";
+import { evaluateFacilityRules, summarizeFacilityRules } from "../components/smartNote/compliance/facilityDocRules";
+import { describePlaceholders, countPlaceholders } from "../components/smartNote/compliance/placeholderGuard";
 import { claimDictation, releaseDictation } from "@/components/smartNote/dictationController";
 import { generateFollowUpTasks } from "@/functions/generateFollowUpTasks";
 import { analyzeVisitForSupplyUsage } from "@/functions/analyzeVisitForSupplyUsage";
 import { toast } from "sonner";
 import SearchablePatientSelect from "@/components/ui/SearchablePatientSelect";
+import { HOME_HEALTH_VISIT_TYPES, HOSPICE_VISIT_TYPES } from "@/components/visit/visitTypes";
 
-const HOME_HEALTH_VISIT_TYPES = [
-  { value: "routine_visit", label: "Routine SN Visit" },
-  { value: "admission", label: "Start of Care (SOC)" },
-  { value: "recertification", label: "Recertification" },
-  { value: "discharge", label: "Discharge" },
-  { value: "prn", label: "PRN Visit" },
-];
-
-const HOSPICE_VISIT_TYPES = [
-  { value: "routine_visit", label: "Routine Hospice Visit" },
-  { value: "admission", label: "Hospice Admission" },
-  { value: "recertification", label: "Recertification (Benefit Period)" },
-  { value: "discharge", label: "Discharge / Revocation" },
-  { value: "prn", label: "After-Hours / Crisis Visit" },
-];
-
-// Returns the right visit types based on care scope
 const getVisitTypes = (careScope) => {
   if (careScope === "hospice") return HOSPICE_VISIT_TYPES;
   if (careScope === "both") return [...HOME_HEALTH_VISIT_TYPES, ...HOSPICE_VISIT_TYPES.filter(v => !HOME_HEALTH_VISIT_TYPES.find(h => h.value === v.value))];
   return HOME_HEALTH_VISIT_TYPES;
 };
 
-// Drafts are saved per patient (plus an "unassigned" bucket for notes typed
-// before a patient is picked) so switching patients never clobbers another
-// patient's in-progress note.
 const draftKeyFor = (pid) => `smart_note_draft_v2:${pid || "unassigned"}`;
+
+const buildExportFindings = (result) => {
+  if (!result) return [];
+  const answered = new Set(result.answeredIds || []);
+  const negated = new Set(result.confirmedNegativeIds || []);
+  const present = new Set((result.presence || []).filter((p) => p.present).map((p) => p.id));
+  const missing = (result.required || [])
+    .filter((e) => !present.has(e.id) && !answered.has(e.id) && !negated.has(e.id))
+    .map((e) => ({
+      severity: e.severity === "critical" ? "critical" : "medium",
+      issue: e.notDocumentedPhrase || `${e.label} was not documented this visit.`,
+      suggestion: e.hint || e.question || "",
+    }));
+  const denial = (result.denialGuardrail?.findings || [])
+    .filter((f) => f.status === "fail")
+    .map((f) => ({ severity: f.severity, issue: f.message, suggestion: f.remediation || "" }));
+  return [...missing, ...denial];
+};
 
 import StepIndicator from "../components/smartNote/StepIndicator";
 import SmartNoteTabs from "../components/smartNote/SmartNoteTabs";
 import PageContainer from "@/components/ui/PageContainer";
 import { HideWhenEmbedded } from "@/components/ui/embeddedPage";
+import { ALL_ROWS } from '@/lib/queryLimits';
 
 export default function SmartNoteAssistant({ visitId = null }) {
   const [searchParams] = useSearchParams();
   const queryPatientId = searchParams.get("patientId") || searchParams.get("patient_id") || "";
   const queryVisitType = searchParams.get("visitType") || searchParams.get("visit_type") || "";
-  const referralDraftNote = useMemo(() => {
-    if (searchParams.get("referral_mode") !== "true") return "";
-    // The prepopulation payload (PHI) is passed via sessionStorage keyed by
-    // referral id, not the URL, so it can't leak into history/proxy logs.
+  const referralHandoff = useMemo(() => {
+    if (searchParams.get("referral_mode") !== "true") return { draftNote: "", patientId: "", visitType: "" };
     const referralId = searchParams.get("referral_id");
-    if (!referralId) return "";
+    if (!referralId) return { draftNote: "", patientId: "", visitType: "" };
     try {
       const raw = sessionStorage.getItem(`referral_prepopulate:${referralId}`);
-      if (!raw) return "";
+      if (!raw) return { draftNote: "", patientId: "", visitType: "" };
       const parsed = JSON.parse(raw);
-      return String(parsed.roughNote || "").trim();
+      return {
+        draftNote: String(parsed.roughNote || "").trim(),
+        patientId: String(parsed.patientId || "").trim(),
+        visitType: String(parsed.visitType || "").trim(),
+      };
     } catch {
-      return "";
+      return { draftNote: "", patientId: "", visitType: "" };
     }
   }, [searchParams]);
-  const [patientId, setPatientId] = useState(queryPatientId);
-  const [visitType, setVisitType] = useState(queryVisitType || "routine_visit");
+  const referralDraftNote = referralHandoff.draftNote;
+  const [patientId, setPatientId] = useState(queryPatientId || referralHandoff.patientId);
+  const [visitType, setVisitType] = useState(queryVisitType || referralHandoff.visitType || "routine_visit");
   const visitDate = todayEastern();
   const [note, setNote] = useState(referralDraftNote);
-  // Structured vital signs (canonical vital_signs shape) saved onto the visit so
-  // they reach the chart, trends, and escalation — restoring the capture the
-  // retired Document Visit page provided.
   const [vitals, setVitals] = useState({});
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [savedVisitId, setSavedVisitId] = useState(null);
   const [savedAuditId, setSavedAuditId] = useState(null);
-  // When documenting a specific existing visit (deep-linked via ?visitId), the
-  // save COMPLETES that visit instead of creating a new one. Cleared once bound or
-  // when the user switches to a different patient than the bound visit's.
   const [existingVisitId, setExistingVisitId] = useState(null);
   const boundPatientRef = useRef(null);
+  // Facility override captured at save-click time so persistVisitNote can stamp
+  // ComplianceAudit.acknowledgment without lifting the render-prop evaluation.
+  const facilityOverrideRef = useRef(null);
   const [step, setStep] = useState(1);
   const [copied, setCopied] = useState(false);
   const [listening, setListening] = useState(false);
@@ -106,26 +112,22 @@ export default function SmartNoteAssistant({ visitId = null }) {
   const [draftRestored, setDraftRestored] = useState(false);
   const [signatureImage, setSignatureImage] = useState(null);
   const [followUpTasks, setFollowUpTasks] = useState([]);
+  const [facilityAck, setFacilityAck] = useState(false);
   const [generatingTasks, setGeneratingTasks] = useState(false);
   const recRef = useRef(null);
   const recStopRef = useRef(null);
   const textareaRef = useRef(null);
   const SAVED_PATIENT_KEY = "smart_note_patient_v1";
-  // Mirror the latest patient so the autosave effect can write under the active
-  // patient without re-subscribing on patientId (which would clobber drafts on
-  // switch). prevPatientRef drives the on-switch draft swap. noteRef guards the
-  // async durable-draft restore from clobbering text the nurse has started typing.
   const patientIdRef = useRef(patientId);
   const prevPatientRef = useRef(patientId);
   const noteRef = useRef(note);
   patientIdRef.current = patientId;
   noteRef.current = note;
+  const autosaveBucketRef = useRef(undefined);
+  const autosavePrevNoteRef = useRef("");
 
-  // Durable cross-session restore: a draft persisted to IndexedDB survives a full
-  // browser restart (sessionStorage does not). Apply it only if we're still on
-  // the same bucket and the nurse hasn't already started typing.
   const tryRestoreDurableDraft = (pid) => {
-    import('@/lib/indexedDB')
+    import('@/lib/draftNotes')
       .then(({ getDraftNoteLocally }) => getDraftNoteLocally(`draft_${pid || 'unassigned'}`))
       .then((d) => {
         if (patientIdRef.current !== pid || noteRef.current?.trim()) return;
@@ -137,51 +139,50 @@ export default function SmartNoteAssistant({ visitId = null }) {
       .catch(() => {});
   };
 
-  // Clear a patient's draft from both stores once the note is saved or reset, so
-  // drafts don't accumulate (one PHI-bearing row per patient) indefinitely.
   const clearDraft = (pid) => {
     sessionStorage.removeItem(draftKeyFor(pid));
-    import('@/lib/indexedDB')
+    import('@/lib/draftNotes')
       .then(({ deleteDraftNoteLocally }) => deleteDraftNoteLocally(`draft_${pid || 'unassigned'}`))
       .catch(() => {});
   };
 
   const { data: currentUser } = useQuery({ queryKey: ["currentUser"], queryFn: () => base44.auth.me() });
   const careScope = currentUser?.care_scope || "home_health";
-  const VISIT_TYPES = getVisitTypes(careScope);
-  const isHospice = careScope === "hospice";
-  const serviceLine = isHospice ? "hospice" : "home_health";
   const { data: patients = [] } = useQuery({
-    queryKey: ["patients"],
-    queryFn: async () => {
-        try {
-            return await base44.entities.Patient.filter({ status: "active" }, "first_name", 200);
-        } catch (e) {
-            if (!navigator.onLine) {
-                const { getPatientsLocally } = await import('@/lib/indexedDB');
-                const local = await getPatientsLocally();
-                return local || [];
-            }
-            throw e;
-        }
-    }
+    queryKey: ["patients", "active-all", agencyQueryKey(currentUser)],
+    networkMode: 'always',
+    // ALL_ROWS before the agency post-filter so foreign-tenant charts cannot
+    // crowd the picker.
+    queryFn: async () => scopePatientsForCurrentCaller(
+      await base44.entities.Patient.filter({ status: "active" }, "first_name", ALL_ROWS),
+    )
   });
   const patient = patients.find(p => p.id === patientId);
-  // Full record for the selected patient (the list query may not include the
-  // note history). Used to pre-fill carry-forward answers from the last visit.
+  const { data: complianceRules = [] } = useQuery({
+    queryKey: ["medicareComplianceRules"],
+    queryFn: () => base44.entities.MedicareComplianceRule.list(undefined, ALL_ROWS),
+    initialData: [],
+    staleTime: 5 * 60 * 1000,
+  });
   const { data: patientDetail } = useQuery({
     queryKey: ["patientDetail", patientId],
     queryFn: () => base44.entities.Patient.get(patientId),
     enabled: !!patientId,
   });
+  const effectiveCareType = (patientDetail || patient)?.care_type || careScope;
+  const isHospice = effectiveCareType === "hospice";
+  const serviceLine = isHospice ? "hospice" : "home_health";
+  const VISIT_TYPES = getVisitTypes(effectiveCareType);
+  const { data: facilityDocRules = [] } = useQuery({
+    queryKey: ["facility-doc-rules"],
+    queryFn: () => base44.entities.FacilityDocumentationRule.list("-severity", 200),
+    initialData: [],
+    staleTime: 5 * 60 * 1000,
+  });
   useEffect(() => {
     if (currentUser?.email) logActivity(ActivityActions.PAGE_VISIT, { page: "SmartNoteAssistant" });
   }, [currentUser?.email]);
 
-  // Visit binding: when deep-linked with ?visitId (e.g. from a compliance alert or
-  // the patient's visit list), load that visit and pre-select its patient + visit
-  // type so saving COMPLETES it rather than creating a duplicate. Vitals are left
-  // for the nurse to enter fresh (the scheduled visit has none yet).
   const { data: boundVisit } = useQuery({
     queryKey: ["visit", visitId],
     queryFn: () => base44.entities.Visit.get(visitId),
@@ -195,7 +196,6 @@ export default function SmartNoteAssistant({ visitId = null }) {
     if (boundVisit.visit_type) setVisitType(boundVisit.visit_type);
   }, [boundVisit]);
 
-  // Restore saved patient context across tabs
   useEffect(() => {
     if (queryPatientId || queryVisitType) {
       if (queryPatientId) setPatientId(queryPatientId);
@@ -208,17 +208,14 @@ export default function SmartNoteAssistant({ visitId = null }) {
         const parsed = JSON.parse(saved);
         if (parsed.patientId) setPatientId(parsed.patientId);
         if (parsed.visitType) setVisitType(parsed.visitType);
-      } catch {}
+      } catch { /* no-op */ }
     }
   }, [queryPatientId, queryVisitType]);
 
-  // Persist patient context across tabs
   useEffect(() => {
     sessionStorage.setItem(SAVED_PATIENT_KEY, JSON.stringify({ patientId, visitType }));
   }, [patientId, visitType]);
 
-  // On first mount, restore the draft for whatever bucket we start in (the saved
-  // patient, or the unassigned bucket) so an in-progress note survives a reload.
   useEffect(() => {
     if (referralDraftNote) {
       setNote(referralDraftNote);
@@ -237,20 +234,16 @@ export default function SmartNoteAssistant({ visitId = null }) {
     } catch { /* ignore a corrupt draft */ }
   }, [referralDraftNote]);
 
-  // When the selected patient changes, load that patient's saved draft (resume
-  // where you left off). The outgoing patient's note was already autosaved under
-  // their own key, so switching never loses or cross-contaminates a draft. When
-  // arriving from the no-patient-yet state with a note already typed, carry it
-  // over (migrate) instead of wiping it.
   useEffect(() => {
     const prev = prevPatientRef.current;
     if (prev === patientId) return;
     prevPatientRef.current = patientId;
-    // Vitals are per-visit, not part of the draft store — clear them on a patient
-    // switch so one patient's readings never carry onto another's chart.
     setVitals({});
-    // Drop the visit binding if the nurse switches to a different patient than the
-    // bound visit's — so the save can't complete the wrong patient's visit.
+    // Clear saved visit/audit ids so a re-save cannot update the prior
+    // patient's Visit while history appends to the new patient (parity with
+    // AudioVisitCapture).
+    setSavedVisitId(null);
+    setSavedAuditId(null);
     if (patientId !== boundPatientRef.current) setExistingVisitId(null);
     let incoming = null;
     const saved = sessionStorage.getItem(draftKeyFor(patientId));
@@ -265,24 +258,24 @@ export default function SmartNoteAssistant({ visitId = null }) {
       setNote(incoming);
       setDraftRestored(incoming.trim().length > 20);
     } else if (prev) {
-      // Switching between two real patients and the incoming one has no session
-      // draft — clear, then check the durable store (covers a post-restart switch
-      // where the only copy of their draft is in IndexedDB).
       setNote("");
       setDraftRestored(false);
       tryRestoreDurableDraft(patientId);
     }
-    // else: came from the unassigned bucket with nothing saved — keep the typed
-    // note so it isn't lost; it will autosave under the newly-selected patient.
   }, [patientId]);
 
-  // Autosave under the ACTIVE patient (via ref) — deliberately not keyed on
-  // patientId, so a patient switch never writes the old note under the new key.
   useEffect(() => {
-    if (!note.trim()) return;
     const pid = patientIdRef.current;
+    const bucketChanged = autosaveBucketRef.current !== pid;
+    const prevNote = autosavePrevNoteRef.current;
+    autosaveBucketRef.current = pid;
+    autosavePrevNoteRef.current = note;
+    if (!note.trim()) {
+      if (!bucketChanged && prevNote.trim()) clearDraft(pid);
+      return;
+    }
     sessionStorage.setItem(draftKeyFor(pid), JSON.stringify({ note, visitType, patientId: pid }));
-    import('@/lib/indexedDB').then(({ saveDraftNoteLocally }) => {
+    import('@/lib/draftNotes').then(({ saveDraftNoteLocally }) => {
         saveDraftNoteLocally({ id: `draft_${pid || 'unassigned'}`, note, visitType, patientId: pid });
     }).catch(console.error);
   }, [note, visitType]);
@@ -313,26 +306,46 @@ export default function SmartNoteAssistant({ visitId = null }) {
     rec.onerror = () => { setListening(false); releaseDictation(stop); };
     rec.onend = () => { setListening(false); releaseDictation(stop); };
     recRef.current = rec;
-    // Stop any per-question dictation mic first — only one recognizer at a time.
     claimDictation(stop);
     rec.start();
     setListening(true);
   };
   const stopDictation = () => { recRef.current?.stop(); setListening(false); releaseDictation(recStopRef.current); };
 
-  // Step 1 → 2. The deterministic scan + questions + generation + fact-check all
-  // live in <ConstrainedNoteReviewer>, which scans `note` on mount.
   const startReview = () => {
     if (!note || note.trim().length < 20) return;
+    // Blanks are fixable HERE and not on the review screen, so stop at the door
+    // rather than letting the nurse discover the hard block a click later.
+    const blanks = describePlaceholders(note);
+    if (blanks.length) {
+      // Count from countPlaceholders, not the capped display rows (see draftScan.js).
+      const total = countPlaceholders(note);
+      toast.error(`Fill in or delete the ${total} blank${total > 1 ? "s" : ""} left in your draft (${blanks[0].placeholders[0]}…) before reviewing.`);
+      return;
+    }
+    const facilityResults = evaluateFacilityRules({
+      rules: facilityDocRules,
+      patient: patientDetail || patient,
+      noteText: note,
+      visitType,
+    });
+    const facilitySummary = summarizeFacilityRules(facilityResults);
+    if (facilitySummary.missing > 0) {
+      const labels = facilityResults
+        .filter((r) => r.missing)
+        .map((r) => r.rule.requirement_label || r.rule.rule_name)
+        .slice(0, 3)
+        .join("; ");
+      toast.warning(`Facility requirement${facilitySummary.missing > 1 ? "s" : ""} not yet documented: ${labels}`);
+    }
     setSaved(false);
     setSavedVisitId(null);
     setSavedAuditId(null);
+    setFacilityAck(false);
+    facilityOverrideRef.current = null;
     setStep(2);
   };
 
-  // Save to the patient's chart. Re-verifies any edits first (via the reviewer),
-  // then persists — updating the same Visit on re-save so editing never creates a
-  // duplicate. Optional: the note is fully usable (copy/PDF) without saving.
   const handleSave = async (api) => {
     if (!patientId || !currentUser?.email) {
       toast.error("Select a patient to save this note to their chart.");
@@ -342,17 +355,25 @@ export default function SmartNoteAssistant({ visitId = null }) {
       toast.error("Acknowledge the chart safety conflict before saving to the chart.");
       return;
     }
+    if (api.denialRisk?.hasUnacknowledgedCritical) {
+      toast.error("Acknowledge the denial-risk findings before saving to the chart.");
+      return;
+    }
     setSaving(true);
     try {
       let result = api.result;
       if (api.dirty) {
         result = await api.recheck();
-        if (!result) { setSaving(false); return; } // fact-check failed → reviewer shows the fix panel
+        if (!result) { setSaving(false); return; }
       }
-      await persistNote(result);
+      const out = await persistNote(result);
+      if (!out) {
+        // persistVisitNote returns null without throwing when inputs are insufficient
+        // — do NOT mark saved or clear the draft (would destroy the only copy).
+        toast.error("Could not save — check that a patient is selected and the note is complete.");
+        return;
+      }
       setSaved(true);
-      // The work is now persisted (online) or queued (offline) — drop the local
-      // draft so it doesn't linger as stale PHI for this patient.
       clearDraft(patientId);
     } catch (err) {
       console.error("Save to chart error:", err);
@@ -362,26 +383,25 @@ export default function SmartNoteAssistant({ visitId = null }) {
     }
   };
 
-  // Create-or-update the chart records from the reviewer's save-ready result via
-  // the shared persistVisitNote helper (also used by the Visit Scribe audio flow),
-  // then run the host-only follow-up (state + task/supply analysis) on a fresh save.
   const persistNote = async (result) => {
     const out = await persistVisitNote({
       result, patientId, visitDate, visitType, roughNote: note, vitals,
       currentUser, patientDiagnosis: patientDetail?.primary_diagnosis || patient?.primary_diagnosis || "",
       savedVisitId, savedAuditId, existingVisitId,
+      facilityAcknowledgment: facilityOverrideRef.current,
     });
-    if (!out) return;
+    if (!out) return null;
     if (out.mode === 'create') {
       setSavedVisitId(out.visitId);
-      // The visit (new or the just-completed bound one) is now the same-session
-      // target, so further re-saves go through the savedVisitId update path.
       setExistingVisitId(null);
-      // Remember the audit so a later re-save updates it in place.
       if (out.auditId) setSavedAuditId(out.auditId);
       generateTasksFromNote(out.finalText, out.visitId);
       analyzeSupplyUsage(out.finalText, out.visitId);
+    } else if (out.mode === 'update') {
+      setSavedVisitId(out.visitId);
+      if (out.auditId) setSavedAuditId(out.auditId);
     }
+    return out;
   };
 
   const analyzeSupplyUsage = async (noteText, visitId) => {
@@ -417,17 +437,19 @@ export default function SmartNoteAssistant({ visitId = null }) {
   const reset = () => {
     setNote(""); setSaved(false); setSavedVisitId(null); setSavedAuditId(null);
     setStep(1); setDraftRestored(false); setSignatureImage(null); setFollowUpTasks([]);
-    setVitals({}); setExistingVisitId(null);
+    setVitals({}); setExistingVisitId(null); setFacilityAck(false);
+    facilityOverrideRef.current = null;
     clearDraft(patientIdRef.current);
   };
 
-  // Turn critical chart conflicts / vitals flagged in the reviewer into high-
-  // priority provider follow-up tasks. A critical follow-up must never be lost,
-  // so offline (or on a failed create) it is queued to the offline sync drain
-  // instead of being dropped.
   const escalateToTasks = async (items) => {
     if (!items?.length || !currentUser?.email) return;
+    const newReqId = () =>
+      (typeof crypto !== 'undefined' && crypto.randomUUID)
+        ? crypto.randomUUID()
+        : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
     const payloads = items.map((it) => ({
+      client_request_id: newReqId(),
       patient_id: patientId || undefined,
       title: it.title,
       description: it.description || "",
@@ -439,27 +461,13 @@ export default function SmartNoteAssistant({ visitId = null }) {
       ai_reason: it.reason || "",
       related_visit_id: savedVisitId || undefined,
     }));
-    const queueForSync = async (toQueue) => {
-      const { addToSyncQueue } = await import('@/lib/indexedDB');
-      await Promise.all(toQueue.map((p) => addToSyncQueue('CREATE_TASK', p)));
-    };
-
-    // Offline: queue everything; the OfflineManager drain creates them on reconnect.
-    if (!navigator.onLine) {
-      try {
-        await queueForSync(payloads);
-        setFollowUpTasks((prev) => [...payloads, ...prev]);
-        toast.success(`Saved ${payloads.length} follow-up task${payloads.length !== 1 ? "s" : ""} offline — will sync when reconnected.`);
-      } catch (err) {
-        console.error("Failed to queue escalation task(s):", err);
-        toast.error("Couldn't save the follow-up task offline.");
-      }
+    // No local queue any more: a follow-up task is either created on the server
+    // or reported as not created. Never claim it was saved when it wasn't.
+    if (typeof navigator !== "undefined" && navigator.onLine === false) {
+      toast.error("You're offline — reconnect to create the provider follow-up task.");
       return;
     }
 
-    // Online: create each individually so a partial failure can't re-create the
-    // ones that already succeeded (Promise.all would reject the whole batch and
-    // the retry would duplicate the successes).
     const results = await Promise.allSettled(payloads.map((p) => base44.entities.Task.create(p)));
     const created = [];
     const failed = [];
@@ -469,19 +477,8 @@ export default function SmartNoteAssistant({ visitId = null }) {
       toast.success(`Created ${created.length} provider follow-up task${created.length !== 1 ? "s" : ""}.`);
       return;
     }
-    // Queue ONLY the failures (a transient 5xx, not necessarily a disconnect),
-    // then kick the sync drain so they retry now — not just on the next
-    // offline→online transition, which may never come while we stay online.
-    console.error("Some escalation task creates failed; queuing for retry:", results.find((r) => r.status === "rejected")?.reason);
-    try {
-      await queueForSync(failed);
-      setFollowUpTasks((prev) => [...failed, ...prev]);
-      window.dispatchEvent(new Event('online'));
-      toast.message(`Couldn't reach the server for ${failed.length} follow-up task${failed.length !== 1 ? "s" : ""} — saved and retrying.`);
-    } catch (err) {
-      console.error("Failed to queue failed escalation task(s):", err);
-      toast.error("Couldn't save the follow-up task. Try again.");
-    }
+    console.error("Some escalation task creates failed:", results.find((r) => r.status === "rejected")?.reason);
+    toast.error(`Couldn't create ${failed.length} follow-up task${failed.length !== 1 ? "s" : ""}. Try again.`);
   };
 
   const ready = note.trim().length >= 20;
@@ -495,39 +492,30 @@ export default function SmartNoteAssistant({ visitId = null }) {
 
       <SmartNoteTabs activeTab={activeTab} setActiveTab={setActiveTab} />
 
-      {/* ── TAB: DRAFT FROM VITALS ── */}
       {activeTab === "drafter" && (
         <StructuredNoteDrafter
           patient={patient}
           onDraftReady={(draft, vType, structuredVitals) => {
             setNote(draft);
             setVisitType(vType);
-            // Carry the structured vitals into the same canonical state the main
-            // form uses, so they reach the verified pipeline (coverage, trends,
-            // critical-vital escalation, chart cross-check) — not just the prose.
             if (structuredVitals) setVitals(structuredVitals);
             setActiveTab("builder");
           }}
         />
       )}
 
-      {/* ── TAB: VISIT SUMMARY ── */}
       {activeTab === "summary" && (
         <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
           <VisitSummaryGenerator patientId={patientId} />
         </div>
       )}
 
-      {/* ── TAB: VITAL TRENDS ── */}
       {activeTab === "trends" && (
         <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
           <VitalsTrendAnalysis patientId={patientId} />
         </div>
       )}
 
-
-
-      {/* ── TAB: NOTE BUILDER ── */}
       {activeTab === "builder" && (
         <>
           {draftRestored && (
@@ -539,7 +527,6 @@ export default function SmartNoteAssistant({ visitId = null }) {
 
           <StepIndicator step={step} />
 
-          {/* STEP 1: WRITE */}
           {step === 1 && (
             <div className="space-y-3">
               <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 space-y-4">
@@ -571,8 +558,7 @@ export default function SmartNoteAssistant({ visitId = null }) {
                           type="button"
                           onClick={() => setVisitType(v.value)}
                           aria-pressed={selected}
-                          style={selected ? { backgroundColor: '#264491', borderColor: '#264491', color: '#ffffff' } : undefined}
-                          className={`py-3 sm:py-2 px-2 rounded-xl text-xs font-semibold border-2 transition-all text-center leading-tight min-h-[48px] sm:min-h-0 active:scale-95 ${selected ? "shadow-md" : "bg-slate-50 border-slate-200 text-slate-700 hover:border-navy-300 hover:bg-navy-50"}`}
+                          className={`py-3 sm:py-2 px-2 rounded-xl text-xs font-semibold border-2 transition-all text-center leading-tight min-h-[48px] sm:min-h-0 active:scale-95 ${selected ? "bg-navy-600 border-navy-600 text-white shadow-md" : "bg-slate-50 border-slate-200 text-slate-700 hover:border-navy-300 hover:bg-navy-50"}`}
                         >
                           {v.label}
                         </button>
@@ -594,8 +580,6 @@ export default function SmartNoteAssistant({ visitId = null }) {
                 </div>
               )}
 
-              {/* Structured vitals — saved to the visit's vital_signs (feeds the
-                  chart, vitals trends, and critical-vitals escalation). */}
               <VitalSignsForm vitalSigns={vitals} onChange={setVitals} />
 
               <NoteTemplateSelector currentVisitType={visitType} onSelect={(content, type) => {
@@ -605,17 +589,26 @@ export default function SmartNoteAssistant({ visitId = null }) {
 
               <ComplianceChecklist isHospice={isHospice} />
 
+              <FacilityRequirementsChecklist
+                patient={patientDetail || patient}
+                noteText={note}
+                visitType={visitType}
+              />
+
               <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
                 <div className="flex items-center justify-between px-4 py-2 bg-slate-50 border-b border-slate-100">
                   <span className="text-xs font-semibold text-navy-700">Your Rough Notes / Bullet Points</span>
-                  <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs text-navy-600 hover:text-navy-800"
-                    onClick={() => { setActiveTab("drafter"); }}>
-                    <ClipboardList className="w-3.5 h-3.5" /> Use Structured Form
-                  </Button>
+                  <div className="flex items-center gap-1">
+                    <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs text-navy-600 hover:text-navy-800"
+                      onClick={() => textareaRef.current?.openQuickPhrases?.()}>
+                      <Sparkles className="w-3.5 h-3.5" /> Quick Phrase
+                    </Button>
+                    <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs text-navy-600 hover:text-navy-800"
+                      onClick={() => { setActiveTab("drafter"); }}>
+                      <ClipboardList className="w-3.5 h-3.5" /> Use Structured Form
+                    </Button>
+                  </div>
                 </div>
-                {/* Voice input — one consolidated group: speak live, or record &
-                    transcribe. All paths append your own words to the draft below;
-                    none rewrite or embellish it. */}
                 <div className="px-4 py-2 bg-navy-50 border-b border-navy-100">
                   <div className="flex items-center gap-1.5 mb-1.5">
                     <Mic className="w-3 h-3 text-navy-500" />
@@ -629,14 +622,20 @@ export default function SmartNoteAssistant({ visitId = null }) {
                     >
                       {listening ? <><Square className="w-4 h-4 fill-current" /> Stop Dictation</> : <><Mic className="w-4 h-4" /> Live Dictation</>}
                     </Button>
-                    {/* One record-and-transcribe control (Narrative or SOAP). */}
                     <VisitAudioRecorder
                       onTranscribed={(text) => setNote(prev => prev ? prev + "\n\n" + text : text)}
                     />
                   </div>
                 </div>
-                <textarea ref={textareaRef} value={note} onChange={e => setNote(e.target.value)}
-                  placeholder={"Enter bullet points or rough draft — AI will NOT invent information.\n\n• BP 148/90, HR 82, O2 95% RA, pain 3/10\n• homebound: unable to leave without considerable effort\n• skilled need: wound assessment and dressing change\n• wound R heel 2×3 cm granulating, no odor\n• taught med schedule, pt verbalized understanding\n• fall risk — clutter noted, discussed w/ family"}
+                <QuickPhraseTextarea
+                  ref={textareaRef}
+                  value={note}
+                  onChange={setNote}
+                  patientId={patientId}
+                  patientName={patient ? `${patient.first_name} ${patient.last_name}` : undefined}
+                  visitType={visitType}
+                  userEmail={currentUser?.email}
+                  placeholder={"Enter bullet points or rough draft — AI will NOT invent information.\n\nType / or .shortcut to insert a saved quick phrase.\n\n• BP 148/90, HR 82, O2 95% RA, pain 3/10\n• homebound: unable to leave without considerable effort\n• skilled need: wound assessment and dressing change\n• wound R heel 2×3 cm granulating, no odor\n• taught med schedule, pt verbalized understanding\n• fall risk — clutter noted, discussed w/ family"}
                   className="w-full min-h-[240px] sm:min-h-[320px] text-sm border-0 px-4 py-3 focus:ring-0 bg-white font-mono resize-none outline-none leading-relaxed" spellCheck={false}
                 />
                 <div className="flex items-center justify-between px-4 py-3 border-t border-slate-100 bg-slate-50 gap-3">
@@ -646,20 +645,26 @@ export default function SmartNoteAssistant({ visitId = null }) {
                   <Button
                     onClick={startReview}
                     disabled={!ready}
-                    style={ready ? { backgroundColor: '#264491', color: '#ffffff' } : undefined}
-                    className="hover:bg-navy-700 h-11 sm:h-9 px-5 gap-1.5 text-sm font-semibold w-full sm:w-auto"
+                    className="h-11 sm:h-9 px-5 gap-1.5 text-sm font-semibold w-full sm:w-auto"
                   >
                     <ClipboardList className="w-4 h-4" /> Review & Complete <ArrowRight className="w-3.5 h-3.5" />
                   </Button>
                 </div>
               </div>
 
+              <NoteReadinessBar
+                roughNote={note}
+                serviceLine={serviceLine}
+                visitType={visitType}
+                vitals={vitals}
+                complianceRules={complianceRules}
+              />
+
               <VitalSignValidator noteText={note} />
 
             </div>
           )}
 
-          {/* STEP 2: QUESTIONS / GENERATE / REVIEW — shared constrained-scribe flow */}
           {step === 2 && (
             <ConstrainedNoteReviewer
               roughNote={note}
@@ -669,9 +674,21 @@ export default function SmartNoteAssistant({ visitId = null }) {
               priorNote={getPriorNote(patientDetail || patient)}
               patient={patientDetail || patient}
               currentUser={currentUser}
+              complianceRules={complianceRules}
               onEscalate={escalateToTasks}
               onBack={() => setStep(1)}
-              renderFinalNote={(api) => (
+              renderFinalNote={(api) => {
+                const facilityResults = evaluateFacilityRules({
+                  rules: facilityDocRules,
+                  patient: patientDetail || patient,
+                  noteText: api.finalNote,
+                  visitType,
+                });
+                const facilityMissingCritical = facilityResults.filter(
+                  (r) => r.missing && r.rule.severity === "critical",
+                );
+                const facilityBlocked = facilityMissingCritical.length > 0 && !facilityAck;
+                return (
                 <>
                   {generatingTasks && (
                     <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-lg px-4 py-3 text-sm text-emerald-800">
@@ -682,6 +699,38 @@ export default function SmartNoteAssistant({ visitId = null }) {
                   {followUpTasks.length > 0 && (
                     <FollowUpTasksPanel tasks={followUpTasks} onDismiss={() => setFollowUpTasks([])} />
                   )}
+
+                  <FacilityRequirementsChecklist
+                    patient={patientDetail || patient}
+                    noteText={api.finalNote}
+                    visitType={visitType}
+                  />
+
+                  {facilityMissingCritical.length > 0 && (
+                    <div className="bg-rose-50 border border-rose-200 rounded-xl px-4 py-3">
+                      <div className="flex items-center gap-2 text-sm font-semibold text-rose-800">
+                        <AlertTriangle className="w-4 h-4" />
+                        Critical facility requirement{facilityMissingCritical.length > 1 ? "s" : ""} not documented
+                      </div>
+                      <ul className="mt-1 ml-6 list-disc text-sm text-rose-700">
+                        {facilityMissingCritical.map((r) => (
+                          <li key={r.rule.id || r.rule.rule_name}>{r.rule.requirement_label || r.rule.rule_name}</li>
+                        ))}
+                      </ul>
+                      <label className="mt-2 flex items-start gap-2 text-xs text-rose-800">
+                        <input
+                          type="checkbox"
+                          className="mt-0.5 rounded"
+                          checked={facilityAck}
+                          onChange={(e) => setFacilityAck(e.target.checked)}
+                        />
+                        <span>
+                          Add the required detail above, or acknowledge saving without it. This override is recorded.
+                        </span>
+                      </label>
+                    </div>
+                  )}
+
                   <FinalNoteDisplay
                     finalNote={api.finalNote}
                     setFinalNote={api.setFinalNote}
@@ -698,20 +747,41 @@ export default function SmartNoteAssistant({ visitId = null }) {
                     patient={patient}
                     visitType={visitType}
                     analysisScore={api.coverage}
-                    analysis={{ overall_score: api.coverage, compliance_score: api.coverage, findings: [] }}
+                    analysis={{ overall_score: api.coverage, compliance_score: api.coverage, findings: buildExportFindings(api.result) }}
                     currentUser={currentUser}
                     signatureImage={signatureImage}
                     setSignatureImage={setSignatureImage}
                     onReset={reset}
                     originalNote={note}
                     noteSections={parseNoteSections(api.finalNote)}
-                    onSave={() => handleSave(api)}
+                    onSave={() => {
+                      if (facilityBlocked) {
+                        toast.error("Document the required facility item(s) or acknowledge the override before saving.");
+                        return;
+                      }
+                      if (facilityMissingCritical.length > 0 && facilityAck) {
+                        const unmet = facilityMissingCritical.map((r) => r.rule.rule_name);
+                        facilityOverrideRef.current = {
+                          acknowledged: true,
+                          unmet_requirements: unmet,
+                        };
+                        logActivity(ActivityActions.NOTE_COMPLIANCE_CHECK, {
+                          patientId,
+                          facility_override: true,
+                          unmet_requirements: unmet,
+                        });
+                      } else {
+                        facilityOverrideRef.current = null;
+                      }
+                      handleSave(api);
+                    }}
                     saving={saving}
                     saved={saved && !api.dirty}
-                    saveDisabled={saving || !!(api.fixRequired && !api.fixRequired.offlinePending) || !patientId || api.chartRisk?.hasUnacknowledgedCritical}
+                    saveDisabled={saving || !!api.fixRequired || !patientId || api.chartRisk?.hasUnacknowledgedCritical || api.denialRisk?.hasUnacknowledgedCritical || facilityBlocked}
                   />
                 </>
-              )}
+                );
+              }}
             />
           )}
         </>

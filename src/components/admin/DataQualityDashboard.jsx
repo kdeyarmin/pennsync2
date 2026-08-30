@@ -1,35 +1,57 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { getStaffRole } from "@/lib/roles";
+import { useAgencyScopedQuery } from '@/hooks/useAgencyScopedQuery';
+import { useScopedPatients } from '@/hooks/useScopedPatients';
+import { describeCallerPatientScope, agencyQueryKey } from '@/lib/agencyRoster';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { AlertTriangle, CheckCircle2, Users, FileText, ClipboardCheck } from "lucide-react";
+import { ALL_ROWS } from '@/lib/queryLimits';
 
 export default function DataQualityDashboard() {
-  const { data: patients = [] } = useQuery({
-    queryKey: ['all-patients-quality'],
-    queryFn: () => base44.entities.Patient.filter({ status: 'active' }),
-    initialData: [],
+  const { data: currentUser } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me(),
   });
+
+
+  const { data: patients = [] } = useScopedPatients({ status: 'active', sort: null, limit: ALL_ROWS });
 
   const { data: users = [] } = useQuery({
-    queryKey: ['all-users-quality'],
-    queryFn: () => base44.entities.User.list('-created_date', 200),
+    queryKey: ['all-users-quality', agencyQueryKey(currentUser)],
+    queryFn: async () => {
+      const _rows = await base44.entities.User.list('-created_date', ALL_ROWS);
+      const { filterUsersByCallerAgency } = await import('@/lib/agencyScope');
+      return filterUsersByCallerAgency(_rows, currentUser);
+    },
+    enabled: !!currentUser,
     initialData: [],
   });
 
-  const { data: visits = [] } = useQuery({
+  // How many charts carry no agency attribution at all. These stay visible on
+  // purpose (see src/lib/agencyScope.js), but they are the set a stricter rule
+  // would silently hide, so the backlog belongs on the data-quality board rather
+  // than buried in the filter. Keyed on the roster size so it recomputes when
+  // charts land; the staff roster behind it is memoized app-wide.
+  const { data: agencyScope } = useQuery({
+    queryKey: ['patients', 'attribution', agencyQueryKey(currentUser), patients.length],
+    queryFn: () => describeCallerPatientScope(patients, currentUser),
+    enabled: !!currentUser,
+    initialData: null,
+  });
+
+  const { data: visits = [] } = useAgencyScopedQuery({
     queryKey: ['recent-visits-quality'],
-    queryFn: () => base44.entities.Visit.filter({ status: 'completed' }, '-visit_date', 100),
+    fetch: () => base44.entities.Visit.filter({ status: 'completed' }, '-visit_date', ALL_ROWS),
     initialData: [],
   });
 
   const { data: credentials = [] } = useQuery({
     queryKey: ['credentials-quality'],
-    queryFn: () => base44.entities.PersonnelCredential.list('-expiration_date', 500),
+    queryFn: () => base44.entities.PersonnelCredential.list('-expiration_date', ALL_ROWS),
     initialData: [],
   });
 
@@ -46,15 +68,14 @@ export default function DataQualityDashboard() {
       ? ((patients.length - patientIssues.length) / patients.length * 100).toFixed(1)
       : 100;
 
-    // User profile quality. Care scope + credential type only apply to nurses, so
-    // non-nurse staff (office, social work, spiritual care) aren't false-flagged.
-    const userIssues = users.filter(u => {
-      if (!u.phone || u.phone === '') return true;
-      if (getStaffRole(u) === 'nurse') {
-        return !u.care_scope || !u.credential_type || u.credential_type === '';
-      }
-      return false;
-    });
+    // User profile quality
+    const userIssues = users.filter(u => 
+      !u.phone || 
+      u.phone === '' || 
+      !u.care_scope ||
+      !u.credential_type ||
+      u.credential_type === ''
+    );
 
     const userCompleteness = users.length > 0
       ? ((users.length - userIssues.length) / users.length * 100).toFixed(1)
@@ -72,23 +93,23 @@ export default function DataQualityDashboard() {
       ? ((visits.length - visitIssues.length) / visits.length * 100).toFixed(1)
       : 100;
 
-    // Credential tracking. Only nurses carry personnel credentials (licenses /
-    // certifications), so the coverage denominator is the nurse population — non-
-    // nurse staff (office, social work, spiritual care) must not be counted as
-    // "missing credentials" or drag the coverage score down forever.
-    // PersonnelCredential is 1-to-many per user (multiple types / renewals) and its
-    // user_id is the user's email, so counting unique covered nurse emails prevents
-    // >100% coverage and a negative "missing" figure.
-    const nurseEmails = new Set(
-      users.filter(u => getStaffRole(u) === 'nurse').map(u => u.email).filter(Boolean)
-    );
-    const coveredUsers = new Set(
-      credentials.map(c => c.user_id).filter(id => nurseEmails.has(id))
-    ).size;
-    const missingCredentials = Math.max(0, nurseEmails.size - coveredUsers);
-    const credentialCoverage = nurseEmails.size > 0
-      ? ((coveredUsers / nurseEmails.size) * 100).toFixed(1)
-      : 100;
+    // Credential tracking. PersonnelCredential is 1-to-many per user (multiple
+    // credential types / renewals), so the row count is not the number of users
+    // covered — count distinct owners instead.
+    //
+    // The credential list is NOT agency-scoped while `users` is, so counting
+    // every distinct user_id let owners outside this roster (other tenants,
+    // ex-employees, users past the fetch window) inflate coverage past 100%
+    // and clamp "missing" to 0 — hiding the exact gap this dashboard exists to
+    // surface. Intersect against the loaded roster, matching the reference
+    // implementation in QuickHealthOverview.jsx. PersonnelCredential.user_id
+    // holds the user's email.
+    const credentialOwners = new Set(credentials.map(c => c.user_id).filter(Boolean));
+    const coveredUsers = users.filter(u => u?.email && credentialOwners.has(u.email)).length;
+    const missingCredentials = users.length - coveredUsers;
+    const credentialCoverage = users.length > 0
+      ? ((coveredUsers / users.length) * 100).toFixed(1)
+      : 0;
 
     return {
       patientIssues,
@@ -130,6 +151,22 @@ export default function DataQualityDashboard() {
           <AlertTriangle className="h-4 w-4 text-amber-600" />
           <AlertDescription className="text-amber-800">
             Data quality is below recommended threshold. Review critical issues below.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {agencyScope?.scoped && agencyScope.unattributable > 0 && (
+        <Alert className="border-slate-300 bg-slate-50">
+          <AlertTriangle className="h-4 w-4 text-slate-600" />
+          <AlertDescription className="text-slate-800">
+            <span className="font-semibold">
+              {agencyScope.unattributable} of {agencyScope.total} charts have no agency attribution.
+            </span>{' '}
+            They were created by an importer or service account, or by a user who is
+            no longer on the roster, so nothing ties them to an agency. They stay
+            visible here — hiding them would remove active charts from clinical
+            views — but they are not covered by agency scoping until an agency is
+            recorded on the record itself.
           </AlertDescription>
         </Alert>
       )}
@@ -246,8 +283,8 @@ export default function DataQualityDashboard() {
                     <Badge variant="outline" className="text-xs">
                       Missing: {[
                         (!user.phone || user.phone === '') && 'Phone',
-                        getStaffRole(user) === 'nurse' && !user.care_scope && 'Care Scope',
-                        getStaffRole(user) === 'nurse' && (!user.credential_type || user.credential_type === '') && 'Credential'
+                        !user.care_scope && 'Care Scope',
+                        (!user.credential_type || user.credential_type === '') && 'Credential'
                       ].filter(Boolean).join(', ')}
                     </Badge>
                   </div>

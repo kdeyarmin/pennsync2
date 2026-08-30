@@ -8,19 +8,16 @@ import {
   ClipboardList,
   Phone,
   Mail,
-  Clock,
-  Target
+  Clock
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { createPageUrl } from "@/utils";
 import { format, isValid } from "date-fns";
-import { toast } from 'sonner';
 
-export default function QuickActionsPanel({ 
-  patient, 
-  recentVisits = [], 
+export default function QuickActionsPanel({
+  patient,
+  recentVisits = [],
   upcomingVisits = [],
-  activeCarePlans = [],
   pendingTasks = []
 }) {
   const today = format(new Date(), 'yyyy-MM-dd');
@@ -28,27 +25,18 @@ export default function QuickActionsPanel({
   const _nextVisit = upcomingVisits.find(v => v.visit_date && isValid(new Date(v.visit_date)) && v.visit_date > today);
 
   const quickActions = [
-    {
-      icon: Calendar,
-      label: "Schedule Visit",
-      description: "Add new appointment",
-      color: "bg-blue-500 hover:bg-blue-600",
-      onClick: () => toast.error("Open schedule visit dialog - implement as needed")
-    },
+    // NOTE: a "Schedule Visit" action was removed here — it only fired a
+    // developer-placeholder error toast ("implement as needed"), and the app has
+    // no appointment-scheduling dialog to wire it to. Bringing back a real
+    // scheduler (Visit.create + a date/type form) is tracked in the enhancement
+    // roadmap; until then we don't show a button that errors on tap.
     {
       icon: Stethoscope,
       label: todayVisit ? "Document Today's Visit" : "Quick Documentation",
       description: todayVisit ? `${todayVisit.visit_type}` : "Add clinical notes",
       color: "bg-green-500 hover:bg-green-600",
-      link: todayVisit ? `${createPageUrl("VisitScribe")}?visitId=${todayVisit.id}` : null,
+      link: todayVisit ? `${createPageUrl("VisitScribe")}?visitId=${todayVisit.id}` : createPageUrl("VisitScribe"),
       badge: todayVisit ? "Today" : null
-    },
-    {
-      icon: Target,
-      label: "Care Plan",
-      description: `${activeCarePlans.length} active`,
-      color: "bg-navy-500 hover:bg-navy-600",
-      link: createPageUrl("CarePlanManagement")
     },
     {
       icon: MessageSquare,

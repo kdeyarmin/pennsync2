@@ -33,8 +33,25 @@ import {
   CheckCircle2,
   AlertTriangle
 } from "lucide-react";
+import { ALL_ROWS } from '@/lib/queryLimits';
+import { useConfirm } from "@/components/ui/confirm-dialog";
+
+/**
+ * Read a number input, falling back to the field's default when it is cleared.
+ *
+ * `parseInt('')` is NaN, and NaN serializes to null — so clearing one of these
+ * boxes persisted a rule with no threshold (every comparison against null is
+ * false, so the automation silently stopped firing) while the `|| default`
+ * display fallback re-rendered the old number and hid it. 0 is preserved as a
+ * legitimate value, which a plain `|| default` would have discarded.
+ */
+const numOrDefault = (raw, fallback) => {
+  const n = parseInt(raw, 10);
+  return Number.isFinite(n) ? n : fallback;
+};
 
 export default function OASISAutomationSettings() {
+  const confirm = useConfirm();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingRule, setEditingRule] = useState(null);
   const queryClient = useQueryClient();
@@ -61,7 +78,7 @@ export default function OASISAutomationSettings() {
   // Fetch automation rules
   const { data: rules = [] } = useQuery({
     queryKey: ['automationRules'],
-    queryFn: () => base44.entities.OASISAutomationRule.list('-priority'),
+    queryFn: () => base44.entities.OASISAutomationRule.list('-priority', ALL_ROWS),
   });
 
   // Create/update rule
@@ -257,14 +274,18 @@ export default function OASISAutomationSettings() {
                     </div>
                     <div>
                       <Label>Score Value (%)</Label>
+                      {/* `??`, not `||`: numOrDefault deliberately keeps a typed
+                          0, but a `|| 70` display fallback re-rendered the box
+                          as 70, so the admin could never enter or see a 0
+                          threshold. */}
                       <Input
                         type="number"
-                        value={formData.trigger_conditions?.score_value || 70}
+                        value={formData.trigger_conditions?.score_value ?? 70}
                         onChange={(e) => setFormData({
                           ...formData,
                           trigger_conditions: { 
                             ...formData.trigger_conditions, 
-                            score_value: parseInt(e.target.value) 
+                            score_value: numOrDefault(e.target.value, 70)
                           }
                         })}
                       />
@@ -296,14 +317,17 @@ export default function OASISAutomationSettings() {
                     </div>
                     <div>
                       <Label>Due in (Days)</Label>
+                      {/* `??` for the same reason as Score Value above: "due in
+                          0 days" (due today) is what a critical-compliance rule
+                          wants, and `|| 7` snapped the field back to a week. */}
                       <Input
                         type="number"
-                        value={formData.action_config?.due_in_days || 7}
+                        value={formData.action_config?.due_in_days ?? 7}
                         onChange={(e) => setFormData({
                           ...formData,
                           action_config: { 
                             ...formData.action_config, 
-                            due_in_days: parseInt(e.target.value) 
+                            due_in_days: numOrDefault(e.target.value, 7)
                           }
                         })}
                       />
@@ -368,7 +392,7 @@ export default function OASISAutomationSettings() {
                     <div className="flex gap-4 text-xs text-slate-500">
                       <span>Action: {rule.action_type.replace(/_/g, ' ')}</span>
                       <span>Priority: {rule.action_config?.task_priority || 'medium'}</span>
-                      <span>Due: {rule.action_config?.due_in_days || 7} days</span>
+                      <span>Due: {rule.action_config?.due_in_days ?? 7} days</span>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
@@ -388,7 +412,18 @@ export default function OASISAutomationSettings() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => deleteMutation.mutate(rule.id)}
+                      onClick={async () => {
+                        // Destructive and unrecoverable — confirm first, matching
+                        // every other delete in the app.
+                        if (await confirm({
+                          title: "Delete automation rule?",
+                          description: `Delete "${rule.rule_name || "this rule"}"? This can't be undone.`,
+                          confirmText: "Delete",
+                          destructive: true,
+                        })) {
+                          deleteMutation.mutate(rule.id);
+                        }
+                      }}
                       className="text-red-600 hover:text-red-700"
                     >
                       <Trash2 className="w-4 h-4" />

@@ -1,7 +1,7 @@
 import React, { useEffect, useState, Suspense, lazy } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router";
 import { base44 } from "@/api/base44Client";
-import { useQuery } from "@tanstack/react-query";
+import { useScopedPatients } from '@/hooks/useScopedPatients';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import EmptyState from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
@@ -33,6 +33,7 @@ import PageHeader from "@/components/ui/PageHeader";
 import LoadingState from "@/components/ui/LoadingState";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import SearchablePatientSelect from "@/components/ui/SearchablePatientSelect";
 import HandoutCustomizer from "../components/education/HandoutCustomizer";
 import HandoutPreview from "../components/education/HandoutPreview";
 import HandoutStyleCustomizer from "../components/education/HandoutStyleCustomizer";
@@ -233,11 +234,7 @@ export default function PatientEducationHub() {
     }
   }, [requestedTab, activeTab, setSearchParams]);
 
-  const { data: patients = [] } = useQuery({
-    queryKey: ['patients'],
-    queryFn: () => base44.entities.Patient.list('-updated_date', 2000),
-    initialData: [],
-  });
+  const { data: patients = [] } = useScopedPatients({ sort: '-updated_date', limit: 2000 });
 
   const selectedPatient = patients.find(p => p.id === patientId);
 
@@ -326,7 +323,7 @@ export default function PatientEducationHub() {
         window.URL.revokeObjectURL(url);
         a.remove();
       } catch (decodeError) {
-        throw new Error(`Failed to process PDF: ${decodeError.message}`);
+        throw new Error(`Failed to process PDF: ${decodeError.message}`, { cause: decodeError });
       }
 
       setSuccessMessage("Handout downloaded successfully!");
@@ -336,9 +333,11 @@ export default function PatientEducationHub() {
       console.error('Error type:', error.constructor.name);
       console.error('Error stack:', error.stack);
       
-      // Log to backend for debugging
+      // Log to backend for debugging. Must go through the authenticated caller:
+      // `asServiceRole` has no service token in the browser client, so its getter
+      // threw on every call and this diagnostic row was never written.
       try {
-        await base44.asServiceRole.entities.SystemLog.create({
+        await base44.entities.SystemLog.create({
           job_name: 'PDF Download Error (Frontend)',
           job_type: 'other',
           status: 'error',
@@ -439,10 +438,10 @@ export default function PatientEducationHub() {
 
       {/* Success Message */}
       {successMessage && (
-        <Card className="mb-4 sm:mb-6 border-green-200 bg-green-50">
+        <Card className="mb-4 sm:mb-6 modern-card border-emerald-200 bg-emerald-50/50">
           <CardContent className="p-3 sm:p-4 flex items-center gap-2">
-            <CheckCircle2 className="w-5 h-5 text-green-600" />
-            <p className="text-green-800 font-medium">{successMessage}</p>
+            <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+            <p className="text-emerald-800 font-medium">{successMessage}</p>
           </CardContent>
         </Card>
       )}
@@ -453,24 +452,18 @@ export default function PatientEducationHub() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
             <div>
               <Label className="text-xs sm:text-sm mb-2 block">Select Patient (Optional)</Label>
-              <Select value={patientId} onValueChange={(value) => {
-                setPatientId(value);
-                const patient = patients.find(p => p.id === value);
-                if (patient?.email) {
-                  setPatientEmail(patient.email);
-                }
-              }}>
-                <SelectTrigger className="h-11 touch-target">
-                  <SelectValue placeholder="Select patient for personalization..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {patients.map(patient => (
-                    <SelectItem key={patient.id} value={patient.id}>
-                      {patient.first_name} {patient.last_name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <SearchablePatientSelect
+                patients={patients}
+                value={patientId}
+                onValueChange={(value) => {
+                  setPatientId(value);
+                  const patient = patients.find(p => p.id === value);
+                  if (patient?.email) {
+                    setPatientEmail(patient.email);
+                  }
+                }}
+                placeholder="Select patient for personalization..."
+              />
             </div>
             <div>
               <Label className="text-xs sm:text-sm mb-2 block">Search Topics</Label>
@@ -500,19 +493,19 @@ export default function PatientEducationHub() {
               return (
                 <Card
                   key={topic.id}
-                  className={`cursor-pointer transition-all hover:shadow-lg touch-target ${
-                    isSelected ? 'ring-2 ring-blue-500 shadow-lg' : ''
+                  className={`modern-card-interactive cursor-pointer touch-target group ${
+                    isSelected ? 'border-blue-500 shadow-md ring-1 ring-blue-500' : ''
                   }`}
                   onClick={() => setSelectedTopic(topic)}
                 >
                   <CardContent className="p-3 sm:p-4 md:p-6">
                     <div className="flex items-start gap-3 sm:gap-4">
-                      <div className={`p-2 sm:p-3 rounded-lg bg-gradient-to-br ${topic.color} shadow-md flex-shrink-0`}>
-                        <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                      <div className={`p-2 sm:p-3 rounded-xl bg-slate-50 border border-slate-100 flex-shrink-0 transition-colors ${isSelected ? 'bg-blue-50 border-blue-100' : 'group-hover:bg-white'}`}>
+                        <Icon className={`w-5 h-5 sm:w-6 sm:h-6 transition-colors ${isSelected ? 'text-blue-600' : 'text-slate-500 group-hover:text-blue-500'}`} />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-sm sm:text-base text-gray-900 mb-1">{topic.title}</h3>
-                        <p className="text-xs sm:text-sm text-gray-600">{topic.description}</p>
+                        <h3 className={`font-semibold text-sm sm:text-base mb-1 transition-colors ${isSelected ? 'text-blue-900' : 'text-slate-800 group-hover:text-blue-700'}`}>{topic.title}</h3>
+                        <p className="text-xs sm:text-sm text-slate-500">{topic.description}</p>
                         {isSelected && (
                           <Badge className="mt-2 bg-blue-600">Selected</Badge>
                         )}
@@ -545,24 +538,19 @@ export default function PatientEducationHub() {
 
                   <div>
                     <Label className="text-sm">Patient (Optional)</Label>
-                    <Select value={patientId} onValueChange={(value) => {
-                      setPatientId(value);
-                      const patient = patients.find(p => p.id === value);
-                      if (patient?.email) {
-                        setPatientEmail(patient.email);
-                      }
-                    }}>
-                      <SelectTrigger className="mt-2 h-11 touch-target">
-                        <SelectValue placeholder="Select patient..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {patients.map(patient => (
-                          <SelectItem key={patient.id} value={patient.id}>
-                            {patient.first_name} {patient.last_name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <SearchablePatientSelect
+                      className="mt-2"
+                      patients={patients}
+                      value={patientId}
+                      onValueChange={(value) => {
+                        setPatientId(value);
+                        const patient = patients.find(p => p.id === value);
+                        if (patient?.email) {
+                          setPatientEmail(patient.email);
+                        }
+                      }}
+                      placeholder="Select patient..."
+                    />
                   </div>
 
                   <div>

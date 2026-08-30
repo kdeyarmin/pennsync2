@@ -18,9 +18,13 @@ import {
   Redo
 } from "lucide-react";
 import { toast } from "sonner";
+import { isSafeExternalUrl } from "@/components/utils/security";
 
 // Use unpkg CDN to reliably load the worker without Vite import issues
 pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
+
+const isSafePdfUrl = (url) =>
+  typeof url === "string" && (url.startsWith("blob:") || isSafeExternalUrl(url));
 
 export default function PDFEditor({ pdfUrl, onSave }) {
   const canvasRef = useRef(null);
@@ -42,6 +46,11 @@ export default function PDFEditor({ pdfUrl, onSave }) {
 
   const loadPDF = useCallback(async () => {
     setIsLoading(true);
+    if (!isSafePdfUrl(pdfUrl)) {
+      toast.error("Blocked unsafe PDF URL");
+      setIsLoading(false);
+      return;
+    }
     try {
       const loadingTask = pdfjsLib.getDocument(pdfUrl);
       const pdf = await loadingTask.promise;
@@ -75,20 +84,21 @@ export default function PDFEditor({ pdfUrl, onSave }) {
     annotations
       .filter(ann => ann.page === currentPage)
       .forEach(ann => {
+        // Annotations are stored in PDF-point space; scale to canvas pixels for display.
         if (ann.type === 'text') {
           context.font = `${ann.fontSize || 16}px Arial`;
           context.fillStyle = ann.color;
-          context.fillText(ann.text, ann.x, ann.y);
+          context.fillText(ann.text, ann.x * scale, ann.y * scale);
         } else if (ann.type === 'highlight') {
           context.fillStyle = ann.color + '40';
-          context.fillRect(ann.x, ann.y, ann.width, ann.height);
+          context.fillRect(ann.x * scale, ann.y * scale, ann.width * scale, ann.height * scale);
         } else if (ann.type === 'draw') {
           context.strokeStyle = ann.color;
           context.lineWidth = ann.lineWidth || 2;
           context.beginPath();
           ann.path.forEach((point, idx) => {
-            if (idx === 0) context.moveTo(point.x, point.y);
-            else context.lineTo(point.x, point.y);
+            if (idx === 0) context.moveTo(point.x * scale, point.y * scale);
+            else context.lineTo(point.x * scale, point.y * scale);
           });
           context.stroke();
         }
@@ -105,58 +115,69 @@ export default function PDFEditor({ pdfUrl, onSave }) {
     }
   }, [pdfDoc, renderPage]);
 
-  const handleCanvasClick = (e) => {
+  const getCanvasPoint = (e) => {
     const rect = canvasRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    if (tool === 'text') {
-      const text = prompt('Enter text:');
-      if (text) {
-        addAnnotation({
-          type: 'text',
-          text,
-          x,
-          y,
-          color,
-          fontSize: 16,
-          page: currentPage
-        });
-      }
-    }
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    // Store in PDF-point space (canvas renders at `scale`) so saved coords match
+    // the backend, which applies annotation.x/y directly as PDF points.
+    return {
+      x: (clientX - rect.left) / scale,
+      y: (clientY - rect.top) / scale,
+    };
   };
 
-  const handleMouseDown = (e) => {
+  const [textDraft, setTextDraft] = useState(null); // { x, y } when placing text
+
+  const handleCanvasClick = (e) => {
+    if (tool !== 'text') return;
+    const { x, y } = getCanvasPoint(e);
+    setTextDraft({ x, y, value: '' });
+  };
+
+  const commitTextDraft = () => {
+    if (!textDraft?.value?.trim()) {
+      setTextDraft(null);
+      return;
+    }
+    addAnnotation({
+      type: 'text',
+      text: textDraft.value.trim(),
+      x: textDraft.x,
+      y: textDraft.y,
+      color,
+      fontSize: 16,
+      page: currentPage
+    });
+    setTextDraft(null);
+  };
+
+  const handlePointerDown = (e) => {
     if (tool !== 'draw' && tool !== 'highlight') return;
-    
-    const rect = canvasRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    
+    e.preventDefault?.();
+    const { x, y } = getCanvasPoint(e);
     setIsDrawing(true);
     setCurrentPath([{ x, y }]);
   };
 
-  const handleMouseMove = (e) => {
+  const handlePointerMove = (e) => {
     if (!isDrawing) return;
-    
-    const rect = canvasRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    
+    e.preventDefault?.();
+    const { x, y } = getCanvasPoint(e);
+
     setCurrentPath(prev => [...prev, { x, y }]);
-    
-    // Live preview
+
+    // Live preview (draw in canvas-pixel space).
     const context = canvasRef.current.getContext('2d');
     if (tool === 'draw') {
       context.strokeStyle = color;
       context.lineWidth = 2;
-      context.lineTo(x, y);
+      context.lineTo(x * scale, y * scale);
       context.stroke();
     }
   };
 
-  const handleMouseUp = () => {
+  const handlePointerUp = () => {
     if (!isDrawing) return;
     
     setIsDrawing(false);
@@ -311,16 +332,36 @@ export default function PDFEditor({ pdfUrl, onSave }) {
         </div>
 
         {/* Canvas */}
-        <div className="border rounded-lg overflow-auto bg-slate-100 p-4" style={{ maxHeight: '600px' }}>
+        <div className="border rounded-lg overflow-auto bg-slate-100 p-4 relative" style={{ maxHeight: '600px' }}>
           <canvas
             ref={canvasRef}
             onClick={handleCanvasClick}
-            onMouseDown={handleMouseDown}
-            onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
-            onMouseLeave={handleMouseUp}
-            className="mx-auto bg-white shadow-lg cursor-crosshair"
+            onMouseDown={handlePointerDown}
+            onMouseMove={handlePointerMove}
+            onMouseUp={handlePointerUp}
+            onMouseLeave={handlePointerUp}
+            onTouchStart={handlePointerDown}
+            onTouchMove={handlePointerMove}
+            onTouchEnd={handlePointerUp}
+            className="mx-auto bg-white shadow-lg cursor-crosshair touch-none"
           />
+          {textDraft && (
+            <div className="absolute inset-x-4 bottom-4 flex gap-2 items-center bg-white/95 border border-slate-200 rounded-lg p-2 shadow-md">
+              <Input
+                autoFocus
+                value={textDraft.value}
+                onChange={(e) => setTextDraft((d) => ({ ...d, value: e.target.value }))}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') commitTextDraft();
+                  if (e.key === 'Escape') setTextDraft(null);
+                }}
+                placeholder="Type annotation text…"
+                className="flex-1"
+              />
+              <Button size="sm" onClick={commitTextDraft}>Add</Button>
+              <Button size="sm" variant="outline" onClick={() => setTextDraft(null)}>Cancel</Button>
+            </div>
+          )}
         </div>
 
         {/* Page Navigation */}

@@ -1,5 +1,42 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
+// <<<BEGIN SHARED HELPER: schedulerAuth — generated, edit base44/_shared/backendHelpers.mjs>>>
+const SCHEDULER_SECRET_HEADER = 'x-internal-secret';
+function isSchedulerAdmin(user) {
+  return !!user && (
+    user.role === 'admin' || user.account_type === 'agency_admin' ||
+    user.account_type === 'super_admin'
+  );
+}
+// Constant-time string compare for the shared-secret check (mirrors
+// createTelehealthToken's timingSafeEqual). A plain === short-circuits on the
+// first differing character, so response timing could leak how much of the
+// secret matched. Dependency-free char-code XOR so the identical source runs
+// under Deno (consumers) and Node (tests).
+function timingSafeEqualStr(a, b) {
+  if (typeof a !== 'string' || typeof b !== 'string' || a.length !== b.length) return false;
+  let mismatch = 0;
+  for (let i = 0; i < a.length; i++) mismatch |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return mismatch === 0;
+}
+function getSchedulerAuthError(req, user) {
+  if (isSchedulerAdmin(user)) return null;
+  const expectedSecret = String(Deno.env.get('INTERNAL_FN_SECRET') || '').trim();
+  if (!expectedSecret) {
+    return Response.json(
+      { error: 'Server misconfigured: INTERNAL_FN_SECRET is required for scheduled/internal functions' },
+      { status: 500 },
+    );
+  }
+  const providedSecret = String(req.headers.get(SCHEDULER_SECRET_HEADER) || '').trim();
+  if (timingSafeEqualStr(providedSecret, expectedSecret)) return null;
+  return Response.json(
+    { error: user ? 'Forbidden: admin or scheduler secret required' : 'Unauthorized: scheduler secret required' },
+    { status: user ? 403 : 401 },
+  );
+}
+// <<<END SHARED HELPER: schedulerAuth>>>
+
 /**
  * redriveFailedSms — cron "outbox" that re-sends outbound texts which Telnyx
  * reported as failed for a TRANSIENT reason (timeout / network / 429 / 5xx).
@@ -28,7 +65,11 @@ const TRANSIENT_FAILURE_PATTERNS = [
   /connection/i, /EAI_AGAIN/i, /ECONN/i, /ETIMEDOUT/i, /socket/i,
 ];
 const PERMANENT_FAILURE_PATTERNS = [
-  /opted out/i, /opt.?out/i, /unsubscrib/i, /invalid/i, /\b(400|401|403|404|422)\b/,
+  // "invalid" scoped to a number/destination context so transient gateway
+  // errors like "Invalid response from Telnyx API (502)" still re-drive.
+  /opted out/i, /opt.?out/i, /unsubscrib/i,
+  /invalid\W*(to\b|number|destination|phone|recipient|address|msisdn)/i,
+  /\b(400|401|403|404|422)\b/,
   /blocked/i, /blacklist/i, /not configured/i, /disabled/i, /too long/i, /consent/i,
 ];
 function isTransientFailureReason(reason) {
@@ -51,8 +92,26 @@ function shouldRedriveSms(row, now = Date.now(), maxAttempts = 4, baseGapMs = 60
   return true;
 }
 
-async function getAgencyConfig(base44) {
-  const settings = await base44.asServiceRole.entities.AgencySettings.list('-created_date', 1).catch(() => []);
+async function getAgencyConfig(base44, agencyHint) {
+  // Prefer the nurse/agency settings row when multi-tenant rows exist.
+  let settings = [];
+  if (agencyHint) {
+    settings = await base44.asServiceRole.entities.AgencySettings
+      .filter({ agency_code: agencyHint }, '-created_date', 1)
+      .catch(() => []);
+    if (!settings?.length) {
+      settings = await base44.asServiceRole.entities.AgencySettings
+        .filter({ office_name: agencyHint }, '-created_date', 1)
+        .catch(() => []);
+    }
+  }
+  if (!settings?.length) {
+    const newest = await base44.asServiceRole.entities.AgencySettings.list('-created_date', 5).catch(() => []);
+    if ((newest || []).length > 1) {
+      return { settings: {}, smsEnabled: false, missingAgencySettings: true };
+    }
+    settings = (newest || []).slice(0, 1);
+  }
   const s = settings[0] || {};
   return {
     settings: s,
@@ -60,29 +119,59 @@ async function getAgencyConfig(base44) {
   };
 }
 
-/**
- * Resolve Telnyx credentials: prefer env vars, then the in-app IntegrationSecret
- * row with provider 'telnyx'. Either path configures the integration, so the
- * Base44 dashboard env is optional.
- */
+// <<<BEGIN SHARED HELPER: resolveTelnyxCreds — generated, edit base44/_shared/backendHelpers.mjs>>>
 async function resolveTelnyxCreds(base44) {
   const pick = (v) => (v && String(v).trim() ? String(v).trim() : null);
-  let apiKey = pick(Deno.env.get('TELNYX_API_KEY'));
-  let publicKey = pick(Deno.env.get('TELNYX_PUBLIC_KEY'));
-  let messagingProfileId = pick(Deno.env.get('TELNYX_MESSAGING_PROFILE_ID'));
-  let voiceConnectionId = pick(Deno.env.get('TELNYX_VOICE_CONNECTION_ID')) || pick(Deno.env.get('TELNYX_CONNECTION_ID'));
-  let faxConnectionId = pick(Deno.env.get('TELNYX_FAX_CONNECTION_ID'));
+  let record = null;
+  let readError = null;
   try {
-    const rows = await base44.asServiceRole.entities.IntegrationSecret.filter({ provider: 'telnyx' });
-    const rec = rows?.[0] || {};
-    if (!apiKey) apiKey = pick(rec.api_key);
-    if (!publicKey) publicKey = pick(rec.public_key);
-    if (!messagingProfileId) messagingProfileId = pick(rec.messaging_profile_id);
-    if (!voiceConnectionId) voiceConnectionId = pick(rec.voice_connection_id);
-    if (!faxConnectionId) faxConnectionId = pick(rec.fax_connection_id);
-  } catch { /* ignore */ }
-  return { apiKey, publicKey, messagingProfileId, voiceConnectionId, faxConnectionId };
+    const rows = await base44.asServiceRole.entities.IntegrationSecret
+      .filter({ provider: 'telnyx' }, '-updated_date', 5000);
+    const list = Array.isArray(rows) ? rows : [];
+    // Deterministic row selection. This read used to be unsorted with no is_active
+    // filter and took rows[0], and saveTelnyxSecret picks from the same unordered
+    // query — so with two telnyx rows the admin could be writing one row while the
+    // senders read the other, and re-entering the key could never fix it.
+    record = list.find((r) => r && r.is_active === true && pick(r.api_key))
+      || list.find((r) => r && pick(r.api_key))
+      || list[0]
+      || null;
+  } catch (err) {
+    // Do NOT collapse this into "not configured". A failed read (this invocation
+    // path carries no service token, entity 404, 401/403, rate limit, platform
+    // blip) is a completely different problem from an unconfigured integration,
+    // and reporting them identically is what sent operators chasing a credential
+    // they had already entered correctly.
+    readError = (err && err.message) ? String(err.message) : 'IntegrationSecret read failed';
+    // The catch used to be bare, so an unreadable credential row left no
+    // server-side breadcrumb at all — the only signal was a misleading
+    // "not configured" reply. Log it; unattended runs have nowhere else to say so.
+    console.error('resolveTelnyxCreds: could not read the Telnyx IntegrationSecret row:', readError);
+  }
+  const rec = record || {};
+  return {
+    apiKey: pick(rec.api_key),
+    publicKey: pick(rec.public_key),
+    messagingProfileId: pick(rec.messaging_profile_id),
+    voiceConnectionId: pick(rec.voice_connection_id),
+    faxConnectionId: pick(rec.fax_connection_id),
+    record,
+    readError,
+  };
 }
+
+// Build the caller-facing message for a missing Telnyx credential. Distinguishing
+// "could not read" from "not stored" is the whole point: the first is not fixed by
+// entering a key, and telling an admin to enter one is what caused two reverted
+// env-fallback regressions.
+function telnyxCredsMessage(creds, what) {
+  const label = what || 'credentials';
+  if (creds && creds.readError) {
+    return `Could not read Telnyx ${label} — the stored-credential lookup failed (${creds.readError}). This is NOT a missing key, so re-entering it will not help. Retry; if it persists, this function is running without service-role access to IntegrationSecret.`;
+  }
+  return `Telnyx ${label} not configured — add the API key in Admin › Telnyx (it is stored on the IntegrationSecret row; TELNYX_* environment variables are not read).`;
+}
+// <<<END SHARED HELPER: resolveTelnyxCreds>>>
 
 async function sendTelnyx(apiKey, messagingProfileId, from, to, body, webhookUrl) {
   const url = `https://api.telnyx.com/v2/messages`;
@@ -233,7 +322,7 @@ const AREA_CODE_TIMEZONE = {
   561: "America/New_York",
   562: "America/Los_Angeles",
   563: "America/Chicago",
-  564: "America/New_York",
+  564: "America/Los_Angeles",
   567: "America/New_York",
   570: "America/New_York",
   571: "America/New_York",
@@ -376,6 +465,15 @@ const AREA_CODE_TIMEZONE = {
   989: "America/New_York",
 };
 // <<<END SHARED HELPER: areaCodeTimezone>>>
+
+// <<<BEGIN SHARED HELPER: requireActiveUser — generated, edit base44/_shared/backendHelpers.mjs>>>
+const isDeactivatedUser = (u) => !!u && u.is_active === false;
+const DEACTIVATED_USER_RESPONSE = () => Response.json(
+  { error: 'Unauthorized - account is deactivated' },
+  { status: 403 },
+);
+// <<<END SHARED HELPER: requireActiveUser>>>
+
 function tzForNumber(raw) {
   const d = String(raw || '').replace(/[^\d]/g, '');
   const ten = d.length === 11 && d.startsWith('1') ? d.slice(1) : d;
@@ -415,36 +513,55 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
 
     // Authorization: privileged cron job (service-role reads/writes + billable
-    // Telnyx re-sends, no end user). Opt-in lockdown mirroring pollFaxStatuses —
-    // a real scheduler runs unauthenticated and still passes while no secret is
-    // configured; once INTERNAL_FN_SECRET is set it must present the header, and
-    // a logged-in non-admin is always rejected.
+    // Telnyx re-sends, no end user). A real scheduler runs unauthenticated and
+    // passes; a logged-in non-admin is always rejected.
     const me = await base44.auth.me().catch(() => null);
-    const isAdmin = me?.role === 'admin';
-    const internalSecret = Deno.env.get('INTERNAL_FN_SECRET');
-    if (internalSecret) {
-      if (!isAdmin && req.headers.get('x-internal-secret') !== internalSecret) {
-        return Response.json({ error: 'Forbidden' }, { status: 403 });
-      }
-    } else if (me && !isAdmin) {
-      return Response.json({ error: 'Forbidden: admin access required' }, { status: 403 });
-    }
+    const authError = getSchedulerAuthError(req, me);
+    if (authError) return authError;
+    if (isDeactivatedUser(me)) return DEACTIVATED_USER_RESPONSE();
 
-    const { apiKey, messagingProfileId } = await resolveTelnyxCreds(base44);
-    const { settings, smsEnabled } = await getAgencyConfig(base44);
+    const telnyxCreds = await resolveTelnyxCreds(base44);
+
+    const { apiKey, messagingProfileId } = telnyxCreds;
     const runId = crypto.randomUUID();
     const now = Date.now();
     // Reconcile terminal delivery status via the DLR webhook (mirrors sendSms) —
     // without it a redriven message that later fails delivery is never retried
     // again and never surfaces a failed-delivery notification.
-    const functionsBaseUrl = (Deno.env.get('FUNCTIONS_BASE_URL') || '').trim().replace(/\/+$/, '');
+    // Derive the functions base from this request's own URL — every backend
+    // function (including handleTelnyxStatusWebhook) is served from the same
+    // base, so the status-webhook peer is one path segment over. Replaces the
+    // retired FUNCTIONS_BASE_URL secret; non-https (local dev) derives nothing.
+    const functionsBaseUrl = (() => {
+      try {
+        const u = new URL(req.url);
+        return u.protocol === 'https:' ? (u.origin + u.pathname).replace(/\/+$/, '').replace(/\/[^/]+$/, '') : '';
+      } catch { return ''; }
+    })();
     const statusCallback = functionsBaseUrl ? `${functionsBaseUrl}/handleTelnyxStatusWebhook` : undefined;
 
     const result = { scanned: 0, redriven: 0, recovered: 0, failed: 0, skipped: 0 };
 
-    if (!apiKey || smsEnabled === false) {
-      return Response.json({ success: true, ...result, note: 'Telnyx SMS not configured or disabled — nothing redriven.' });
+    if (!apiKey) {
+      return Response.json({ success: true, ...result, note: 'Telnyx SMS not configured — nothing redriven.' });
     }
+
+    // Per-nurse agency settings (cached) so quiet-hours / sms_enabled from one
+    // tenant cannot suppress or allow redrives for another.
+    const agencyConfigCache = new Map();
+    const configForNurse = async (nurseEmail) => {
+      let agencyName = '';
+      if (nurseEmail) {
+        const [nurse] = await base44.asServiceRole.entities.User
+          .filter({ email: nurseEmail }, undefined, 1).catch(() => []);
+        agencyName = nurse?.agency_name || '';
+      }
+      const key = agencyName || '__default__';
+      if (agencyConfigCache.has(key)) return agencyConfigCache.get(key);
+      const cfg = await getAgencyConfig(base44, agencyName);
+      agencyConfigCache.set(key, cfg);
+      return cfg;
+    };
 
     const failedRows = await base44.asServiceRole.entities.SmsMessage
       .filter({ status: 'failed', direction: 'outbound' }, '-created_date', BATCH_LIMIT).catch(() => []);
@@ -452,21 +569,23 @@ Deno.serve(async (req) => {
 
     for (const row of failedRows) {
       if (!shouldRedriveSms(row, now)) continue;
-      // Opt-out can have changed since the failure — re-check, fail closed.
-      let optedOut = true;
+      const { settings, smsEnabled } = await configForNurse(row.nurse_email || row.created_by);
+      if (smsEnabled === false) { result.skipped++; continue; }
+      // Consent can have changed since the failure — re-check, require opted_in.
+      let allowed = false;
       try {
         const consents = await base44.asServiceRole.entities.SmsConsent
           .filter({ phone_e164: row.to_number }, '-captured_at', 1);
-        optedOut = consents[0]?.consent_status === 'opted_out';
+        allowed = consents[0]?.consent_status === 'opted_in';
       } catch {
-        optedOut = true;
+        allowed = false;
       }
-      if (optedOut) continue;
+      if (!allowed) continue;
 
       // TCPA quiet hours (recipient timezone): a text that failed during the day
       // must not be redriven into the recipient's quiet hours. Skip for now; a
       // later run during allowed hours will pick it up.
-      if (settings?.tcpa_quiet_hours_enabled === true) {
+      if (settings?.tcpa_quiet_hours_enabled !== false) {
         const q = quietHoursCheck(row.to_number, new Date(), settings);
         if (!q.allowed) { result.skipped++; continue; }
       }
@@ -525,6 +644,7 @@ Deno.serve(async (req) => {
         provider_message_id: resp.data?.data?.id || row.provider_message_id || null,
         status: mappedStatus,
         failure_reason: null,
+        failure_notified: false,
         client_message_id: clientMessageId,
         redrive_claimed_by: null,
       }).catch(() => {});
@@ -542,6 +662,6 @@ Deno.serve(async (req) => {
     return Response.json({ success: true, ...result, checked_at: new Date(now).toISOString() });
   } catch (error) {
     console.error('redriveFailedSms error:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
 });

@@ -45,21 +45,13 @@ only presence + the last 4 characters are shown. Functions:
 - `getTelnyxSecretStatus` — read whether each value is configured (no secrets returned).
 - `testTelnyxConnection` — read-only readiness report + a live `/v2/whoami` probe.
 
-### Option B — dashboard env (takes precedence)
+### Dashboard-env overrides — retired
 
-Set as backend function secrets (see `.env.example`). They are **not** `VITE_*`
-and must never reach the browser.
-
-| Secret | Purpose |
-|---|---|
-| `TELNYX_API_KEY` | Telnyx API key (starts with `KEY`) — authenticates all four channels |
-| `TELNYX_PUBLIC_KEY` | Ed25519 webhook **public** key (base64) — verifies inbound webhooks |
-| `TELNYX_MESSAGING_PROFILE_ID` | Messaging Profile id for outbound SMS/MMS |
-| `TELNYX_VOICE_CONNECTION_ID` | Call Control Application connection id (alias: `TELNYX_CONNECTION_ID`) |
-| `TELNYX_FAX_CONNECTION_ID` | Programmable Fax connection id |
-| `TELNYX_FAX_NUMBER` | E.164 Telnyx fax number on the fax connection |
-
-Env values override the in-app `IntegrationSecret` values when both are set.
+The `TELNYX_*` dashboard-env vars (`TELNYX_API_KEY`, `TELNYX_PUBLIC_KEY`,
+`TELNYX_MESSAGING_PROFILE_ID`, `TELNYX_VOICE_CONNECTION_ID` /
+`TELNYX_CONNECTION_ID`, `TELNYX_FAX_CONNECTION_ID`, `TELNYX_FAX_NUMBER`) are no
+longer read. The in-app `IntegrationSecret` row (plus `AgencySettings` for the
+office fax/main numbers) is the single source of Telnyx config.
 
 ## 3. Webhooks
 
@@ -71,15 +63,16 @@ https://<your-functions-base>/handleTelnyxStatusWebhook
 ```
 
 Outbound sends/calls also pass a per-request `webhook_url` pointing at the same
-function when `FUNCTIONS_BASE_URL` is set, so delivery/status updates flow back
-even before you finish the portal-level webhook configuration.
+function (derived automatically from each function's own request URL), so
+delivery/status updates flow back even before you finish the portal-level
+webhook configuration.
 
 ### Signature verification (fail-closed)
 
 `handleTelnyxStatusWebhook` verifies Telnyx's **Ed25519** signature:
 
 - signed message = `` `${telnyx-timestamp}|${rawBody}` ``
-- header `telnyx-signature-ed25519` (base64) verified against `TELNYX_PUBLIC_KEY`
+- header `telnyx-signature-ed25519` (base64) verified against the in-app Ed25519 public key
 - the `telnyx-timestamp` must be within a 5-minute replay window
 
 A webhook without a valid signature, or with a stale timestamp, is rejected `401`.
@@ -106,12 +99,17 @@ Resilience built in:
 - `callCommand` returns `{ ok, status }`; a **failed transfer falls back** to a
   spoken apology + `hangup` (and, for the outbound bridge, marks the `CallLog`
   failed) rather than leaving the caller/nurse on dead air.
-- Voicemail recording is bounded (`max_length_secs`) and **transcribed**
-  (`transcription_start` → `call.transcription` events append to the `CallLog`,
-  setting `has_voicemail` and surfacing a transcript preview in the notification).
+- Voicemail recording is bounded (`max_length`) and **transcribed**
+  (`transcription_start` with `transcription_engine_config.language` →
+  `call.transcription` events append to the `CallLog`, setting `has_voicemail`
+  and surfacing a transcript preview in the notification).
+- Ringdown advances on Telnyx `hangup_cause` values verified against the Call
+  Control HangupCause enum: `no_answer`, `user_busy`, `call_rejected`,
+  `timeout`, `not_found`, `originator_cancel` (see `src/components/voice/onCall.js`).
 
-> Call Control action/field names are annotated with `TODO(verify)` in the
-> webhook and should be confirmed against your live Telnyx account during rollout.
+> Call Control *action path* URLs should still be smoke-tested against your live
+> Telnyx account during rollout; hangup_cause / record_start / transcription_start
+> field names are pinned to the published Telnyx v2 docs/SDK.
 
 **MMS:** `sendSms` accepts an optional `media_urls` array (up to 10 `https` URLs);
 when present, Telnyx sends an MMS. Non-https or oversized payloads are rejected
@@ -142,10 +140,35 @@ using the same guest-token / staff authorization model as before. The client
 available number from the pool. (Or set them individually.) Add numbers to the
 pool with the in-app search/buy (`searchPurchaseTelnyxNumbers`).
 
-**Fax is shared.** Everyone faxes from the single office fax number
-(`AgencySettings.office_fax_number_e164`, else `TELNYX_FAX_NUMBER`), so the office
-number is what recipients see and reply to — **incoming faxes go straight to the
-office**, never to an individual.
+**Fax: one blind outbound line, masked as the office machine.** All outbound
+faxes TRANSMIT from a single Telnyx fax-capable number
+(`AgencySettings.outbound_fax_number_e164`) but are PRESENTED to recipients
+under the office fax machine's number (`AgencySettings.office_fax_number_e164`,
+e.g. `+17244650444`): the office number rides on the Telnyx
+`from_display_name` caller-id name and on every cover sheet, so **fax replies
+are dialed straight to the physical office machine** — the app expects no
+inbound faxes. The office number does not need to be a Telnyx number.
+
+- Any stray fax dialed to the blind outbound line (e.g. a machine auto-redialing
+  the transmitting number) is **passed straight through to the office machine**
+  by `handleTelnyxStatusWebhook`, with an at-most-once `IncomingFax` record as
+  the audit/idempotency anchor. In-app ingestion (OCR + referral matching) is
+  opt-in via `AgencySettings.fax_receiving_enabled` and off by default.
+- Legacy fallback: with no outbound line configured, faxes transmit from the
+  office fax number itself (which must then be a Telnyx number).
+
+**Provisioning the outbound fax line** (requires the Programmable Fax
+connection id in the Telnyx Credentials panel):
+- *Buy it in-app:* Number Pool → **Find & buy numbers** → choose **Outbound fax
+  line**. The search filters fax-capable numbers; buying attaches the number to
+  your Programmable Fax connection and stores it as the outbound fax line.
+- *Already own the number?* Enter it as the outbound fax line and click
+  **Provision fax** — the app looks the number up in your Telnyx account,
+  re-points its connection at the Programmable Fax connection, and saves it.
+  (Backed by `searchPurchaseTelnyxNumbers` `purpose: 'fax'` / `provision_fax`.)
+- The office fax, outbound fax, and main office numbers are **reserved**:
+  assignment (manual, pool, or auto-assign) refuses to hand them out as
+  personal work numbers.
 
 **The duty toggle (default OFF).** A user is reachable on their work number ONLY
 while they've toggled **On Duty** (DutyStatusCard). They flip it on in the morning;
@@ -195,6 +218,12 @@ ring timeout is ~20s. (`AgencySettings.ringdown_max` caps the number of targets.
 **A2P 10DLC + consent ledger** (Super Admin): the A2P panel records your
 registration status/brand/campaign (`a2p_10dlc_status`, `a2p_brand_id`,
 `a2p_campaign_id`) — US 10DLC registration is required or carriers filter texts.
+With `a2p_campaign_id` saved, every SMS-capable number bought in-app is
+**automatically enrolled in that campaign** at purchase time (Telnyx
+`POST /10dlc/phone_number_campaigns`); an enrollment failure surfaces as a
+warning toast, never a failed purchase. Numbers added manually (bought in the
+portal) must be enrolled in the portal — the in-app auto-enroll only runs on
+in-app purchases. Fax lines don't text and are never enrolled.
 The consent ledger (`manageSmsConsent`) browses `SmsConsent`, shows opted-in/out
 counts, supports a manual opt-out / opt-back-in, and CSV export.
 
@@ -205,7 +234,13 @@ logic is the unit-tested `src/components/admin/commsDashboard.js`.
 
 ## 8. Go-live verification (live smoke test)
 
-Before launch, validate a real Telnyx account end-to-end:
+Before launch, validate a real Telnyx account end-to-end.
+
+> These `TELNYX_*` variables configure the **local `tools-telnyx-live-smoke.mjs`
+> Node CLI only** — they are how you hand credentials to a script on your own
+> machine. They are **not** app configuration: no deployed Base44 function reads
+> a `TELNYX_*` environment variable, and setting them in the Base44 dashboard
+> does nothing. The app reads Admin → Telnyx.
 
 ```
 TELNYX_API_KEY=KEY... TELNYX_PUBLIC_KEY=... \

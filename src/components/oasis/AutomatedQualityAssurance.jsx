@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useAICall } from "@/hooks/useAICall";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,6 +18,8 @@ import {
   BookOpen,
   Target
 } from "lucide-react";
+import { severityBadgeClass } from "@/lib/severityStyles";
+import { isSafeExternalUrl } from "@/components/utils/security";
 
 export default function AutomatedQualityAssurance({
   oasisData,
@@ -26,10 +28,15 @@ export default function AutomatedQualityAssurance({
   autoRun = false,
   onQAComplete
 }) {
-  const ai = useAICall();
+  // Auto-fired analyses are background work in the app-wide AI budget, so
+  // several such cards on one page queue instead of hitting the provider at
+  // once. A run the user CLICKED passes interactive priority per call and
+  // takes the reserved slot instead of queueing behind that background work.
+  const ai = useAICall({ priority: 'background' });
   const [qaResults, setQaResults] = useState(null);
+  const autoRanRef = useRef(false);
 
-  const runQualityAssurance = useCallback(async () => {
+  const runQualityAssurance = useCallback(async ({ interactive = false } = {}) => {
     if (!oasisData) return;
 
     try {
@@ -95,7 +102,7 @@ For each failure, provide:
 - Recommended fix`;
 
       const result = await ai.run({
-        model: "claude_opus_4_8",
+        model: "automatic",
         prompt,
         response_json_schema: {
           type: "object",
@@ -191,7 +198,7 @@ For each failure, provide:
             qa_summary: { type: "string" }
           }
         }
-      });
+      }, { priority: interactive ? 'interactive' : 'background' });
 
       setQaResults(result);
       if (onQAComplete) {
@@ -204,21 +211,17 @@ For each failure, provide:
   // eslint-disable-next-line react-hooks/exhaustive-deps -- AI hook object is intentionally omitted; its run() is stable, and including it would re-fire the call every render
   }, [oasisData, patientData, clinicalNotes, onQAComplete]);
 
+  // Auto-run once per loaded assessment. Guard on !qaResults && !ai.loading (like
+  // AIComplianceAuditor) so the expensive AI QA call doesn't re-fire every time the
+  // parent re-renders: callers pass an inline onQAComplete, which makes
+  // runQualityAssurance a new identity each parent render, and without this guard
+  // the effect would re-run and overwrite results / spam the model on each one.
   useEffect(() => {
-    if (autoRun && oasisData) {
+    if (autoRun && oasisData && !qaResults && !ai.loading && !autoRanRef.current) {
+      autoRanRef.current = true;
       runQualityAssurance();
     }
-  }, [autoRun, oasisData?.id, oasisData, runQualityAssurance]);
-
-  const getSeverityColor = (severity) => {
-    switch (severity) {
-      case 'critical': return 'bg-red-100 text-red-800 border-red-300';
-      case 'high': return 'bg-orange-100 text-orange-800 border-orange-300';
-      case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-300';
-      case 'low': return 'bg-blue-100 text-blue-800 border-blue-300';
-      default: return 'bg-slate-100 text-slate-800 border-slate-300';
-    }
-  };
+  }, [autoRun, oasisData?.id, oasisData, qaResults, ai.loading, runQualityAssurance]);
 
   return (
     <Card className="border-2 border-indigo-300 bg-gradient-to-br from-indigo-50 to-blue-50">
@@ -230,7 +233,7 @@ For each failure, provide:
             {ai.loading && <Loader2 className="w-4 h-4 animate-spin text-indigo-500" />}
           </CardTitle>
           {!qaResults && !ai.loading && (
-            <Button onClick={runQualityAssurance} className="bg-indigo-600 hover:bg-indigo-700">
+            <Button onClick={() => runQualityAssurance({ interactive: true })} className="bg-indigo-600 hover:bg-indigo-700">
               <Shield className="w-4 h-4 mr-2" />
               Run QA Checks
             </Button>
@@ -359,7 +362,7 @@ For each failure, provide:
                               <div className="flex-1">
                                 <div className="flex items-center gap-2 mb-1">
                                   <h4 className="font-semibold text-red-900">{error.error_type}</h4>
-                                  <Badge className={getSeverityColor(error.severity)}>
+                                  <Badge className={severityBadgeClass(error.severity)}>
                                     {error.severity}
                                   </Badge>
                                 </div>
@@ -386,11 +389,11 @@ For each failure, provide:
                                 </p>
                                 <p className="text-xs text-indigo-800 mb-1">{error.cms_guideline}</p>
                                 {error.cms_reference_link && (
-                                  <a 
-                                    href={error.cms_reference_link} 
-                                    target="_blank" 
+                                  <a
+                                    href={isSafeExternalUrl(error.cms_reference_link) ? error.cms_reference_link : undefined}
+                                    target="_blank"
                                     rel="noopener noreferrer"
-                                    className="text-xs text-indigo-600 underline hover:text-indigo-800 flex items-center gap-1"
+                                    className="text-xs text-indigo-600 underline hover:text-indigo-700 flex items-center gap-1"
                                   >
                                     <ExternalLink className="w-3 h-3" />
                                     View Official CMS Documentation
@@ -494,11 +497,11 @@ For each failure, provide:
                               </p>
                               <p className="text-xs text-indigo-800 mb-1">{gap.cms_guideline}</p>
                               {gap.cms_reference_link && (
-                                <a 
-                                  href={gap.cms_reference_link} 
-                                  target="_blank" 
+                                <a
+                                  href={isSafeExternalUrl(gap.cms_reference_link) ? gap.cms_reference_link : undefined}
+                                  target="_blank"
                                   rel="noopener noreferrer"
-                                  className="text-xs text-indigo-600 underline hover:text-indigo-800 flex items-center gap-1"
+                                  className="text-xs text-indigo-600 underline hover:text-indigo-700 flex items-center gap-1"
                                 >
                                   <ExternalLink className="w-3 h-3" />
                                   View Official CMS Guideline
@@ -569,7 +572,7 @@ For each failure, provide:
                           <div key={idx} className="bg-white rounded-lg border-2 border-orange-200 p-4">
                             <div className="flex items-center justify-between mb-2">
                               <h4 className="font-semibold text-orange-900">{issue.compliance_area}</h4>
-                              <Badge className={getSeverityColor(issue.severity)}>
+                              <Badge className={severityBadgeClass(issue.severity)}>
                                 {issue.severity}
                               </Badge>
                             </div>
@@ -589,11 +592,11 @@ For each failure, provide:
                                 </p>
                                 <p className="text-xs text-indigo-800 mb-1">{issue.cms_regulation}</p>
                                 {issue.cms_reference_link && (
-                                  <a 
-                                    href={issue.cms_reference_link} 
-                                    target="_blank" 
+                                  <a
+                                    href={isSafeExternalUrl(issue.cms_reference_link) ? issue.cms_reference_link : undefined}
+                                    target="_blank"
                                     rel="noopener noreferrer"
-                                    className="text-xs text-indigo-600 underline hover:text-indigo-800 flex items-center gap-1"
+                                    className="text-xs text-indigo-600 underline hover:text-indigo-700 flex items-center gap-1"
                                   >
                                     <ExternalLink className="w-3 h-3" />
                                     View Official CMS Regulation
@@ -694,7 +697,7 @@ For each failure, provide:
               )}
             </Accordion>
 
-            <Button onClick={runQualityAssurance} variant="outline" className="w-full">
+            <Button onClick={() => runQualityAssurance({ interactive: true })} variant="outline" className="w-full">
               Re-run QA Checks
             </Button>
           </div>

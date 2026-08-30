@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { useScopedPatients } from '@/hooks/useScopedPatients';
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import EmptyState from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -36,22 +38,19 @@ import {
   Flag,
   Loader2,
   Activity,
-  Heart,
-  Pill,
-  TrendingDown,
-  Shield,
-  Users,
-  Zap,
   Eye,
   X,
   Search,
   FileText
 } from "lucide-react";
+import { getAlertIcon, getSeverityColor } from "@/components/alerts/alertPresentation";
+import { buildSafetyHuddle, formatSlaTime } from "@/components/alerts/safetyHuddle";
 import { format, formatDistanceToNow } from "date-fns";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router";
 import { createPageUrl } from "@/utils";
+import { isAdminView } from "@/lib/roles";
 
-export default function PatientAlertsDashboard({ patientId = null, _showAllPatients = true }) {
+export default function PatientAlertsDashboard({ patientId = null }) {
   const [selectedAlert, setSelectedAlert] = useState(null);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   const [resolutionNotes, setResolutionNotes] = useState("");
@@ -60,6 +59,7 @@ export default function PatientAlertsDashboard({ patientId = null, _showAllPatie
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("active");
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   // Fetch current user FIRST — the alerts useMemo below references currentUser
   // and isAdmin, which would hit the temporal dead zone (ReferenceError) if
@@ -69,7 +69,7 @@ export default function PatientAlertsDashboard({ patientId = null, _showAllPatie
     queryFn: () => base44.auth.me()
   });
 
-  const isAdmin = currentUser?.role === 'admin';
+  const isAdmin = isAdminView(currentUser);
 
   // Fetch alerts via a SERVER-SCOPED function so the browser only receives
   // alerts the caller is authorized for (assigned patients, or all for admins).
@@ -77,7 +77,7 @@ export default function PatientAlertsDashboard({ patientId = null, _showAllPatie
   // Keep the ['patientAlerts'] key so the app-wide invalidations (workflow
   // engine, alert analyzers/widgets, risk analyzers) still refresh this view.
   const { data: allAlerts = [], isLoading } = useQuery({
-    queryKey: ['patientAlerts', patientId],
+    queryKey: ['patientAlerts', patientId, 'scoped'],
     queryFn: async () => {
       const res = await base44.functions.invoke('getScopedPatientAlerts', {
         patient_id: patientId || undefined,
@@ -86,38 +86,49 @@ export default function PatientAlertsDashboard({ patientId = null, _showAllPatie
     }
   });
 
-  // Filter alerts to only favorited patients (unless viewing specific patient or admin)
+  // Favorites are a UX narrow, not an access boundary. Match RealTimePatientAlerts:
+  // when the nurse has starred patients, show only those; when they haven't, show
+  // all server-scoped alerts (assigned patients). An empty/missing favorites list
+  // previously short-circuited to [] and hid overdue visits / high-risk alerts.
   const alerts = React.useMemo(() => {
     if (patientId || isAdmin) return allAlerts;
-    if (!currentUser?.favorited_patients) return [];
-    return allAlerts.filter(alert =>
-      currentUser.favorited_patients.some(fav => fav.id === alert.patient_id)
-    );
+    const favoritedIds = (currentUser?.favorited_patients || [])
+      .map((fav) => (typeof fav === 'string' ? fav : fav?.id))
+      .filter(Boolean);
+    if (favoritedIds.length === 0) return allAlerts;
+    return allAlerts.filter((alert) => favoritedIds.includes(alert.patient_id));
   }, [allAlerts, patientId, currentUser, isAdmin]);
 
-  // Fetch patients for lookup
-  const { data: patients = [] } = useQuery({
-    queryKey: ['patients'],
-    queryFn: () => base44.entities.Patient.list('-updated_date', 2000)
-  });
+  // Fetch patients for lookup (agency-scoped for facility admins)
+  const { data: patients = [] } = useScopedPatients({ sort: '-updated_date', limit: 2000 });
 
-  // Fetch clinical events for linking
-  const { data: _clinicalEvents = [] } = useQuery({
-    queryKey: ['clinicalEvents'],
-    queryFn: () => base44.entities.ClinicalEvent.list('-created_date', 200),
-    initialData: []
-  });
+  // (No clinical-event query here: an unused `_clinicalEvents` useQuery used to
+  // bulk-list 200 ClinicalEvent rows — per-patient PHI, across every patient,
+  // and ClinicalEvent carries no RLS policy — then discard the result. The
+  // underscore silenced the unused-variable warning rather than removing the
+  // read. Alerts already arrive patient-scoped from getScopedPatientAlerts.)
 
   const patientMap = patients.reduce((acc, p) => {
     acc[p.id] = p;
     return acc;
   }, {});
 
-  // Update alert mutation
+  // Update alert mutation — routed through updateScopedPatientAlert (not a
+  // direct entity update): PatientAlert's own RLS only allows created_by/admin,
+  // but this dashboard already shows alerts for patients assigned to, not
+  // created by, the caller (via getScopedPatientAlerts above), and a direct
+  // entity write would be silently rejected for those.
   const updateAlertMutation = useMutation({
-    mutationFn: ({ alertId, data }) => base44.entities.PatientAlert.update(alertId, data),
+    mutationFn: ({ alertId, action, resolution_notes }) =>
+      base44.functions.invoke('updateScopedPatientAlert', { alert_id: alertId, action, resolution_notes }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['patientAlerts'] });
+      queryClient.invalidateQueries({ queryKey: ['patientRiskAlerts'] });
+      queryClient.invalidateQueries({ queryKey: ['allPatientRiskAlerts'] });
+      queryClient.invalidateQueries({ queryKey: ['patientActiveAlerts'] });
+      if (patientId) {
+        queryClient.invalidateQueries({ queryKey: ['patientContext', patientId] });
+      }
       setDetailsDialogOpen(false);
       setSelectedAlert(null);
       setResolutionNotes("");
@@ -155,69 +166,23 @@ export default function PatientAlertsDashboard({ patientId = null, _showAllPatie
     low: alerts.filter(a => a.severity === 'low' && isOpen(a)).length
   };
 
+  const safetyHuddle = React.useMemo(() => buildSafetyHuddle(alerts, new Date(), { limit: 3 }), [alerts]);
+
   const handleAcknowledge = (alert) => {
-    updateAlertMutation.mutate({
-      alertId: alert.id,
-      data: {
-        status: 'acknowledged',
-        acknowledged_by: currentUser?.email,
-        acknowledged_at: new Date().toISOString()
-      }
-    });
+    updateAlertMutation.mutate({ alertId: alert.id, action: 'acknowledge' });
   };
 
   const handleFlagUrgent = (alert) => {
-    updateAlertMutation.mutate({
-      alertId: alert.id,
-      data: {
-        flagged_urgent: !alert.flagged_urgent
-      }
-    });
+    updateAlertMutation.mutate({ alertId: alert.id, action: 'toggle_flagged_urgent' });
   };
 
   const handleResolve = () => {
     if (!selectedAlert) return;
-    updateAlertMutation.mutate({
-      alertId: selectedAlert.id,
-      data: {
-        status: 'resolved',
-        resolution_notes: resolutionNotes
-      }
-    });
+    updateAlertMutation.mutate({ alertId: selectedAlert.id, action: 'resolve', resolution_notes: resolutionNotes });
   };
 
   const handleDismiss = (alert) => {
-    updateAlertMutation.mutate({
-      alertId: alert.id,
-      data: { status: 'dismissed' }
-    });
-  };
-
-  const getAlertIcon = (type) => {
-    const icons = {
-      vital_deterioration: Activity,
-      medication_risk: Pill,
-      fall_risk: TrendingDown,
-      readmission_risk: Heart,
-      infection_risk: Shield,
-      symptom_escalation: AlertTriangle,
-      care_gap: Clock,
-      urgent_intervention: Zap,
-      hospice_transition: Heart,
-      caregiver_burnout: Users
-    };
-    const Icon = icons[type] || AlertTriangle;
-    return <Icon className="w-4 h-4" />;
-  };
-
-  const getSeverityColor = (severity) => {
-    switch (severity) {
-      case 'critical': return 'bg-red-600 text-white';
-      case 'high': return 'bg-orange-500 text-white';
-      case 'medium': return 'bg-yellow-500 text-white';
-      case 'low': return 'bg-blue-500 text-white';
-      default: return 'bg-slate-500 text-white';
-    }
+    updateAlertMutation.mutate({ alertId: alert.id, action: 'dismiss' });
   };
 
   const getSeverityBorderColor = (severity) => {
@@ -296,6 +261,55 @@ export default function PatientAlertsDashboard({ patientId = null, _showAllPatie
         </Card>
       </div>
 
+
+      {/* Closed-loop Safety Huddle */}
+      {safetyHuddle.summary.openCount > 0 && (
+        <Card className={`border-l-4 ${safetyHuddle.summary.status === 'escalate' ? 'border-l-red-600' : 'border-l-amber-500'}`}>
+          <CardHeader className="pb-2">
+            <CardTitle className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between text-base">
+              <span className="flex items-center gap-2">
+                <Activity className="w-5 h-5 text-navy-600" />
+                Closed-loop Safety Huddle
+              </span>
+              <div className="flex flex-wrap gap-2">
+                <Badge className={safetyHuddle.summary.status === 'escalate' ? 'bg-red-600 text-white' : 'bg-amber-100 text-amber-800'}>
+                  {safetyHuddle.summary.status === 'escalate' ? 'Escalate now' : 'Huddle needed'}
+                </Badge>
+                <Badge variant="outline">{safetyHuddle.summary.overdueCount} overdue</Badge>
+                <Badge variant="outline">{safetyHuddle.summary.unassignedCount} unassigned</Badge>
+                <Badge variant="outline">{safetyHuddle.summary.unacknowledgedCount} unacknowledged</Badge>
+              </div>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-sm text-slate-600">
+              Prioritized open alerts with owner, acknowledgement, SLA, and next-action gaps so high-risk alerts move from detection to documented resolution.
+            </p>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+              {safetyHuddle.topItems.map((item) => (
+                <div key={item.id || item.title} className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <div>
+                      <p className="text-sm font-semibold text-slate-900 line-clamp-1">{item.title}</p>
+                      <p className="text-xs text-slate-500">{item.owner || 'No owner assigned'}</p>
+                    </div>
+                    <Badge className={getSeverityColor(item.severity)}>{item.severity}</Badge>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5 mb-2">
+                    <Badge variant="outline" className={item.isOverdue ? 'text-red-700 border-red-200' : ''}>
+                      {formatSlaTime(item.minutesUntilDue)}
+                    </Badge>
+                    {item.needsOwner && <Badge className="bg-orange-100 text-orange-800">assign owner</Badge>}
+                    {!item.isAcknowledged && <Badge className="bg-blue-100 text-blue-800">ack needed</Badge>}
+                  </div>
+                  <p className="text-xs text-slate-600">{item.nextAction}</p>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Filters */}
       <Card>
         <CardContent className="p-4">
@@ -363,12 +377,7 @@ export default function PatientAlertsDashboard({ patientId = null, _showAllPatie
               <Loader2 className="w-8 h-8 animate-spin mx-auto text-slate-400" />
             </div>
           ) : filteredAlerts.length === 0 ? (
-            <Card>
-              <CardContent className="p-8 text-center text-slate-500">
-                <BellOff className="w-12 h-12 mx-auto mb-4 text-slate-300" />
-                <p>No alerts found</p>
-              </CardContent>
-            </Card>
+            <EmptyState icon={BellOff} title="No alerts found" description="" />
           ) : (
             <div className="space-y-3">
               {filteredAlerts.map((alert) => {
@@ -567,7 +576,11 @@ export default function PatientAlertsDashboard({ patientId = null, _showAllPatie
                         onClick={() => {
                           const patient = patientMap[selectedAlert.patient_id];
                           if (patient) {
-                            window.open(createPageUrl(`PatientDetails?id=${patient.id}`), '_blank');
+                            // In-app navigation, not window.open: installed
+                            // apps (standalone PWA/TWA) have no "new tab" — a
+                            // _blank open breaks out of the app shell or no-ops.
+                            setDetailsDialogOpen(false);
+                            navigate(createPageUrl(`PatientDetails?id=${patient.id}`));
                           }
                         }}
                       >
@@ -668,7 +681,6 @@ export default function PatientAlertsDashboard({ patientId = null, _showAllPatie
                     </Button>
                     <Button
                       onClick={handleResolve}
-                      className="bg-green-600 hover:bg-green-700"
                     >
                       <CheckCircle2 className="w-4 h-4 mr-1" /> Mark Resolved
                     </Button>

@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>CFBundleDisplayName</key>
+	<string>PennSync</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>$(PRODUCT_NAME)</string>
+	<key>CFBundlePackageType</key>
+	<string>$(PRODUCT_BUNDLE_PACKAGE_TYPE)</string>
+	<key>CFBundleShortVersionString</key>
+	<string>$(MARKETING_VERSION)</string>
+	<key>CFBundleVersion</key>
+	<string>$(CURRENT_PROJECT_VERSION)</string>
+
+	<!--
+	  Camera / microphone usage strings.
+	  These are surfaced by iOS the first time the WKWebView requests
+	  getUserMedia (telehealth video visits, visit audio recording /
+	  Whisper transcription) or the camera-fax document scanner.
+	  App Store review rejects binaries that access these APIs without
+	  a purpose string, so keep them specific to the clinical features.
+	-->
+	<key>NSCameraUsageDescription</key>
+	<string>PennSync uses the camera for telehealth video visits, scanning documents with Camera Fax, and capturing incident or wound photos for the patient chart.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>PennSync uses the microphone for telehealth video visits and to record visit audio for SmartNote clinical documentation and transcription.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>PennSync accesses your photo library so you can attach existing photos of documents, wounds, or incidents to the patient chart and Camera Fax.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>PennSync saves captured document scans and exported files to your photo library when you choose to keep a copy on this device.</string>
+
+	<!-- Uses only Apple's system TLS/HTTPS; no proprietary encryption. -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+
+	<!--
+	  App-Bound Domains. Opting in (together with
+	  limitsNavigationsToAppBoundDomains = true on the
+	  WKWebViewConfiguration) is what enables Service Workers inside the
+	  WKWebView. Main-frame navigation is limited to these domains, which is
+	  safe because WebViewController already sends external main-frame links
+	  to Safari; cross-origin subframes (Supabase previews) are unaffected.
+	  Bare domains cover their subdomains (caremetricai.base44.app, the
+	  base44.com auth/API endpoints).
+	-->
+	<key>WKAppBoundDomains</key>
+	<array>
+		<string>base44.app</string>
+		<string>base44.com</string>
+	</array>
+
+	<!--
+	  Schemes queried via UIApplication.canOpenURL before handing links to
+	  iOS (openExternally in WebViewController). iOS 9+ requires them to be
+	  declared here or canOpenURL always returns false.
+	-->
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>tel</string>
+		<string>mailto</string>
+		<string>sms</string>
+		<string>http</string>
+		<string>https</string>
+	</array>
+
+	<key>UIApplicationSceneManifest</key>
+	<dict>
+		<key>UIApplicationSupportsMultipleScenes</key>
+		<false/>
+		<key>UISceneConfigurations</key>
+		<dict>
+			<key>UIWindowSceneSessionRoleApplication</key>
+			<array>
+				<dict>
+					<key>UISceneConfigurationName</key>
+					<string>Default Configuration</string>
+					<key>UISceneDelegateClassName</key>
+					<string>$(PRODUCT_MODULE_NAME).SceneDelegate</string>
+				</dict>
+			</array>
+		</dict>
+	</dict>
+	<key>UILaunchScreen</key>
+	<dict>
+		<key>UIColorName</key>
+		<string>LaunchBackground</string>
+	</dict>
+	<key>UIRequiredDeviceCapabilities</key>
+	<array>
+		<string>arm64</string>
+	</array>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<key>UISupportedInterfaceOrientations~ipad</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationPortraitUpsideDown</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+</dict>
+</plist>

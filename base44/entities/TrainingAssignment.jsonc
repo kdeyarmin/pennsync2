@@ -166,7 +166,34 @@
       "items": {
         "type": "number"
       },
-      "description": "List of expiration reminder offsets already sent"
+      "description": "Renewal reminder offsets already sent by sendRenewalReminders"
+    },
+    "training_due_offsets_sent": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "description": "Offsets sent by sendTrainingNotifications; separate from reminder_offsets_sent used by sendRenewalReminders"
+    },
+    "reminder_claimed_by": {
+      "type": "string",
+      "description": "Per-run claim token so overlapping training-reminder crons do not double-notify"
+    },
+    "reminder_claimed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When reminder_claimed_by was written"
+    },
+    "expiration_note_offsets_sent": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "description": "Expiration-note offsets already sent by sendExpirationNotifications (own marker so it doesn't collide with sendRenewalReminders)"
+    },
+    "expiration_note_claimed_by": {
+      "type": "string",
+      "description": "Per-run claim token for sendExpirationNotifications before creating in-app notes"
     },
     "completion_date": {
       "type": "string",
@@ -205,6 +232,10 @@
       "type": "string",
       "format": "date-time",
       "description": "When the attempt was submitted"
+    },
+    "certificate_issue_claimed_by": {
+      "type": "string",
+      "description": "Claim token for issueCertificate idempotency. Set before TrainingCertificate.create so concurrent grade/issue paths cannot mint duplicate certificates for the same assignment."
     }
   },
   "required": [

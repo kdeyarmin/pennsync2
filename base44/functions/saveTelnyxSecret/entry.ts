@@ -1,12 +1,21 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
+// <<<BEGIN SHARED HELPER: requireActiveUser — generated, edit base44/_shared/backendHelpers.mjs>>>
+const isDeactivatedUser = (u) => !!u && u.is_active === false;
+const DEACTIVATED_USER_RESPONSE = () => Response.json(
+  { error: 'Unauthorized - account is deactivated' },
+  { status: 403 },
+);
+// <<<END SHARED HELPER: requireActiveUser>>>
+
+
 /**
  * saveTelnyxSecret — super-admin-only. Stores the Telnyx API key (and the
  * optional resource ids used by text / voice / video / fax) on the backend-only
  * IntegrationSecret entity (provider 'telnyx'), so the Telnyx integration can be
- * configured entirely in-app without touching the Base44 dashboard env.
+ * configured entirely in-app without touching dashboard environment variables.
  *
- * Mirrors saveTwilioSecret: every value is written via the service role and is
+ * Every value is written via the service role and is
  * NEVER returned to the client — the response only carries presence + the last 4
  * characters so the UI can confirm what is set.
  *
@@ -24,11 +33,6 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
  * Any omitted optional field is left unchanged; an explicit "" / null clears it.
  */
 
-const SUPER_ADMIN_EMAIL = ((typeof Deno !== 'undefined' && Deno.env.get('SUPER_ADMIN_EMAIL')) || '').trim().toLowerCase() || null;
-
-const sameEmail = (a, b) =>
-  String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase();
-
 const lastFour = (s) => (s.length <= 4 ? s : s.slice(-4));
 
 // Optional string field: present-and-blank/null → clear (''), present → trimmed.
@@ -43,8 +47,9 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    if (isDeactivatedUser(user)) return DEACTIVATED_USER_RESPONSE();
 
-    const isSuperAdmin = (SUPER_ADMIN_EMAIL && sameEmail(user.email, SUPER_ADMIN_EMAIL)) || user.account_type === 'super_admin';
+    const isSuperAdmin = user.account_type === 'super_admin';
     if (!isSuperAdmin) {
       return Response.json({ error: 'Only the super administrator can manage integration secrets.' }, { status: 403 });
     }
@@ -58,10 +63,18 @@ Deno.serve(async (req) => {
     // Optional-only update (e.g. adding a connection id without re-entering the
     // API key). Requires an existing row — the API key must be set first.
     if (!apiKey && hasOptionalOnly) {
+      // Same ordering/selection as resolveTelnyxCreds, and no `.catch(() => [])`:
+      // a failed read must not be reported to the admin as "Set your Telnyx API
+      // key first", which is the message that sends someone to re-enter a key
+      // that was never missing.
       const existing = await base44.asServiceRole.entities.IntegrationSecret
-        .filter({ provider: 'telnyx' })
-        .catch(() => []);
-      if (!existing[0]?.id) {
+        .filter({ provider: 'telnyx' }, '-updated_date', 5000);
+      const rows = Array.isArray(existing) ? existing : [];
+      const target = rows.find((r) => r && r.is_active === true && String(r.api_key || '').trim())
+        || rows.find((r) => r && String(r.api_key || '').trim())
+        || rows[0]
+        || null;
+      if (!target?.id) {
         return Response.json({ error: 'Set your Telnyx API key first.' }, { status: 400 });
       }
       const update = { is_active: true, updated_by_email: user.email };
@@ -69,7 +82,7 @@ Deno.serve(async (req) => {
         const v = optionalField(body, k);
         if (v !== undefined) update[k] = v;
       }
-      const saved = await base44.asServiceRole.entities.IntegrationSecret.update(existing[0].id, update);
+      const saved = await base44.asServiceRole.entities.IntegrationSecret.update(target.id, update);
       await base44.asServiceRole.entities.SecurityLog.create({
         timestamp: new Date().toISOString(),
         user_email: user.email,
@@ -110,13 +123,25 @@ Deno.serve(async (req) => {
       if (v !== undefined) update[k] = v;
     }
 
+    // Read the row the SENDERS will read. This used to be an unsorted query whose
+    // `.catch(() => [])` turned a transient read failure into "no row exists" —
+    // so a blip during a save created a SECOND provider:'telnyx' row. From then on
+    // the admin updated existing[0] while resolveTelnyxCreds read its own rows[0]
+    // from a differently-ordered query, and re-entering the key could never fix
+    // it: the panel echoed the right last-four while every send reported "not
+    // configured". Order and select exactly as resolveTelnyxCreds does, and never
+    // create on a failed read.
     const existing = await base44.asServiceRole.entities.IntegrationSecret
-      .filter({ provider: 'telnyx' })
-      .catch(() => []);
+      .filter({ provider: 'telnyx' }, '-updated_date', 5000);
+    const rows = Array.isArray(existing) ? existing : [];
+    const target = rows.find((r) => r && r.is_active === true && String(r.api_key || '').trim())
+      || rows.find((r) => r && String(r.api_key || '').trim())
+      || rows[0]
+      || null;
 
     let saved;
-    if (existing[0]?.id) {
-      saved = await base44.asServiceRole.entities.IntegrationSecret.update(existing[0].id, update);
+    if (target?.id) {
+      saved = await base44.asServiceRole.entities.IntegrationSecret.update(target.id, update);
     } else {
       saved = await base44.asServiceRole.entities.IntegrationSecret.create(update);
     }
@@ -147,6 +172,6 @@ Deno.serve(async (req) => {
     });
   } catch (error) {
     console.error('saveTelnyxSecret error:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
 });

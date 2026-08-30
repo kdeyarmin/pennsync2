@@ -1,9 +1,18 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 import { PDFDocument, StandardFonts, rgb } from 'npm:pdf-lib@1.17.1';
 
-// SSRF guard: only fetch https URLs on public hosts, never internal IPs /
-// metadata. Set FILE_URL_ALLOWED_HOSTS (comma-separated) to restrict to your
-// storage host(s).
+// <<<BEGIN SHARED HELPER: requireActiveUser — generated, edit base44/_shared/backendHelpers.mjs>>>
+const isDeactivatedUser = (u) => !!u && u.is_active === false;
+const DEACTIVATED_USER_RESPONSE = () => Response.json(
+  { error: 'Unauthorized - account is deactivated' },
+  { status: 403 },
+);
+// <<<END SHARED HELPER: requireActiveUser>>>
+
+// SSRF guard: only fetch https URLs on the app's own storage/app hosts, never
+// internal IPs / metadata. The allowlist is hardcoded (always-on, fail-closed)
+// rather than env-configured; add a host here if file storage ever moves.
+const FILE_URL_ALLOWED_HOSTS = ['qtrypzzcjebvfcihiynt.supabase.co', 'base44.app', 'base44.io'];
 function isSafeFetchUrl(raw) {
   let u;
   try { u = new URL(String(raw)); } catch { return false; }
@@ -16,12 +25,30 @@ function isSafeFetchUrl(raw) {
     const a = +m[1], b = +m[2];
     if (a === 10 || a === 127 || (a === 169 && b === 254) || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168)) return false;
   }
-  const allow = Deno.env.get('FILE_URL_ALLOWED_HOSTS');
-  if (allow) {
-    const hosts = allow.split(',').map((h) => h.trim().toLowerCase()).filter(Boolean);
-    if (!hosts.some((h) => host === h || host.endsWith('.' + h))) return false;
-  }
+  if (!FILE_URL_ALLOWED_HOSTS.some((h) => host === h || host.endsWith('.' + h))) return false;
   return true;
+}
+
+// Fetch that re-validates every redirect hop against isSafeFetchUrl. With the
+// default redirect:'follow' the guard only checks the FIRST URL, so an
+// allowlisted host that 3xx-redirects to an internal/metadata IP would still be
+// fetched (SSRF). Returns null if a hop resolves to a disallowed host.
+async function safeFetchFollow(initialUrl) {
+  let response;
+  let nextUrl = initialUrl;
+  for (let hop = 0; hop < 4; hop++) {
+    response = await fetch(nextUrl, { redirect: 'manual' });
+    if (response.status >= 300 && response.status < 400) {
+      const location = response.headers.get('location');
+      if (!location) break;
+      const resolved = new URL(location, nextUrl).toString();
+      if (!isSafeFetchUrl(resolved)) return null;
+      nextUrl = resolved;
+      continue;
+    }
+    break;
+  }
+  return response;
 }
 
 Deno.serve(async (req) => {
@@ -32,6 +59,7 @@ Deno.serve(async (req) => {
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    if (isDeactivatedUser(user)) return DEACTIVATED_USER_RESPONSE();
 
     const { 
       pdf_template_url, 
@@ -51,29 +79,52 @@ Deno.serve(async (req) => {
     // Fetch additional patient data if mappings require it
     let patientData = null;
     let visitData = null;
-    let carePlans = [];
-    
+
     if (patient_id && field_mappings.length > 0) {
       try {
-        patientData = await base44.entities.Patient.filter({ id: patient_id });
-        if (patientData.length > 0) patientData = patientData[0];
-        
+        const [claimed] = await base44.asServiceRole.entities.Patient
+          .filter({ id: patient_id }, '', 1).catch(() => []);
+        if (!claimed) {
+          return Response.json({ error: 'Patient not found' }, { status: 404 });
+        }
+        const isSuperAdmin = user.account_type === 'super_admin';
+        const isAgencyScopedAdmin =
+          user.account_type === 'agency_admin'
+          || (user.role === 'admin' && !!user.agency_name && !isSuperAdmin);
+        const isPlatformAdmin = isSuperAdmin || (user.role === 'admin' && !user.agency_name);
+        const isAssigned = Array.isArray(claimed.assigned_nurses)
+          && claimed.assigned_nurses.includes(user.email);
+        if (!isPlatformAdmin && !isAgencyScopedAdmin && claimed.created_by !== user.email && !isAssigned) {
+          return Response.json({ error: 'Forbidden' }, { status: 403 });
+        }
+        if (isAgencyScopedAdmin) {
+          if (!user.agency_name) {
+            return Response.json({ error: 'Forbidden' }, { status: 403 });
+          }
+          const agencyUsers = await base44.asServiceRole.entities.User
+            .list('-created_date', 5000).catch(() => []);
+          const agencyEmails = new Set(
+            (agencyUsers || [])
+              .filter((u) => u.agency_name === user.agency_name && u.email)
+              .map((u) => u.email),
+          );
+          const inAgency = (claimed.created_by && agencyEmails.has(claimed.created_by))
+            || (Array.isArray(claimed.assigned_nurses)
+              && claimed.assigned_nurses.some((e) => agencyEmails.has(e)));
+          if (!inAgency) {
+            return Response.json({ error: 'Forbidden' }, { status: 403 });
+          }
+        }
+        patientData = claimed;
+
         // Get latest visit if needed
         if (field_mappings.some(m => m.data_source === 'visit')) {
-          const visits = await base44.entities.Visit.filter(
+          const visits = await base44.asServiceRole.entities.Visit.filter(
             { patient_id },
             '-visit_date',
             1
           );
           if (visits.length > 0) visitData = visits[0];
-        }
-        
-        // Get active care plans if needed
-        if (field_mappings.some(m => m.data_source === 'care_plan')) {
-          carePlans = await base44.entities.CarePlan.filter({
-            patient_id,
-            status: 'active'
-          });
         }
       } catch (e) {
         console.warn('Error fetching additional data:', e.message);
@@ -83,8 +134,11 @@ Deno.serve(async (req) => {
     if (!isSafeFetchUrl(pdf_template_url)) {
       return Response.json({ error: 'Invalid or disallowed pdf_template_url' }, { status: 400 });
     }
-    // Fetch the PDF template
-    const pdfResponse = await fetch(pdf_template_url);
+    // Fetch the PDF template (re-validating any redirect hop)
+    const pdfResponse = await safeFetchFollow(pdf_template_url);
+    if (!pdfResponse) {
+      return Response.json({ error: 'Redirect to a disallowed host blocked' }, { status: 400 });
+    }
     if (!pdfResponse.ok) {
       throw new Error(`Failed to fetch PDF template: ${pdfResponse.statusText}`);
     }
@@ -133,11 +187,6 @@ Deno.serve(async (req) => {
             break;
           case 'visit':
             value = visitData ? getNestedValue(visitData, mapping.field_path) : null;
-            break;
-          case 'care_plan':
-            if (carePlans.length > 0) {
-              value = getNestedValue(carePlans[0], mapping.field_path);
-            }
             break;
           case 'custom':
             value = patient_info[mapping.field_path] || mapping.default_value;
@@ -259,7 +308,7 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error('PDF preparation error:', error);
     return Response.json({ 
-      error: error.message || 'Failed to prepare PDF' 
+      error: 'Failed to prepare PDF' 
     }, { status: 500 });
   }
 });

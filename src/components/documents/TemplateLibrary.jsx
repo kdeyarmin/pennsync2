@@ -32,6 +32,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { openExternalUrl } from "@/components/utils/security";
 
 export default function TemplateLibrary() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -51,13 +52,13 @@ export default function TemplateLibrary() {
   const queryClient = useQueryClient();
 
   const { data: templates = [], isLoading: _isLoadingTemplates } = useQuery({
-    queryKey: ['pdfTemplates'],
+    queryKey: ['pdfTemplates', '-created_date', 100],
     queryFn: () => base44.entities.PDFTemplate.list('-created_date', 100),
     initialData: []
   });
 
   const { data: documents = [], isLoading: _isLoadingDocs } = useQuery({
-    queryKey: ['libraryDocuments'],
+    queryKey: ['libraryDocuments', '-created_date', 100],
     queryFn: () => base44.entities.LibraryDocument.list('-created_date', 100),
     initialData: []
   });
@@ -71,9 +72,14 @@ export default function TemplateLibrary() {
       }
     },
     onSuccess: (_, item) => {
-      queryClient.invalidateQueries({ queryKey: item.type === 'template' ? ['pdfTemplates'] : ['libraryDocuments'] });
       if (item.type === 'template') {
+        // Prefix-invalidate both key families used across TemplateLibrary /
+        // PDFTemplateManager / SignatureRequestCreator / PDFTemplateBuilder.
+        queryClient.invalidateQueries({ queryKey: ['pdfTemplates'] });
+        queryClient.invalidateQueries({ queryKey: ['pdf-templates'] });
         queryClient.invalidateQueries({ queryKey: ['pdf-templates-active'] });
+      } else {
+        queryClient.invalidateQueries({ queryKey: ['libraryDocuments'] });
       }
       toast.success('Deleted successfully');
       setShowDeleteDialog(false);
@@ -99,9 +105,12 @@ export default function TemplateLibrary() {
       }
     },
     onSuccess: (_, item) => {
-      queryClient.invalidateQueries({ queryKey: item.type === 'template' ? ['pdfTemplates'] : ['libraryDocuments'] });
       if (item.type === 'template') {
+        queryClient.invalidateQueries({ queryKey: ['pdfTemplates'] });
+        queryClient.invalidateQueries({ queryKey: ['pdf-templates'] });
         queryClient.invalidateQueries({ queryKey: ['pdf-templates-active'] });
+      } else {
+        queryClient.invalidateQueries({ queryKey: ['libraryDocuments'] });
       }
       toast.success('Status updated');
     },
@@ -237,7 +246,7 @@ export default function TemplateLibrary() {
                         size="sm"
                         variant="outline"
                         className="flex-1"
-                        onClick={() => window.open(template.template_file_url, '_blank')}
+                        onClick={() => openExternalUrl(template.template_file_url)}
                       >
                         <FileText className="w-4 h-4" />
                       </Button>
@@ -311,7 +320,7 @@ export default function TemplateLibrary() {
                         size="sm"
                         variant="outline"
                         className="flex-1"
-                        onClick={() => window.open(doc.file_url, '_blank')}
+                        onClick={() => openExternalUrl(doc.file_url)}
                       >
                         <FileText className="w-4 h-4" />
                       </Button>

@@ -1,24 +1,21 @@
 import * as React from "react"
-
-function cn(...inputs) {
-  return inputs.filter(Boolean).join(' ')
-}
+import { cn } from "@/lib/utils"
 
 const buttonVariants = ({ variant = "default", size = "default", className } = {}) => {
-    const baseStyles = "inline-flex items-center justify-center rounded-lg text-sm font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-navy-500 disabled:pointer-events-none disabled:opacity-50 active:scale-[0.98]"
+    const baseStyles = "inline-flex items-center justify-center text-center rounded-lg text-sm font-semibold leading-none transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-navy-500 disabled:pointer-events-none disabled:opacity-50 active:scale-[0.98] [&_svg]:shrink-0"
 
     const variants = {
-      default: "bg-navy-600 text-white shadow-sm hover:bg-navy-700 hover:shadow-md",
-      destructive: "bg-red-600 text-white shadow-sm hover:bg-red-700 hover:shadow-md",
-      outline: "border border-slate-300 bg-white text-slate-700 shadow-sm hover:bg-slate-50 hover:border-slate-400 hover:text-navy-700",
-      ghost: "text-slate-700 hover:bg-slate-100 hover:text-navy-800",
-      secondary: "bg-slate-100 text-slate-800 border border-slate-200 shadow-sm hover:bg-slate-200 hover:text-slate-900",
-      link: "text-navy-600 underline-offset-4 hover:underline hover:text-navy-700",
-      gold: "bg-gold-400 text-navy-900 shadow-sm hover:bg-gold-500 hover:shadow-md",
+      default: "app-primary-button shadow-md hover:shadow-md",
+      destructive: "bg-red-600 text-white shadow-sm hover:bg-red-700 hover:shadow-md dark:bg-red-500 dark:hover:bg-red-400",
+      outline: "border border-slate-400 bg-white text-slate-900 shadow-sm hover:border-slate-500 hover:bg-slate-100 hover:text-slate-950 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:hover:border-slate-500 dark:hover:bg-slate-800",
+      ghost: "text-slate-800 hover:bg-slate-200 hover:text-slate-950 dark:text-slate-200 dark:hover:bg-slate-800 dark:hover:text-white",
+      secondary: "border border-slate-300 bg-slate-200 text-slate-900 shadow-sm hover:border-slate-400 hover:bg-slate-300 hover:text-slate-950 dark:border-slate-600 dark:bg-slate-700 dark:text-white dark:hover:bg-slate-600",
+      link: "text-navy-600 underline-offset-4 hover:underline hover:text-navy-700 dark:text-navy-300 dark:hover:text-navy-200",
+      gold: "bg-gold-400 text-navy-900 shadow-sm hover:bg-gold-500 hover:shadow-md dark:bg-gold-300 dark:hover:bg-gold-200 dark:text-slate-950",
     }
 
     const sizes = {
-      default: "h-10 px-4 py-2",
+      default: "h-10 px-4",
       sm: "h-9 rounded-md px-3",
       lg: "h-11 rounded-md px-8",
       icon: "h-10 w-10",

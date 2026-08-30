@@ -1,14 +1,44 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
-import { jsPDF } from 'npm:jspdf@2.5.1';
+import { jsPDF } from 'npm:jspdf@2.5.2';
 import JSZip from 'npm:jszip@3.10.1';
+
+// <<<BEGIN SHARED HELPER: requireActiveUser — generated, edit base44/_shared/backendHelpers.mjs>>>
+const isDeactivatedUser = (u) => !!u && u.is_active === false;
+const DEACTIVATED_USER_RESPONSE = () => Response.json(
+  { error: 'Unauthorized - account is deactivated' },
+  { status: 403 },
+);
+// <<<END SHARED HELPER: requireActiveUser>>>
+
+
+// Financial visibility gate. MIRRORS src/lib/permissions.canViewFinancials
+// (isAdminLike) — backend Deno modules can't import src/lib, so the admin
+// checks are duplicated here. Keep in sync (see listOASISUploads).
+function canViewFinancials(user) {
+  if (!user) return false;
+  return (
+    user.role === 'admin' ||
+    user.account_type === 'agency_admin' ||
+    user.account_type === 'super_admin'
+  );
+}
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
+    if (isDeactivatedUser(user)) return DEACTIVATED_USER_RESPONSE();
 
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // The batch results and generated PDFs embed revenue_optimization_score /
+    // revenue_tips — the financial data the FinancialGate hides from non-financial
+    // users (the UI already wraps this in <FinancialGate>). Enforce it server-side
+    // so the endpoint can't be called directly to read that data.
+    if (!canViewFinancials(user)) {
+      return Response.json({ error: 'Forbidden: financial access required' }, { status: 403 });
     }
 
     const { fileUrls, fileNames } = await req.json();
@@ -19,6 +49,10 @@ Deno.serve(async (req) => {
 
     const results = [];
     const zip = new JSZip();
+    // JSZip keys entries by name, so two documents whose sanitized/truncated
+    // names collide would silently replace one another while both still count
+    // as successes. Track the names already written and suffix the collisions.
+    const usedZipNames = new Set();
 
     // Process one document end-to-end (extract -> analyze -> render PDF).
     // Returns a result object and never throws, so one bad file can't fail the
@@ -69,7 +103,7 @@ Deno.serve(async (req) => {
 
         // Analyze with AI
         const analysisResult = await base44.integrations.Core.InvokeLLM({
-          model: "claude_opus_4_8",
+          model: "automatic",
           prompt: `You are an expert OASIS analyst. Analyze this OASIS assessment document:
 
 OASIS Document Content:
@@ -146,7 +180,12 @@ Return JSON:
       );
       for (const r of batchResults) {
         if (r.status === 'success') {
-          zip.file(`${r.safeName}_Analysis.pdf`, r.pdfBytes);
+          let entryName = `${r.safeName}_Analysis.pdf`;
+          for (let n = 2; usedZipNames.has(entryName); n++) {
+            entryName = `${r.safeName}_Analysis_${n}.pdf`;
+          }
+          usedZipNames.add(entryName);
+          zip.file(entryName, r.pdfBytes);
           results.push({ fileName: r.fileName, status: 'success', analysis: r.analysis });
         } else {
           results.push({ fileName: r.fileName, status: 'error', error: r.error });
@@ -166,7 +205,7 @@ Return JSON:
 
   } catch (error) {
     console.error('Batch processing error:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
 });
 

@@ -1,5 +1,7 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
+import { useAgencyScopedQuery } from '@/hooks/useAgencyScopedQuery';
+import { useScopedPatients } from "@/hooks/useScopedPatients";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import AICarePlanSuggestionEngine from "../components/carePlan/AICarePlanSuggestionEngine";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -7,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { createPageUrl } from "@/utils";
 import {
   Target,
@@ -21,6 +23,7 @@ import {
   ChevronDown
 } from "lucide-react";
 import { format, addDays } from "date-fns";
+import { formatLocalDate, toLocalISODate } from "@/lib/dateLocal";
 import {
   Select,
   SelectContent,
@@ -53,6 +56,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { PATIENT_HISTORY_ROWS } from '@/lib/queryLimits';
 
 export default function CarePlanManagement() {
   const navigate = useNavigate();
@@ -83,8 +87,8 @@ export default function CarePlanManagement() {
 
   // Fetch only patients the user has charted on
   const { data: myVisits = [] } = useQuery({
-    queryKey: ['myVisits'],
-    queryFn: () => currentUser ? base44.entities.Visit.filter({ created_by: currentUser.email }) : Promise.resolve([]),
+    queryKey: ['myVisits', currentUser?.email ?? null],
+    queryFn: () => currentUser ? base44.entities.Visit.filter({ created_by: currentUser.email }, undefined, PATIENT_HISTORY_ROWS) : Promise.resolve([]),
     enabled: !!currentUser,
     initialData: [],
   });
@@ -95,9 +99,9 @@ export default function CarePlanManagement() {
   );
 
   // Fetch all care plans
-  const { data: carePlans = [], isLoading } = useQuery({
+  const { data: carePlans = [], isLoading } = useAgencyScopedQuery({
     queryKey: ['allCarePlans'],
-    queryFn: () => base44.entities.CarePlan.list('-created_date', 500),
+    fetch: () => base44.entities.CarePlan.list('-created_date', 5000),
     initialData: [],
   });
 
@@ -111,20 +115,28 @@ export default function CarePlanManagement() {
     [myPatientIds, carePlans]
   );
 
-  const { data: patients = [] } = useQuery({
-    queryKey: ['carePlanPatients', visiblePatientIds],
-    queryFn: async () => {
-      if (visiblePatientIds.length === 0) return [];
-      const allPatients = await base44.entities.Patient.list('-updated_date', 2000);
-      return allPatients.filter(p => visiblePatientIds.includes(p.id));
-    },
+  // Narrowing with `select` keeps the roster itself out of the key: the rows
+  // fetched are the same whatever `visiblePatientIds` happens to be, so this
+  // shares one cache entry with the other 2000-row consumers instead of
+  // refetching the whole roster every time the visible set changes.
+  // useCallback, not an inline arrow: React Query memoizes `select` by
+  // reference, so a fresh arrow each render re-filters all 2000 rows every
+  // render. A Set drops the per-row includes() scan while we are here.
+  const selectVisible = useCallback((rows) => {
+    const visible = new Set(visiblePatientIds);
+    return rows.filter(p => visible.has(p.id));
+  }, [visiblePatientIds]);
+
+  const { data: patients = [] } = useScopedPatients({
+    sort: '-updated_date',
+    limit: 2000,
     enabled: visiblePatientIds.length > 0,
-    initialData: [],
+    select: selectVisible,
   });
 
   // Fetch visits for selected patient
   const { data: patientVisits = [] } = useQuery({
-    queryKey: ['patientVisits', selectedPatient?.id],
+    queryKey: ['patientVisits', selectedPatient?.id, 10],
     queryFn: () => base44.entities.Visit.filter({ patient_id: selectedPatient?.id }, '-visit_date', 10),
     enabled: !!selectedPatient?.id,
     initialData: [],
@@ -136,8 +148,9 @@ export default function CarePlanManagement() {
     onSuccess: (updatedPlan, variables) => {
       queryClient.invalidateQueries({ queryKey: ['allCarePlans'] });
       
-      // Log care plan update
-      logActivity(ActivityActions.CARE_PLAN_UPDATE, {
+      // Log care plan update (repo's ActivityActions has no CARE_PLAN_* keys;
+      // entity_type carries the care-plan context instead)
+      logActivity(ActivityActions.UPDATE, {
         entity_type: 'CarePlan',
         entity_id: variables.id,
         updates: variables.updates,
@@ -230,7 +243,9 @@ export default function CarePlanManagement() {
             content: `Education on ${topic} for ${selectedPatient.primary_diagnosis}`,
             format: 'handout',
             status: 'assigned',
-            assigned_date: new Date().toISOString().split('T')[0],
+            // Local calendar day, not UTC's: toISOString() rolls over to tomorrow
+            // for any US evening, stamping education assignments a day ahead.
+            assigned_date: toLocalISODate(),
             assigned_by: 'AI System'
           });
         }
@@ -240,7 +255,7 @@ export default function CarePlanManagement() {
       queryClient.invalidateQueries({ queryKey: ['patientEducation'] });
       
       // Log care plan creation from AI recommendation
-      logActivity(ActivityActions.CARE_PLAN_CREATE, {
+      logActivity(ActivityActions.CREATE, {
         entity_type: 'CarePlan',
         entity_id: newCarePlan.id,
         patient_id: selectedPatient.id,
@@ -276,7 +291,6 @@ export default function CarePlanManagement() {
   const [planItems, setPlanItems] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
   const [linkedPathways, setLinkedPathways] = useState({});
-  const [planName, setPlanName] = useState("New Care Plan");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [careType, setCareType] = useState("home_health");
@@ -343,7 +357,7 @@ export default function CarePlanManagement() {
 
     setSaving(true);
     try {
-      const existingPlans = await base44.entities.CarePlan.filter({ patient_id: builderPatient.id });
+      const existingPlans = await base44.entities.CarePlan.filter({ patient_id: builderPatient.id }, undefined, PATIENT_HISTORY_ROWS);
       const savePromises = planItems.map(item => {
         const existingForItem = existingPlans.find(p => p.problem === item.name);
         const data = {
@@ -391,11 +405,10 @@ export default function CarePlanManagement() {
       <div className="flex-shrink-0 bg-white border-b border-slate-200 px-4 py-3 flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2 flex-1 min-w-0">
             <Target className="w-5 h-5 text-navy-600 flex-shrink-0" />
-            <Input
-              value={planName}
-              onChange={e => setPlanName(e.target.value)}
-              className="h-8 text-sm font-semibold border-0 shadow-none px-0 bg-transparent focus-visible:ring-0 max-w-xs"
-            />
+            {/* Static label, not an Input: CarePlan has no plan-name field, so a
+                typed name was silently dropped on save with nothing in the UI
+                signalling it was lost. */}
+            <h2 className="h-8 flex items-center text-sm font-semibold text-slate-900">Care Plan</h2>
           </div>
 
           <div className="relative">
@@ -662,7 +675,8 @@ export default function CarePlanManagement() {
                       content: `Medicare-compliant education on ${topic} for ${selectedPatient.primary_diagnosis}`,
                       format: 'handout',
                       status: 'assigned',
-                      assigned_date: new Date().toISOString().split('T')[0],
+                      // Local calendar day, not UTC's (see above).
+                      assigned_date: toLocalISODate(),
                       assigned_by: 'AI Care Plan System',
                       priority: 'high'
                     })
@@ -673,7 +687,7 @@ export default function CarePlanManagement() {
                 queryClient.invalidateQueries({ queryKey: ['patientEducation'] });
                 
                 // Log AI care plan creation
-                logActivity(ActivityActions.CARE_PLAN_CREATE, {
+                logActivity(ActivityActions.CREATE, {
                   entity_type: 'CarePlan',
                   entity_id: newPlan.id,
                   patient_id: selectedPatient.id,
@@ -865,7 +879,7 @@ export default function CarePlanManagement() {
                                 {plan.frequency && <span><strong>Frequency:</strong> {plan.frequency}</span>}
                                 {plan.target_date && (
                                   <span>
-                                    <strong>Target:</strong> {format(new Date(plan.target_date), 'MMM d, yyyy')}
+                                    <strong>Target:</strong> {formatLocalDate(plan.target_date, { month: 'short', day: 'numeric', year: 'numeric' })}
                                   </span>
                                 )}
                               </div>

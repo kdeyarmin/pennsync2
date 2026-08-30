@@ -9,7 +9,10 @@ export const exportToPDF = async (options = {}) => {
     elementId = null,
     content = [],
     orientation = 'portrait',
-    includeTimestamp = true
+    includeTimestamp = true,
+    // 'save' downloads the file (default); 'blob' returns the PDF Blob instead
+    // (for callers that upload/fax the document rather than download it).
+    output = 'save'
   } = options;
 
   const doc = new jsPDF(orientation, 'mm', 'a4');
@@ -98,7 +101,25 @@ export const exportToPDF = async (options = {}) => {
         doc.text(lines, margin, yPosition);
         yPosition += lines.length * 5;
       } else if (section.type === 'table') {
-        const { headers, rows } = section;
+        // Accept both table shapes so no caller silently renders a blank table:
+        //   1. { headers: [...], rows: [[...]] }                         (most callers)
+        //   2. { columns: [{ header, key | accessor }], data: [{...}] }  (src/components/reports/*)
+        // The column/data shape previously fell through with `headers`
+        // undefined, throwing on `headers.length` — breaking the OASIS, PDGM,
+        // Nurse-Performance and Referral report exports.
+        let { headers, rows } = section;
+        if ((!headers || !rows) && Array.isArray(section.columns)) {
+          headers = section.columns.map((c) => c.header ?? c.key ?? '');
+          rows = (section.data || []).map((row) =>
+            section.columns.map((c) => {
+              const v = typeof c.accessor === 'function' ? c.accessor(row) : row[c.key];
+              return v == null ? '' : String(v);
+            })
+          );
+        }
+        headers = headers || [];
+        rows = rows || [];
+        if (headers.length === 0) continue; // nothing to render for an empty table
         const colWidth = (pageWidth - (2 * margin)) / headers.length;
         
         // Headers
@@ -136,7 +157,7 @@ export const exportToPDF = async (options = {}) => {
           // Calculate max height needed for this row
           let maxHeight = 0;
           const cellLines = row.map((cell, _i) => {
-            const cellText = String(cell || '');
+            const cellText = String(cell ?? '');
             const lines = doc.splitTextToSize(cellText, colWidth - 4);
             maxHeight = Math.max(maxHeight, lines.length);
             return lines;
@@ -246,7 +267,8 @@ export const exportToPDF = async (options = {}) => {
           const angle = (value / total) * 360;
           const endAngle = startAngle + angle;
           
-          doc.setFillColor(...colors[i % colors.length]);
+          const sliceColor = colors[i % colors.length];
+          doc.setFillColor(sliceColor[0], sliceColor[1], sliceColor[2]);
           
           // Draw slice using triangle approximation
           const steps = Math.ceil(angle / 5);
@@ -282,7 +304,8 @@ export const exportToPDF = async (options = {}) => {
           const percentage = total > 0 ? Math.round((item[valueKey] / total) * 100) : 0;
           
           // Color box
-          doc.setFillColor(...colors[i % colors.length]);
+          const legendColor = colors[i % colors.length];
+          doc.setFillColor(legendColor[0], legendColor[1], legendColor[2]);
           doc.rect(margin, legendY - 3, 4, 4, 'F');
           
           // Label
@@ -310,45 +333,11 @@ export const exportToPDF = async (options = {}) => {
     );
   }
 
+  if (output === 'blob') {
+    return doc.output('blob');
+  }
   doc.save(filename);
   return true;
-};
-
-export const exportChartToPDF = async (chartElementId, options = {}) => {
-  const element = document.getElementById(chartElementId);
-  if (!element) return false;
-
-  try {
-    const canvas = await html2canvas(element, {
-      scale: 2,
-      useCORS: true,
-      logging: false
-    });
-
-    const doc = new jsPDF(options.orientation || 'landscape', 'mm', 'a4');
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const pageHeight = doc.internal.pageSize.getHeight();
-    const margin = 15;
-
-    // Title
-    if (options.title) {
-      doc.setFontSize(18);
-      doc.setFont(undefined, 'bold');
-      doc.text(options.title, margin, margin + 5);
-    }
-
-    const imgData = canvas.toDataURL('image/png');
-    const imgWidth = pageWidth - (2 * margin);
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
-    
-    doc.addImage(imgData, 'PNG', margin, margin + 15, imgWidth, Math.min(imgHeight, pageHeight - 40));
-    
-    doc.save(options.filename || 'chart.pdf');
-    return true;
-  } catch (error) {
-    console.error('Chart export error:', error);
-    return false;
-  }
 };
 
 export const exportDataTableToPDF = (data, columns, options = {}) => {

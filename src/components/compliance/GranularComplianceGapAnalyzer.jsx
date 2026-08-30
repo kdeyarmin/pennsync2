@@ -14,13 +14,13 @@ import {
   ChevronDown,
   ChevronUp
 } from "lucide-react";
+import { severityBadgeClass } from "@/lib/severityStyles";
 
-export default function GranularComplianceGapAnalyzer({ 
-  visits, 
-  patients, 
-  _carePlans, 
+export default function GranularComplianceGapAnalyzer({
+  visits,
+  patients,
   complianceAudits,
-  dateRange = 30 
+  dateRange = 30
 }) {
   const [gapAnalysis, setGapAnalysis] = useState(null);
   const ai = useAICall();
@@ -28,7 +28,10 @@ export default function GranularComplianceGapAnalyzer({
 
   const analyzeVisitTypeGaps = useCallback(() => {
     const gaps = {};
-    const visitTypes = ['admission', 'recertification', 'routine_visit', 'discharge'];
+    // Every Visit.visit_type enum value: skilled_nursing/prn get the generic
+    // documentation + vitals checks (omitting them silently exempted the most
+    // common visit type from gap analysis).
+    const visitTypes = ['admission', 'recertification', 'routine_visit', 'discharge', 'skilled_nursing', 'prn'];
 
     visitTypes.forEach(type => {
       const typeVisits = visits.filter(v => v.visit_type === type);
@@ -80,7 +83,7 @@ export default function GranularComplianceGapAnalyzer({
 
       // AI-driven recommendations
       const result = await ai.run({
-        model: "claude_opus_4_8",
+        model: "automatic",
         prompt: `You are a compliance analytics AI for home health agencies. Analyze these compliance gaps and provide actionable recommendations.
 
 IDENTIFIED GAPS:
@@ -167,16 +170,6 @@ Provide detailed analysis with:
 
   const toggleExpanded = (key) => {
     setExpandedGaps(prev => ({ ...prev, [key]: !prev[key] }));
-  };
-
-  const getSeverityColor = (severity) => {
-    const colors = {
-      critical: 'bg-red-100 text-red-800 border-red-300',
-      high: 'bg-orange-100 text-orange-800 border-orange-300',
-      medium: 'bg-yellow-100 text-yellow-800 border-yellow-300',
-      low: 'bg-blue-100 text-blue-800 border-blue-300'
-    };
-    return colors[severity] || 'bg-slate-100 text-slate-800';
   };
 
   if (ai.loading) {
@@ -299,7 +292,7 @@ Provide detailed analysis with:
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
-                            <Badge className={getSeverityColor(gap.priority)}>{gap.priority}</Badge>
+                            <Badge className={severityBadgeClass(gap.priority)}>{gap.priority}</Badge>
                             <p className="font-semibold text-slate-900">{gap.gap_type}</p>
                           </div>
                           <p className="text-sm text-slate-600 mb-2">{gap.root_cause}</p>
@@ -363,7 +356,7 @@ Provide detailed analysis with:
                     <div key={idx} className="bg-navy-50 p-3 rounded-lg border border-navy-200">
                       <div className="flex items-center justify-between mb-2">
                         <p className="font-semibold text-slate-900">{training.topic}</p>
-                        <Badge className={getSeverityColor(training.priority)}>{training.priority}</Badge>
+                        <Badge className={severityBadgeClass(training.priority)}>{training.priority}</Badge>
                       </div>
                       <p className="text-sm text-slate-600 mb-1">
                         <strong>For:</strong> {training.target_audience}

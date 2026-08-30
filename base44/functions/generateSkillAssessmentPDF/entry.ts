@@ -1,11 +1,21 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
-import { jsPDF } from 'npm:jspdf';
+import { jsPDF } from 'npm:jspdf@2.5.2';
+
+// <<<BEGIN SHARED HELPER: requireActiveUser — generated, edit base44/_shared/backendHelpers.mjs>>>
+const isDeactivatedUser = (u) => !!u && u.is_active === false;
+const DEACTIVATED_USER_RESPONSE = () => Response.json(
+  { error: 'Unauthorized - account is deactivated' },
+  { status: 403 },
+);
+// <<<END SHARED HELPER: requireActiveUser>>>
+
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
-
+    if (isDeactivatedUser(user)) return DEACTIVATED_USER_RESPONSE();
+    
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -21,7 +31,7 @@ Deno.serve(async (req) => {
 
     // Fetch and add logo
     try {
-      const logoUrl = 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ee80d98929370f9e8f2932/52cac091f_20170AA9-BB95-4BA4-B4E7-793615312CC4.png';
+      const logoUrl = 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ee80d98929370f9e8f2932/02eed9872_pennsynclogoupdated.png';
       const logoResponse = await fetch(logoUrl);
       const logoBlob = await logoResponse.blob();
       const logoArrayBuffer = await logoBlob.arrayBuffer();
@@ -213,7 +223,7 @@ Deno.serve(async (req) => {
       doc.rect(0, 282, 210, 15, 'F');
       doc.setTextColor(107, 114, 128);
       doc.setFontSize(8);
-      doc.text(`Penn Sync - Skill Assessment Report - Page ${i} of ${pageCount}`, 105, 290, { align: 'center' });
+      doc.text(`PennSync - Skill Assessment Report - Page ${i} of ${pageCount}`, 105, 290, { align: 'center' });
     }
 
     const pdfBytes = doc.output('arraybuffer');
@@ -227,6 +237,6 @@ Deno.serve(async (req) => {
     });
   } catch (error) {
     console.error('Error generating PDF:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
 });

@@ -1,5 +1,8 @@
 import { useState, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
+import { useAgencyScopedQuery } from '@/hooks/useAgencyScopedQuery';
+import { useScopedPatients } from '@/hooks/useScopedPatients';
+import { agencyQueryKey } from '@/lib/agencyRoster';
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ShieldAlert } from "lucide-react";
@@ -8,8 +11,9 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { createPageUrl } from "@/utils";
+import { isAdminView } from "@/lib/roles";
 import {
   Shield,
   TrendingUp,
@@ -28,8 +32,10 @@ import {
   Download,
 } from "lucide-react";
 import GranularComplianceGapAnalyzer from "@/components/compliance/GranularComplianceGapAnalyzer";
+import { severityBadgeClass } from "@/lib/severityStyles";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { format, subDays, startOfWeek, endOfWeek } from "date-fns";
+import { ALL_ROWS } from '@/lib/queryLimits';
 
 export default function RealTimeComplianceDashboard() {
   const [dateRange, setDateRange] = useState("30");
@@ -43,17 +49,21 @@ export default function RealTimeComplianceDashboard() {
 
   // Fetch all compliance-related data
   const { data: complianceAudits = [] } = useQuery({
-    queryKey: ['complianceAudits'],
+    queryKey: ['complianceAudits', 'list', 1000],
     queryFn: () => base44.entities.ComplianceAudit.list('-audit_date', 1000),
   });
 
   const { data: userActivities = [] } = useQuery({
-    queryKey: ['userActivities'],
+    queryKey: ['userActivities', 1000],
     queryFn: () => base44.entities.UserActivity.list('-created_date', 1000),
   });
 
   const { data: oasisUploads = [] } = useQuery({
-    queryKey: ['oasisUploads'],
+    // Key encodes source and limit: a bare ['oasisUploads'] is shared with fetches that
+    // use a different limit and a field-stripping backend function, so whichever mounted
+    // first inside staleTime served its payload here (and vice versa). The 'oasisUploads'
+    // prefix is kept so existing invalidateQueries calls still match.
+    queryKey: ['oasisUploads', 'list', 500],
     queryFn: () => base44.entities.OASISUpload.list('-created_date', 500),
   });
 
@@ -63,24 +73,21 @@ export default function RealTimeComplianceDashboard() {
   });
 
   const { data: allUsers = [] } = useQuery({
-    queryKey: ['allUsers'],
-    queryFn: () => base44.entities.User.list(),
+    queryKey: ['allUsers', ALL_ROWS, agencyQueryKey(currentUser)],
+    queryFn: async () => {
+      const _rows = await base44.entities.User.list(undefined, ALL_ROWS);
+      const { filterUsersByCallerAgency } = await import('@/lib/agencyScope');
+      return filterUsersByCallerAgency(_rows, currentUser);
+    },
+    enabled: !!currentUser,
   });
 
-  const { data: allVisits = [] } = useQuery({
+  const { data: allVisits = [] } = useAgencyScopedQuery({
     queryKey: ['allVisits'],
-    queryFn: () => base44.entities.Visit.list('-visit_date', 500),
+    fetch: () => base44.entities.Visit.list('-visit_date', 5000),
   });
 
-  const { data: allPatients = [] } = useQuery({
-    queryKey: ['allPatients'],
-    queryFn: () => base44.entities.Patient.list('-updated_date', 2000),
-  });
-
-  const { data: allCarePlans = [] } = useQuery({
-    queryKey: ['allCarePlans'],
-    queryFn: () => base44.entities.CarePlan.list(),
-  });
+  const { data: allPatients = [] } = useScopedPatients({ sort: '-updated_date', limit: 2000 });
 
   // Calculate date filter
   const filterDate = useMemo(() => {
@@ -498,16 +505,6 @@ export default function RealTimeComplianceDashboard() {
     return 'from-red-500 to-gold-500';
   };
 
-  const getSeverityColor = (severity) => {
-    const colors = {
-      critical: 'bg-red-100 text-red-800 border-red-300',
-      high: 'bg-orange-100 text-orange-800 border-orange-300',
-      medium: 'bg-yellow-100 text-yellow-800 border-yellow-300',
-      low: 'bg-blue-100 text-blue-800 border-blue-300'
-    };
-    return colors[severity] || 'bg-slate-100 text-slate-800';
-  };
-
   const COLORS_PIE = ['#EF4444', '#F97316', '#EAB308', '#3557b0', '#10B981'];
 
   const featureDistribution = featureCompliance.map((f, _idx) => ({
@@ -561,7 +558,7 @@ export default function RealTimeComplianceDashboard() {
     );
   }
 
-  if (currentUser?.role !== 'admin') {
+  if (!isAdminView(currentUser)) {
     return (
       <div className="p-8 max-w-4xl mx-auto">
         <Card className="border-red-200 bg-red-50">
@@ -796,7 +793,6 @@ export default function RealTimeComplianceDashboard() {
       <GranularComplianceGapAnalyzer
         visits={allVisits}
         patients={allPatients}
-        carePlans={allCarePlans}
         complianceAudits={filteredAudits}
         dateRange={parseInt(dateRange)}
       />
@@ -826,7 +822,7 @@ export default function RealTimeComplianceDashboard() {
                     <div>
                       <h4 className="font-semibold text-slate-900">{issue.name}</h4>
                       <div className="flex items-center gap-2 mt-1">
-                        <Badge className={getSeverityColor(issue.severity)}>
+                        <Badge className={severityBadgeClass(issue.severity)}>
                           {issue.severity}
                         </Badge>
                         <Badge variant="outline" className="text-xs">{issue.source}</Badge>
@@ -934,7 +930,7 @@ export default function RealTimeComplianceDashboard() {
                       </p>
                       <div className="flex flex-wrap gap-1">
                         {nurse.trainingNeeds.slice(0, 3).map((training, tIdx) => (
-                          <Badge key={tIdx} className={getSeverityColor(training.severity)}>
+                          <Badge key={tIdx} className={severityBadgeClass(training.severity)}>
                             {training.type}
                           </Badge>
                         ))}

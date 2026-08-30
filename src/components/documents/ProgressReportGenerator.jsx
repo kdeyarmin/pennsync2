@@ -8,10 +8,12 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { TrendingUp, Sparkles } from "lucide-react";
+import { Loader2, TrendingUp, Sparkles } from "lucide-react";
 import { todayEastern } from "../utils/timezone";
 import SmartNotesContextPanel from "./SmartNotesContextPanel";
 import DocumentDraftManager from "./DocumentDraftManager";
+import { parseLocalDate } from "@/lib/dateLocal";
+import { PATIENT_HISTORY_ROWS } from '@/lib/queryLimits';
 
 export default function ProgressReportGenerator({ patientId, patient }) {
   const [reportDate, setReportDate] = useState(todayEastern());
@@ -23,40 +25,42 @@ export default function ProgressReportGenerator({ patientId, patient }) {
   const [additionalContext, setAdditionalContext] = useState("");
 
   const { data: visits = [] } = useQuery({
-    queryKey: ['patientVisits', patientId],
-    queryFn: () => base44.entities.Visit.filter({ patient_id: patientId }, '-visit_date'),
-    enabled: !!patientId,
-    initialData: [],
-  });
-
-  const { data: carePlans = [] } = useQuery({
-    queryKey: ['patientCarePlans', patientId],
-    queryFn: () => base44.entities.CarePlan.filter({ patient_id: patientId }),
+    queryKey: ['patientVisits', patientId, PATIENT_HISTORY_ROWS],
+    queryFn: () => base44.entities.Visit.filter({ patient_id: patientId }, '-visit_date', PATIENT_HISTORY_ROWS),
     enabled: !!patientId,
     initialData: [],
   });
 
   const { data: incidents = [] } = useQuery({
-    queryKey: ['patientIncidents', patientId],
-    queryFn: () => base44.entities.Incident.filter({ patient_id: patientId }),
+    queryKey: ['patientIncidents', patientId, PATIENT_HISTORY_ROWS],
+    queryFn: () => base44.entities.Incident.filter({ patient_id: patientId }, undefined, PATIENT_HISTORY_ROWS),
     enabled: !!patientId,
     initialData: [],
   });
 
   const generateReport = async () => {
     try {
+      // Local midnight `reportPeriod` days back. visit_date / incident_date are
+      // date-only fields: `new Date(...)` reads them at UTC midnight (the prior
+      // local day west of UTC), and an unanchored boundary carries the current
+      // time-of-day — together they dropped the oldest day of the report window.
       const daysAgo = new Date();
-      daysAgo.setDate(daysAgo.getDate() - parseInt(reportPeriod));
-      
-      const periodVisits = visits.filter(v => 
-        v.status === 'completed' && new Date(v.visit_date) >= daysAgo
+      daysAgo.setDate(daysAgo.getDate() - parseInt(reportPeriod, 10));
+      daysAgo.setHours(0, 0, 0, 0);
+      const inPeriod = (value) => {
+        const d = parseLocalDate(value);
+        return d != null && d >= daysAgo;
+      };
+
+      const periodVisits = visits.filter(v =>
+        v.status === 'completed' && inPeriod(v.visit_date)
       );
 
       const firstVisit = periodVisits[periodVisits.length - 1];
       const latestVisit = periodVisits[0];
       
       const result = await ai.run({
-        model: "claude_opus_4_8",
+        model: "automatic",
         prompt: `Generate a comprehensive progress report for home health services.
 
 REPORT INFORMATION:
@@ -92,15 +96,6 @@ Weight: ${latestVisit.vital_signs?.weight || 'Not recorded'} lbs
 Pain Level: ${latestVisit.vital_signs?.pain_level || 'Not recorded'}/10
 ` : 'No current data available'}
 
-CARE PLAN PROGRESS:
-${carePlans.map(cp => `
-Problem: ${cp.problem}
-Goal: ${cp.goal}
-Status: ${cp.status}
-Target Date: ${cp.target_date || 'Not set'}
-${cp.baseline_measurement ? `Baseline: ${cp.baseline_measurement}` : ''}
-`).join('\n') || 'No active care plans'}
-
 CLINICAL NOTES SUMMARY:
 ${periodVisits.slice(0, 3).map((v, i) => `
 Visit ${i + 1} (${v.visit_date}):
@@ -108,7 +103,7 @@ ${v.nurse_notes?.substring(0, 250)}
 `).join('\n')}
 
 INCIDENTS/CONCERNS:
-${incidents.filter(inc => new Date(inc.incident_date) >= daysAgo).map(inc => `
+${incidents.filter(inc => inPeriod(inc.incident_date)).map(inc => `
 - ${inc.incident_type} (${inc.incident_date}): ${inc.severity} severity
   ${inc.report?.substring(0, 100)}
 `).join('\n') || 'No incidents reported during this period'}
@@ -133,7 +128,7 @@ Generate a professional progress report with:
    - Skilled interventions provided
 
 3. PROGRESS TOWARD GOALS
-   - Detailed analysis of each care plan goal
+   - Detailed analysis of each treatment goal
    - Measurable improvements or concerns
    - Functional status changes
 
@@ -143,7 +138,7 @@ Generate a professional progress report with:
    - Response to treatment
 
 5. PATIENT/CAREGIVER RESPONSE
-   - Compliance with care plan
+   - Compliance with the treatment plan
    - Understanding of instructions
    - Barriers to progress
 
@@ -264,17 +259,16 @@ Use professional medical terminology. Be objective and data-driven. Include spec
             <div className="bg-green-50 p-4 rounded-lg border border-green-200">
               <p className="text-sm text-green-900">
                 <strong>Data Source:</strong> {visits.length} total visits
-                {carePlans.length > 0 && `, ${carePlans.length} care plans`}
               </p>
             </div>
 
             <Button 
               onClick={generateReport} 
               disabled={ai.loading}
-              className="w-full bg-green-600 hover:bg-green-700"
+              className="w-full"
             >
               {ai.loading ? (
-                <><div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2" /> Generating...</>
+                <><Loader2 className="w-5 h-5 animate-spin mr-2" /> Generating...</>
               ) : (
                 <><Sparkles className="w-5 h-5 mr-2" /> Generate Progress Report</>
               )}

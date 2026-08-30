@@ -1,6 +1,8 @@
 import React, { useState, useCallback, useRef } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
+import { useAgencyScopedQuery } from '@/hooks/useAgencyScopedQuery';
+import { useScopedPatients } from '@/hooks/useScopedPatients';
 import { invokeLLM } from "@/lib/invokeLLM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,11 +12,14 @@ import {
   AlertTriangle, Activity, 
   RefreshCw, ChevronRight, AlertCircle, CheckCircle2
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { createPageUrl } from "@/utils";
 import { toast } from 'sonner';
+import { formatAge } from "@/lib/age";
+import { PATIENT_HISTORY_ROWS } from '@/lib/queryLimits';
 
 export default function HospitalizationRiskWidget({ autoAnalyze = false }) {
+  const queryClient = useQueryClient();
   const [analyzing, setAnalyzing] = useState(false);
   const [riskScores, setRiskScores] = useState(null);
   const [lastAnalyzed, setLastAnalyzed] = useState(null);
@@ -23,15 +28,11 @@ export default function HospitalizationRiskWidget({ autoAnalyze = false }) {
   // !riskScores guard alone can't prevent re-entrant runs on query invalidation).
   const runningRef = useRef(false);
 
-  const { data: patients = [] } = useQuery({
-    queryKey: ['activePatients'],
-    queryFn: () => base44.entities.Patient.filter({ status: 'active' }, '-updated_date', 100),
-    initialData: [],
-  });
+  const { data: patients = [] } = useScopedPatients({ status: 'active', sort: '-updated_date', limit: 100 });
 
-  const { data: recentVisits = [] } = useQuery({
+  const { data: recentVisits = [] } = useAgencyScopedQuery({
     queryKey: ['allRecentVisits'],
-    queryFn: () => base44.entities.Visit.filter({ status: 'completed' }, '-visit_date', 500),
+    fetch: () => base44.entities.Visit.filter({ status: 'completed' }, '-visit_date', 500),
     initialData: [],
   });
 
@@ -79,13 +80,13 @@ export default function HospitalizationRiskWidget({ autoAnalyze = false }) {
 
         // Analyze with AI
         const analysis = await invokeLLM({
-          model: "claude_opus_4_8",
+          model: "automatic",
           prompt: `You are a clinical risk assessment AI analyzing home health patient data to predict hospitalization risk.
 
 PATIENT: ${patient.first_name} ${patient.last_name}
 PRIMARY DIAGNOSIS: ${patient.primary_diagnosis || 'Unknown'}
 SECONDARY DIAGNOSES: ${patient.secondary_diagnoses?.join(', ') || 'None'}
-AGE: ${patient.date_of_birth ? Math.floor((new Date() - new Date(patient.date_of_birth)) / (365.25 * 24 * 60 * 60 * 1000)) : 'Unknown'}
+AGE: ${formatAge(patient.date_of_birth)}
 
 RECENT VITALS TRENDS (Last ${vitalsTrends.length} visits):
 ${vitalsTrends.map(v => `Date: ${v.date} | BP: ${v.bp_systolic}/${v.bp_diastolic} | HR: ${v.heart_rate} | Temp: ${v.temp} | O2: ${v.o2_sat}% | Weight: ${v.weight}`).join('\n')}
@@ -186,7 +187,7 @@ Return detailed risk assessment:`,
       );
 
       for (const patientRisk of highRiskPatients) {
-        await base44.entities.PatientAlert.create({
+        const alertData = {
           patient_id: patientRisk.patient_id,
           alert_type: 'readmission_risk',
           severity: patientRisk.risk_level === 'critical' ? 'critical' : 'high',
@@ -196,7 +197,28 @@ Return detailed risk assessment:`,
             ? patientRisk.immediate_actions
             : ['Review patient immediately'],
           status: 'active'
-        }).catch(err => console.error('Failed to create hospitalization risk alert:', err));
+        };
+        try {
+          // Idempotent: update the patient's existing active readmission_risk
+          // alert rather than inserting a duplicate on every re-analysis.
+          const existing = await base44.entities.PatientAlert.filter({
+            patient_id: patientRisk.patient_id,
+            alert_type: 'readmission_risk',
+            status: 'active'
+          }, undefined, PATIENT_HISTORY_ROWS);
+          if (existing?.length > 0) {
+            await base44.entities.PatientAlert.update(existing[0].id, alertData);
+          } else {
+            await base44.entities.PatientAlert.create(alertData);
+          }
+          queryClient.invalidateQueries({ queryKey: ['patientAlerts'] });
+          queryClient.invalidateQueries({ queryKey: ['patientRiskAlerts'] });
+          queryClient.invalidateQueries({ queryKey: ['allPatientRiskAlerts'] });
+          queryClient.invalidateQueries({ queryKey: ['patientActiveAlerts'] });
+          queryClient.invalidateQueries({ queryKey: ['patientContext', patientRisk.patient_id] });
+        } catch (err) {
+          console.error('Failed to upsert hospitalization risk alert:', err);
+        }
       }
 
     } catch (error) {
@@ -206,7 +228,7 @@ Return detailed risk assessment:`,
       setAnalyzing(false);
       runningRef.current = false;
     }
-  }, [patients, recentVisits]);
+  }, [patients, recentVisits, queryClient]);
 
   React.useEffect(() => {
     if (autoAnalyze && patients.length > 0 && !riskScores) {
@@ -257,7 +279,7 @@ Return detailed risk assessment:`,
           <div className="text-center py-8">
             <Activity className="w-12 h-12 text-slate-300 mx-auto mb-3" />
             <p className="text-slate-600 mb-4">Click "Analyze" to assess hospitalization risk for all active patients</p>
-            <p className="text-xs text-slate-500">AI analyzes vitals, medications, and clinical notes</p>
+            <p className="text-xs text-slate-500">AI analyzes vitals and clinical notes</p>
           </div>
         )}
 
@@ -265,7 +287,7 @@ Return detailed risk assessment:`,
           <div className="text-center py-8">
             <RefreshCw className="w-12 h-12 text-blue-500 mx-auto mb-3 animate-spin" />
             <p className="text-slate-600 font-medium">Analyzing {patients.length} patients...</p>
-            <p className="text-xs text-slate-500 mt-2">Reviewing vitals, medications, and clinical patterns</p>
+            <p className="text-xs text-slate-500 mt-2">Reviewing vitals and clinical patterns</p>
           </div>
         )}
 

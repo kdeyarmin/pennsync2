@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Mic, MicOff, Trash2, Upload } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from 'sonner';
+import { formatTime } from "@/lib/formatTime";
 
 export default function AudioRecorder({ onAudioProcessed, isProcessing }) {
   const [isRecording, setIsRecording] = useState(false);
@@ -79,12 +80,6 @@ export default function AudioRecorder({ onAudioProcessed, isProcessing }) {
     setRecordingTime(0);
   };
 
-  const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
-
   return (
     <Card className="bg-gradient-to-r from-navy-50 to-gold-50 border-navy-200">
       <CardContent className="p-6">
@@ -93,15 +88,15 @@ export default function AudioRecorder({ onAudioProcessed, isProcessing }) {
             <Mic className="w-6 h-6 text-white" />
           </div>
           <div className="flex-1">
-            <h3 className="font-semibold text-slate-900 mb-2">Voice Dictation - Penn Sync AI</h3>
+            <h3 className="font-semibold text-slate-900 mb-2">Voice Dictation - PennSync AI</h3>
             
             <Alert className="bg-white border-navy-200 mb-4">
               <AlertDescription className="text-sm text-slate-700">
-                <strong>🎤 How Penn Sync Voice Works:</strong>
+                <strong>🎤 How PennSync Voice Works:</strong>
                 <ul className="list-disc ml-5 mt-2 space-y-1">
                   <li>Click "Start Recording" and speak naturally about your patient visit</li>
                   <li>Describe observations, assessments, interventions, patient responses</li>
-                  <li>Penn Sync AI will transcribe, format, and merge into your clinical narrative</li>
+                  <li>PennSync AI will transcribe, format, and merge into your clinical narrative</li>
                   <li>Works seamlessly with existing templates and vital signs</li>
                 </ul>
               </AlertDescription>
@@ -111,7 +106,6 @@ export default function AudioRecorder({ onAudioProcessed, isProcessing }) {
               {!isRecording && !audioBlob && (
                 <Button
                   onClick={startRecording}
-                  className="bg-gradient-to-r from-navy-600 to-gold-600 hover:from-navy-700 hover:to-gold-700"
                 >
                   <Mic className="w-4 h-4 mr-2" />
                   Start Recording
@@ -123,7 +117,6 @@ export default function AudioRecorder({ onAudioProcessed, isProcessing }) {
                   <Button
                     onClick={stopRecording}
                     variant="destructive"
-                    className="bg-red-600 hover:bg-red-700"
                   >
                     <MicOff className="w-4 h-4 mr-2" />
                     Stop Recording
@@ -141,10 +134,9 @@ export default function AudioRecorder({ onAudioProcessed, isProcessing }) {
                 <>
                   <Button
                     onClick={handleUpload}
-                    className="bg-green-600 hover:bg-green-700"
                   >
                     <Upload className="w-4 h-4 mr-2" />
-                    Process with Penn Sync AI
+                    Process with PennSync AI
                   </Button>
                   <Button
                     onClick={handleDiscard}
@@ -162,7 +154,7 @@ export default function AudioRecorder({ onAudioProcessed, isProcessing }) {
 
             {isProcessing && (
               <p className="text-sm text-navy-600 mt-3 font-medium">
-                ⚡ Penn Sync AI is processing your dictation...
+                ⚡ PennSync AI is processing your dictation...
               </p>
             )}
           </div>

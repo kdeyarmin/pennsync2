@@ -1,5 +1,6 @@
 import { useState, useEffect, lazy, Suspense } from "react";
 import { base44 } from "@/api/base44Client";
+import { agencyQueryKey, scopePatientsToCallerAgency } from '@/lib/agencyRoster';
 import { invokeLLM } from "@/lib/invokeLLM";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -46,14 +47,27 @@ import {
   Target,
   Trash2,
   UserCheck,
-  Loader2
+  Loader2,
+  Inbox
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PageHeader from "@/components/ui/PageHeader";
 import PageContainer from "@/components/ui/PageContainer";
 import LoadingState from "@/components/ui/LoadingState";
-import { format } from "date-fns";
+import EmptyState from "@/components/ui/empty-state";
+import { format, isValid } from "date-fns";
+
+// AI-extracted referral dates (patient_dob, referral_date) are free-text strings
+// that may hold "Not documented", "March 2024", etc. date-fns format() throws
+// RangeError on an Invalid Date, which — during a list .map() render — crashes the
+// entire Referral Intake page. Guard every format with a validity check.
+const safeDate = (value) => {
+  if (!value) return "N/A";
+  const d = new Date(value);
+  return isValid(d) ? format(d, "MM/dd/yyyy") : "N/A";
+};
 import { toast } from "sonner";
+import { parseDob } from "@/components/patient/patientDuplicateUtils";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -65,14 +79,20 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { todayEastern } from "@/components/utils/timezone";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router";
 import ReferralPDFSummarizer from "../components/referral/ReferralPDFSummarizer";
 import { validateReferralFile, getDocumentType } from "../components/referral/referralUploadUtils";
+import { generateDiagnosisCodes, toPersistedCoding } from "../components/referral/diagnosisCodeGenerator";
 import { runReferralQuickScan } from "../components/referral/referralExtraction";
+import { markStartOfCareCompleted } from "../components/referral/intakeToSocTracker";
+import { referralToF2FInput, validateFaceToFace, toFaceToFaceEncounter } from "../components/referral/faceToFaceValidator";
+import { validateIntakeDiagnoses } from "../components/referral/intakeDiagnosisValidator";
+import { referralPatientReadiness, splitPatientName } from "../components/referral/referralPatientReadiness";
+import ReferralAgingBoard from "../components/referral/ReferralAgingBoard";
 import PatientMatchReview from "../components/referral/PatientMatchReview";
-import AIReferralCarePlanGenerator from "../components/referral/AIReferralCarePlanGenerator";
 import PatientVerificationStep from "../components/referral/PatientVerificationStep";
 import MultiReferralDetector from "../components/referral/MultiReferralDetector";
+import { ALL_ROWS, PATIENT_HISTORY_ROWS } from '@/lib/queryLimits';
 
 const ReferralProcessor = lazy(() => import("@/components/hub-tabs/ReferralProcessor"));
 const ReferralAdmissionNote = lazy(() => import("@/components/hub-tabs/ReferralAdmissionNote"));
@@ -123,6 +143,14 @@ export default function ReferralIntake() {
   const [uploadedFile, setUploadedFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
   const [extractedFormData, setExtractedFormData] = useState(null);
+  // Upload-time diagnosis guard (validateIntakeDiagnoses result); null when the
+  // quick scan surfaced no ICD-10 codes at all.
+  const [dxGuard, setDxGuard] = useState(null);
+  // "Mark SOC Complete" dialog state.
+  const [socReferral, setSocReferral] = useState(null);
+  const [socDate, setSocDate] = useState(todayEastern());
+  const [socFirstVisitDate, setSocFirstVisitDate] = useState("");
+  const [socSaving, setSocSaving] = useState(false);
   const [multiReferralDetection, setMultiReferralDetection] = useState(null);
   const [_processingMultipleReferrals, setProcessingMultipleReferrals] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -140,14 +168,19 @@ export default function ReferralIntake() {
   });
 
   const { data: referrals = [], isLoading } = useQuery({
-    queryKey: ['referrals'],
+    queryKey: ['referrals', 200],
     queryFn: () => base44.entities.Referral.list('-created_date', 200),
     initialData: [],
   });
 
   const { data: users = [] } = useQuery({
-    queryKey: ['allUsers'],
-    queryFn: () => base44.entities.User.list(),
+    queryKey: ['allUsers', ALL_ROWS, agencyQueryKey(currentUser)],
+    queryFn: async () => {
+      const _rows = await base44.entities.User.list(undefined, ALL_ROWS);
+      const { filterUsersByCallerAgency } = await import('@/lib/agencyScope');
+      return filterUsersByCallerAgency(_rows, currentUser);
+    },
+    enabled: !!currentUser,
     initialData: [],
   });
 
@@ -184,7 +217,18 @@ export default function ReferralIntake() {
       const extracted = await runReferralQuickScan(invokeLLM, { fileUrl: file_url });
 
       setExtractedFormData(extracted);
-      
+
+      // Upload-time diagnosis guard: pre-check the scanned ICD-10 codes for
+      // RTP-unacceptable principals and preview the PDGM clinical group. Only
+      // when the scan surfaced actual codes — a free-text-only extraction has
+      // nothing deterministic to check and must not nag.
+      const scannedIcdCodes = (extracted.icd10_codes || []).filter(Boolean);
+      setDxGuard(
+        scannedIcdCodes.length > 0
+          ? validateIntakeDiagnoses({ primary: scannedIcdCodes[0], secondaries: scannedIcdCodes.slice(1) })
+          : null
+      );
+
       // Auto-populate form with comprehensive extracted data
       if (extracted.patient_name) {
         setNewReferral(prev => ({
@@ -339,6 +383,7 @@ export default function ReferralIntake() {
       });
       setUploadedFile(null);
       setExtractedFormData(null);
+      setDxGuard(null);
 
       queryClient.invalidateQueries({ queryKey: ['referrals'] });
     } catch (error) {
@@ -374,8 +419,6 @@ export default function ReferralIntake() {
       if (!referral) return;
       const nurse = users.find(u => u.email === nurseEmail);
 
-      await base44.entities.Referral.update(referralId, { assigned_to: nurseEmail });
-
       // Send secure message to assigned nurse with PROCESSED PDF document (not original upload)
       const attachmentUrl = referral.processed_document_url || referral.document_url;
       const messageData = {
@@ -387,7 +430,7 @@ export default function ReferralIntake() {
 Patient: ${referral.patient_name || 'Unknown'}
 Referral Source: ${referral.referral_source || 'N/A'}
 Priority: ${referral.priority}
-Referral Date: ${referral.referral_date ? format(new Date(referral.referral_date), 'MM/dd/yyyy') : 'N/A'}
+Referral Date: ${safeDate(referral.referral_date)}
 
 ${referral.extracted_data ? 'Referral has been processed with AI analysis and formatted into an admission packet.' : 'Please process this referral to extract patient information.'}
 
@@ -406,8 +449,20 @@ Actions available:
         related_event_type: 'referral'
       };
 
-      await base44.entities.Message.create(messageData);
-      
+      // These are two separate writes with no shared transaction. Persist the
+      // assignment first, then notify; if the notification fails, roll the
+      // assignment back to its prior value so the nurse is never left assigned to a
+      // referral they were never told about (the original silent-orphan bug). The
+      // operator then sees the error and can retry cleanly.
+      const priorAssignedTo = referral.assigned_to ?? null;
+      await base44.entities.Referral.update(referralId, { assigned_to: nurseEmail });
+      try {
+        await base44.entities.Message.create(messageData);
+      } catch (notifyErr) {
+        await base44.entities.Referral.update(referralId, { assigned_to: priorAssignedTo }).catch(() => {});
+        throw notifyErr;
+      }
+
       queryClient.invalidateQueries({ queryKey: ['referrals'] });
       queryClient.invalidateQueries({ queryKey: ['messages'] });
       
@@ -435,6 +490,27 @@ Actions available:
       const priorityAnalysis = priorityResponse.data?.priorityAnalysis || {};
       const intakeAnalysis = intakeAnalysisResponse.data?.analysis || {};
 
+      // Merge DEFENSIVELY against the existing record: extraction can miss
+      // fields the intake staff already typed in (patient name, source,
+      // referral date). Overwriting them with null removed the referral from
+      // the aging board and CMS timely-initiation tracking (which skip rows
+      // with no referral_date) and erased manual entries.
+      const existing =
+        (await base44.entities.Referral.filter({ id: referralId }).then((rows) => rows?.[0]).catch(() => null)) ||
+        referrals.find((r) => r.id === referralId) ||
+        {};
+
+      // Never DOWNGRADE a staff-selected priority: if intake marked the
+      // referral urgent and the AI analysis returns nothing (or a lower
+      // level), keep the higher one.
+      const PRIORITY_RANK = { low: 0, normal: 1, high: 2, urgent: 3 };
+      const aiPriority = priorityAnalysis.priority;
+      const existingPriority = existing.priority;
+      const priority =
+        (PRIORITY_RANK[aiPriority] ?? -1) >= (PRIORITY_RANK[existingPriority] ?? -1)
+          ? (aiPriority || existingPriority || 'normal')
+          : existingPriority;
+
       // Extract and update referral fields from AI-processed data
       const updates = {
         status: 'ready_for_admission',
@@ -444,17 +520,37 @@ Actions available:
           priority_analysis: priorityAnalysis,
           intake_analysis: intakeAnalysis
         },
-        patient_name: extractedData.demographics?.full_name || null,
-        patient_dob: extractedData.demographics?.date_of_birth || null,
-        referral_source: extractedData.admission_details?.admission_source || 
-                         extractedData.demographics?.referring_physician || 
+        patient_name: extractedData.demographics?.full_name || existing.patient_name || null,
+        patient_dob: extractedData.demographics?.date_of_birth || existing.patient_dob || null,
+        referral_source: extractedData.admission_details?.admission_source ||
+                         extractedData.demographics?.referring_physician ||
+                         existing.referral_source ||
                          null,
-        referral_date: extractedData.admission_details?.referral_date || 
-                       extractedData.admission_details?.admission_date || 
+        referral_date: extractedData.admission_details?.referral_date ||
+                       extractedData.admission_details?.admission_date ||
+                       existing.referral_date ||
                        null,
-        diagnosis: extractedData.diagnoses?.primary_diagnosis || null,
-        priority: priorityAnalysis.priority || 'normal'
+        diagnosis: extractedData.diagnoses?.primary_diagnosis || existing.diagnosis || null,
+        priority
       };
+
+      // Deterministic PDGM-sequenced diagnosis coding (codes only ever
+      // harvested from the referral, never generated). Persisted TOP-LEVEL —
+      // not inside extracted_data — so it can't leak into the
+      // referral→admission-note bridges. Best-effort: never blocks intake.
+      try {
+        const me = await base44.auth.me().catch(() => null);
+        const { fetchCallerPdgmRateConfig } = await import('@/lib/agencySettings');
+        const rateRow = await fetchCallerPdgmRateConfig(me?.agency_name);
+        updates.diagnosis_coding = toPersistedCoding(
+          generateDiagnosisCodes(extractedData, {
+            rates: rateRow?.rates,
+            icdGroups: rateRow?.icd10_clinical_groups,
+          })
+        );
+      } catch (codingError) {
+        console.error('Diagnosis coding skipped:', codingError);
+      }
 
       // Check for missing critical information using AI analysis
       const allMissingInfo = [
@@ -475,13 +571,23 @@ Actions available:
       const address = extractedData.demographics?.address;
       
       let existingPatient = null;
-      const allPatients = await base44.entities.Patient.list('-created_date', 500);
+      // The auto-create path also assigns existingPatient, so the summary below
+      // can't tell "created" from "matched" by inspecting it — track it here.
+      let createdNewPatient = false;
+      // Match only against charts this agency may see. Matching a referral onto
+      // another tenant's chart would attach PHI to the wrong record; charts with
+      // no agency attribution stay in scope, so this cannot silently duplicate.
+      const allPatients = await scopePatientsToCallerAgency(
+        await base44.entities.Patient.list('-created_date', 500),
+        currentUser,
+      );
       
       if (fullName || dob || phone) {
-        const nameParts = fullName.split(' ').filter(p => p.length > 0);
-        const firstName = nameParts[0] || '';
-        const middleName = nameParts.length > 2 ? nameParts.slice(1, -1).join(' ') : '';
-        const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : '';
+        // Use the shared splitter so "Last, First" fax forms and placeholder
+        // names ("Unknown" / "Not provided on referral") match triage behavior
+        // instead of creating first_name "Doe," / treating placeholders as real.
+        const { first_name: firstName, last_name: lastName } = splitPatientName(fullName);
+        const middleName = '';
         
         // Helper: normalize string for comparison
         const normalize = (str) => str?.toLowerCase().trim().replace(/[^a-z0-9]/g, '') || '';
@@ -517,6 +623,7 @@ Actions available:
         // Score each patient for match likelihood
         const scoredPatients = allPatients.map(p => {
           let score = 0;
+          let nameMatched = false;
           const reasons = [];
           
           // Name matching (40 points max)
@@ -524,6 +631,7 @@ Actions available:
             const firstNameSim = similarity(normalize(firstName), normalize(p.first_name));
             if (firstNameSim >= 0.8) {
               score += firstNameSim * 20;
+              nameMatched = true;
               reasons.push(`First name: ${(firstNameSim * 100).toFixed(0)}%`);
             }
           }
@@ -532,6 +640,7 @@ Actions available:
             const lastNameSim = similarity(normalize(lastName), normalize(p.last_name));
             if (lastNameSim >= 0.8) {
               score += lastNameSim * 20;
+              nameMatched = true;
               reasons.push(`Last name: ${(lastNameSim * 100).toFixed(0)}%`);
             }
           }
@@ -546,19 +655,17 @@ Actions available:
             }
           }
           
-          // DOB matching (30 points)
+          // DOB matching (30 points) — tolerate MM/DD/YYYY vs YYYY-MM-DD via parseDob
+          // (same helper OASIS patient matching already uses).
           if (dob && p.date_of_birth) {
-            if (dob === p.date_of_birth) {
+            const a = parseDob(dob);
+            const b = parseDob(p.date_of_birth);
+            if (a && b && a.year === b.year && a.month === b.month && a.day === b.day) {
               score += 30;
               reasons.push('Exact DOB match');
-            } else {
-              // Partial DOB match (year and month)
-              const [y1, m1] = dob.split('-');
-              const [y2, m2] = p.date_of_birth.split('-');
-              if (y1 === y2 && m1 === m2) {
-                score += 15;
-                reasons.push('Partial DOB match');
-              }
+            } else if (a && b && a.year === b.year && a.month === b.month) {
+              score += 15;
+              reasons.push('Partial DOB match');
             }
           }
           
@@ -582,14 +689,19 @@ Actions available:
             }
           }
           
-          return { patient: p, score, reasons };
+          return { patient: p, score, nameMatched, reasons };
         });
         
         // Sort by score and get best match
         const bestMatch = scoredPatients.sort((a, b) => b.score - a.score)[0];
         
-        // Match threshold: 60+ points = high confidence match
-        if (bestMatch && bestMatch.score >= 60) {
+        // Match threshold: 60+ points = high confidence match. A NAME signal is
+        // also required: without it, exact DOB (30) + phone (15) + address (10)
+        // + middle initial (5) reaches 60 on their own — which is precisely a
+        // twin/household member sharing DOB, phone, and address. Auto-linking a
+        // referral to the WRONG person's chart is a patient-safety error; the
+        // dedupe engine (patientDuplicateUtils) enforces the same identity guard.
+        if (bestMatch && bestMatch.score >= 60 && bestMatch.nameMatched) {
           existingPatient = bestMatch.patient;
         }
       }
@@ -639,12 +751,38 @@ Actions available:
         }
       }
 
-      if (!existingPatient && extractedData.demographics) {
-        // Create new patient from referral data
-        const nameParts = (extractedData.demographics.full_name || '').split(' ');
-        const firstName = nameParts[0] || '';
-        const middleName = nameParts.length > 2 ? nameParts.slice(1, -1).join(' ') : '';
-        const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : '';
+      if (!existingPatient && !updates.requires_manual_review && extractedData.demographics) {
+        // Create new patient from referral data. Skip the auto-create when the AI
+        // flagged a probable match for manual review (medium / high-but-<90%
+        // confidence): those branches set requires_manual_review but not
+        // existingPatient, so without this guard a duplicate chart was created for
+        // a patient a reviewer is about to confirm. Patient creation/linking then
+        // happens in handleConfirmMatch (existing) or handleCreateNewFromReview.
+        // Also require the same minimum identity triage uses — otherwise intake
+        // minted active charts named "Doe," / "Unknown" with no verifiable ID.
+        const readiness = referralPatientReadiness({
+          patient_name: extractedData.demographics.full_name,
+          full_name: extractedData.demographics.full_name,
+          date_of_birth: extractedData.demographics.date_of_birth,
+          medical_record_number: extractedData.demographics.medical_record_number || extractedData.demographics.mrn,
+          phone: extractedData.demographics.phone,
+          address: extractedData.demographics.address,
+        });
+        if (!readiness.ready) {
+          updates.requires_manual_review = true;
+          updates.status = 'awaiting_info';
+          updates.follow_up_notes = [
+            ...(Array.isArray(existing.follow_up_notes) ? existing.follow_up_notes : []),
+            {
+              type: 'missing_patient_identity',
+              note: `Patient chart not auto-created. Missing: ${readiness.missing.join(', ')}.`,
+              created_at: new Date().toISOString(),
+            },
+          ];
+        } else {
+        const firstName = readiness.first_name;
+        const lastName = readiness.last_name;
+        const middleName = '';
 
         const newPatient = await base44.entities.Patient.create({
           first_name: firstName,
@@ -693,6 +831,8 @@ Actions available:
 
         updates.patient_id = newPatient.id;
         existingPatient = newPatient;
+        createdNewPatient = true;
+        }
       } else if (existingPatient) {
         // Pull MRN from existing patient and update with referral data
         const updateData = {
@@ -732,8 +872,41 @@ Actions available:
 
       await base44.entities.Referral.update(referralId, updates);
 
-      // Create comprehensive AI-generated tasks from multiple sources
+      // Persist + validate the Face-to-Face encounter extracted from the
+      // referral packet (42 CFR 424.22). Best-effort exactly like the
+      // diagnosis-coding block above: F2F bookkeeping never blocks processing.
+      // A missing face_to_face block only means none was found in the uploaded
+      // packet — it is NOT evidence that no encounter happened (companion mode),
+      // so nothing is written or flagged in that case.
+      try {
+        const referralRecord = referrals.find((r) => r.id === referralId);
+        const f2fInput = referralToF2FInput({ ...referralRecord, ...updates });
+        if (f2fInput) {
+          const f2fValidation = validateFaceToFace(f2fInput);
+          const f2fPayload = toFaceToFaceEncounter(
+            { referralId, patientId: updates.patient_id || referralRecord?.patient_id || null, ...f2fInput },
+            f2fValidation
+          );
+          const existingF2F = await base44.entities.FaceToFaceEncounter.filter({ referral_id: referralId }, undefined, PATIENT_HISTORY_ROWS);
+          if (existingF2F?.length > 0) {
+            await base44.entities.FaceToFaceEncounter.update(existingF2F[0].id, f2fPayload);
+          } else {
+            await base44.entities.FaceToFaceEncounter.create(f2fPayload);
+          }
+        }
+      } catch (f2fError) {
+        console.error('F2F encounter persistence skipped:', f2fError);
+      }
+
+      // Create comprehensive AI-generated tasks from multiple sources.
+      // Link to the Referral via related_entity/related_entity_id (NOT
+      // related_visit_id — that FK is for Visit rows; stuffing a referral id
+      // there broke triage linkage and could mis-associate Visit filters).
       const allSuggestedTasks = [];
+      const taskReferralLink = {
+        related_entity: 'Referral',
+        related_entity_id: referralId,
+      };
       
       // Tasks from intake analysis
       if (intakeAnalysis.suggested_next_steps?.length > 0) {
@@ -744,11 +917,14 @@ Actions available:
             title: step.action,
             description: `AI-suggested action based on referral analysis. Timeframe: ${step.timeframe}`,
             type: 'followup',
-            priority: step.priority === 'immediate' || step.priority === 'urgent' ? 'high' : 'medium',
+            // The filter above admits only immediate/urgent/high, so every step
+            // reaching here is high-priority work; the old ternary silently
+            // downgraded a 'high' step to 'medium'.
+            priority: 'high',
             status: 'pending',
             source: 'ai_generated',
             ai_reason: `Referral intake analysis identified this as ${step.priority} priority action`,
-            related_visit_id: referralId
+            ...taskReferralLink,
           }));
         allSuggestedTasks.push(...analysisTasksToCreate);
       }
@@ -780,7 +956,7 @@ Actions available:
           status: "pending",
           source: "ai_generated",
           ai_reason: "Wound care identified in referral document",
-          related_visit_id: referralId
+          ...taskReferralLink,
         });
       }
 
@@ -794,7 +970,7 @@ Actions available:
           status: "pending",
           source: "ai_generated",
           ai_reason: "IV therapy identified in referral document",
-          related_visit_id: referralId
+          ...taskReferralLink,
         });
       }
 
@@ -808,7 +984,7 @@ Actions available:
           status: "pending",
           source: "ai_generated",
           ai_reason: `Therapy requirements identified: ${therapyRequirements.join(', ')}`,
-          related_visit_id: referralId
+          ...taskReferralLink,
         });
       }
 
@@ -822,7 +998,7 @@ Actions available:
           status: "pending",
           source: "ai_generated",
           ai_reason: `DME needs identified: ${dmeNeeds.join(', ')}`,
-          related_visit_id: referralId
+          ...taskReferralLink,
         });
       }
 
@@ -838,43 +1014,20 @@ Actions available:
         ));
       }
       
-      // Optional fallback care-plan creation. The full extraction schema does not
-      // carry `suggested_care_plans` (that is a quick-scan field), so this is a
-      // no-op for the full-extraction path; care plans for processed referrals are
-      // generated by the dedicated AIReferralCarePlanGenerator shown in this dialog.
-      let createdCarePlansCount = 0;
-      if (extractedData.suggested_care_plans?.length > 0 && updates.patient_id) {
-        const carePlansToCreate = extractedData.suggested_care_plans.map(cp => ({
-          patient_id: updates.patient_id,
-          problem: cp.problem,
-          goal: cp.goal,
-          interventions: cp.interventions,
-          status: 'active',
-          baseline_measurement: 'To be assessed on first visit',
-          target_date: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-        }));
-        
-        await Promise.all(carePlansToCreate.map(cp => 
-          base44.entities.CarePlan.create(cp)
-            .then(() => { createdCarePlansCount++; return true; })
-            .catch(err => { console.error('Failed to create care plan:', err); return false; })
-        ));
-      }
-      
       // Show automation summary
       const automationSummary = [];
-      if (existingPatient && !updates.requires_manual_review) {
-        automationSummary.push(`✓ Patient matched: ${existingPatient.first_name} ${existingPatient.last_name}${updates.match_confidence ? ` (${Math.round(updates.match_confidence)}% confidence)` : ''}`);
-      } else if (!existingPatient && updates.patient_id) {
+      // Test creation FIRST: a freshly created chart also satisfies the match
+      // condition, so checking "matched" first told intake staff a chart was
+      // matched (sometimes with a confidence %) when one had just been created.
+      if (createdNewPatient) {
         automationSummary.push(`✓ New patient created`);
+      } else if (existingPatient && !updates.requires_manual_review) {
+        automationSummary.push(`✓ Patient matched: ${existingPatient.first_name} ${existingPatient.last_name}${updates.match_confidence ? ` (${Math.round(updates.match_confidence)}% confidence)` : ''}`);
       }
       if (createdTasksCount > 0) {
         automationSummary.push(`✓ ${createdTasksCount} automated task${createdTasksCount > 1 ? 's' : ''} created`);
       }
-      if (createdCarePlansCount > 0) {
-        automationSummary.push(`✓ ${createdCarePlansCount} care plan${createdCarePlansCount > 1 ? 's' : ''} created`);
-      }
-      
+
       if (automationSummary.length > 0) {
         toast.success(`Referral processed successfully! AI Automation: ${automationSummary.join(', ')}`);
       }
@@ -939,18 +1092,56 @@ Actions available:
     }
   };
 
+  const openSocDialog = (referral) => {
+    setSocReferral(referral);
+    setSocDate(todayEastern());
+    setSocFirstVisitDate("");
+  };
+
+  const handleMarkSocComplete = async () => {
+    if (!socReferral || !socDate) return;
+    setSocSaving(true);
+    try {
+      // Pure, tested transition — closes the intake→SOC clock.
+      const payload = markStartOfCareCompleted(socReferral, {
+        socDate,
+        firstVisitDate: socFirstVisitDate || undefined,
+        by: currentUser?.email,
+      });
+      await base44.entities.Referral.update(socReferral.id, payload);
+      queryClient.invalidateQueries({ queryKey: ['referrals'] });
+      toast.success(`Start of care recorded for ${socReferral.patient_name || 'referral'}.`);
+      setSocReferral(null);
+    } catch (error) {
+      console.error('Error marking SOC complete:', error);
+      toast.error('Failed to mark start of care complete. Please try again.');
+    }
+    setSocSaving(false);
+  };
+
   const handleCreateNewFromReview = async () => {
     try {
       const referralToUpdate = verificationReferral || matchReviewReferral;
       if (!referralToUpdate) return;
       const data = referralToUpdate.extracted_data || {};
       const demo = data.demographics || {};
-      const nameParts = (demo.full_name || '').split(' ');
+      const readiness = referralPatientReadiness({
+        patient_name: demo.full_name,
+        full_name: demo.full_name,
+        date_of_birth: demo.date_of_birth,
+        medical_record_number: demo.medical_record_number || demo.mrn,
+        phone: demo.phone,
+        address: demo.address,
+      });
+      if (!readiness.ready) {
+        toast.error(`Cannot create patient chart. Missing: ${readiness.missing.join(', ')}.`);
+        return;
+      }
       
       const newPatient = await base44.entities.Patient.create({
-        first_name: nameParts[0] || '',
-        middle_name: nameParts.length > 2 ? nameParts.slice(1, -1).join(' ') : '',
-        last_name: nameParts.length > 1 ? nameParts[nameParts.length - 1] : '',
+        first_name: readiness.first_name,
+        middle_name: '',
+        last_name: readiness.last_name,
         medical_record_number: demo?.medical_record_number || demo?.mrn || null,
         date_of_birth: demo.date_of_birth,
         address: demo.address,
@@ -1008,23 +1199,53 @@ Actions available:
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'new': return 'bg-blue-500';
-      case 'processing': return 'bg-amber-500';
-      case 'awaiting_info': return 'bg-orange-500';
-      case 'ready_for_admission': return 'bg-emerald-500';
-      case 'archived': return 'bg-slate-500';
-      case 'declined': return 'bg-red-500';
-      default: return 'bg-slate-500';
+      case 'new': return 'bg-blue-100 text-blue-800 border border-blue-200';
+      case 'processing': return 'bg-amber-100 text-amber-800 border border-amber-200';
+      case 'awaiting_info': return 'bg-orange-100 text-orange-800 border border-orange-200';
+      case 'ready_for_admission': return 'bg-emerald-100 text-emerald-800 border border-emerald-200';
+      case 'soc_completed': return 'bg-teal-100 text-teal-800 border border-teal-200';
+      case 'archived': return 'bg-slate-100 text-slate-800 border border-slate-200';
+      case 'declined': return 'bg-red-100 text-red-800 border border-red-200';
+      default: return 'bg-slate-100 text-slate-800 border border-slate-200';
     }
+  };
+
+  // F2F status chip for the queue row. Only computed once the FULL extraction
+  // ran (analysis_results is the full-processing marker); quick-scan uploads
+  // never carry a face_to_face block. Companion-mode wording: no F2F block in
+  // the packet means it wasn't FOUND there — never a claim that no encounter
+  // happened.
+  const renderF2FBadge = (referral) => {
+    if (!referral.extracted_data || !referral.analysis_results) return null;
+    const f2fInput = referralToF2FInput(referral);
+    if (!f2fInput) {
+      return (
+        <Badge variant="outline" className="bg-slate-50 text-slate-600 text-xs mt-1">
+          F2F not found in referral packet
+        </Badge>
+      );
+    }
+    const { status } = validateFaceToFace(f2fInput);
+    const chip =
+      status === 'valid'
+        ? { label: 'F2F valid', className: 'bg-emerald-50 text-emerald-700' }
+        : status === 'invalid'
+        ? { label: 'F2F non-compliant', className: 'bg-red-50 text-red-700' }
+        : { label: 'F2F needs review', className: 'bg-amber-50 text-amber-700' };
+    return (
+      <Badge variant="outline" className={`${chip.className} text-xs mt-1`}>
+        {chip.label}
+      </Badge>
+    );
   };
 
   const getPriorityColor = (priority) => {
     switch (priority) {
-      case 'urgent': return 'bg-red-600';
-      case 'high': return 'bg-orange-600';
-      case 'normal': return 'bg-blue-600';
-      case 'low': return 'bg-slate-600';
-      default: return 'bg-slate-600';
+      case 'urgent': return 'bg-red-100 text-red-800 border border-red-200';
+      case 'high': return 'bg-orange-100 text-orange-800 border border-orange-200';
+      case 'normal': return 'bg-blue-100 text-blue-800 border border-blue-200';
+      case 'low': return 'bg-slate-100 text-slate-800 border border-slate-200';
+      default: return 'bg-slate-100 text-slate-800 border border-slate-200';
     }
   };
 
@@ -1084,6 +1305,9 @@ Actions available:
         <StatCard label="Ready" value={statusCounts.ready_for_admission} icon={CheckCircle2} tone="emerald" />
       </div>
 
+      {/* Intake→SOC aging board (Timely Initiation of Care workflow) */}
+      <ReferralAgingBoard referrals={referrals} className="mb-4 sm:mb-6" />
+
       {/* Filters */}
       <Card className="mb-4 sm:mb-6">
         <CardContent className="p-3 sm:p-4">
@@ -1100,7 +1324,8 @@ Actions available:
                   <SelectItem value="processing">Processing</SelectItem>
                   <SelectItem value="awaiting_info">Awaiting Info</SelectItem>
                   <SelectItem value="ready_for_admission">Ready for Admission</SelectItem>
-                  <SelectItem value="archived">Archived</SelectItem>
+                  <SelectItem value="soc_completed">SOC Completed</SelectItem>
+                  <SelectItem value="declined">Declined</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -1132,17 +1357,19 @@ Actions available:
           {isLoading ? (
             <LoadingState label="Loading referrals..." />
           ) : filteredReferrals.length === 0 ? (
-            <div className="text-center py-12">
-              <FileText className="w-12 h-12 text-slate-400 mx-auto mb-3" />
-              <p className="text-slate-600">No referrals found</p>
-              <Button
-                onClick={() => setUploadDialogOpen(true)}
-                variant="outline"
-                className="mt-4"
-              >
-                Upload First Referral
-              </Button>
-            </div>
+            <EmptyState
+              icon={Inbox}
+              title="No referrals found"
+              className="m-4 sm:m-6"
+              action={
+                <Button
+                  onClick={() => setUploadDialogOpen(true)}
+                  variant="outline"
+                >
+                  Upload First Referral
+                </Button>
+              }
+            />
           ) : (
             <div className="overflow-x-auto -mx-3 sm:mx-0">
               <Table>
@@ -1170,7 +1397,7 @@ Actions available:
                         )}
                         {referral.patient_dob && (
                           <p className="text-xs text-slate-500">
-                            DOB: {referral.patient_dob ? format(new Date(referral.patient_dob), 'MM/dd/yyyy') : 'N/A'}
+                            DOB: {safeDate(referral.patient_dob)}
                           </p>
                         )}
                         {referral.extracted_data?.demographics?.referring_physician && (
@@ -1211,6 +1438,34 @@ Actions available:
                             {referral.extracted_data.diagnoses.primary_diagnosis}
                           </Badge>
                         )}
+                        {referral.diagnosis_coding?.sequenced?.length > 0 && (
+                          <Badge
+                            variant="outline"
+                            className={`text-xs mt-1 ${
+                              referral.diagnosis_coding.has_pdgm_primary
+                                ? 'bg-indigo-50 text-indigo-700'
+                                : 'bg-amber-50 text-amber-700'
+                            }`}
+                          >
+                            {/* sequenced[0] is the chosen primary only when the
+                                sequencer picked one (has_pdgm_primary) */}
+                            {referral.diagnosis_coding.has_pdgm_primary
+                              ? `PDGM: ${referral.diagnosis_coding.sequenced[0].code}${
+                                  referral.diagnosis_coding.sequenced.length > 1
+                                    ? ` +${referral.diagnosis_coding.sequenced.length - 1}`
+                                    : ''
+                                }`
+                              : referral.diagnosis_coding.has_acceptable_primary
+                              ? 'PDGM primary unmapped'
+                              : 'No PDGM primary'}
+                          </Badge>
+                        )}
+                        {referral.diagnosis_coding?.uncoded?.length > 0 && (
+                          <Badge variant="outline" className="bg-amber-50 text-amber-700 text-xs mt-1">
+                            {referral.diagnosis_coding.uncoded.length} uncoded dx
+                          </Badge>
+                        )}
+                        {renderF2FBadge(referral)}
                         {referral.analysis_results?.intake_analysis?.category?.primary && (
                           <Badge className="bg-navy-100 text-navy-700 text-xs mt-1">
                             {referral.analysis_results.intake_analysis.category.primary.replace(/_/g, ' ')}
@@ -1218,7 +1473,7 @@ Actions available:
                         )}
                       </TableCell>
                       <TableCell className="text-xs sm:text-sm hidden md:table-cell">
-                        {referral.referral_date ? format(new Date(referral.referral_date), 'MM/dd/yyyy') : 'N/A'}
+                        {safeDate(referral.referral_date)}
                       </TableCell>
                       <TableCell className="text-xs sm:text-sm hidden lg:table-cell">{referral.referral_source || 'N/A'}</TableCell>
                       <TableCell>
@@ -1258,20 +1513,34 @@ Actions available:
                       </TableCell>
                       <TableCell>
                        <div className="flex flex-col gap-2 min-w-[120px]">
+                         {/* Follow-Up review requires the FULL extraction; quick-scan
+                             uploads carry a partial extracted_data until processed */}
+                         {referral.extracted_data && referral.analysis_results && (
+                           <Link to={`/ReferralFollowUp?id=${referral.id}`}>
+                             <Button
+                               size="sm"
+                               variant="outline"
+                               className="min-h-[36px] text-xs w-full"
+                             >
+                               <ClipboardCheck className="w-4 h-4 mr-1" />
+                               {referral.follow_up_requests?.status ? `Follow-Up (${referral.follow_up_requests.status})` : 'Follow-Up'}
+                             </Button>
+                           </Link>
+                         )}
                          {referral.requires_manual_review ? (
                            <Button
                              size="sm"
-                             className="bg-amber-500 hover:bg-amber-600 text-white min-h-[36px] text-xs"
+                             className="min-h-[36px] text-xs"
                              onClick={() => setVerificationReferral(referral)}
                            >
                               <UserCheck className="w-4 h-4 mr-1" />
                               Verify Patient
                             </Button>
                          ) : referral.status === 'ready_for_admission' && referral.patient_id && referral.extracted_data ? (
-                           <Link to={`/SmartNoteAssistant?referral_id=${referral.id}`}>
+                           <Link to={`/ReferralIntake?tab=admission&referral_id=${referral.id}`}>
                              <Button
                                size="sm"
-                               className="bg-emerald-600 hover:bg-emerald-700 text-white min-h-[36px] text-xs w-full"
+                               className="min-h-[36px] text-xs w-full"
                              >
                                <Sparkles className="w-4 h-4 mr-1" />
                                Start Admission Note
@@ -1289,10 +1558,10 @@ Actions available:
                                {referral.analysis_results?.intake_analysis ? 'View Analysis' : 'Process'}
                              </Button>
                              {referral.patient_id && referral.extracted_data && (
-                              <Link to={`/SmartNoteAssistant?referral_id=${referral.id}`}>
+                              <Link to={`/ReferralIntake?tab=admission&referral_id=${referral.id}`}>
                                  <Button
                                    size="sm"
-                                   className="bg-navy-600 hover:bg-navy-700 text-white min-h-[36px] text-xs w-full"
+                                   className="min-h-[36px] text-xs w-full"
                                  >
                                    <Sparkles className="w-4 h-4 mr-1" />
                                    Create Note
@@ -1317,12 +1586,23 @@ Actions available:
                               )}
                             </>
                           )}
+                          {referral.status === 'ready_for_admission' && !referral.requires_manual_review && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => openSocDialog(referral)}
+                              className="min-h-[36px] text-xs text-emerald-700 border-emerald-300 hover:bg-emerald-50"
+                            >
+                              <CheckCircle2 className="w-4 h-4 mr-1" />
+                              Mark SOC Complete
+                            </Button>
+                          )}
                           <div className="flex gap-2">
                             <Button
                               size="sm"
                               variant="outline"
                               onClick={() => setReferralToReject(referral)}
-                              className="text-orange-600 hover:bg-orange-50 min-h-[36px] text-xs flex-1"
+                              className="min-h-[36px] text-xs flex-1"
                             >
                               <XCircle className="w-4 h-4 mr-1" />
                               Reject
@@ -1348,11 +1628,11 @@ Actions available:
           {totalPages > 1 && (
             <div className="flex items-center justify-between px-4 py-3 border-t">
               <span className="text-sm text-slate-500">
-                Showing {(currentPage - 1) * REFERRALS_PER_PAGE + 1}-{Math.min(currentPage * REFERRALS_PER_PAGE, filteredReferrals.length)} of {filteredReferrals.length}
+                Showing {(safePage - 1) * REFERRALS_PER_PAGE + 1}-{Math.min(safePage * REFERRALS_PER_PAGE, filteredReferrals.length)} of {filteredReferrals.length}
               </span>
               <div className="flex gap-1">
-                <Button variant="outline" size="sm" disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)}>Previous</Button>
-                <Button variant="outline" size="sm" disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)}>Next</Button>
+                <Button variant="outline" size="sm" disabled={safePage === 1} onClick={() => setCurrentPage(safePage - 1)}>Previous</Button>
+                <Button variant="outline" size="sm" disabled={safePage === totalPages} onClick={() => setCurrentPage(safePage + 1)}>Next</Button>
               </div>
             </div>
           )}
@@ -1402,7 +1682,43 @@ Actions available:
                     </AlertDescription>
                   </Alert>
                 )}
-                
+
+                {/* Upload-time diagnosis guard: RTP pre-check + PDGM clinical-group
+                    preview for the scanned ICD-10 codes. Renders nothing when the
+                    quick scan found no codes (free-text-only extraction). */}
+                {dxGuard && (
+                  <Alert className={dxGuard.acceptable ? "bg-emerald-50 border-emerald-300" : "bg-amber-50 border-amber-300"}>
+                    {dxGuard.acceptable ? (
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                    ) : (
+                      <AlertCircle className="w-4 h-4 text-amber-600" />
+                    )}
+                    <AlertDescription className={`text-sm ${dxGuard.acceptable ? "text-emerald-900" : "text-amber-900"}`}>
+                      <strong>Diagnosis Check:</strong>{' '}
+                      {dxGuard.acceptable
+                        ? `${dxGuard.primary.code} is acceptable as a PDGM principal diagnosis.`
+                        : `${dxGuard.primary.code || 'Primary code'} — RTP risk detected.`}
+                      {dxGuard.findings.length > 0 && (
+                        <ul className="list-disc list-inside mt-2 text-xs space-y-1">
+                          {dxGuard.findings.map((finding, idx) => (
+                            <li key={idx}>
+                              {finding.message}
+                              {finding.remediation && (
+                                <span className="text-amber-800"> {finding.remediation}</span>
+                              )}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                      <div className="mt-2 text-xs">
+                        <strong>Clinical group preview:</strong> {dxGuard.clinical_group_preview.clinical_group}
+                        {dxGuard.clinical_group_preview.confidence === 'low' && ' (low confidence)'}
+                        {dxGuard.secondary_count > 0 && ` · ${dxGuard.secondary_count} secondary code${dxGuard.secondary_count !== 1 ? 's' : ''}`}
+                      </div>
+                    </AlertDescription>
+                  </Alert>
+                )}
+
                 {/* Suggested Tasks Preview */}
                 {extractedFormData.suggested_initial_tasks?.length > 0 && (
                   <Alert className="bg-navy-50 border-navy-300">
@@ -1637,20 +1953,6 @@ Actions available:
                 fileUrl={referrals.find(r => r.id === processingReferralId)?.document_url}
                 onExtractionComplete={(data, analysis, pdfUrl) => handleProcessingComplete(processingReferralId, data, analysis, pdfUrl)}
               />
-              
-              {/* Show care plan generator after processing */}
-              {referrals.find(r => r.id === processingReferralId)?.extracted_data && 
-               referrals.find(r => r.id === processingReferralId)?.patient_id && (
-                <AIReferralCarePlanGenerator
-                  referralData={referrals.find(r => r.id === processingReferralId)?.extracted_data}
-                  intakeAnalysis={referrals.find(r => r.id === processingReferralId)?.analysis_results?.intake_analysis}
-                  patientId={referrals.find(r => r.id === processingReferralId)?.patient_id}
-                  onCarePlansSaved={() => {
-                    queryClient.invalidateQueries({ queryKey: ['referrals'] });
-                    toast.success('Care plans saved successfully!');
-                  }}
-                />
-              )}
             </div>
           </DialogContent>
         </Dialog>
@@ -1741,6 +2043,70 @@ Actions available:
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Mark SOC Complete Dialog */}
+      <Dialog open={!!socReferral} onOpenChange={(open) => { if (!open) setSocReferral(null); }}>
+        <DialogContent className="max-w-[95vw] sm:max-w-md">
+          <DialogHeader className="space-y-2">
+            <DialogTitle className="flex items-center gap-2">
+              <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+              Mark Start of Care Complete
+            </DialogTitle>
+            <p className="text-sm text-slate-600">
+              Record the completed start-of-care visit for {socReferral?.patient_name || 'this referral'}.
+              This closes the intake-to-SOC clock for timely-initiation tracking.
+            </p>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="soc-date" className="mb-1.5 block">SOC date</Label>
+              <Input
+                id="soc-date"
+                type="date"
+                value={socDate}
+                onChange={(e) => setSocDate(e.target.value)}
+                className="h-10"
+              />
+            </div>
+            <div>
+              <Label htmlFor="soc-first-visit-date" className="mb-1.5 block">First visit date (optional)</Label>
+              <Input
+                id="soc-first-visit-date"
+                type="date"
+                value={socFirstVisitDate}
+                onChange={(e) => setSocFirstVisitDate(e.target.value)}
+                className="h-10"
+              />
+            </div>
+          </div>
+          <DialogFooter className="flex-col sm:flex-row gap-3">
+            <Button
+              variant="outline"
+              onClick={() => setSocReferral(null)}
+              className="min-h-[44px] w-full sm:w-auto order-2 sm:order-1"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleMarkSocComplete}
+              disabled={socSaving || !socDate}
+              className="bg-emerald-600 hover:bg-emerald-700 min-h-[44px] w-full sm:w-auto order-1 sm:order-2"
+            >
+              {socSaving ? (
+                <>
+                  <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="w-4 h-4 mr-2" />
+                  Confirm SOC Complete
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
         </TabsContent>
 
         <TabsContent value="process">

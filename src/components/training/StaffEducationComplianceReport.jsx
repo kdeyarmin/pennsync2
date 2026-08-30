@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { agencyQueryKey } from '@/lib/agencyRoster';
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -25,15 +26,28 @@ import {
 } from "lucide-react";
 import { formatEastern } from "../utils/timezone";
 import { exportToPDF } from "../utils/pdfExporter";
+import { escapeCsvField } from "@/components/admin/csvExport";
 import { toast } from 'sonner';
+import { ALL_ROWS } from '@/lib/queryLimits';
+import { isPastLocalDueDate } from '@/lib/dateLocal';
 
 export default function StaffEducationComplianceReport() {
+  const { data: currentUser } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me(),
+  });
+
+
   const [timeframe, setTimeframe] = useState('30');
   const [isGenerating, setIsGenerating] = useState(false);
 
   const { data: allUsers = [] } = useQuery({
-    queryKey: ['users'],
-    queryFn: () => base44.entities.User.list(),
+    queryKey: ['users', agencyQueryKey(currentUser)],
+    queryFn: async () => {
+      const _rows = await base44.entities.User.list(undefined, ALL_ROWS);
+      const { filterUsersByCallerAgency } = await import('@/lib/agencyScope');
+      return filterUsersByCallerAgency(_rows, currentUser);
+    },
   });
 
   // Derive compliance from the entities the grading/certificate pipeline
@@ -45,13 +59,12 @@ export default function StaffEducationComplianceReport() {
   });
 
   const complianceData = React.useMemo(() => {
-    const now = new Date();
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - parseInt(timeframe));
 
     const isCompleted = (a) => a.status === 'completed' || a.pass_fail_result === 'passed';
     const isOverdue = (a) =>
-      !isCompleted(a) && (a.status === 'overdue' || (a.due_date && new Date(a.due_date) < now));
+      !isCompleted(a) && (a.status === 'overdue' || isPastLocalDueDate(a.due_date));
     // Recency is based on when the assignment was acted on (completed) or, if
     // still open, when it was assigned — so the timeframe filter reflects activity.
     const activityDate = (a) => new Date(a.completion_date || a.submitted_at || a.assigned_date || a.created_date);
@@ -72,6 +85,9 @@ export default function StaffEducationComplianceReport() {
         email: nurse.email,
         completed: recent.filter(isCompleted).length,
         avgScore: Math.round(avgScore),
+        // Distinguish "no scored work in this window" from a genuine low score, so
+        // a nurse with nothing scored isn't tagged At Risk with a phantom 0%.
+        hasScores: scored.length > 0,
         overdue,
         total: recent.length,
       };
@@ -98,18 +114,21 @@ export default function StaffEducationComplianceReport() {
       totalRequired,
       completedRequired,
       totalOverdue: staffMetrics.reduce((sum, s) => sum + s.overdue, 0),
-      atRiskStaff: staffMetrics.filter(s => s.overdue > 0 || s.avgScore < 70).length
+      atRiskStaff: staffMetrics.filter(s => s.overdue > 0 || (s.hasScores && s.avgScore < 70)).length
     };
   }, [allUsers, allAssignments, timeframe]);
 
   const statusLabel = (staff) =>
-    (staff.avgScore >= 90 && staff.overdue === 0) ? 'Excellent'
-      : (staff.overdue > 0 || staff.avgScore < 70) ? 'At Risk'
+    (staff.hasScores && staff.avgScore >= 90 && staff.overdue === 0) ? 'Excellent'
+      : (staff.overdue > 0 || (staff.hasScores && staff.avgScore < 70)) ? 'At Risk'
       : 'On Track';
 
   const exportCSV = () => {
     const headers = ['Staff Member', 'Email', 'Completed', 'Total', 'Avg Score (%)', 'Overdue', 'Status'];
-    const escape = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+    // Use the shared escaper so user-controlled name/email cells beginning with
+    // = + - @ are neutralized against spreadsheet formula injection (RFC quoting
+    // alone does not prevent Excel/Sheets from evaluating them).
+    const escape = escapeCsvField;
     const rows = complianceData.staffMetrics.map((s) =>
       [s.name || '', s.email || '', s.completed, s.total, s.avgScore, s.overdue, statusLabel(s)].map(escape).join(',')
     );
@@ -139,11 +158,6 @@ export default function StaffEducationComplianceReport() {
         '180': 'Last 6 months', '365': 'Last year',
       };
 
-      const statusFor = (staff) =>
-        (staff.avgScore >= 90 && staff.overdue === 0) ? 'Excellent'
-          : (staff.overdue > 0 || staff.avgScore < 70) ? 'At Risk'
-          : 'On Track';
-
       await exportToPDF({
         filename: `Staff_Training_Report_${formatEastern(new Date(), 'yyyy-MM-dd')}.pdf`,
         title: 'Staff Education Compliance Report',
@@ -163,9 +177,12 @@ export default function StaffEducationComplianceReport() {
               staff.name || 'N/A',
               staff.email || '',
               `${staff.completed} / ${staff.total}`,
-              `${staff.avgScore}%`,
+              // Share statusLabel/hasScores with the KPI card and CSV — the PDF
+              // used to re-derive the thresholds without the hasScores guard, so
+              // unscored staff printed a phantom 0% and "At Risk".
+              staff.hasScores ? `${staff.avgScore}%` : '-',
               staff.overdue > 0 ? String(staff.overdue) : '-',
-              statusFor(staff),
+              statusLabel(staff),
             ]),
           },
         ],
@@ -297,8 +314,10 @@ export default function StaffEducationComplianceReport() {
             </TableHeader>
             <TableBody>
               {complianceData.staffMetrics.map((staff, idx) => {
-                const isAtRisk = staff.overdue > 0 || staff.avgScore < 70;
-                const isExcellent = staff.avgScore >= 90 && staff.overdue === 0;
+                // Same helper the KPI card and CSV use. Re-deriving the thresholds
+                // here dropped the hasScores guard, so staff with nothing scored in
+                // the window were badged At Risk off a phantom 0%.
+                const status = statusLabel(staff);
 
                 return (
                   <TableRow key={idx}>
@@ -310,14 +329,18 @@ export default function StaffEducationComplianceReport() {
                       <Badge variant="outline">{staff.completed} / {staff.total}</Badge>
                     </TableCell>
                     <TableCell className="text-center">
-                      <Badge variant={
-                        staff.avgScore >= 90 ? 'success' :
-                        staff.avgScore >= 80 ? 'info' :
-                        staff.avgScore >= 70 ? 'warning' :
-                        'destructive'
-                      }>
-                        {staff.avgScore}%
-                      </Badge>
+                      {staff.hasScores ? (
+                        <Badge variant={
+                          staff.avgScore >= 90 ? 'success' :
+                          staff.avgScore >= 80 ? 'info' :
+                          staff.avgScore >= 70 ? 'warning' :
+                          'destructive'
+                        }>
+                          {staff.avgScore}%
+                        </Badge>
+                      ) : (
+                        <span className="text-slate-400">-</span>
+                      )}
                     </TableCell>
                     <TableCell className="text-center">
                       {staff.overdue > 0 ? (
@@ -327,12 +350,12 @@ export default function StaffEducationComplianceReport() {
                       )}
                     </TableCell>
                     <TableCell className="text-center">
-                      {isExcellent ? (
+                      {status === 'Excellent' ? (
                         <Badge variant="success">
                           <Award className="w-3 h-3 mr-1" />
                           Excellent
                         </Badge>
-                      ) : isAtRisk ? (
+                      ) : status === 'At Risk' ? (
                         <Badge variant="warning">
                           <AlertTriangle className="w-3 h-3 mr-1" />
                           At Risk

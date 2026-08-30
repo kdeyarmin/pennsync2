@@ -1,5 +1,8 @@
 import { useState, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
+import { useAgencyScopedQuery } from '@/hooks/useAgencyScopedQuery';
+import { useScopedPatients } from '@/hooks/useScopedPatients';
+import { agencyQueryKey } from '@/lib/agencyRoster';
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -40,6 +43,12 @@ import { format, subDays, differenceInMinutes } from "date-fns";
 import { escapeCsvField } from "@/components/admin/csvExport";
 
 export default function QualityMetricsDashboard() {
+  const { data: currentUser } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me(),
+  });
+
+
   const [timeRange, setTimeRange] = useState("30");
   const [selectedNurse, setSelectedNurse] = useState("all");
   const [aiInsights, setAiInsights] = useState(null); // State for AI insights
@@ -58,26 +67,20 @@ export default function QualityMetricsDashboard() {
   const dateRange = getDateRange();
 
   // Fetch data
-  const { data: allVisits, isLoading: visitsLoading } = useQuery({
+  const { data: allVisits, isLoading: visitsLoading } = useAgencyScopedQuery({
     queryKey: ['allVisitsMetrics', timeRange],
-    queryFn: async () => {
+    fetch: async () => {
       const visits = await base44.entities.Visit.list('-visit_date', 1000);
       return visits.filter(v => v.visit_date >= dateRange.start && v.visit_date <= dateRange.end);
     },
     initialData: [],
   });
 
-  const { data: allPatients } = useQuery({
-    queryKey: ['allPatientsMetrics'],
-    // The sibling Visit/Incident/SecurityLog queries here pass limits; this one
-    // didn't, so patient-derived metrics were capped at Base44's default 50.
-    queryFn: () => base44.entities.Patient.list('-updated_date', 5000),
-    initialData: [],
-  });
+  const { data: allPatients } = useScopedPatients({ sort: '-updated_date', limit: 5000 });
 
-  const { data: allIncidents } = useQuery({
+  const { data: allIncidents } = useAgencyScopedQuery({
     queryKey: ['allIncidentsMetrics', timeRange],
-    queryFn: async () => {
+    fetch: async () => {
       const incidents = await base44.entities.Incident.list('-incident_date', 500);
       return incidents.filter(i => i.incident_date >= dateRange.start && i.incident_date <= dateRange.end);
     },
@@ -85,8 +88,13 @@ export default function QualityMetricsDashboard() {
   });
 
   const { data: allUsers } = useQuery({
-    queryKey: ['allUsersMetrics'],
-    queryFn: () => base44.entities.User.list(),
+    queryKey: ['allUsersMetrics', agencyQueryKey(currentUser)],
+    queryFn: async () => {
+      const _rows = await base44.entities.User.list('-created_date', 1000);
+      const { filterUsersByCallerAgency } = await import('@/lib/agencyScope');
+      return filterUsersByCallerAgency(_rows, currentUser);
+    },
+    enabled: !!currentUser,
     initialData: [],
   });
 
@@ -249,7 +257,7 @@ export default function QualityMetricsDashboard() {
   };
 
   const exportMetrics = () => {
-    const csvContent = `PennCares Quality Metrics Report
+    const csvContent = `PennSync by CareMetric Quality Metrics Report
 Time Range: Last ${timeRange} days (${dateRange.start} to ${dateRange.end})
 Generated: ${format(new Date(), 'PPpp')}
 
@@ -320,11 +328,11 @@ ${Object.entries(metrics.nurseStats).map(([_email, stats]) =>
         hasRecommendations = true;
     }
     if (metrics.avgQualityScore < 80) {
-        insightsText += `- **Enhance Quality Scores:** With an average score of ${metrics.avgQualityScore}/100, there's room to improve documentation quality. Leverage Penn Sync's AI assistance features more extensively to ensure comprehensive and compliant records, focusing on areas identified by the scrubber.\n`;
+        insightsText += `- **Enhance Quality Scores:** With an average score of ${metrics.avgQualityScore}/100, there's room to improve documentation quality. Leverage PennSync AI assistance features more extensively to ensure comprehensive and compliant records, focusing on areas identified by the scrubber.\n`;
         hasRecommendations = true;
     }
     if (metrics.avgDocTime > 50) {
-        insightsText += `- **Optimize Documentation Efficiency:** The average documentation time of ${metrics.avgDocTime} minutes suggests potential inefficiencies. Encourage nurses to utilize Penn Sync's voice dictation and smart templates to streamline their workflow and reduce administrative burden. Review individual nurse times for specific coaching.\n`;
+        insightsText += `- **Optimize Documentation Efficiency:** The average documentation time of ${metrics.avgDocTime} minutes suggests potential inefficiencies. Encourage nurses to utilize PennSync voice dictation and smart templates to streamline their workflow and reduce administrative burden. Review individual nurse times for specific coaching.\n`;
         hasRecommendations = true;
     }
     if (metrics.fallRate > 10) {
@@ -344,16 +352,16 @@ ${Object.entries(metrics.nurseStats).map(([_email, stats]) =>
         .filter(([, stats]) => stats.completionRate < 70 || stats.avgDocTime > 60)
         .map(([, s]) => s.name);
     if (strugglingNurses.length > 0) {
-        insightsText += `- **Support Nurse Productivity:** ${strugglingNurses.join(', ')} currently show lower completion rates or higher documentation times. Targeted coaching, mentorship, or additional training on Penn Sync features could be highly beneficial for these individuals.\n`;
+        insightsText += `- **Support Nurse Productivity:** ${strugglingNurses.join(', ')} currently show lower completion rates or higher documentation times. Targeted coaching, mentorship, or additional training on PennSync features could be highly beneficial for these individuals.\n`;
         hasRecommendations = true;
     }
 
     if (!hasRecommendations) {
-        insightsText += `- All primary metrics are performing well. Continue monitoring and leveraging Penn Sync's tools for sustained excellence. Consider setting even more ambitious targets for continuous improvement.\n`;
+        insightsText += `- All primary metrics are performing well. Continue monitoring and leveraging PennSync AI tools for sustained excellence. Consider setting even more ambitious targets for continuous improvement.\n`;
     }
 
-    insightsText += `\n### Penn Sync AI Impact & Value:\n`;
-    insightsText += `- Penn Sync AI has saved an estimated **${metrics.totalTimeSavedHours} hours** of documentation time during this period. This translates to nurses dedicating more time directly to patient care rather than administrative tasks.\n`;
+    insightsText += `\n### PennSync AI Impact & Value:\n`;
+    insightsText += `- PennSync AI has saved an estimated **${metrics.totalTimeSavedHours} hours** of documentation time during this period. This translates to nurses dedicating more time directly to patient care rather than administrative tasks.\n`;
     insightsText += `- The average quality score of **${metrics.avgQualityScore}/100** suggests effective use of AI-driven quality checks and compliance support, reducing errors and improving record accuracy.\n`;
 
     setAiInsights(insightsText);
@@ -375,14 +383,14 @@ ${Object.entries(metrics.nurseStats).map(([_email, stats]) =>
 
   return (
     <div className="space-y-6">
-      {/* Penn Sync Branded Header */}
+      {/* PennSync by CareMetric Branded Header */}
       <Card className="bg-gradient-to-r from-navy-600 to-indigo-600 text-white border-none">
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-2xl font-bold mb-2">Penn Sync Quality Metrics Dashboard</h2>
+              <h2 className="text-2xl font-bold mb-2">PennSync by CareMetric Quality Metrics Dashboard</h2>
               <p className="text-navy-100">
-                Comprehensive quality tracking and performance analytics powered by Penn Sync AI
+                Comprehensive quality tracking and performance analytics powered by PennSync AI
               </p>
             </div>
             <TrendingUp className="w-12 h-12 text-navy-200" />
@@ -684,14 +692,14 @@ ${Object.entries(metrics.nurseStats).map(([_email, stats]) =>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-navy-600" />
-            Penn Sync AI Quality Insights
+            PennSync AI Quality Insights
           </CardTitle>
         </CardHeader>
         <CardContent>
           {isGenerating ? (
             <div className="flex items-center justify-center py-8">
               <RefreshCw className="w-6 h-6 animate-spin text-navy-600 mr-2" />
-              <span className="text-slate-600">Penn Sync AI is analyzing quality metrics...</span>
+              <span className="text-slate-600">PennSync AI is analyzing quality metrics...</span>
             </div>
           ) : aiInsights ? (
             <div className="space-y-4">
@@ -714,7 +722,7 @@ ${Object.entries(metrics.nurseStats).map(([_email, stats]) =>
                 className="bg-navy-600 hover:bg-navy-700 gap-2"
               >
                 <Sparkles className="w-4 h-4" />
-                Generate Penn Sync AI Insights
+                Generate PennSync AI Insights
               </Button>
             </div>
           )}

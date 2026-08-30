@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { useScopedPatients } from '@/hooks/useScopedPatients';
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Search, CheckCircle2, XCircle, Clock, AlertTriangle } from "lucide-react";
+import { isAdminView } from "@/lib/roles";
 import OASISComparisonView from "@/components/oasis/OASISComparisonView";
 import OASISApprovalWorkflow from "@/components/oasis/OASISApprovalWorkflow";
 
@@ -29,13 +31,10 @@ export default function OASISReview() {
     queryFn: () => base44.auth.me(),
   });
 
-  const isAdmin = currentUser?.role === 'admin';
+  const isAdmin = isAdminView(currentUser);
 
   // Fetch patients with pending OASIS reviews
-  const { data: patients = [] } = useQuery({
-    queryKey: ['patients'],
-    queryFn: () => base44.entities.Patient.list('-updated_date', 2000),
-  });
+  const { data: patients = [] } = useScopedPatients({ sort: '-updated_date', limit: 2000 });
 
   // Fetch all OASIS uploads with AI suggestions
   const { data: oasisRecords = [] } = useQuery({
@@ -94,7 +93,7 @@ export default function OASISReview() {
   });
 
   const pendingReviews = reviewItems.filter(i => i.status === 'pending');
-  const needsApproval = reviewItems.filter(i => i.approvedCount > 0 && !isAdmin);
+  const needsApproval = reviewItems.filter(i => i.approvedCount > 0);
 
   return (
     <div className="space-y-4 sm:space-y-6">

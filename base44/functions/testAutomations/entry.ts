@@ -1,11 +1,29 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
+// <<<BEGIN SHARED HELPER: requireActiveUser — generated, edit base44/_shared/backendHelpers.mjs>>>
+const isDeactivatedUser = (u) => !!u && u.is_active === false;
+const DEACTIVATED_USER_RESPONSE = () => Response.json(
+  { error: 'Unauthorized - account is deactivated' },
+  { status: 403 },
+);
+// <<<END SHARED HELPER: requireActiveUser>>>
+
+// <<<BEGIN SHARED HELPER: isAdminLike — generated, edit base44/_shared/backendHelpers.mjs>>>
+const isAdminLike = (u) => !!u && (
+  u.role === 'admin' || u.account_type === 'agency_admin' ||
+  u.account_type === 'super_admin'
+);
+// <<<END SHARED HELPER: isAdminLike>>>
+
+
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
-
-    if (!user || user.role !== 'admin') {
+    if (isDeactivatedUser(user)) return DEACTIVATED_USER_RESPONSE();
+    
+    if (!user || !isAdminLike(user)) {
       return Response.json({ error: 'Unauthorized - Admin access required' }, { status: 403 });
     }
 
@@ -14,68 +32,31 @@ Deno.serve(async (req) => {
       tests: []
     };
 
-    // Test personnel expiration notifications
-    try {
-      const personnelResult = await base44.functions.invoke('sendPersonnelExpirationNotifications', {});
-      results.tests.push({
-        function: 'sendPersonnelExpirationNotifications',
-        status: 'success',
-        result: personnelResult
-      });
-    } catch (error) {
-      results.tests.push({
-        function: 'sendPersonnelExpirationNotifications',
-        status: 'error',
-        error: error.message
-      });
-    }
+    const automationFunctions = [
+      'sendPersonnelExpirationNotifications',
+      'sendTrainingNotifications',
+      'sendCredentialRenewalReminders',
+      'sendExpirationNotifications'
+    ];
 
-    // Test training notifications
-    try {
-      const trainingResult = await base44.functions.invoke('sendTrainingNotifications', {});
-      results.tests.push({
-        function: 'sendTrainingNotifications',
-        status: 'success',
-        result: trainingResult
-      });
-    } catch (error) {
-      results.tests.push({
-        function: 'sendTrainingNotifications',
-        status: 'error',
-        error: error.message
-      });
-    }
-
-    // Test credential renewal reminders
-    try {
-      const renewalResult = await base44.functions.invoke('sendCredentialRenewalReminders', {});
-      results.tests.push({
-        function: 'sendCredentialRenewalReminders',
-        status: 'success',
-        result: renewalResult
-      });
-    } catch (error) {
-      results.tests.push({
-        function: 'sendCredentialRenewalReminders',
-        status: 'error',
-        error: error.message
-      });
-    }
-
-    // Test expiration notifications
-    try {
-      const expirationResult = await base44.functions.invoke('sendExpirationNotifications', {});
-      results.tests.push({
-        function: 'sendExpirationNotifications',
-        status: 'success',
-        result: expirationResult
-      });
-    } catch (error) {
-      results.tests.push({
-        function: 'sendExpirationNotifications',
-        status: 'error',
-        error: error.message
-      });
+    for (const fnName of automationFunctions) {
+      try {
+        const fnResult = await base44.functions.invoke(fnName, {});
+        // functions.invoke returns an axios response — extract .data to avoid
+        // "Converting circular structure to JSON" when Response.json serializes.
+        const data = fnResult?.data ?? fnResult;
+        results.tests.push({
+          function: fnName,
+          status: 'success',
+          result: typeof data === 'object' ? data : { value: data }
+        });
+      } catch (error) {
+        results.tests.push({
+          function: fnName,
+          status: 'error',
+          error: error.message
+        });
+      }
     }
 
     const successCount = results.tests.filter(t => t.status === 'success').length;
@@ -94,6 +75,6 @@ Deno.serve(async (req) => {
 
   } catch (error) {
     console.error('Automation test error:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
 });

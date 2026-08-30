@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { toLocalISODate } from "@/lib/dateLocal";
 import { useAICall } from "@/hooks/useAICall";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -55,7 +56,7 @@ Make documentation:
 - Defensible in audit`;
 
       const result = await ai.run({
-        model: "claude_opus_4_8",
+        model: "automatic",
         prompt,
         response_json_schema: {
           type: "object",
@@ -162,7 +163,7 @@ ${draftDocumentation.skilled_need_justification}
 ${draftDocumentation.goals_and_interventions?.map((g, i) => `
 Goal ${i + 1}: ${g.goal}
 Problem: ${g.problem}
-Interventions: ${g.interventions.join('; ')}
+Interventions: ${(g.interventions || []).join('; ')}
 Timeframe: ${g.timeframe}
 `).join('\n')}
 
@@ -179,7 +180,7 @@ ${draftDocumentation.caregiver_support}`;
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `OASIS_Draft_${new Date().toISOString().split('T')[0]}.txt`;
+    a.download = `OASIS_Draft_${toLocalISODate()}.txt`;
     document.body.appendChild(a);
     a.click();
     URL.revokeObjectURL(url);
@@ -373,7 +374,7 @@ ${draftDocumentation.caregiver_support}`;
                       <p className="text-sm font-medium text-navy-900 mb-1">{goal.goal}</p>
                       <p className="text-xs text-slate-600 mb-2">Problem: {goal.problem}</p>
                       <p className="text-xs text-slate-700 mb-1">
-                        <strong>Interventions:</strong> {goal.interventions.join('; ')}
+                        <strong>Interventions:</strong> {(goal.interventions || []).join('; ')}
                       </p>
                       <p className="text-xs text-slate-500">Timeframe: {goal.timeframe}</p>
                     </div>

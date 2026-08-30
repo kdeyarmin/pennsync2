@@ -1,3 +1,5 @@
+import { normalizeName, soundex, streetKeyOf } from "../patient/patientDuplicateUtils.js";
+
 /**
  * Fuzzy patient-matching score for OASIS document → patient-record linking.
  *
@@ -22,13 +24,17 @@ export function calculatePatientMatchScore(extractedName, patient, extractedDOB,
   const matchFactors = [];
   let dobMatch = false;
 
+  // normalizeName (canonical, shared with the dedupe engine) folds accents to
+  // ASCII before the a-z strip. Lowercase-only on the patient side vs strip on
+  // the extracted side meant "José García" could NEVER exact-match its own
+  // record ("jos garca" vs "josé garcía") — both sides must fold identically.
   const extractedNameRaw = String(extractedName ?? '');
-  const extractedNameClean = extractedNameRaw.toLowerCase().replace(/[^a-z\s]/g, '').trim();
+  const extractedNameClean = normalizeName(extractedNameRaw);
   const nameParts = extractedNameClean.split(/\s+/).filter(p => p.length > 1);
 
-  const fullName = `${patient.first_name || ''} ${patient.last_name || ''}`.trim().toLowerCase();
-  const firstName = (patient.first_name || '').toLowerCase();
-  const lastName = (patient.last_name || '').toLowerCase();
+  const fullName = normalizeName(`${patient.first_name || ''} ${patient.last_name || ''}`);
+  const firstName = normalizeName(patient.first_name || '');
+  const lastName = normalizeName(patient.last_name || '');
 
   // Levenshtein distance for typo tolerance
   const levenshteinDistance = (a, b) => {
@@ -72,7 +78,7 @@ export function calculatePatientMatchScore(extractedName, patient, extractedDOB,
 
   // Strategy 2: Handle "LastName, FirstName" format
   if (extractedNameRaw.includes(',')) {
-    const [lastPart, firstPart] = extractedNameRaw.split(',').map(s => s.trim().toLowerCase().replace(/[^a-z\s]/g, ''));
+    const [lastPart, firstPart] = extractedNameRaw.split(',').map(s => normalizeName(s));
     const lastSim = similarity(lastPart, lastName);
     const firstSim = similarity(firstPart, firstName);
 
@@ -123,21 +129,19 @@ export function calculatePatientMatchScore(extractedName, patient, extractedDOB,
   // Strategy 4: Initial matching (e.g., "J. Smith")
   const initials = nameParts.map(p => p.charAt(0)).join('');
   const patientInitials = (firstName.charAt(0) + lastName.charAt(0));
-  // Require both patient initials to be present. A blank patient record yields
-  // "" (or a 1-char string), and `initials.includes("")` is always true — which
-  // would award an "Initials match" to any extracted name against an empty record.
-  if (patientInitials.length === 2 && (initials === patientInitials || initials.includes(patientInitials))) {
+  // Require an EXACT 2-initial match. A blank patient record yields "" (or a
+  // 1-char string), caught by the length guard. Substring matching was dropped:
+  // `initials.includes(patientInitials)` over-credited a multi-token extracted
+  // name whose initials merely CONTAIN the patient's (e.g. patient "Jane Smith"
+  // vs "John James Smith" → "jjs".includes("js")), inflating confidence.
+  if (patientInitials.length === 2 && initials === patientInitials) {
     confidence += 10;
     matchFactors.push('Initials match');
   }
 
-  // Strategy 5: Soundex/phonetic matching for common misspellings
-  const soundex = (str) => {
-    const code = str.toUpperCase().charAt(0);
-    const mapping = { B: 1, F: 1, P: 1, V: 1, C: 2, G: 2, J: 2, K: 2, Q: 2, S: 2, X: 2, Z: 2, D: 3, T: 3, L: 4, M: 5, N: 5, R: 6 };
-    return code + str.slice(1).toUpperCase().replace(/[^A-Z]/g, '').split('').map(c => mapping[c] || '').filter((v, i, a) => i === 0 || v !== a[i - 1]).join('').substring(0, 3).padEnd(3, '0');
-  };
-
+  // Strategy 5: Soundex/phonetic matching for common misspellings. Reuses the
+  // canonical, unit-tested soundex from patientDuplicateUtils (with the standard
+  // H/W coalescing rule) rather than a second, weaker local copy that could drift.
   if (lastName.length >= 3 && nameParts.length > 0) {
     const lastPartSoundex = soundex(nameParts[nameParts.length - 1]);
     const lastNameSoundex = soundex(lastName);
@@ -255,20 +259,9 @@ export function calculatePatientMatchScore(extractedName, patient, extractedDOB,
       const patientStreetNum = patient.address.match(/^\d+/)?.[0];
 
       if (extractedStreetNum && extractedStreetNum === patientStreetNum) {
-        // Derive the street name, skipping the house number and keeping an optional
-        // leading directional (n/s/e/w) as part of the key — otherwise "123 N Main"
-        // and "123 N Oak" both reduce to the directional "n" and falsely match.
-        const streetKeyOf = (normalized) => {
-          const tokens = normalized.split(/\s+/).filter(Boolean);
-          let i = 0;
-          while (i < tokens.length && /^\d+$/.test(tokens[i])) i++; // skip house number
-          let dir = '';
-          if (i < tokens.length && /^[nsew]$/.test(tokens[i])) { dir = tokens[i]; i++; }
-          while (i < tokens.length && /^\d+$/.test(tokens[i])) i++; // skip stray numbers
-          const name = tokens[i];
-          if (!name) return undefined;
-          return dir ? `${dir} ${name}` : name;
-        };
+        // Derive the street name (canonical streetKeyOf, shared with the dedupe
+        // engine): skip the house number, keep an optional leading directional
+        // (n/s/e/w) so "123 N Main" and "123 N Oak" don't both reduce to "n".
         const extractedStreetName = streetKeyOf(extractedAddrNorm);
         const patientStreetName = streetKeyOf(patientAddrNorm);
 

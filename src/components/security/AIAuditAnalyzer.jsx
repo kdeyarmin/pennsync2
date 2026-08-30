@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { base44 } from '@/api/base44Client';
+import { useAgencyScopedQuery } from '@/hooks/useAgencyScopedQuery';
 import { useAICall } from "@/hooks/useAICall";
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -8,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { AlertTriangle, CheckCircle, Clock, TrendingUp, FileText, Shield } from 'lucide-react';
 import { toast } from 'sonner';
+import { isAdminView } from '@/lib/roles';
 
 export default function AIAuditAnalyzer() {
   const ai = useAICall();
@@ -21,19 +23,19 @@ export default function AIAuditAnalyzer() {
   const { data: activities = [] } = useQuery({
     queryKey: ['user-activities'],
     queryFn: () => base44.entities.UserActivity.list('-created_date', 500),
-    enabled: user?.role === 'admin',
+    enabled: isAdminView(user),
   });
 
   const { data: securityLogs = [] } = useQuery({
     queryKey: ['security-logs'],
     queryFn: () => base44.entities.SecurityLog.list('-timestamp', 500),
-    enabled: user?.role === 'admin',
+    enabled: isAdminView(user),
   });
 
-  const { data: visits = [] } = useQuery({
+  const { data: visits = [] } = useAgencyScopedQuery({
     queryKey: ['visits-audit'],
-    queryFn: () => base44.entities.Visit.list('-created_date', 200),
-    enabled: user?.role === 'admin',
+    fetch: () => base44.entities.Visit.list('-created_date', 200),
+    enabled: isAdminView(user),
   });
 
   const analyzePatterns = async () => {
@@ -64,7 +66,7 @@ For each issue found, provide:
 - Recommended actions`;
 
       const response = await ai.run({
-        model: "claude_opus_4_8",
+        model: "automatic",
         prompt: analysisPrompt,
         response_json_schema: {
           type: 'object',
@@ -113,7 +115,7 @@ For each issue found, provide:
     security_concern: 'Security Concern',
   };
 
-  if (user?.role !== 'admin') {
+  if (!isAdminView(user)) {
     return (
       <Alert>
         <Shield className="h-4 w-4" />

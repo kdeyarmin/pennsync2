@@ -1,12 +1,41 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
+// <<<BEGIN SHARED HELPER: requireActiveUser — generated, edit base44/_shared/backendHelpers.mjs>>>
+const isDeactivatedUser = (u) => !!u && u.is_active === false;
+const DEACTIVATED_USER_RESPONSE = () => Response.json(
+  { error: 'Unauthorized - account is deactivated' },
+  { status: 403 },
+);
+// <<<END SHARED HELPER: requireActiveUser>>>
+
+
+// Financial visibility gate. MIRRORS src/lib/permissions.canViewFinancials
+// (isAdminLike) — backend Deno modules can't import src/lib, so the admin
+// checks are duplicated here. Keep in sync (see listOASISUploads).
+function canViewFinancials(user) {
+  if (!user) return false;
+  return (
+    user.role === 'admin' ||
+    user.account_type === 'agency_admin' ||
+    user.account_type === 'super_admin'
+  );
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
+    if (isDeactivatedUser(user)) return DEACTIVATED_USER_RESPONSE();
 
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // This endpoint returns reimbursement tiers / estimated payment ranges — the
+    // exact financial data the FinancialGate hides from non-financial users
+    // everywhere else. Enforce it server-side so a nurse can't call it directly.
+    if (!canViewFinancials(user)) {
+      return Response.json({ error: 'Forbidden: financial access required' }, { status: 403 });
     }
 
     const { diagnoses, patient_data } = await req.json();
@@ -17,7 +46,7 @@ Deno.serve(async (req) => {
 
     // Use AI to rank diagnoses by PDGM reimbursement potential
     const result = await base44.integrations.Core.InvokeLLM({
-      model: "claude_opus_4_8",
+      model: "automatic",
       prompt: `You are a Medicare PDGM reimbursement expert. Analyze and rank these diagnoses by their PDGM reimbursement potential.
 
 DIAGNOSES TO RANK:
@@ -83,9 +112,8 @@ Rank all diagnoses from highest to lowest reimbursement potential.`,
 
   } catch (error) {
     console.error('Error ranking diagnoses:', error);
-    return Response.json({ 
-      error: error.message,
-      details: error.toString()
+    return Response.json({
+      error: 'Failed to rank diagnoses'
     }, { status: 500 });
   }
 });

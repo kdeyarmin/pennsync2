@@ -5,8 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import { Calendar, CheckCircle2, Clock, AlertCircle, Award, BookOpen, Loader2 } from 'lucide-react';
+import { formatLocalDate, isPastLocalDueDate, parseLocalDate, startOfLocalDay } from '@/lib/dateLocal';
 
 export default function LearningPathProgress({ planId, userId }) {
     const { data: plan } = useQuery({
@@ -36,7 +37,10 @@ export default function LearningPathProgress({ planId, userId }) {
     });
 
     const { data: certificates = [] } = useQuery({
-        queryKey: ['plan-certificates', userId],
+        // plan.year is a filter input, so it must be part of the key — without it
+        // two plan cards for the same user with different years shared one cache
+        // entry and showed the same certificate count.
+        queryKey: ['plan-certificates', userId, plan?.year],
         queryFn: () => base44.entities.TrainingCertificate.filter({
             user_id: userId,
             annual_cycle_year: plan?.year
@@ -66,31 +70,34 @@ export default function LearningPathProgress({ planId, userId }) {
     const now = new Date();
     const _upcomingDue = assignments
         .filter(a => a.due_date && a.status !== 'completed')
-        .sort((a, b) => new Date(a.due_date) - new Date(b.due_date));
+        .sort((a, b) => {
+          const da = parseLocalDate(a.due_date);
+          const db = parseLocalDate(b.due_date);
+          return (da?.getTime() || 0) - (db?.getTime() || 0);
+        });
 
-    const overdue = assignments.filter(a => 
-        a.due_date && 
-        new Date(a.due_date) < now && 
-        a.status !== 'completed'
+    const overdue = assignments.filter(a =>
+        a.status !== 'completed' && isPastLocalDueDate(a.due_date, now)
     );
 
     const formatDate = (dateString) => {
         if (!dateString) return 'No due date';
-        const date = new Date(dateString);
-        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        return formatLocalDate(dateString, { month: 'short', day: 'numeric', year: 'numeric' }) || 'No due date';
     };
 
     const getDaysUntil = (dateString) => {
         if (!dateString) return null;
-        const days = Math.ceil((new Date(dateString) - now) / (1000 * 60 * 60 * 24));
-        return days;
+        const due = parseLocalDate(dateString);
+        const today = startOfLocalDay(now);
+        if (!due || !today) return null;
+        return Math.ceil((due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
     };
 
     const getStatusBadge = (assignment) => {
         if (assignment.status === 'completed') {
             return <Badge className="bg-green-100 text-green-700 border-green-300">Completed</Badge>;
         }
-        if (assignment.status === 'overdue' || (assignment.due_date && new Date(assignment.due_date) < now)) {
+        if (assignment.status === 'overdue' || isPastLocalDueDate(assignment.due_date, now)) {
             return <Badge className="bg-red-100 text-red-700 border-red-300">Overdue</Badge>;
         }
         if (assignment.status === 'in_progress') {
@@ -211,7 +218,7 @@ export default function LearningPathProgress({ planId, userId }) {
                                                             <span className="text-slate-500">({daysUntil}d)</span>
                                                         )}
                                                     </div>
-                                                    {assignment.score_percentage !== null && (
+                                                    {assignment.score_percentage != null && (
                                                         <div className="flex items-center gap-1">
                                                             <CheckCircle2 className="h-4 w-4" />
                                                             <span>Score: {assignment.score_percentage}%</span>

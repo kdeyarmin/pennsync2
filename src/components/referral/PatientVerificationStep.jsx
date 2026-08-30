@@ -12,11 +12,47 @@ import {
   Users,
   Calendar,
   MapPin,
-  Phone
+  Phone,
+  ShieldCheck,
+  Info
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
-import { format } from "date-fns";
+import { format, isValid } from "date-fns";
+import {
+  validateMbi,
+  findMbiCandidates,
+  looksLikeMedicare,
+  looksLikeMedicareAdvantage,
+} from "./mbiValidator";
+import { ALL_ROWS } from '@/lib/queryLimits';
+
+// A suggested patient's stored date_of_birth may be a malformed string (patients
+// auto-created from referrals persist the raw AI-extracted DOB). date-fns format()
+// throws RangeError on an Invalid Date, which would crash this verification card
+// during render. Fall back to the raw value / "N/A" instead of throwing.
+const safeDOB = (value) => {
+  if (!value) return "N/A";
+  const d = new Date(value);
+  return isValid(d) ? format(d, "MM/dd/yyyy") : String(value);
+};
+
+// Describe what the referral packet says about one coverage slot. Format-only
+// companion info — statements about the packet contents, never an eligibility
+// verdict. For Medicare-looking coverage, MBI-shaped IDs are pulled from the
+// slot text + the extracted policy_numbers string and format-checked (the MBI
+// has no checksum, so this is pattern validation only).
+const describeCoverage = (insuranceText, policyNumbers) => {
+  if (!insuranceText || !looksLikeMedicare(insuranceText)) return null;
+  const candidates = findMbiCandidates(`${insuranceText} ${policyNumbers || ""}`);
+  const results = candidates.map((raw) => ({ raw, ...validateMbi(raw) }));
+  const validResult = results.find((r) => r.valid) || null;
+  return {
+    maHint: looksLikeMedicareAdvantage(insuranceText),
+    validResult,
+    invalidResults: validResult ? [] : results,
+  };
+};
 
 export default function PatientVerificationStep({ 
   referral, 
@@ -27,15 +63,27 @@ export default function PatientVerificationStep({
   const [selectedPatientId, setSelectedPatientId] = useState(null);
   const [isConfirming, setIsConfirming] = useState(false);
 
-  const { data: allPatients = [] } = useQuery({
-    queryKey: ['all-patients'],
-    queryFn: () => base44.entities.Patient.list('-created_date', 500),
-    initialData: [],
-  });
-
   const extractedData = referral.extracted_data;
   const matchAnalysis = referral.match_analysis;
   const suggestions = referral.match_suggestions || [];
+
+  // Resolve the suggested (and best-match) patients directly by id rather than
+  // paging the newest 500 — otherwise a match against an older chart is silently
+  // dropped, steering staff to create a duplicate record.
+  const matchPatientIds = [
+    ...suggestions.map((s) => s.patient_id),
+    ...(matchAnalysis?.best_match_id ? [matchAnalysis.best_match_id] : []),
+  ].filter(Boolean);
+
+  const { data: allPatients = [] } = useQuery({
+    queryKey: ['verification-patients', matchPatientIds],
+    queryFn: () =>
+      matchPatientIds.length
+        ? base44.entities.Patient.filter({ id: { $in: matchPatientIds } }, undefined, ALL_ROWS)
+        : [],
+    enabled: matchPatientIds.length > 0,
+    initialData: [],
+  });
 
   // Get suggested patients
   const suggestedPatients = suggestions.map(sug => {
@@ -139,6 +187,66 @@ export default function PatientVerificationStep({
             </div>
           </div>
 
+          {/* Insurance Verification Strip — what the referral packet contains */}
+          <div className="mt-4 p-3 bg-slate-50 rounded-lg border">
+            <p className="text-sm font-semibold text-slate-900 mb-3 flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4 text-slate-600" />
+              Insurance Listed in Referral Packet
+            </p>
+            <div className="space-y-3">
+              {[
+                { label: "Primary", text: extractedData?.demographics?.insurance_primary },
+                { label: "Secondary", text: extractedData?.demographics?.insurance_secondary },
+              ].map(({ label, text }) => {
+                const coverage = describeCoverage(text, extractedData?.demographics?.policy_numbers);
+                return (
+                  <div key={label}>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-xs text-slate-500 w-20 shrink-0">{label}</span>
+                      <span className="text-sm font-semibold">{text || 'Not listed in packet'}</span>
+                      {coverage && coverage.validResult && (
+                        <Badge className="bg-green-100 text-green-800">
+                          MBI format valid: <span className="font-mono ml-1">{coverage.validResult.raw}</span>
+                        </Badge>
+                      )}
+                      {coverage && !coverage.validResult && coverage.invalidResults.length > 0 && (
+                        <Badge className="bg-red-100 text-red-800">MBI format issue in packet</Badge>
+                      )}
+                      {coverage && !coverage.validResult && coverage.invalidResults.length === 0 && (
+                        <Badge variant="outline" className="text-slate-600">No MBI-format ID in packet</Badge>
+                      )}
+                    </div>
+                    {coverage && coverage.invalidResults.length > 0 && (
+                      <ul className="mt-1 sm:ml-[5.5rem] text-xs text-red-700 list-disc list-inside">
+                        {coverage.invalidResults.map((r) => (
+                          <li key={r.raw}>
+                            <span className="font-mono">{r.raw}</span>: {r.errors[0]}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                    {coverage?.maHint && (
+                      <p className="mt-1 sm:ml-[5.5rem] text-xs text-blue-700 flex items-start gap-1">
+                        <Info className="w-3 h-3 mt-0.5 shrink-0" />
+                        Packet wording suggests a Medicare Advantage-type plan (advantage/HMO/PPO). The ID
+                        in the packet may be a plan member ID rather than an MBI.
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-xs text-slate-500 w-20 shrink-0">Policy #s</span>
+                <span className="text-sm font-semibold">
+                  {extractedData?.demographics?.policy_numbers || 'Not listed in packet'}
+                </span>
+              </div>
+            </div>
+            <p className="text-xs text-slate-500 mt-3 italic">
+              Format check of what the referral packet contains — not an eligibility or coverage verification.
+            </p>
+          </div>
+
           {/* Match Analysis Summary */}
           {matchAnalysis && (
             <div className="mt-4 p-3 bg-navy-50 rounded-lg border border-navy-200">
@@ -201,7 +309,7 @@ export default function PatientVerificationStep({
                       <div className="grid md:grid-cols-3 gap-3 text-sm">
                         <div className="flex items-center gap-1 text-slate-600">
                           <Calendar className="w-4 h-4" />
-                          <span>DOB: {patient.date_of_birth ? format(new Date(patient.date_of_birth), 'MM/dd/yyyy') : 'N/A'}</span>
+                          <span>DOB: {safeDOB(patient.date_of_birth)}</span>
                         </div>
                         <div className="flex items-center gap-1 text-slate-600">
                           <Phone className="w-4 h-4" />
@@ -263,7 +371,7 @@ export default function PatientVerificationStep({
         <Button
           onClick={handleConfirm}
           disabled={!selectedPatientId || isConfirming}
-          className="flex-1 bg-green-600 hover:bg-green-700 h-12"
+          className="flex-1 h-12"
           size="lg"
         >
           {isConfirming ? (

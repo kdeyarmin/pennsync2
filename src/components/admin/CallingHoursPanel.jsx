@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import {
   DAY_KEYS, defaultBusinessHours, isWithinBusinessHours, summarizeSchedule,
 } from "@/components/voice/businessHours";
+import { normalizeE164 } from "@/components/voice/phoneUtils";
 import { backfillTcpaQuietHours } from "@/functions/backfillTcpaQuietHours";
 
 const DAY_LABELS = {
@@ -37,6 +38,15 @@ const guessTimeZone = () => {
   }
 };
 
+// Parse the free-text holidays textarea into an array of well-formed YYYY-MM-DD
+// dates. Only run this on blur/save — never per keystroke — so partially-typed
+// dates aren't stripped out from under the cursor.
+const parseHolidays = (text) =>
+  String(text || "")
+    .split(/[\n,]/)
+    .map((s) => s.trim())
+    .filter((s) => /^\d{4}-\d{2}-\d{2}$/.test(s));
+
 /**
  * CallingHoursPanel — global "calling & texting hours" for the agency. Outside
  * these hours, inbound calls auto-transfer (or go to voicemail) and inbound
@@ -46,13 +56,19 @@ const guessTimeZone = () => {
  */
 export default function CallingHoursPanel() {
   const queryClient = useQueryClient();
-  const { data: settingsArr = [] } = useQuery({
-    queryKey: ["agency-settings"],
-    queryFn: () => base44.entities.AgencySettings.list("-created_date", 1),
-    refetchOnWindowFocus: false,
-    initialData: [],
+  const { data: currentUser } = useQuery({
+    queryKey: ["currentUser"],
+    queryFn: () => base44.auth.me(),
   });
-  const settings = settingsArr[0];
+  const { data: settings = null } = useQuery({
+    queryKey: ["agencySettings", currentUser?.agency_name || null],
+    queryFn: async () => {
+      const { fetchCallerAgencySettings } = await import("@/lib/agencySettings");
+      return fetchCallerAgencySettings(currentUser?.agency_name);
+    },
+    enabled: !!currentUser,
+    refetchOnWindowFocus: false,
+  });
 
   const [form, setForm] = useState({
     business_hours_enabled: false,
@@ -70,6 +86,10 @@ export default function CallingHoursPanel() {
     tcpa_quiet_start_hour: 8,
     tcpa_quiet_end_hour: 21,
   });
+
+  // Raw text backing the holidays textarea. Kept separate from the parsed array
+  // so typing a partial date doesn't get filtered away mid-keystroke.
+  const [holidaysText, setHolidaysText] = useState("");
 
   useEffect(() => {
     if (!settings) return;
@@ -91,6 +111,9 @@ export default function CallingHoursPanel() {
       tcpa_quiet_start_hour: settings.tcpa_quiet_start_hour ?? 8,
       tcpa_quiet_end_hour: settings.tcpa_quiet_end_hour ?? 21,
     });
+    setHolidaysText(
+      (Array.isArray(settings.business_hours_holidays) ? settings.business_hours_holidays : []).join("\n"),
+    );
   }, [settings]);
 
   // One-time, idempotent backfill: existing agencies that never configured TCPA
@@ -102,7 +125,7 @@ export default function CallingHoursPanel() {
       .then((res) => {
         const updated = (res?.data ?? res)?.updated_count ?? 0;
         if (updated > 0) {
-          queryClient.invalidateQueries({ queryKey: ["agency-settings"] });
+          queryClient.invalidateQueries({ queryKey: ["agencySettings"] });
           toast.success("TCPA quiet hours are now enforced by default for outbound texting.");
         }
       })
@@ -111,13 +134,31 @@ export default function CallingHoursPanel() {
 
   const save = useMutation({
     mutationFn: () => {
-      const payload = { ...form };
+      // The transfer number becomes a Call Control `transfer` target, which
+      // Telnyx rejects unless it's E.164. REJECT the save on an unnormalizable
+      // value rather than persisting the raw string — a bad value silently
+      // breaks after-hours transfers at call time.
+      const normalizedTransfer = form.after_hours_transfer_number_e164
+        ? normalizeE164(form.after_hours_transfer_number_e164)
+        : "";
+      if (form.after_hours_transfer_number_e164 && !normalizedTransfer) {
+        throw new Error("Enter a valid after-hours transfer number (E.164, e.g. +17244650444) or clear the field.");
+      }
+      // Parse the raw holidays text at save time so the saved array always
+      // matches what's in the textarea, even if it never lost focus.
+      const agencyKey = String(currentUser?.agency_name || "").trim();
+      const payload = {
+        ...form,
+        business_hours_holidays: parseHolidays(holidaysText),
+        after_hours_transfer_number_e164: normalizedTransfer,
+        ...(agencyKey ? { agency_code: agencyKey, office_name: agencyKey } : {}),
+      };
       return settings?.id
         ? base44.entities.AgencySettings.update(settings.id, payload)
         : base44.entities.AgencySettings.create(payload);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["agency-settings"] });
+      queryClient.invalidateQueries({ queryKey: ["agencySettings"] });
       toast.success("Calling & texting hours saved");
     },
     onError: (err) => toast.error(err?.message || "Failed to save hours"),
@@ -143,7 +184,7 @@ export default function CallingHoursPanel() {
     : [form.business_hours_timezone, ...TIMEZONES];
 
   return (
-    <Card id="twilio-hours" className="scroll-mt-24">
+    <Card id="telnyx-hours" className="scroll-mt-24">
       <CardHeader>
         <CardTitle className="flex items-center justify-between gap-2">
           <span className="flex items-center gap-2">
@@ -246,15 +287,10 @@ export default function CallingHoursPanel() {
               <Textarea
                 rows={2}
                 placeholder={"One date per line, YYYY-MM-DD\n2026-12-25\n2027-01-01"}
-                value={(form.business_hours_holidays || []).join("\n")}
-                onChange={(e) =>
-                  setForm((f) => ({
-                    ...f,
-                    business_hours_holidays: e.target.value
-                      .split(/[\n,]/)
-                      .map((s) => s.trim())
-                      .filter((s) => /^\d{4}-\d{2}-\d{2}$/.test(s)),
-                  }))
+                value={holidaysText}
+                onChange={(e) => setHolidaysText(e.target.value)}
+                onBlur={() =>
+                  setForm((f) => ({ ...f, business_hours_holidays: parseHolidays(holidaysText) }))
                 }
                 className="mt-1 resize-none font-mono text-xs"
               />
@@ -287,8 +323,12 @@ export default function CallingHoursPanel() {
                     placeholder="Defaults to the main office number"
                     value={form.after_hours_transfer_number_e164}
                     onChange={(e) => setForm((f) => ({ ...f, after_hours_transfer_number_e164: e.target.value }))}
-                    className="mt-1"
+                    className={`mt-1 ${form.after_hours_transfer_number_e164 && !normalizeE164(form.after_hours_transfer_number_e164) ? "border-red-400 focus-visible:ring-red-400" : ""}`}
+                    aria-invalid={Boolean(form.after_hours_transfer_number_e164 && !normalizeE164(form.after_hours_transfer_number_e164))}
                   />
+                  {form.after_hours_transfer_number_e164 && !normalizeE164(form.after_hours_transfer_number_e164) && (
+                    <p className="text-[11px] text-red-600 mt-0.5">Enter a valid phone number (e.g. +17244650440).</p>
+                  )}
                 </div>
               )}
             </div>

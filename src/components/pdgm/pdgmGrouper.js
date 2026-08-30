@@ -19,6 +19,18 @@
 // This replaces the previous approach of asking an LLM to guess
 // `estimated_pdgm_group` — once the agency loads current CMS tables, grouping
 // becomes deterministic and reproducible.
+//
+// ── WIRING STATUS / canonical path ────────────────────────────────────────────
+// This client-side grouper is currently UNWIRED. The app's live, canonical PDGM
+// calculation runs in the backend function `base44/functions/calculatePDGM`
+// (admin-configurable ICD10_CLINICAL_GROUPS + case-mix multipliers + base rate;
+// see also `pdgmRates.js`). That is the single source of truth shown to staff.
+// Do NOT surface this engine's output as a SECOND reimbursement figure — two
+// independent methodologies would produce inconsistent billing numbers. If it is
+// ever wired it must (a) be supplied with the agency's current CMS case-mix
+// weight + functional item-points tables (which this repo does not ship), and
+// (b) reconcile against `calculatePDGM` rather than compete with it. Until then
+// it stays a tested, table-driven reference for that future, reconciled work.
 
 /** The 12 PDGM clinical groups (stable public reference; the ICD-10→group
  *  mapping that selects among them is CMS data supplied via cmsTables). */
@@ -106,7 +118,13 @@ export function computeFunctionalLevel(points, thresholds) {
  *  thresholds vary by clinical group, so `functionalThresholds` may be either a
  *  flat { low, medium } (one set for all groups) or a table keyed by clinical
  *  group { [group]: { low, medium } }. Returns null when no set applies, so the
- *  period is reported incomplete rather than scored against absent thresholds. */
+ *  period is reported incomplete rather than scored against absent thresholds.
+ *
+ *  NOTE: this is NOT the same shape as DEFAULT_PDGM_RATES.functionalThresholds in
+ *  pdgmRates.js, which is timing-bucket-keyed with { low, high } for the separate
+ *  backend-mirrored revenue estimator. Don't pass DEFAULT_PDGM_RATES here — its
+ *  { low, high } entries lack `medium`, so computeFunctionalLevel would (correctly)
+ *  return null and every period would report incomplete. */
 function resolveThresholds(functionalThresholds, clinicalGroup) {
   if (!functionalThresholds) return null;
   if (typeof functionalThresholds.low === "number" || typeof functionalThresholds.medium === "number") {
@@ -157,14 +175,14 @@ export function lookupCaseMix(variables, caseMixTable) {
  * tables are supplied AND every lookup resolves; otherwise `complete:false` with
  * a `missing` list. Never fabricates a group, level, HIPPS, or weight.
  *
- * @param {object} input { periodNumber, hadInstitutionalStay, principalDiagnosis,
+ * @param {Record<string, any>} [input] { periodNumber, hadInstitutionalStay, principalDiagnosis,
  *                         secondaryDiagnoses, answers }
- * @param {object} cmsTables { itemPoints, functionalThresholds, dxToGroup,
+ * @param {Record<string, any>} [cmsTables] { itemPoints, functionalThresholds, dxToGroup,
  *                             comorbidity, caseMixTable } (from official CMS files).
  *                 `functionalThresholds` may be flat ({ low, medium }) or keyed
  *                 by clinical group ({ [group]: { low, medium } }).
  */
-export function groupPeriod(input, cmsTables = {}) {
+export function groupPeriod(input = {}, cmsTables = {}) {
   const { periodNumber, hadInstitutionalStay, principalDiagnosis, secondaryDiagnoses, answers } = input || {};
   const { itemPoints, functionalThresholds, dxToGroup, comorbidity, caseMixTable } = cmsTables;
 

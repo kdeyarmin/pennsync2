@@ -86,6 +86,22 @@
       "type": "string",
       "format": "date",
       "description": "Date the most recent renewal reminder was sent, so a same-day cron re-run doesn't re-notify."
+    },
+    "renewal_reminder_offsets_sent": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "description": "Renewal reminder tiers (days before expiration) already sent by sendTrainingNotifications, so a missed cron run doesn't skip a tier permanently."
+    },
+    "renewal_assignment_claimed_by": {
+      "type": "string",
+      "description": "Per-run claim token so overlapping processTrainingRenewals / processAnnualEducationRenewals crons do not create duplicate renewal assignments"
+    },
+    "renewal_assignment_claimed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When renewal_assignment_claimed_by was written"
     }
   },
   "required": [

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { base44 } from "@/api/base44Client";
+import { agencyQueryKey } from '@/lib/agencyRoster';
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -37,6 +38,7 @@ import {
   TrendingUp,
   Activity
 } from "lucide-react";
+import { ALL_ROWS, PATIENT_HISTORY_ROWS } from '@/lib/queryLimits';
 
 export default function OASISActionWorkflow({ 
   analysisId, 
@@ -53,17 +55,38 @@ export default function OASISActionWorkflow({
   const [reviewNotes, setReviewNotes] = useState("");
   const [assignTo, setAssignTo] = useState("");
 
+  // Close the review dialog AND clear its form state, so review notes / assignee
+  // from one action item never carry over to the next. Both the success path and
+  // a user close (Cancel / overlay / Esc) route through here — a controlled
+  // `open=false` does not fire onOpenChange, so each close site must call this.
+  const closeReviewDialog = () => {
+    setShowReviewDialog(false);
+    setSelectedAction(null);
+    setReviewNotes("");
+    setAssignTo("");
+  };
+
   // Fetch action items
   const { data: actionItems = [], isLoading } = useQuery({
     queryKey: ['oasis-actions', analysisId],
-    queryFn: () => base44.entities.OASISActionItem.filter({ analysis_id: analysisId }),
+    queryFn: () => base44.entities.OASISActionItem.filter({ analysis_id: analysisId }, undefined, PATIENT_HISTORY_ROWS),
     enabled: !!analysisId
   });
 
   // Fetch users for assignment
   const { data: users = [] } = useQuery({
-    queryKey: ['users'],
-    queryFn: () => base44.entities.User.list()
+    queryKey: ['users', agencyQueryKey(currentUser)],
+    queryFn: async () => {
+      const _rows = await base44.entities.User.list(undefined, ALL_ROWS);
+      const { filterUsersByCallerAgency } = await import('@/lib/agencyScope');
+      return filterUsersByCallerAgency(_rows, currentUser);
+    }
+  });
+
+  // Current user, for the reviewed_by audit trail
+  const { data: currentUser } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me()
   });
 
   // Create action mutation
@@ -79,9 +102,7 @@ export default function OASISActionWorkflow({
     mutationFn: ({ id, data }) => base44.entities.OASISActionItem.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['oasis-actions', analysisId] });
-      setShowReviewDialog(false);
-      setSelectedAction(null);
-      setReviewNotes("");
+      closeReviewDialog();
     }
   });
 
@@ -270,11 +291,15 @@ export default function OASISActionWorkflow({
   };
 
   const handleReview = (action, decision) => {
+    if (!currentUser?.email) {
+      toast.error("Couldn't identify the current user. Please try again.");
+      return;
+    }
     updateActionMutation.mutate({
       id: action.id,
       data: {
         status: decision,
-        reviewed_by: 'current_user', // Would use actual user email
+        reviewed_by: currentUser.email,
         reviewed_at: new Date().toISOString(),
         review_notes: reviewNotes,
         assigned_to: assignTo || action.assigned_to
@@ -475,7 +500,6 @@ export default function OASISActionWorkflow({
                           </Button>
                           <Button 
                             size="sm" 
-                            className="bg-green-600 hover:bg-green-700"
                             onClick={() => handleReview(action, 'approved')}
                           >
                             <CheckCircle2 className="w-4 h-4 mr-1" /> Approve
@@ -527,7 +551,7 @@ export default function OASISActionWorkflow({
         </Tabs>
 
         {/* Review Dialog */}
-        <Dialog open={showReviewDialog} onOpenChange={setShowReviewDialog}>
+        <Dialog open={showReviewDialog} onOpenChange={(open) => (open ? setShowReviewDialog(true) : closeReviewDialog())}>
           <DialogContent className="max-w-lg">
             <DialogHeader>
               <DialogTitle>Review Action Item</DialogTitle>
@@ -601,7 +625,7 @@ export default function OASISActionWorkflow({
               </div>
             )}
             <DialogFooter>
-              <Button variant="outline" onClick={() => setShowReviewDialog(false)}>
+              <Button variant="outline" onClick={closeReviewDialog}>
                 Cancel
               </Button>
               <Button 
@@ -612,7 +636,6 @@ export default function OASISActionWorkflow({
                 <XCircle className="w-4 h-4 mr-1" /> Reject
               </Button>
               <Button 
-                className="bg-green-600 hover:bg-green-700"
                 onClick={() => handleReview(selectedAction, 'approved')}
               >
                 <CheckCircle2 className="w-4 h-4 mr-1" /> Approve

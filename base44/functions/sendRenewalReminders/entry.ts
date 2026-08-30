@@ -1,5 +1,51 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
+// <<<BEGIN SHARED HELPER: schedulerAuth — generated, edit base44/_shared/backendHelpers.mjs>>>
+const SCHEDULER_SECRET_HEADER = 'x-internal-secret';
+function isSchedulerAdmin(user) {
+  return !!user && (
+    user.role === 'admin' || user.account_type === 'agency_admin' ||
+    user.account_type === 'super_admin'
+  );
+}
+// Constant-time string compare for the shared-secret check (mirrors
+// createTelehealthToken's timingSafeEqual). A plain === short-circuits on the
+// first differing character, so response timing could leak how much of the
+// secret matched. Dependency-free char-code XOR so the identical source runs
+// under Deno (consumers) and Node (tests).
+function timingSafeEqualStr(a, b) {
+  if (typeof a !== 'string' || typeof b !== 'string' || a.length !== b.length) return false;
+  let mismatch = 0;
+  for (let i = 0; i < a.length; i++) mismatch |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return mismatch === 0;
+}
+function getSchedulerAuthError(req, user) {
+  if (isSchedulerAdmin(user)) return null;
+  const expectedSecret = String(Deno.env.get('INTERNAL_FN_SECRET') || '').trim();
+  if (!expectedSecret) {
+    return Response.json(
+      { error: 'Server misconfigured: INTERNAL_FN_SECRET is required for scheduled/internal functions' },
+      { status: 500 },
+    );
+  }
+  const providedSecret = String(req.headers.get(SCHEDULER_SECRET_HEADER) || '').trim();
+  if (timingSafeEqualStr(providedSecret, expectedSecret)) return null;
+  return Response.json(
+    { error: user ? 'Forbidden: admin or scheduler secret required' : 'Unauthorized: scheduler secret required' },
+    { status: user ? 403 : 401 },
+  );
+}
+// <<<END SHARED HELPER: schedulerAuth>>>
+
+// <<<BEGIN SHARED HELPER: requireActiveUser — generated, edit base44/_shared/backendHelpers.mjs>>>
+const isDeactivatedUser = (u) => !!u && u.is_active === false;
+const DEACTIVATED_USER_RESPONSE = () => Response.json(
+  { error: 'Unauthorized - account is deactivated' },
+  { status: 403 },
+);
+// <<<END SHARED HELPER: requireActiveUser>>>
+
+
 // ───────────────────────────────────────────────────────────────────────────
 // Tiered renewal / due-date reminders for required training.
 // processTrainingRenewals already CREATES the renewal assignment + one
@@ -24,19 +70,14 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
 
     const me = await base44.auth.me().catch(() => null);
-    const isAdmin = me?.role === 'admin' || me?.account_type === 'agency_admin' || me?.account_type === 'super_admin';
-    const internalSecret = Deno.env.get('INTERNAL_FN_SECRET');
-    if (internalSecret) {
-      if (!isAdmin && req.headers.get('x-internal-secret') !== internalSecret) {
-        return Response.json({ error: 'Forbidden' }, { status: 403 });
-      }
-    } else if (me && !isAdmin) {
-      return Response.json({ error: 'Forbidden: admin access required' }, { status: 403 });
-    }
+    const authError = getSchedulerAuthError(req, me);
+    if (authError) return authError;
+    if (isDeactivatedUser(me)) return DEACTIVATED_USER_RESPONSE();
 
     const svc = base44.asServiceRole.entities;
     const today = new Date();
     const todayIso = today.toISOString().slice(0, 10);
+    const runId = crypto.randomUUID();
 
     const openStatuses = ['assigned', 'in_progress', 'overdue', 'failed'];
     // Order by due_date ascending so the overdue + soonest-due assignments are
@@ -55,6 +96,12 @@ Deno.serve(async (req) => {
     };
 
     const notifications = [];
+    // Deferred reminder-tier marker writes. These must run only AFTER the
+    // notifications are created — marking a tier "sent" before the create means a
+    // failed/timed-out create permanently suppresses that learner's nudge. A
+    // duplicate reminder on a later run is the safe failure direction (mirrors
+    // sendExpirationNotifications' markerUpdates).
+    const markerUpdates = [];
     let remindersSent = 0;
 
     for (const a of assignments) {
@@ -62,8 +109,21 @@ Deno.serve(async (req) => {
       if (!openStatuses.includes(a.status)) continue;
       if (!a.assigned_to_user_id) continue;
 
-      const due = new Date(`${a.due_date}T00:00:00Z`);
-      const daysUntilDue = Math.ceil((due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+      // Date-only due_date values compare on the local calendar — UTC midnight
+      // parsing flagged assignments overdue / escalated tiers the evening before
+      // the due day (mirrors sendTrainingNotifications / remindPlanOverdueStaff).
+      const dueRaw = String(a.due_date).trim();
+      let daysUntilDue;
+      if (/^\d{4}-\d{1,2}-\d{1,2}$/.test(dueRaw)) {
+        const [y, m, d] = dueRaw.split('-').map(Number);
+        const dueLocal = new Date(y, m - 1, d);
+        const todayLocal = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        daysUntilDue = Math.round((dueLocal.getTime() - todayLocal.getTime()) / (1000 * 60 * 60 * 24));
+      } else {
+        const due = new Date(a.due_date);
+        if (Number.isNaN(due.getTime())) continue;
+        daysUntilDue = Math.ceil((due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+      }
 
       // Overdue only AFTER the due date has passed (daysUntilDue < 0). Due-today
       // (=== 0) is an upcoming reminder, not an overdue escalation.
@@ -78,7 +138,30 @@ Deno.serve(async (req) => {
       const alreadySent = Array.isArray(a.reminder_offsets_sent) ? a.reminder_offsets_sent : [];
       const tier = Math.min(...crossed); // smallest = most urgent (OVERDUE_OFFSET if overdue)
       if (alreadySent.includes(tier)) continue; // already nudged at this level
-      const dueLabel = new Date(a.due_date).toLocaleDateString();
+
+      // Claim before queueing so overlapping cron runs don't double-notify.
+      try {
+        await svc.TrainingAssignment.update(a.id, {
+          reminder_claimed_by: runId,
+          reminder_claimed_at: new Date().toISOString(),
+        });
+      } catch {
+        continue;
+      }
+      const claimCheck = await svc.TrainingAssignment.filter({ id: a.id }, '-created_date', 1).catch(() => []);
+      if (!claimCheck[0] || claimCheck[0].reminder_claimed_by !== runId) {
+        continue;
+      }
+
+      // Reuse dueRaw from the daysUntilDue parse above — a second `const dueRaw`
+      // here broke backend transpile (duplicate symbol) and blocked CI.
+      let dueLabel;
+      if (/^\d{4}-\d{1,2}-\d{1,2}$/.test(dueRaw)) {
+        const [y, m, d] = dueRaw.split('-').map(Number);
+        dueLabel = new Date(y, m - 1, d).toLocaleDateString();
+      } else {
+        dueLabel = new Date(a.due_date).toLocaleDateString();
+      }
       const learnerMsg = overdue
         ? `Your required training "${a.course_title}" is overdue (was due ${dueLabel}). Please complete it as soon as possible.`
         : `Reminder: your required training "${a.course_title}" is due ${dueLabel} (${daysUntilDue} day${daysUntilDue === 1 ? '' : 's'} left).`;
@@ -112,25 +195,55 @@ Deno.serve(async (req) => {
         }
       }
 
-      // Mark every crossed tier as sent so a missed run doesn't replay old tiers.
-      await svc.TrainingAssignment.update(a.id, {
-        reminder_offsets_sent: Array.from(new Set([...alreadySent, ...crossed])),
-        last_reminder_date: today.toISOString(),
-        reminder_sent: true,
+      // Record the crossed tiers so a missed run doesn't replay old tiers — but
+      // DEFER the write until after the notifications are created (see above).
+      markerUpdates.push({
+        assignmentId: a.id,
+        apply: () => svc.TrainingAssignment.update(a.id, {
+          reminder_offsets_sent: Array.from(new Set([...alreadySent, ...crossed])),
+          // TrainingAssignment.last_reminder_date is declared `format: "date"`,
+          // and every other writer stores YYYY-MM-DD. Writing a full ISO
+          // date-time made this the one outlier the reminder reports had to
+          // render. todayIso is the same value, already sliced.
+          last_reminder_date: todayIso,
+          reminder_sent: true,
+        }),
       });
       remindersSent++;
     }
 
-    // Batch-create notifications.
+    // Batch-create notifications FIRST, with per-notification fault isolation:
+    // one un-creatable Notification (e.g. a bad manager_email) must NOT abort the
+    // whole run — that would skip every tier marker and re-notify every learner on
+    // the next run (a storm). Track the assignments whose notifications failed so
+    // ONLY their tier marker is withheld (they replay next run); all others are
+    // marked so they don't replay.
     let notificationsCreated = 0;
+    const failedAssignmentIds = new Set();
     for (let i = 0; i < notifications.length; i += 50) {
       const batch = notifications.slice(i, i + 50);
-      await Promise.all(batch.map((n) => svc.Notification.create(n).catch((err) => console.error('Notification create failed:', err))));
-      notificationsCreated += batch.length;
+      const results = await Promise.allSettled(batch.map((n) => svc.Notification.create(n)));
+      results.forEach((r, k) => {
+        if (r.status === 'fulfilled') {
+          notificationsCreated++;
+        } else {
+          const aid = batch[k]?.metadata?.assignment_id;
+          if (aid) failedAssignmentIds.add(aid);
+          console.error('sendRenewalReminders: notification create failed', r.reason?.message || r.reason);
+        }
+      });
+    }
+
+    // Record the crossed tiers, skipping any assignment whose notification failed
+    // so its reminder replays next run (the safe direction) instead of being lost.
+    for (const { assignmentId, apply } of markerUpdates) {
+      if (failedAssignmentIds.has(assignmentId)) continue;
+      await apply();
     }
 
     return Response.json({ success: true, date: todayIso, reminders_sent: remindersSent, notifications_created: notificationsCreated });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error('sendRenewalReminders failed:', error);
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
 });

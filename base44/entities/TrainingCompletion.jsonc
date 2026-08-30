@@ -34,11 +34,6 @@
       "format": "date",
       "description": "Due date for required training"
     },
-    "last_reminder_sent": {
-      "type": "string",
-      "format": "date-time",
-      "description": "Timestamp of the last reminder email sent for this assignment"
-    },
     "expiration_date": {
       "type": "string",
       "format": "date",
@@ -107,5 +102,31 @@
     "nurse_email",
     "training_module_id",
     "status"
-  ]
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "nurse_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "write": {
+      "$or": [
+        {
+          "nurse_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
 }

@@ -1,5 +1,7 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { toLocalISODate } from "@/lib/dateLocal";
+import { generateDiagnosisCodes, codeLabel } from "@/components/referral/diagnosisCodeGenerator";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -32,6 +34,27 @@ export default function AIGeneratedOASISAssessment({ patientId, visitId, visitTy
   const [copiedItems, setCopiedItems] = useState([]);
   const [editingItems, setEditingItems] = useState({});
 
+  // Deterministic diagnosis sequence from the referral (codes documented in
+  // the referral only, never generated). Feeds M1021/M1023 review and the
+  // divergence check below. Clinical view only — no payment mechanics here.
+  const referralCoding = useMemo(
+    () => (referralData ? generateDiagnosisCodes(referralData) : null),
+    [referralData]
+  );
+
+  // After generation, flag when the AI's M1021 doesn't reflect the referral's
+  // documented primary so the clinician verifies before locking the OASIS.
+  const m1021Divergence = useMemo(() => {
+    if (!assessment?.oasis_items || !referralCoding?.primary) return null;
+    const m1021 = assessment.oasis_items.find((it) => /M1021/i.test(it.item_number || ""));
+    if (!m1021) return null;
+    const text = `${m1021.suggested_response || ""} ${m1021.rationale || ""}`.toUpperCase().replace(/\./g, "");
+    const code = referralCoding.primary.code; // normalized, no dot
+    const desc = (referralCoding.primary.description || "").toUpperCase();
+    const mentions = text.includes(code) || (desc && text.includes(desc.replace(/\./g, "")));
+    return mentions ? null : referralCoding.primary;
+  }, [assessment, referralCoding]);
+
   const generateAssessment = async () => {
     setIsGenerating(true);
     try {
@@ -54,7 +77,11 @@ export default function AIGeneratedOASISAssessment({ patientId, visitId, visitTy
           const numMatch = itemNum.match(/M(\d+)/);
           if (numMatch) {
             const num = parseInt(numMatch[1]);
-            if (num >= 1000 && num <= 1060) return false;
+            // M1021 (Primary Diagnosis) and M1023 (Other Diagnoses) fall in this
+            // range but are clinical diagnosis items, not administrative — keep
+            // them so the primary diagnosis is saved and the referral-divergence
+            // safety check can run.
+            if (num >= 1000 && num <= 1060 && num !== 1021 && num !== 1023) return false;
           }
           return true;
         });
@@ -91,7 +118,7 @@ export default function AIGeneratedOASISAssessment({ patientId, visitId, visitTy
         patient_id: patientId,
         visit_id: visitId || null,
         visit_type: visitType,
-        assessment_date: new Date().toISOString().split('T')[0],
+        assessment_date: toLocalISODate(),
         oasis_items: updatedItems,
         clinical_summary: assessment.clinical_summary,
         estimated_pdgm_group: assessment.estimated_pdgm_group,
@@ -170,6 +197,15 @@ ${item.documentation_tips?.map(t => `• ${t}`).join('\n')}`;
           <p className="text-xs text-indigo-800 mb-3">
             Generate intelligent OASIS assessment suggestions based on patient data, diagnoses, and care plans.
           </p>
+          {referralCoding?.sequenced?.length > 0 && (
+            <div className="bg-white border border-indigo-200 rounded p-2 mb-3 text-xs text-slate-700">
+              <p className="font-semibold text-indigo-900 mb-1">Documented in the referral (M1021/M1023 reference):</p>
+              {referralCoding.primary && <p>Primary: {codeLabel(referralCoding.primary)}</p>}
+              {referralCoding.secondaries.length > 0 && (
+                <p>Other: {referralCoding.secondaries.map((d) => d.displayCode).join(", ")}</p>
+              )}
+            </div>
+          )}
           <Button
             onClick={generateAssessment}
             disabled={isGenerating}
@@ -194,6 +230,15 @@ ${item.documentation_tips?.map(t => `• ${t}`).join('\n')}`;
 
   return (
     <Card className="border-2 border-indigo-300 bg-indigo-50">
+      {m1021Divergence && (
+        <Alert className="m-3 mb-0 bg-amber-50 border-amber-300">
+          <AlertTriangle className="w-4 h-4 text-amber-700" />
+          <AlertDescription className="text-xs text-amber-900">
+            The generated M1021 may not reflect the referral's documented primary diagnosis
+            ({codeLabel(m1021Divergence)}). Verify the primary diagnosis against the referral before finalizing.
+          </AlertDescription>
+        </Alert>
+      )}
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-sm flex items-center gap-2 text-indigo-900">
@@ -275,12 +320,14 @@ ${item.documentation_tips?.map(t => `• ${t}`).join('\n')}`;
 
           <TabsContent value="all" className="space-y-2 mt-3">
             {assessment.oasis_items?.filter(item => {
-              // Filter out administrative items M1000-M1060
+              // Filter out administrative items M1000-M1060, but keep the diagnosis
+              // items M1021/M1023 the generator deliberately retains — hiding them
+              // left the AI primary diagnosis saved yet impossible to review or edit.
               const itemNum = item.item_number?.toUpperCase() || '';
               const numMatch = itemNum.match(/M(\d+)/);
               if (numMatch) {
                 const num = parseInt(numMatch[1]);
-                if (num >= 1000 && num <= 1060) return false;
+                if (num >= 1000 && num <= 1060 && num !== 1021 && num !== 1023) return false;
               }
               return true;
             }).map((item, idx) => {
@@ -404,7 +451,7 @@ ${item.documentation_tips?.map(t => `• ${t}`).join('\n')}`;
               const numMatch = itemNum.match(/M(\d+)/);
               if (numMatch) {
                 const num = parseInt(numMatch[1]);
-                if (num >= 1000 && num <= 1060) return false;
+                if (num >= 1000 && num <= 1060 && num !== 1021 && num !== 1023) return false;
               }
               return i.category?.toLowerCase().includes('functional');
             }).map((item, idx) => (
@@ -420,7 +467,7 @@ ${item.documentation_tips?.map(t => `• ${t}`).join('\n')}`;
               const numMatch = itemNum.match(/M(\d+)/);
               if (numMatch) {
                 const num = parseInt(numMatch[1]);
-                if (num >= 1000 && num <= 1060) return false;
+                if (num >= 1000 && num <= 1060 && num !== 1021 && num !== 1023) return false;
               }
               return i.category?.toLowerCase().includes('clinical');
             }).map((item, idx) => (
@@ -436,7 +483,7 @@ ${item.documentation_tips?.map(t => `• ${t}`).join('\n')}`;
               const numMatch = itemNum.match(/M(\d+)/);
               if (numMatch) {
                 const num = parseInt(numMatch[1]);
-                if (num >= 1000 && num <= 1060) return false;
+                if (num >= 1000 && num <= 1060 && num !== 1021 && num !== 1023) return false;
               }
               return i.category?.toLowerCase().includes('cognitive');
             }).map((item, idx) => (
@@ -466,7 +513,7 @@ ${item.documentation_tips?.map(t => `• ${t}`).join('\n')}`;
           <Button
             onClick={saveAssessment}
             disabled={isSaving || !patientId}
-            className="flex-1 bg-green-600 hover:bg-green-700"
+            className="flex-1"
           >
             {isSaving ? (
               <>

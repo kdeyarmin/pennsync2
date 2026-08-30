@@ -1,10 +1,12 @@
-import { useState, useEffect, lazy, Suspense } from "react";
+import { useState, useEffect, useRef, lazy, Suspense } from "react";
 import { base44 } from "@/api/base44Client";
+import { useScopedPatients } from '@/hooks/useScopedPatients';
+import { toLocalISODate } from "@/lib/dateLocal";
 import { invokeLLM } from "@/lib/invokeLLM";
 import { calculatePatientMatchScore } from "@/components/oasis/patientMatchScore";
 import OASISAnalyticsDashboard from "@/components/oasis/OASISAnalyticsDashboard";
 import { getScoreColor, getScoreBg, getSeverityBadge } from "@/components/oasis/oasisScoreColors";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -47,6 +49,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 const BatchOASISAnalyzer = lazy(() => import("@/components/oasis/BatchOASISAnalyzer"));
 const PDGMRevenueComparison = lazy(() => import("@/components/oasis/PDGMRevenueComparison"));
 import FinancialGate from "@/components/ui/FinancialGate";
+import { canViewFinancials } from "@/lib/permissions";
 const EnhancedMultiReportComparison = lazy(() => import("@/components/oasis/EnhancedMultiReportComparison"));
 import KeyTakeawaysSummary from "@/components/oasis/KeyTakeawaysSummary";
 import AuditRiskPredictor from "@/components/oasis/AuditRiskPredictor";
@@ -95,6 +98,23 @@ const ComprehensiveOASISReviewer = lazy(() => import("@/components/oasis/Compreh
 import OASISPDFComparison from "@/components/oasis/OASISPDFComparison";
 import { toast } from 'sonner';
 
+/** Map OASIS M-item codes (UI / AI output) onto pdgmData.functional_scores keys. */
+const FUNCTIONAL_M_ITEM_FIELDS = {
+  M1800: 'm1800_grooming', m1800: 'm1800_grooming', m1800_grooming: 'm1800_grooming',
+  M1810: 'm1810_dress_upper', m1810: 'm1810_dress_upper', m1810_dress_upper: 'm1810_dress_upper',
+  M1820: 'm1820_dress_lower', m1820: 'm1820_dress_lower', m1820_dress_lower: 'm1820_dress_lower',
+  M1830: 'm1830_bathing', m1830: 'm1830_bathing', m1830_bathing: 'm1830_bathing',
+  M1840: 'm1840_toilet_transfer', m1840: 'm1840_toilet_transfer', m1840_toilet_transfer: 'm1840_toilet_transfer',
+  M1850: 'm1850_transferring', m1850: 'm1850_transferring', m1850_transferring: 'm1850_transferring',
+  M1860: 'm1860_ambulation', m1860: 'm1860_ambulation', m1860_ambulation: 'm1860_ambulation',
+};
+
+function functionalFieldForMItem(code) {
+  if (!code) return null;
+  const raw = String(code).trim();
+  return FUNCTIONAL_M_ITEM_FIELDS[raw] || FUNCTIONAL_M_ITEM_FIELDS[raw.toUpperCase()] || FUNCTIONAL_M_ITEM_FIELDS[raw.toLowerCase()] || null;
+}
+
 export default function OASISAnalyzer() {
   const [activeTab, setActiveTab] = useState("single");
   const [file, setFile] = useState(null);
@@ -120,16 +140,30 @@ export default function OASISAnalyzer() {
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [useDataEntryAssistant, setUseDataEntryAssistant] = useState(false);
   const [predictions, setPredictions] = useState(null);
+  // Comprehensive OASIS Review for the currently loaded assessment:
+  // { results, reviewed_at }. Restored from a saved OASISUpload record on load
+  // (so reopening never re-bills the LLM) and persisted back on completion.
+  const [comprehensiveReview, setComprehensiveReview] = useState(null);
+  // Mirror of the above for async code that must read the LATEST review after an
+  // await, not the value captured when the handler started.
+  const comprehensiveReviewRef = useRef(null);
+  // Action items are managed only in OASISActionWorkflow, which is admin-gated
+  // (it shows revenue impact), so the reviewer offers creation to those users
+  // only. Reuses the app-wide cached ['currentUser'] query.
+  const { data: currentUserForActions } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me(),
+  });
+  // The OASISUpload record id backing the loaded assessment, when one exists —
+  // set on load of a saved upload and after "Save to Patient Record".
+  const [oasisUploadRecordId, setOasisUploadRecordId] = useState(null);
   const [patientHistoricalData, setPatientHistoricalData] = useState(null);
   const [extractedData, setExtractedData] = useState(null);
 
   const queryClient = useQueryClient();
 
   // Fetch patients for linking
-  const { data: patients = [] } = useQuery({
-    queryKey: ['patients'],
-    queryFn: () => base44.entities.Patient.list('-updated_date', 2000),
-  });
+  const { data: patients = [] } = useScopedPatients({ sort: '-updated_date', limit: 2000 });
 
   // Update selected patient when selectedPatientId changes
   useEffect(() => {
@@ -164,8 +198,14 @@ export default function OASISAnalyzer() {
           functional: o.pdgm_data?.functional_impairment_level
         })),
         hospitalizations: visits.filter(v => v.visit_type === 'admission'),
-        functionalDecline: previousOASIS.length >= 2 && 
-          previousOASIS[0].pdgm_data?.functional_impairment_level > previousOASIS[1].pdgm_data?.functional_impairment_level
+        // Compare ordinal levels — string ">" is lexicographic ("Low" > "High").
+        functionalDecline: (() => {
+          if (previousOASIS.length < 2) return false;
+          const rank = { low: 1, medium: 2, high: 3 };
+          const a = rank[String(previousOASIS[0].pdgm_data?.functional_impairment_level || '').toLowerCase()] || 0;
+          const b = rank[String(previousOASIS[1].pdgm_data?.functional_impairment_level || '').toLowerCase()] || 0;
+          return a > b;
+        })()
       });
     } catch (error) {
       console.error('Error loading historical data:', error);
@@ -174,7 +214,13 @@ export default function OASISAnalyzer() {
 
   // Fetch saved OASIS uploads
   const { data: savedOASISUploads = [] } = useQuery({
-    queryKey: ['oasisUploads'],
+    // Source + limit in the key. This payload is NOT interchangeable with the
+    // direct OASISUpload.list() fetches other dashboards make — it is capped at
+    // 50 rows and has the financial fields stripped — but they all shared the
+    // bare ['oasisUploads'] key, so whichever landed first was served to the
+    // rest. The invalidate below stays broad on purpose: react-query matches
+    // keys by prefix, so a new upload still refreshes every one of these views.
+    queryKey: ['oasisUploads', 'listFn', 50],
     // Routed through listOASISUploads so financial fields (estimated_payment,
     // revenue_*) are stripped server-side for non-financial users.
     queryFn: async () => (await base44.functions.invoke('listOASISUploads', { sort: '-created_date', limit: 50 }))?.data?.uploads || [],
@@ -251,6 +297,18 @@ export default function OASISAnalyzer() {
 
   // Handle viewing batch result in single analysis view
   const handleViewBatchResult = (result) => {
+    setRevenueData(null); // drop the prior result's revenue figures (see handleFileChange)
+    // Batch results carry no persisted comprehensive review / backing record.
+    setComprehensiveReview(null);
+    comprehensiveReviewRef.current = null;
+    setOasisUploadRecordId(null);
+    // Clear the analysis IDENTITY too. The effect that mints a fresh
+    // analysis_id only runs when analysisId is falsy, so leaving the previous
+    // one here filed this assessment's action items under the previous
+    // assessment's workflow and patient name.
+    setAnalysisId(null);
+    setPatientName("");
+    setSavedToPatient(false);
     setAnalysisResults(result);
     if (result?.pdgm_data) {
       setPdgmData(result.pdgm_data);
@@ -273,6 +331,16 @@ export default function OASISAnalyzer() {
       setAnalysisId(null);
       setSavedToPatient(false);
       setUploadedFileUrl(null);
+      // Clear the prior upload's revenue figures so a stale optimized_payment /
+      // revenue_uplift can't be saved against this new assessment before its own
+      // PDGM revenue comparison recomputes.
+      setRevenueData(null);
+      setOriginalPayment(null);
+      // Drop the prior assessment's comprehensive review + backing record so it
+      // can't hydrate (or be persisted) against this new document's analysis.
+      setComprehensiveReview(null);
+      comprehensiveReviewRef.current = null;
+      setOasisUploadRecordId(null);
     } else {
       setError("Please select a valid PDF file.");
       setFile(null);
@@ -383,12 +451,23 @@ export default function OASISAnalyzer() {
       const cleanPdgmData = sanitizeData(pdgmData);
       const cleanAnalysisResults = sanitizeData(analysisResults);
 
+      // Persist the priced case-mix weight and clinical group alongside the
+      // extraction. calculatePDGM derives both, but nothing ever stored them, so
+      // PDGMTrendDashboard's "Avg Case Mix" read undefined (always 0.0000) and its
+      // clinical-group filter matched no rows at all.
+      if (Number.isFinite(revenueData?.original?.caseMixWeight)) {
+        cleanPdgmData.case_mix_weight = revenueData.original.caseMixWeight;
+      }
+      if (revenueData?.original?.clinicalGroup) {
+        cleanPdgmData.clinical_group = revenueData.original.clinicalGroup;
+      }
+
       const savedOASIS = await saveOASISMutation.mutateAsync({
         patient_id: patientIdToUse || null,
         patient_name: patientFullName,
         file_url: uploadedFileUrl,
         file_name: file?.name || 'OASIS Document',
-        assessment_date: analysisResults.pdgm_data?.patient_info?.assessment_date || new Date().toISOString().split('T')[0],
+        assessment_date: analysisResults.pdgm_data?.patient_info?.assessment_date || toLocalISODate(),
         assessment_type: mapAssessmentType(analysisResults.pdgm_data?.patient_info?.assessment_type),
         analysis_id: analysisId,
         pdgm_data: cleanPdgmData,
@@ -400,8 +479,35 @@ export default function OASISAnalyzer() {
           revenue_optimization: analysisResults.revenue_optimization_score || 0
         },
         estimated_payment: originalPayment || 0,
+        // Persist the "after corrections" figure + uplift when a corrected scenario
+        // exists (revenueData from PDGMRevenueComparison's calculatePDGM call), so
+        // the admin Documentation Impact view can show a real, record-driven
+        // before→after. Absent when no corrections were modeled. Financial fields —
+        // listOASISUploads strips any payment/revenue key for non-financial users.
+        ...(Number.isFinite(revenueData?.corrected?.totalPayment)
+          ? {
+              optimized_payment: revenueData.corrected.totalPayment,
+              revenue_uplift: Number.isFinite(revenueData?.revenueDifference)
+                ? revenueData.revenueDifference
+                : Math.round((revenueData.corrected.totalPayment - (originalPayment || 0)) * 100) / 100,
+            }
+          : {}),
+        // Persist the comprehensive AI review with the record so reopening this
+        // upload restores it instead of re-running the billed LLM call.
+        ...(comprehensiveReview ? { comprehensive_review: sanitizeData(comprehensiveReview) } : {}),
         status: 'analyzed'
       });
+      // The assessment now has a backing record — later review re-runs persist to it.
+      setOasisUploadRecordId(savedOASIS.id);
+      // A review that completed WHILE the create was in flight was not in the
+      // payload above and had no record id to update — without this it would be
+      // lost, and reopening the record would re-run (and re-bill) the review.
+      const latestReview = comprehensiveReviewRef.current;
+      if (latestReview && latestReview !== comprehensiveReview) {
+        base44.entities.OASISUpload
+          .update(savedOASIS.id, { comprehensive_review: sanitizeData(latestReview) })
+          .catch((err) => console.error('Failed to persist comprehensive review after save:', err));
+      }
 
       // Log save activity
       logActivity(ActivityActions.OASIS_SAVE, {
@@ -435,6 +541,13 @@ export default function OASISAnalyzer() {
   // Load saved OASIS for viewing
   // Load saved OASIS for viewing
   const handleLoadSavedOASIS = (oasisUpload) => {
+    setRevenueData(null); // drop the prior result's revenue figures (see handleFileChange)
+    // Restore the persisted comprehensive review (if any) so the reviewer
+    // hydrates from it instead of re-running the billed LLM call, and keep the
+    // record id so a manual re-run can persist its refreshed findings.
+    setComprehensiveReview(oasisUpload.comprehensive_review || null);
+    comprehensiveReviewRef.current = oasisUpload.comprehensive_review || null;
+    setOasisUploadRecordId(oasisUpload.id);
     setAnalysisResults(oasisUpload.analysis_results);
     setPdgmData(oasisUpload.pdgm_data);
     setAnalysisId(oasisUpload.analysis_id);
@@ -480,7 +593,7 @@ export default function OASISAnalyzer() {
         ]);
         file_url = uploadResult.file_url;
       } catch (uploadErr) {
-        throw new Error(`File upload failed: ${uploadErr.message}. Please check your connection and try again.`);
+        throw new Error(`File upload failed: ${uploadErr.message}. Please check your connection and try again.`, { cause: uploadErr });
       }
       
       setUploadedFileUrl(file_url);
@@ -519,10 +632,15 @@ export default function OASISAnalyzer() {
             assessment_reason: { type: "string", description: "M0100 reason for assessment" },
 
             // Episode timing - critical for PDGM
-            m0110_episode_timing: { type: "string", description: "M0110 Episode Timing: 1=Early (within 30 days of SOC/ROC), 2=Late (31+ days), or NA" },
+            m0110_episode_timing: { type: "string", description: "M0110 Episode Timing: 01=Early (days 1-30 of period), 02=Late (day 31+), or NA" },
             soc_date: { type: "string", description: "M0030 Start of Care date" },
             referral_date: { type: "string", description: "M0104 Referral date" },
             days_since_soc: { type: "string", description: "Number of days since start of care if mentioned" },
+            // Admission source - critical for PDGM community vs institutional payment
+            m1000_from_where_admitted: {
+              type: "string",
+              description: "M1000 From where was the patient admitted? Codes: 1=Community (home/physician), 2=Hospital, 3=SNF, 4=IRF/rehab hospital, 5=LTCH, 6=Inpatient psych, 7=Other. Extract the checked code(s) or the facility type text."
+            },
 
             // DIAGNOSES - SEARCH THE ENTIRE DOCUMENT FOR THESE
             m1021_primary_diagnosis_code: { 
@@ -568,10 +686,18 @@ export default function OASISAnalyzer() {
             m1306_pressure_ulcer: { type: "string", description: "M1306 pressure ulcer present 0-1" },
             m1307_pressure_ulcer_stage: { type: "string", description: "M1307 oldest stage" },
             m1311_pressure_ulcer_count: { type: "string", description: "M1311 number of ulcers" },
-            m1322_stasis_ulcer: { type: "string", description: "M1322 stasis ulcer present" },
-            m1324_stasis_ulcer_status: { type: "string", description: "M1324 status" },
-            m1330_surgical_wound: { type: "string", description: "M1330 surgical wound present" },
-            m1340_surgical_wound_status: { type: "string", description: "M1340 status" },
+            // These were off by one OASIS item, so the model was asked to read
+            // stasis ulcer out of M1322 (Stage 1 pressure INJURY count) and
+            // surgical wound out of M1330 (which is the stasis-ulcer item). The
+            // resulting clinical_items booleans fed the PDGM comorbidity
+            // reconciler as documentation of the wrong wounds entirely.
+            // M1330 = stasis ulcer present, M1334 = its status,
+            // M1340 = surgical wound present (its value encodes infection —
+            // matches oasisQuestions.jsx), M1342 = its status.
+            m1330_stasis_ulcer: { type: "string", description: "M1330 stasis ulcer present" },
+            m1334_stasis_ulcer_status: { type: "string", description: "M1334 status of most problematic stasis ulcer" },
+            m1340_surgical_wound: { type: "string", description: "M1340 surgical wound present (0=no, 1=yes not infected, 2=yes infected)" },
+            m1342_surgical_wound_status: { type: "string", description: "M1342 status of most problematic surgical wound" },
 
             // Cognitive and behavioral
             m1700_cognitive: { type: "string", description: "M1700 cognitive functioning" },
@@ -627,7 +753,7 @@ export default function OASISAnalyzer() {
             
             // Use AI to parse the raw text for critical fields
             const parsedData = await invokeLLM({
-              model: "claude_opus_4_8",
+              model: "automatic",
               prompt: `Parse this OASIS document text and extract key data fields. Focus on accuracy.
 
 DOCUMENT TEXT:
@@ -689,7 +815,7 @@ Return JSON:
               }
             };
           } else {
-            throw new Error("Text extraction also failed");
+            throw new Error("Text extraction also failed", { cause: extractErr });
           }
         } catch {
           throw new Error(`Unable to read PDF: ${extractErr.message}. Please ensure the PDF is not password-protected, corrupted, or scanned without OCR. Try re-saving the PDF or using a different file.`);
@@ -739,7 +865,7 @@ Return JSON:
         const comorbidities = output.comorbidities_text || 'NOT FOUND';
         
         // Enhanced patient name extraction with fallbacks
-        let extractedPatientName = output.patient_name_raw || output.patient_name || '';
+        extractedPatientName = output.patient_name_raw || output.patient_name || '';
         
         // Try to construct from first/last if full name not found
         if (!extractedPatientName && (output.patient_first_name || output.patient_last_name)) {
@@ -812,10 +938,10 @@ Return JSON:
       M1306 Pressure Ulcer Present: ${output.m1306_pressure_ulcer || '?'}
       M1307 Pressure Ulcer Stage: ${output.m1307_pressure_ulcer_stage || 'N/A'}
       M1311 Pressure Ulcer Count: ${output.m1311_pressure_ulcer_count || 'N/A'}
-      M1322 Stasis Ulcer: ${output.m1322_stasis_ulcer || '?'}
-      M1324 Stasis Ulcer Status: ${output.m1324_stasis_ulcer_status || 'N/A'}
-      M1330 Surgical Wound: ${output.m1330_surgical_wound || '?'}
-      M1340 Surgical Wound Status: ${output.m1340_surgical_wound_status || 'N/A'}
+      M1330 Stasis Ulcer: ${output.m1330_stasis_ulcer || '?'}
+      M1334 Stasis Ulcer Status: ${output.m1334_stasis_ulcer_status || 'N/A'}
+      M1340 Surgical Wound: ${output.m1340_surgical_wound || '?'}
+      M1342 Surgical Wound Status: ${output.m1342_surgical_wound_status || 'N/A'}
 
       COGNITIVE/BEHAVIORAL:
       M1700 Cognitive Functioning: ${output.m1700_cognitive || '?'}
@@ -848,36 +974,81 @@ Return JSON:
       }
 
       
-      // Parse scores helper
-      const parseScore = (val) => {
-        if (!val) return 0;
-        const num = parseInt(String(val).replace(/[^0-9]/g, ''));
-        return isNaN(num) ? 0 : num;
+      // Parse OASIS item scores carefully. Values often arrive as "M1830: 4" or
+      // "Bathing - 3"; stripping ALL non-digits would turn that into 18304 and
+      // blow functional points / case-mix. Prefer an isolated 0–max digit; missing
+      // stays null (0 is a real OASIS response meaning independent).
+      const parseScore = (val, max = 6) => {
+        if (val == null || val === '') return null;
+        const s = String(val).trim();
+        if (/^\d+$/.test(s)) {
+          const n = parseInt(s, 10);
+          return Number.isFinite(n) && n >= 0 && n <= max ? n : null;
+        }
+        // Match any isolated run of digits, then range-check against `max`.
+        // A hardcoded [0-6] class silently dropped every legitimate value above
+        // 6 — an M1311 ulcer count of 7-9, and any medication count over 6 (the
+        // polypharmacy cases that matter most), both came back null.
+        // \b still prevents "M1830" from being read as 1830.
+        const matches = [...s.matchAll(/\b(\d{1,3})\b/g)];
+        if (matches.length === 0) return null;
+        const n = parseInt(matches[matches.length - 1][1], 10);
+        return Number.isFinite(n) && n >= 0 && n <= max ? n : null;
       };
 
-      // Default admission source
+      // M1000 → community vs institutional (mirrors calculatePDGM validation).
+      const m1000Raw = String(output?.m1000_from_where_admitted || '').trim();
+      const m1000Lower = m1000Raw.toLowerCase();
+      // Strip a leading zero first so a zero-padded code ("02") still matches
+      // the single-digit pattern. Mirrors calculatePDGM's validateAdmissionSource.
+      const m1000Code = (m1000Raw.replace(/^0+(?=\d)/, '').match(/\b([1-7])\b/) || [])[1] || '';
+      // An explicit M1000 code decides on its own; the keyword scans are only a
+      // fallback for values that carry no code. OR-ing the code with the
+      // institutional keywords made the community branch unreachable for CMS's
+      // own response-1 wording ("Community (no inpatient facility discharge
+      // within the past 14 days)"), storing a community admission as
+      // institutional. Mirrors calculatePDGM's validateAdmissionSource.
       let admissionSource = 'community';
+      if (m1000Code) {
+        admissionSource = ['2', '3', '4', '5', '6'].includes(m1000Code) ? 'institutional' : 'community';
+      } else if (/hospital|snf|skilled nursing|inpatient|acute|rehab|ltch|irf|psych/.test(m1000Lower)) {
+        admissionSource = 'institutional';
+      } else if (/community|home|physician|clinic|outpatient/.test(m1000Lower)) {
+        admissionSource = 'community';
+      }
 
-      // Determine episode timing from M0110 or calculated from dates
+      // Episode timing: prefer exact M0110 01/02 (as calculatePDGM), then dates.
+      // Day 31 of care (daysSinceSoc >= 30) starts the late period — NOT > 30.
+      // Do NOT treat a bare "30" as early (that matched late "30+" wording).
       let episodeTiming = 'early';
-      const m0110 = String(output?.m0110_episode_timing || '').toLowerCase();
-      if (m0110.includes('2') || m0110.includes('late') || m0110.includes('31')) {
+      const m0110Raw = String(output?.m0110_episode_timing || '').trim();
+      const m0110Digits = m0110Raw.replace(/\D/g, '');
+      const m0110Lower = m0110Raw.toLowerCase();
+      if (m0110Digits === '02' || m0110Digits === '2' || m0110Lower.includes('late')) {
         episodeTiming = 'late';
-      } else if (m0110.includes('1') || m0110.includes('early') || m0110.includes('30') || m0110.includes('within')) {
+      } else if (m0110Digits === '01' || m0110Digits === '1' || m0110Lower.includes('early')) {
         episodeTiming = 'early';
       } else if (output?.days_since_soc) {
-        const days = parseInt(output.days_since_soc);
-        if (!isNaN(days) && days > 30) {
-          episodeTiming = 'late';
-        }
+        const days = parseInt(output.days_since_soc, 10);
+        if (!isNaN(days) && days >= 30) episodeTiming = 'late';
       } else if (output?.soc_date && output?.assessment_date) {
-        // Try to calculate from dates
         try {
-          const soc = new Date(output.soc_date);
-          const assessment = new Date(output.assessment_date);
-          const diffDays = Math.floor((assessment - soc) / (1000 * 60 * 60 * 24));
-          if (diffDays > 30) {
-            episodeTiming = 'late';
+          // Calendar-day diff, not a raw-ms floor: a floor undercounts by one
+          // across spring-forward DST or when the two dates parse in different
+          // zones (local MM/DD/YYYY vs UTC YYYY-MM-DD) — letting day 31 of
+          // care read as "early". Date-only ISO strings parse as UTC, so use
+          // UTC components for those and local otherwise, then diff UTC days.
+          const parseDay = (v) => {
+            const iso = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(String(v).trim());
+            if (iso) return Date.UTC(Number(iso[1]), Number(iso[2]) - 1, Number(iso[3]));
+            const d = new Date(v);
+            return Number.isNaN(d.getTime()) ? NaN : Date.UTC(d.getFullYear(), d.getMonth(), d.getDate());
+          };
+          const socDay = parseDay(output.soc_date);
+          const assessmentDay = parseDay(output.assessment_date);
+          if (!Number.isNaN(socDay) && !Number.isNaN(assessmentDay)) {
+            const diffDays = Math.round((assessmentDay - socDay) / (1000 * 60 * 60 * 24));
+            if (diffDays >= 30) episodeTiming = 'late';
           }
         } catch {
           // Keep default early
@@ -956,29 +1127,33 @@ Return JSON:
         admission_source: admissionSource,
         episode_timing: episodeTiming,
         m0110_episode_timing: output?.m0110_episode_timing || null,
+        m1000_from_where_admitted: output?.m1000_from_where_admitted || null,
         soc_date: output?.soc_date || null,
         functional_scores: {
-          m1800_grooming: parseScore(output?.m1800_grooming),
-          m1810_dress_upper: parseScore(output?.m1810_dress_upper),
-          m1820_dress_lower: parseScore(output?.m1820_dress_lower),
-          m1830_bathing: parseScore(output?.m1830_bathing),
-          m1840_toilet_transfer: parseScore(output?.m1840_toilet_transfer),
-          m1850_transferring: parseScore(output?.m1850_transferring),
-          m1860_ambulation: parseScore(output?.m1860_ambulation)
+          m1800_grooming: parseScore(output?.m1800_grooming, 3),
+          m1810_dress_upper: parseScore(output?.m1810_dress_upper, 3),
+          m1820_dress_lower: parseScore(output?.m1820_dress_lower, 3),
+          m1830_bathing: parseScore(output?.m1830_bathing, 6),
+          m1840_toilet_transfer: parseScore(output?.m1840_toilet_transfer, 4),
+          m1850_transferring: parseScore(output?.m1850_transferring, 5),
+          m1860_ambulation: parseScore(output?.m1860_ambulation, 6)
         },
         gg_scores: { 
           self_care: output?.gg0130_self_care || null, 
           mobility: output?.gg0170_mobility || null 
         },
         clinical_items: {
-          dyspnea: parseScore(output?.m1400_dyspnea),
-          pain_frequency: parseScore(output?.m1242_pain_freq),
-          pressure_ulcer_present: output?.m1306_pressure_ulcer === '1' || String(output?.m1306_pressure_ulcer).toLowerCase().includes('yes'),
+          dyspnea: parseScore(output?.m1400_dyspnea, 4),
+          pain_frequency: parseScore(output?.m1242_pain_freq, 4),
+          pressure_ulcer_present: output?.m1306_pressure_ulcer === '1' || String(output?.m1306_pressure_ulcer || '').toLowerCase().includes('yes'),
           pressure_ulcer_stage: output?.m1307_pressure_ulcer_stage || null,
-          pressure_ulcer_count: parseScore(output?.m1311_pressure_ulcer_count),
-          stasis_ulcer: output?.m1322_stasis_ulcer === '1' || String(output?.m1322_stasis_ulcer).toLowerCase().includes('yes'),
-          surgical_wound: output?.m1330_surgical_wound === '1' || String(output?.m1330_surgical_wound).toLowerCase().includes('yes'),
-          surgical_wound_status: output?.m1340_surgical_wound_status || null
+          pressure_ulcer_count: parseScore(output?.m1311_pressure_ulcer_count, 9),
+          stasis_ulcer: output?.m1330_stasis_ulcer === '1' || String(output?.m1330_stasis_ulcer || '').toLowerCase().includes('yes'),
+          // M1340 is 0=no / 1=yes not infected / 2=yes infected, so any non-zero
+          // response means a surgical wound is present.
+          surgical_wound: ['1', '2'].includes(String(output?.m1340_surgical_wound || '').trim())
+            || String(output?.m1340_surgical_wound || '').toLowerCase().includes('yes'),
+          surgical_wound_status: output?.m1342_surgical_wound_status || null
         },
         cognitive_status: {
           cognitive_functioning: output?.m1700_cognitive || null,
@@ -995,7 +1170,9 @@ Return JSON:
           fall_risk: output?.fall_risk_assessment || null,
           hospitalization_risk: output?.hospitalization_risk || null,
           high_risk_medications: output?.high_risk_medications || null,
-          medication_count: parseScore(output?.medication_count)
+          // Not an OASIS 0-6 item: a medication count routinely exceeds 6, and
+          // the default max clamped every polypharmacy patient back to null.
+          medication_count: parseScore(output?.medication_count, 99)
         },
         homebound_reason: output?.homebound_reason || null,
         patient_info: { 
@@ -1005,7 +1182,7 @@ Return JSON:
           dob: output?.patient_dob || "Not found",
           gender: output?.patient_gender || "Not specified",
           address: output?.patient_address || null,
-          assessment_date: output?.assessment_date || new Date().toISOString().split('T')[0], 
+          assessment_date: output?.assessment_date || toLocalISODate(),
           assessment_type: output?.assessment_type || "Unknown",
           assessment_reason: output?.assessment_reason || "Not specified"
         }
@@ -1025,7 +1202,7 @@ Return JSON:
       try {
         analysisResult = await Promise.race([
           invokeLLM({
-            model: "claude_opus_4_8",
+            model: "automatic",
             prompt: `Analyze OASIS document. Extract: diagnosis, functional scores, compliance issues, revenue opportunities.
 
 DATA:
@@ -1063,7 +1240,7 @@ Return scores (0-100) and top 3-5 issues in each category.`,
           )
         ]);
       } catch (analysisErr) {
-        throw new Error(`AI analysis failed: ${analysisErr.message}. Please try uploading again.`);
+        throw new Error(`AI analysis failed: ${analysisErr.message}. Please try uploading again.`, { cause: analysisErr });
       }
 
       setUploadProgress(85);
@@ -1127,9 +1304,7 @@ Return scores (0-100) and top 3-5 issues in each category.`,
       setPdgmData(finalPdgmData);
       
       // Store extracted data for clinical note mapper
-      if (!extractedData) {
-        setExtractedData({ status: 'success', output });
-      }
+      setExtractedData({ status: 'success', output });
     } catch (err) {
     console.error("Error analyzing OASIS:", err);
 
@@ -1175,7 +1350,7 @@ Return scores (0-100) and top 3-5 issues in each category.`,
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `OASIS_Analysis_Report_${new Date().toISOString().split('T')[0]}.pdf`;
+      a.download = `OASIS_Analysis_Report_${toLocalISODate()}.pdf`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -1337,11 +1512,11 @@ Return scores (0-100) and top 3-5 issues in each category.`,
                 setUploadedFileUrl(data.fileUrl);
                 setPatientName(data.extractedData.patient_name || "Unknown");
 
-                // Auto-trigger analysis with pre-filled data
+                // Switch back to the standard upload view with the confirmed data
                 setUseDataEntryAssistant(false);
 
                 // Show success message
-                toast.error("Data confirmed! Now analyzing with AI-extracted information...");
+                toast.success("Data confirmed! Click \"Analyze OASIS\" to run the AI analysis with the extracted information.");
               }}
             />
           ) : null}
@@ -1488,6 +1663,25 @@ Return scores (0-100) and top 3-5 issues in each category.`,
           analysisResults={analysisResults}
           patientData={selectedPatient}
           autoReview={true}
+          analysisId={analysisId}
+          patientName={patientName}
+          onActionItemsCreated={() => {
+            // Surface the new items in the action workflow list immediately.
+            queryClient.invalidateQueries({ queryKey: ['oasis-actions', analysisId] });
+          }}
+          canManageActionItems={canViewFinancials(currentUserForActions)}
+          savedReview={comprehensiveReview}
+          onReviewComplete={(review) => {
+            setComprehensiveReview(review);
+            comprehensiveReviewRef.current = review;
+            // Persist onto the backing record (when one exists) so reopening
+            // the saved upload restores this review instead of re-billing.
+            if (oasisUploadRecordId) {
+              base44.entities.OASISUpload.update(oasisUploadRecordId, { comprehensive_review: review })
+                .then(() => queryClient.invalidateQueries({ queryKey: ['oasisUploads'] }))
+                .catch((err) => console.error('Failed to persist comprehensive review:', err));
+            }
+          }}
         />
       )}
 
@@ -1525,10 +1719,25 @@ Return scores (0-100) and top 3-5 issues in each category.`,
           patientHistory={patientHistoricalData}
           autoValidate={true}
           onCorrection={(correction) => {
-            setPdgmData(prev => ({
-              ...prev,
-              [correction.m_item_code]: correction.suggested_value
-            }));
+            const field = functionalFieldForMItem(correction.m_item_code || correction.m_item);
+            const value = correction.suggested_value ?? correction.recommended_score ?? correction.suggested_score;
+            setPdgmData((prev) => {
+              if (!prev) return prev;
+              if (field) {
+                return {
+                  ...prev,
+                  functional_scores: {
+                    ...prev.functional_scores,
+                    [field]: value,
+                  },
+                };
+              }
+              // Non-functional corrections (e.g. timing/source) land at top level.
+              if (correction.m_item_code) {
+                return { ...prev, [correction.m_item_code]: value };
+              }
+              return prev;
+            });
           }}
         />
       )}
@@ -1645,10 +1854,14 @@ Return scores (0-100) and top 3-5 issues in each category.`,
                     </p>
                   </div>
                 </div>
+                {/* Must be wrapped: passing the handler directly binds React's click
+                    event to the `autoPatientId` parameter, and since the event object
+                    is truthy it won through `autoPatientId || selectedPatientId` and
+                    was written straight into the record's patient_id — orphaning every
+                    saved assessment from the chart the UI said it would link to. */}
                 <Button
-                  onClick={handleSaveToPatient}
+                  onClick={() => handleSaveToPatient()}
                   disabled={isSaving || savedToPatient || !uploadedFileUrl}
-                  className={savedToPatient ? "bg-green-600" : "bg-blue-600 hover:bg-blue-700"}
                 >
                   {isSaving ? (
                     <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Saving...</>
@@ -1674,7 +1887,7 @@ Return scores (0-100) and top 3-5 issues in each category.`,
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <FinancialGate>
                 <Link to="/OASISCenter?tab=revenue" state={{ analysisResults, pdgmData, patientName, uploadId: analysisId }}>
-                  <Button className="w-full bg-green-600 hover:bg-green-700 h-auto py-4 flex flex-col items-center gap-2">
+                  <Button className="w-full h-auto py-4 flex flex-col items-center gap-2">
                     <DollarSign className="w-8 h-8" />
                     <div className="text-center">
                       <div className="font-bold">Revenue Analysis</div>
@@ -1684,7 +1897,7 @@ Return scores (0-100) and top 3-5 issues in each category.`,
                 </Link>
                 </FinancialGate>
                 <Link to="/OASISCenter?tab=quality" state={{ analysisResults, pdgmData, patientName, patientId: selectedPatientId }}>
-                  <Button className="w-full bg-red-600 hover:bg-red-700 h-auto py-4 flex flex-col items-center gap-2">
+                  <Button className="w-full h-auto py-4 flex flex-col items-center gap-2">
                     <Shield className="w-8 h-8" />
                     <div className="text-center">
                       <div className="font-bold">Compliance Review</div>
@@ -1692,7 +1905,7 @@ Return scores (0-100) and top 3-5 issues in each category.`,
                     </div>
                   </Button>
                 </Link>
-                <Link to="/OASISCenter?tab=quality" state={{ analysisResults, pdgmData, patientName, navigationData }}>
+                <Link to="/OASISCenter?tab=quality" state={{ analysisResults, pdgmData, patientName, navigationData, patientId: selectedPatientId }}>
                   <Button className="w-full bg-navy-600 hover:bg-navy-700 h-auto py-4 flex flex-col items-center gap-2">
                     <FileText className="w-8 h-8" />
                     <div className="text-center">
@@ -1738,7 +1951,7 @@ Return scores (0-100) and top 3-5 issues in each category.`,
 
           {/* Key Takeaways Summary (includes potential-revenue figures) — financial, admins only */}
           <FinancialGate>
-            <KeyTakeawaysSummary analysisResults={analysisResults} revenueData={null} />
+            <KeyTakeawaysSummary analysisResults={analysisResults} revenueData={revenueData} />
           </FinancialGate>
 
           {/* AI-Powered Automatic Document Review */}
@@ -2086,7 +2299,7 @@ Return scores (0-100) and top 3-5 issues in each category.`,
           <AutomatedPDGMNavigator
             analysisResults={analysisResults} 
             pdgmData={pdgmData}
-            revenueData={null}
+            revenueData={revenueData}
             onNavigationComplete={(navData) => setNavigationData(navData)}
           />
 
@@ -2106,8 +2319,10 @@ Return scores (0-100) and top 3-5 issues in each category.`,
                 functional_improvements: analysisResults.specific_rescore_opportunities
                   ?.filter(opp => opp.category === 'functional')
                   ?.reduce((acc, opp) => {
-                    if (opp.m_item && opp.suggested_score !== undefined) {
-                      acc[opp.m_item] = opp.suggested_score;
+                    const score = opp.recommended_score ?? opp.suggested_score;
+                    const field = functionalFieldForMItem(opp.m_item);
+                    if (field && score !== undefined && score !== null) {
+                      acc[field] = score;
                     }
                     return acc;
                   }, {}),
@@ -2219,7 +2434,14 @@ Return scores (0-100) and top 3-5 issues in each category.`,
             <AIDocumentationAssistant 
               analysisResults={analysisResults} 
               pdgmData={pdgmData}
-              onInsertText={() => {}}
+              onInsertText={async (text) => {
+                try {
+                  await navigator.clipboard.writeText(text || '');
+                  toast.success('Documentation text copied to clipboard');
+                } catch {
+                  toast.error('Could not copy documentation text');
+                }
+              }}
             />
             <AIAuditRiskPredictor 
               analysisResults={analysisResults} 

@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { Award, BookOpen, CheckCircle2, RefreshCcw, TriangleAlert, Search, Filter } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { createPageUrl } from "@/utils";
@@ -14,8 +14,14 @@ import { useIsEmbedded } from "@/components/ui/embeddedPage";
 import { Input } from "@/components/ui/input";
 import LoadingState from "@/components/ui/LoadingState";
 import RequiredTrainingSummary from "./RequiredTrainingSummary";
+import { isPastLocalDueDate, formatLocalDate } from '@/lib/dateLocal';
 
-const formatDate = (value) => value ? new Date(value).toLocaleDateString() : "—";
+const formatDate = (value) => formatLocalDate(value) || "—";
+
+function isAssignmentOverdue(a) {
+  if (!a || a.status === 'completed' || a.pass_fail_result === 'passed') return false;
+  return a.status === 'overdue' || isPastLocalDueDate(a.due_date);
+}
 
 export default function MyTrainingDashboard({ filterByType }) {
   const embedded = useIsEmbedded();
@@ -64,7 +70,7 @@ export default function MyTrainingDashboard({ filterByType }) {
       } else if (statusFilter === "completed") {
         filtered = filtered.filter(a => a.status === 'completed' || a.pass_fail_result === 'passed');
       } else if (statusFilter === "overdue") {
-        filtered = filtered.filter(a => a.status === 'overdue');
+        filtered = filtered.filter(a => isAssignmentOverdue(a));
       } else if (statusFilter === "failed") {
         filtered = filtered.filter(a => a.pass_fail_result === 'failed');
       }
@@ -80,7 +86,7 @@ export default function MyTrainingDashboard({ filterByType }) {
 
   const stats = {
     assigned: typeFilteredAssignments.length,
-    overdue: typeFilteredAssignments.filter((a) => a.status === 'overdue').length,
+    overdue: typeFilteredAssignments.filter((a) => isAssignmentOverdue(a)).length,
     passed: typeFilteredAssignments.filter((a) => a.pass_fail_result === 'passed').length,
     failed: typeFilteredAssignments.filter((a) => a.pass_fail_result === 'failed').length,
   };
@@ -88,11 +94,11 @@ export default function MyTrainingDashboard({ filterByType }) {
   return (
     <div className="max-w-6xl mx-auto space-y-6">
       {!embedded && (
-        <div className="rounded-3xl bg-gradient-to-r from-blue-700 via-indigo-700 to-slate-800 text-white p-5 sm:p-6 shadow-xl">
+        <div className="page-header-gradient">
           <h1 className="text-2xl sm:text-3xl font-bold mb-2">
             {filterByType === 'in_service' ? 'Compliance In-Services' : 'My Training'}
           </h1>
-          <p className="text-sm sm:text-base text-blue-100">
+          <p className="relative text-sm sm:text-base text-navy-100">
             {filterByType === 'in_service'
               ? 'Required compliance training, scores, and certification status.'
               : 'Assigned in-services, due dates, scores, certificates, and learning plan progress in one place.'}
@@ -190,7 +196,7 @@ export default function MyTrainingDashboard({ filterByType }) {
               {sortedAssignments.map((assignment) => {
                 const course = courseMap[assignment.course_id] || {};
                 const attemptsForAssignment = latestAttempts[assignment.id] || [];
-                const isOverdue = assignment.status === 'overdue';
+                const isOverdue = isAssignmentOverdue(assignment);
                 const isPassed = assignment.pass_fail_result === 'passed';
                 const isFailed = assignment.pass_fail_result === 'failed';
                 const isInProgress = assignment.status === 'in_progress';
@@ -256,7 +262,7 @@ export default function MyTrainingDashboard({ filterByType }) {
             </Card>
           ) : (
             enrollments.map((enrollment) => {
-              const overdue = enrollment.status === 'overdue' || (enrollment.due_date && new Date(enrollment.due_date) < new Date() && enrollment.status !== 'completed');
+              const overdue = enrollment.status === 'overdue' || (isPastLocalDueDate(enrollment.due_date) && enrollment.status !== 'completed');
               return (
                 <Card key={enrollment.id} className={`border transition-all hover:shadow-md ${overdue ? 'border-red-200 bg-red-50/20' : ''}`}>
                   <CardHeader className="pb-2">
@@ -308,9 +314,9 @@ export default function MyTrainingDashboard({ filterByType }) {
                     )}
                     {certificate.expiration_date && (
                       <p className={`text-sm ${
-                        new Date(certificate.expiration_date) < new Date() ? 'text-red-600 font-semibold' : 'text-slate-500'
+                        isPastLocalDueDate(certificate.expiration_date) ? 'text-red-600 font-semibold' : 'text-slate-500'
                       }`}>
-                        {new Date(certificate.expiration_date) < new Date() ? 'Expired' : 'Valid until'}: {formatDate(certificate.expiration_date)}
+                        {isPastLocalDueDate(certificate.expiration_date) ? 'Expired' : 'Valid until'}: {formatDate(certificate.expiration_date)}
                       </p>
                     )}
                   </div>

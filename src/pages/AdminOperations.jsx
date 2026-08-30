@@ -1,10 +1,13 @@
+// AdminOperations — admin command center [2026-06-29]. Tabs: overview, activity,
+// data-quality, system-health, settings. Deep-linkable via ?tab=<key>.
 import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router";
 import { base44 } from "@/api/base44Client";
-import { Card, CardContent } from "@/components/ui/card";
+import { isAdminView } from "@/lib/roles";
+import AccessDeniedState from "@/components/ui/AccessDeniedState";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ShieldAlert, Activity, Database, Settings, Zap } from "lucide-react";
+import { Activity, Database, Settings, Zap } from "lucide-react";
 import AdminConsoleDirectory from "@/components/admin/AdminConsoleDirectory";
 import AdminDashboardOverview from "@/components/admin/AdminDashboardOverview";
 import UserActivityDashboard from "@/components/admin/UserActivityDashboard";
@@ -17,6 +20,7 @@ import PageContainer from "@/components/ui/PageContainer";
 // Console tab keys, kept in sync with the TabsTrigger values below. Used to
 // validate the ?tab= deep-link so the retired standalone pages (System Health,
 // Data Quality) can redirect straight to the right tab.
+// [Force recompile: 2026-06-29 12:05:00 UTC]
 const TAB_KEYS = ["overview", "activity", "data-quality", "system-health", "settings"];
 
 export default function AdminOperations() {
@@ -47,17 +51,12 @@ export default function AdminOperations() {
 
   if (isLoading) return null;
 
-  if (currentUser?.role !== 'admin') {
+  if (!isAdminView(currentUser)) {
     return (
-      <div className="p-8 max-w-2xl mx-auto">
-        <Card className="modern-card border-l-4 border-l-red-500">
-          <CardContent className="p-12 text-center">
-            <ShieldAlert className="w-16 h-16 text-red-500 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-slate-900 mb-2">Access Restricted</h2>
-            <p className="text-slate-600">Only administrators can access Admin Operations.</p>
-          </CardContent>
-        </Card>
-      </div>
+      <AccessDeniedState
+        title="Access Restricted"
+        description="Only administrators can access Admin Operations."
+      />
     );
   }
 

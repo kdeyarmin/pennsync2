@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { useAgencyScopedQuery } from '@/hooks/useAgencyScopedQuery';
+import { patchIncident } from "@/functions/updateIncident";
 import { invokeLLM } from "@/lib/invokeLLM";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -15,15 +17,17 @@ export default function AIAutoTagger() {
   const [results, setResults] = useState(null);
   const queryClient = useQueryClient();
 
-  const { data: visits = [] } = useQuery({
+  // High limits before agency post-filter so foreign-tenant rows cannot crowd
+  // this agency's untagged visits/incidents out of the tagging sample.
+  const { data: visits = [] } = useAgencyScopedQuery({
     queryKey: ['allVisitsForTagging'],
-    queryFn: () => base44.entities.Visit.list('-created_date', 100),
+    fetch: () => base44.entities.Visit.list('-created_date', 500),
     initialData: [],
   });
 
-  const { data: incidents = [] } = useQuery({
+  const { data: incidents = [] } = useAgencyScopedQuery({
     queryKey: ['allIncidentsForTagging'],
-    queryFn: () => base44.entities.Incident.list('-created_date', 50),
+    fetch: () => base44.entities.Incident.list('-created_date', 500),
     initialData: [],
   });
 
@@ -32,8 +36,9 @@ export default function AIAutoTagger() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['allVisitsForTagging'] }),
   });
 
+  // Incident writes are service-role-only; go through the function.
   const updateIncidentMutation = useMutation({
-    mutationFn: ({ id, tags }) => base44.entities.Incident.update(id, { ai_tags: tags }),
+    mutationFn: ({ id, tags }) => patchIncident({ incidentId: id, patch: { ai_tags: tags } }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['allIncidentsForTagging'] }),
   });
 
@@ -75,7 +80,7 @@ Return as JSON array of lowercase strings with underscores: ["tag1", "tag2", ...
 
           try {
             const tags = await invokeLLM({
-              model: "claude_sonnet_4_6",
+              model: "automatic",
               prompt,
               response_json_schema: {
                 type: "array",
@@ -96,7 +101,7 @@ Return as JSON array of lowercase strings with underscores: ["tag1", "tag2", ...
 
       // Process incidents
       for (const incident of incidents) {
-        if (incident.ai_tags) {
+        if (hasSemanticTags(incident.ai_tags)) {
           processed++;
           continue;
         }
@@ -119,7 +124,7 @@ Return as JSON array of lowercase strings with underscores: ["tag1", "tag2", ...
 
         try {
           const tags = await invokeLLM({
-            model: "claude_sonnet_4_6",
+            model: "automatic",
             prompt,
             response_json_schema: {
               type: "array",

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { invokeLLM } from "@/lib/invokeLLM";
+import { useScopedPatients } from '@/hooks/useScopedPatients';
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,6 +13,8 @@ import {
   BookOpen, CheckCircle2, Clock, Loader2, Send, Eye, EyeOff
 } from "lucide-react";
 import { toast } from "sonner";
+import { PATIENT_HISTORY_ROWS } from '@/lib/queryLimits';
+import { formatLocalDate } from "@/lib/dateLocal";
 
 export default function PatientEducationPortal() {
   const queryClient = useQueryClient();
@@ -20,10 +22,7 @@ export default function PatientEducationPortal() {
   const [selectedPatientId, setSelectedPatientId] = useState(null);
   const [expandedMaterialId, setExpandedMaterialId] = useState(null);
 
-  const { data: patients = [] } = useQuery({
-    queryKey: ["patients"],
-    queryFn: () => base44.entities.Patient.filter({ status: "active" }, "first_name", 100),
-  });
+  const { data: patients = [] } = useScopedPatients({ status: "active", sort: "first_name", limit: 100 });
 
   const { data: materials = [] } = useQuery({
     queryKey: ["patient-education", selectedPatientId],
@@ -31,14 +30,15 @@ export default function PatientEducationPortal() {
       selectedPatientId
         ? base44.entities.PatientEducationDelivery.filter(
             { patient_id: selectedPatientId },
-            "-generated_date"
+            "-generated_date",
+            PATIENT_HISTORY_ROWS,
           )
         : Promise.resolve([]),
     enabled: !!selectedPatientId,
   });
 
   const { data: _visits = [] } = useQuery({
-    queryKey: ["patient-visits", selectedPatientId],
+    queryKey: ["patient-visits", selectedPatientId, "completed", 10],
     queryFn: () =>
       selectedPatientId
         ? base44.entities.Visit.filter(
@@ -50,24 +50,9 @@ export default function PatientEducationPortal() {
     enabled: !!selectedPatientId,
   });
 
-  const { data: _carePlans = [] } = useQuery({
-    queryKey: ["patient-care-plans", selectedPatientId],
-    queryFn: () =>
-      selectedPatientId
-        ? base44.entities.CarePlan.filter(
-            { patient_id: selectedPatientId, status: "active" },
-            "-created_date"
-          )
-        : Promise.resolve([]),
-    enabled: !!selectedPatientId,
-  });
-
   const generateEducationMutation = useMutation({
     mutationFn: (patientId) =>
-      invokeLLM({
-        model: "claude_sonnet_4_6",
-        prompt: `Generate personalized education for patient ${patientId}`,
-      }),
+      base44.functions.invoke("generatePatientEducation", { patientId }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["patient-education", selectedPatientId] });
       toast.success("Education materials generated");
@@ -83,6 +68,9 @@ export default function PatientEducationPortal() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["patient-education", selectedPatientId] });
       toast.success("Delivery status updated");
+    },
+    onError: (err) => {
+      toast.error(err?.message || "Couldn't save delivery — your teach-back notes were not saved. Please try again.");
     },
   });
 
@@ -221,7 +209,7 @@ export default function PatientEducationPortal() {
                   <EducationMaterialCard
                     key={material.id}
                     material={material}
-                    onUpdate={(id, data) => updateDeliveryMutation.mutate({ id, data })}
+                    onUpdate={(id, data) => updateDeliveryMutation.mutateAsync({ id, data })}
                     isExpanded={expandedMaterialId === material.id}
                     onToggleExpand={() =>
                       setExpandedMaterialId(
@@ -273,22 +261,34 @@ function EducationMaterialCard({
 }) {
   const [deliveryMethod, setDeliveryMethod] = useState("in_person");
   const [teachBackNotes, setTeachBackNotes] = useState("");
+  const [teachBackConfirmed, setTeachBackConfirmed] = useState(true);
   const [updatingStatus, setUpdatingStatus] = useState(false);
 
   const handleMarkDelivered = async () => {
     setUpdatingStatus(true);
     try {
+      let deliveredBy = "";
+      try {
+        const currentUser = await base44.auth.me();
+        deliveredBy = currentUser?.email || "";
+      } catch {
+        deliveredBy = "";
+      }
       await onUpdate(material.id, {
         delivery_status: "delivered",
         delivery_method: deliveryMethod,
-        delivered_by: "current_user",
+        delivered_by: deliveredBy,
         delivery_date: new Date().toISOString(),
         teach_back_notes: teachBackNotes,
-        teach_back_confirmation: true,
-        patient_understood: true,
+        teach_back_confirmation: teachBackConfirmed,
+        patient_understood: teachBackConfirmed,
       });
       setDeliveryMethod("in_person");
       setTeachBackNotes("");
+      setTeachBackConfirmed(true);
+    } catch {
+      // Update failed (onError already toasted); keep the form — including the
+      // teach-back notes — intact so the nurse doesn't lose their work.
     } finally {
       setUpdatingStatus(false);
     }
@@ -369,7 +369,11 @@ function EducationMaterialCard({
                 </div>
 
                 <div className="flex items-center gap-2 p-2 bg-blue-50 rounded border border-blue-200">
-                  <Checkbox id={`teach-back-${material.id}`} defaultChecked />
+                  <Checkbox
+                    id={`teach-back-${material.id}`}
+                    checked={teachBackConfirmed}
+                    onCheckedChange={(checked) => setTeachBackConfirmed(checked === true)}
+                  />
                   <label
                     htmlFor={`teach-back-${material.id}`}
                     className="text-xs text-slate-700"
@@ -381,7 +385,7 @@ function EducationMaterialCard({
                 <Button
                   onClick={handleMarkDelivered}
                   disabled={updatingStatus || !teachBackNotes.trim()}
-                  className="w-full bg-green-600 hover:bg-green-700"
+                  className="w-full"
                 >
                   {updatingStatus ? (
                     <>
@@ -401,7 +405,7 @@ function EducationMaterialCard({
             {delivered && material.delivery_date && (
               <div className="bg-green-100 border border-green-300 rounded-lg p-3">
                 <p className="text-xs text-green-800">
-                  <strong>Delivered:</strong> {new Date(material.delivery_date).toLocaleDateString()} via {material.delivery_method?.replace('_', ' ')}
+                  <strong>Delivered:</strong> {formatLocalDate(material.delivery_date) || '—'} via {material.delivery_method?.replace('_', ' ')}
                 </p>
                 {material.teach_back_notes && (
                   <p className="text-xs text-green-700 mt-2">

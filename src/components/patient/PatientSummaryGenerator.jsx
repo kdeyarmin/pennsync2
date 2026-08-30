@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { isWithinLastDays, toLocalISODate } from "@/lib/dateLocal";
 import { useAICall } from "@/hooks/useAICall";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,7 +8,7 @@ import { FileText, Download, Loader2, Copy, Check } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from 'sonner';
 
-export default function PatientSummaryGenerator({ patient, visits, carePlans, incidents }) {
+export default function PatientSummaryGenerator({ patient, visits, incidents }) {
   const [summaryFormat, setSummaryFormat] = useState("concise");
   const ai = useAICall();
   const [summaries, setSummaries] = useState({});
@@ -18,8 +19,10 @@ export default function PatientSummaryGenerator({ patient, visits, carePlans, in
 
     try {
       const recentVisits = visits.slice(0, 5);
-      const activeCarePlans = carePlans.filter(cp => cp.status === 'active');
       const recentIncidents = incidents.slice(0, 3);
+      // Actual count of visits within the last 30 days, so the "(last 30 days)"
+      // prompt labels match the number rather than the first 5 array entries.
+      const visitsLast30Days = visits.filter(v => isWithinLastDays(v.visit_date, 30)).length;
 
       let prompt = '';
       let schema = {};
@@ -31,8 +34,7 @@ Patient: ${patient.first_name} ${patient.last_name}
 Primary Diagnosis: ${patient.primary_diagnosis || 'Not specified'}
 Secondary Diagnoses: ${patient.secondary_diagnoses?.join(', ') || 'None'}
 Current Medications: ${patient.current_medications?.length || 0} medications
-Recent Visits: ${recentVisits.length} (last 30 days)
-Active Care Plans: ${activeCarePlans.length}
+Recent Visits: ${visitsLast30Days} (last 30 days)
 Recent Incidents: ${recentIncidents.length}
 
 Provide a brief snapshot focusing on current status, key concerns, and immediate priorities.`;
@@ -48,6 +50,9 @@ Provide a brief snapshot focusing on current status, key concerns, and immediate
           }
         };
       } else if (format === 'detailed') {
+        // An empty allergies field means the status was never charted, not that
+        // the patient has none — defaulting to "NKDA" would have the model
+        // assert a clinical negative that nobody documented.
         prompt = `Create a COMPREHENSIVE patient summary for thorough understanding:
 
 PATIENT INFORMATION:
@@ -63,15 +68,13 @@ Secondary: ${patient.secondary_diagnoses?.join(', ') || 'None'}
 MEDICATIONS (${patient.current_medications?.length || 0}):
 ${patient.current_medications?.map(m => `- ${m.name} ${m.dosage} ${m.frequency}`).join('\n') || 'None documented'}
 
-ALLERGIES: ${patient.allergies || 'NKDA'}
+ALLERGIES: ${patient.allergies || 'Not documented — allergy status unknown, verify before administering medication'}
 
 MEDICAL HISTORY:
 ${patient.past_medical_history?.join(', ') || 'No past medical history documented'}
 
 RECENT CLINICAL ACTIVITY:
-- Visits (last 30 days): ${recentVisits.length}
-- Active Care Plans: ${activeCarePlans.length}
-${activeCarePlans.map(cp => `  • ${cp.problem}: ${cp.goal}`).join('\n')}
+- Visits (last 30 days): ${visitsLast30Days}
 - Recent Incidents: ${recentIncidents.length}
 ${recentIncidents.map(i => `  • ${i.incident_type} on ${i.incident_date}`).join('\n')}
 
@@ -107,6 +110,9 @@ Create a detailed narrative summary that includes:
           }
         };
       } else if (format === 'handoff') {
+        // Undocumented allergies are reported as unknown, never as "NKDA" — a
+        // handoff that states a clinical negative nobody charted is a safety
+        // falsehood.
         prompt = `Create a HANDOFF SUMMARY for nurse-to-nurse communication:
 
 Patient: ${patient.first_name} ${patient.last_name} (${patient.medical_record_number || 'No MRN'})
@@ -116,9 +122,8 @@ Payor: ${patient.payor || 'Not specified'}
 Last Visit: ${recentVisits[0]?.visit_date || 'No recent visits'}
 ${recentVisits[0]?.nurse_notes ? `Notes: ${recentVisits[0].nurse_notes.substring(0, 200)}...` : ''}
 
-Active Problems: ${activeCarePlans.map(cp => cp.problem).join(', ') || 'None'}
 Recent Concerns: ${recentIncidents.map(i => i.incident_type).join(', ') || 'None'}
-Allergies: ${patient.allergies || 'NKDA'}
+Allergies: ${patient.allergies || 'Not documented — allergy status unknown, verify before administering medication'}
 
 Key Medications: ${patient.current_medications?.slice(0, 5).map(m => `${m.name} ${m.dosage}`).join(', ') || 'None'}
 
@@ -150,7 +155,7 @@ Provide actionable handoff information including:
       }
 
       const result = await ai.run({
-        model: "claude_opus_4_8",
+        model: "automatic",
         prompt,
         response_json_schema: schema
       });
@@ -178,7 +183,7 @@ Provide actionable handoff information including:
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `patient-summary-${format}-${patient.last_name}-${new Date().toISOString().split('T')[0]}.txt`;
+    a.download = `patient-summary-${format}-${patient.last_name}-${toLocalISODate()}.txt`;
     document.body.appendChild(a);
     a.click();
     window.URL.revokeObjectURL(url);

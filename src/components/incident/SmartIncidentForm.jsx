@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
+import { toLocalISODate } from "@/lib/dateLocal";
 import { submitIncidentReport } from "@/functions/submitIncidentReport";
 import { submitStateReportableIncident } from "@/functions/submitStateReportableIncident";
 import { useAICall } from "@/hooks/useAICall";
@@ -19,6 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { AlertTriangle, Camera, Send, Sparkles, Loader2, CheckCircle2 } from "lucide-react";
+import AICaveat from "@/components/ui/AICaveat";
 import SearchablePatientSelect from "@/components/ui/SearchablePatientSelect";
 import IncidentPhotoCapture from "@/components/incident/IncidentPhotoCapture";
 import StateReportableBanner from "@/components/incident/StateReportableBanner";
@@ -28,7 +30,7 @@ import {
   getStateReportableCategory,
 } from "@/components/incident/stateReportableConfig";
 
-const getCurrentDate = () => new Date().toISOString().slice(0, 10);
+const getCurrentDate = () => toLocalISODate();
 const getCurrentTime = () => new Date().toTimeString().slice(0, 5);
 
 const blankForm = () => ({
@@ -54,6 +56,7 @@ export default function SmartIncidentForm({ patients = [], currentUser, onSubmit
   const [form, setForm] = useState(blankForm());
   const [submitted, setSubmitted] = useState(false);
   const ai = useAICall();
+  const [narrativeAiAssisted, setNarrativeAiAssisted] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
   const update = (patch) => setForm((prev) => ({ ...prev, ...patch }));
@@ -75,7 +78,7 @@ export default function SmartIncidentForm({ patients = [], currentUser, onSubmit
   const generateNarrative = async () => {
     try {
       const text = await ai.run({
-        model: "claude_opus_4_8",
+        model: "automatic",
         prompt: `Write a professional, objective home-health incident report narrative.
 
 INCIDENT TYPE: ${INCIDENT_TYPES.find((t) => t.value === form.incident_type)?.label}
@@ -89,6 +92,7 @@ Produce a clear narrative that summarizes the event, objective observations, imm
 actions taken, and who was notified. Objective facts only. Return report text only, no JSON.`,
       });
       update({ report: text });
+      setNarrativeAiAssisted(true);
     } catch {
       toast.error("Could not generate the narrative. Please write it manually.");
     }
@@ -121,6 +125,7 @@ actions taken, and who was notified. Objective facts only. Return report text on
           followup_action: form.followup_action,
           submitted_by_name: currentUser?.full_name,
           source: "smart_incident_form",
+          photo_urls,
         });
       }
 
@@ -309,6 +314,7 @@ actions taken, and who was notified. Objective facts only. Return report text on
             onChange={(e) => update({ report: e.target.value })}
             placeholder="Describe what happened, what you observed, actions taken, and who was notified. Or jot notes and tap AI assist."
           />
+          {narrativeAiAssisted && <AICaveat label="AI-assisted draft — review and correct before submitting" />}
         </div>
 
         {/* Extra legally-required fields, only for state-reportable events. */}

@@ -16,6 +16,7 @@ import {
   Sparkles
 } from "lucide-react";
 import { format } from "date-fns";
+import { PATIENT_HISTORY_ROWS } from '@/lib/queryLimits';
 
 export default function AIEducationRecommender({ patient, carePlans = [], onAssignEducation }) {
   const ai = useAICall();
@@ -25,8 +26,8 @@ export default function AIEducationRecommender({ patient, carePlans = [], onAssi
 
   // Fetch existing education assignments
   const { data: existingEducation = [] } = useQuery({
-    queryKey: ['patientEducation', patient?.id],
-    queryFn: () => base44.entities.PatientEducationAssignment.filter({ patient_id: patient?.id }),
+    queryKey: ['patientEducation', patient?.id, 'unsorted'],
+    queryFn: () => base44.entities.PatientEducationAssignment.filter({ patient_id: patient?.id }, undefined, PATIENT_HISTORY_ROWS),
     enabled: !!patient?.id,
     initialData: []
   });
@@ -39,7 +40,7 @@ export default function AIEducationRecommender({ patient, carePlans = [], onAssi
       const assignedTopics = existingEducation.map(e => e.topic.toLowerCase());
 
       const result = await ai.run({
-        model: "claude_sonnet_4_6",
+        model: "automatic",
         prompt: `You are a patient education specialist. Recommend educational topics for this patient based on their diagnosis and care plan goals.
 
 PATIENT: ${patient.first_name} ${patient.last_name}

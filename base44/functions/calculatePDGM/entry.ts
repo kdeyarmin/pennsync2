@@ -1,12 +1,52 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
+// <<<BEGIN SHARED HELPER: requireActiveUser — generated, edit base44/_shared/backendHelpers.mjs>>>
+const isDeactivatedUser = (u) => !!u && u.is_active === false;
+const DEACTIVATED_USER_RESPONSE = () => Response.json(
+  { error: 'Unauthorized - account is deactivated' },
+  { status: 403 },
+);
+// <<<END SHARED HELPER: requireActiveUser>>>
+
+// <<<BEGIN SHARED HELPER: resolveAgencySettings — generated, edit base44/_shared/backendHelpers.mjs>>>
+async function resolveAgencySettings(base44, agencyName) {
+  let settings = [];
+  const key = String(agencyName || '').trim();
+  if (key) {
+    settings = await base44.asServiceRole.entities.AgencySettings
+      .filter({ agency_code: key }, '-created_date', 1)
+      .catch(() => []);
+    if (!settings?.length) {
+      settings = await base44.asServiceRole.entities.AgencySettings
+        .filter({ office_name: key }, '-created_date', 1)
+        .catch(() => []);
+    }
+  }
+  if (!settings?.length) {
+    // Fail closed when the agency hint missed (or no hint but multiple tenant
+    // rows exist). Newest-row-wins would silently apply another agency's fax
+    // line / dial allowlist / wage index / quiet-hour timezone.
+    if (key) return null;
+    const newest = await base44.asServiceRole.entities.AgencySettings
+      .list('-created_date', 5)
+      .catch(() => []);
+    if ((newest || []).length > 1) return null;
+    settings = (newest || []).slice(0, 1);
+  }
+  return settings?.[0] || null;
+}
+// <<<END SHARED HELPER: resolveAgencySettings>>>
+
 // CMS PDGM base payment rate
 const BASE_PAYMENT_RATE_2026 = 2038.22; // CY2026 national standardized 30-day period payment, quality submitters (CMS-1828-F, eff. 2026-01-01)
 
 // CY2026 national labor-related share of the 30-day base payment (CMS-1828-F). The
 // wage index adjusts ONLY this labor portion; the non-labor remainder is paid
 // unadjusted. Overridable per rate year via PDGMRateConfig.rates.laborShare.
-const PDGM_LABOR_SHARE_2026 = 0.7676;
+// 0.749 per the VERIFIED value in docs/pdgm-cy2026.md (was 0.7676, which
+// contradicted the repo's own verified table and skewed every wage-adjusted
+// payment).
+const PDGM_LABOR_SHARE_2026 = 0.749;
 
 // Clinical Group Weights by Admission Source and Episode Timing (CMS PDGM model)
 // Format: { [clinicalGroup]: { community_early, community_late, institutional_early, institutional_late } }
@@ -117,8 +157,16 @@ function deepMergeNumbers(base, over) {
   for (const key of Object.keys(over)) {
     const ov = over[key];
     if (ov && typeof ov === 'object' && !Array.isArray(ov)) {
-      out[key] = deepMergeNumbers(base?.[key] || {}, ov);
-    } else if (typeof ov === 'number' && Number.isFinite(ov)) {
+      // Mirror the frontend guard (pdgmRates.js): when the base value isn't an
+      // object, merge over {} — without this a malformed stored override (e.g.
+      // clinicalGroupWeights.MMTA_Wounds: 2) clobbered the whole subtree and
+      // the engine silently priced with the 1.0 fallback while the FE preview
+      // showed the correct number.
+      const baseVal = base?.[key];
+      out[key] = deepMergeNumbers(baseVal && typeof baseVal === 'object' && !Array.isArray(baseVal) ? baseVal : {}, ov);
+    } else if (typeof ov === 'number' && Number.isFinite(ov) && !(base?.[key] && typeof base[key] === 'object')) {
+      // A stored scalar must not clobber an object subtree (e.g. rates.
+      // functionalThresholds.community_early: 5 over { low, high }).
       out[key] = ov;
     }
   }
@@ -169,6 +217,10 @@ const MEDIUM_VALUE_COMORBIDITIES = [
 const ICD10_CLINICAL_GROUPS = {
   // Neuro/Rehab (G codes, stroke, etc.)
   'G': 'MMTA_Neuro_Rehab',
+  // Cerebrovascular block I60–I69 (stroke, hemorrhage, post-stroke sequelae like
+  // I61/I69) is Neuro/Stroke Rehab, not Cardiac. Longest-prefix wins so the
+  // Cardiac I50/I10/I25 below are unaffected. Matches the intake preview.
+  'I6': 'MMTA_Neuro_Rehab',
   'I63': 'MMTA_Neuro_Rehab', // Cerebral infarction
   'I64': 'MMTA_Neuro_Rehab', // Stroke
 
@@ -295,8 +347,9 @@ function mapDiagnosisToClinicalGroup(primaryDiagnosis, icd10Code, icdMap = ICD10
     return 'MMTA_Infectious_Disease';
   }
 
-  // GI/GU
-  if (diagnosis.includes('gi') || diagnosis.includes('bowel') || diagnosis.includes('kidney') ||
+  // GI/GU. Match 'gi' only as a whole word (\bgi\b) — a bare substring flags
+  // "angina", "surgical", "meningitis", etc. and mis-groups them as GI/GU.
+  if (/\bgi\b/.test(diagnosis) || diagnosis.includes('bowel') || diagnosis.includes('kidney') ||
       diagnosis.includes('renal') || diagnosis.includes('bladder') || diagnosis.includes('gastrointestinal')) {
     return 'MMTA_GI_GU';
   }
@@ -307,8 +360,10 @@ function mapDiagnosisToClinicalGroup(primaryDiagnosis, icd10Code, icdMap = ICD10
     return 'MMTA_Behavioral_Health';
   }
 
-  // Complex Nursing
-  if (diagnosis.includes('complex') || diagnosis.includes('iv') || diagnosis.includes('infusion') ||
+  // Complex Nursing. Match 'iv' only as a whole word (\biv\b) — a bare substring
+  // flags "diverticulitis", "arrival", "survival", etc. and inflates them to the
+  // higher-weighted Complex Nursing group.
+  if (diagnosis.includes('complex') || /\biv\b/.test(diagnosis) || diagnosis.includes('infusion') ||
       diagnosis.includes('trach') || diagnosis.includes('ventilator') || diagnosis.includes('tube feeding')) {
     return 'MMTA_Complex_Nursing';
   }
@@ -324,27 +379,35 @@ function mapDiagnosisToClinicalGroup(primaryDiagnosis, icd10Code, icdMap = ICD10
 // Calculate functional impairment level with source/timing consideration
 function calculateFunctionalLevel(functionalData, sourceTimingKey, thresholdsTable = FUNCTIONAL_THRESHOLDS) {
   let totalPoints = 0;
+  // Sum only ratable OASIS response codes. M1830 code 6 = "Unable to rate —
+  // artificial opening" is unassessable (see outcomeMeasureEngine excludeEither)
+  // and must NOT count as max bathing points.
+  const addRatable = (raw, { unratable = [] } = {}) => {
+    const n = parseInt(raw, 10);
+    if (!Number.isFinite(n) || unratable.includes(n)) return;
+    totalPoints += n;
+  };
 
   // M1800 - Grooming (0-3)
-  totalPoints += parseInt(functionalData.m1800_grooming) || 0;
+  addRatable(functionalData.m1800_grooming);
 
   // M1810 - Dress Upper (0-3)
-  totalPoints += parseInt(functionalData.m1810_dress_upper) || 0;
+  addRatable(functionalData.m1810_dress_upper);
 
   // M1820 - Dress Lower (0-3)
-  totalPoints += parseInt(functionalData.m1820_dress_lower) || 0;
+  addRatable(functionalData.m1820_dress_lower);
 
-  // M1830 - Bathing (0-6)
-  totalPoints += parseInt(functionalData.m1830_bathing) || 0;
+  // M1830 - Bathing (0-5 ratable; 6 = unratable artificial opening)
+  addRatable(functionalData.m1830_bathing, { unratable: [6] });
 
   // M1840 - Toilet Transfer (0-4)
-  totalPoints += parseInt(functionalData.m1840_toilet_transfer) || 0;
+  addRatable(functionalData.m1840_toilet_transfer);
 
   // M1850 - Transferring (0-5)
-  totalPoints += parseInt(functionalData.m1850_transferring) || 0;
+  addRatable(functionalData.m1850_transferring);
 
   // M1860 - Ambulation (0-6)
-  totalPoints += parseInt(functionalData.m1860_ambulation) || 0;
+  addRatable(functionalData.m1860_ambulation);
 
   // Get thresholds based on admission source and timing
   const thresholds = thresholdsTable[sourceTimingKey] || thresholdsTable.community_early || FUNCTIONAL_THRESHOLDS.community_early;
@@ -421,11 +484,23 @@ function validateAdmissionSource(data) {
   const m1000Val = String(m1000 || '').trim();
 
   let expectedSource = 'community';
-  if (['2', '3', '4'].includes(m1000Val) ||
-      m1000Val.toLowerCase().includes('hospital') ||
-      m1000Val.toLowerCase().includes('snf') ||
-      m1000Val.toLowerCase().includes('skilled nursing') ||
-      m1000Val.toLowerCase().includes('acute')) {
+  // The extraction prompt emits "the checked code(s) or the facility type text"
+  // (e.g. "5 - IRF", "02", "Inpatient rehabilitation facility"), so match the
+  // digit anywhere in the value and the full facility-keyword set — a bare
+  // equality check classified "5 - IRF" / "LTCH" / "Inpatient psych" as
+  // community, producing false discrepancies and community-priced corrections.
+  // Mirrors the M1000 handling in src/components/hub-tabs/OASISAnalyzer.jsx.
+  // 2=acute hospital, 3=LTCH, 4=SNF, 5=IRF, 6=psychiatric hospital/unit — ALL
+  // institutional under PDGM.
+  const m1000Digit = (m1000Val.replace(/^0+(?=\d)/, '').match(/\b([1-7])\b/) || [])[1];
+  // An explicit M1000 code decides on its own; the keyword scan is only a
+  // fallback for values that carry no code at all. OR-ing the two mispriced
+  // community admissions, because CMS's own response-1 wording — "Community (no
+  // inpatient facility discharge within the past 14 days)" — contains an
+  // institutional keyword and beat the code.
+  if (m1000Digit) {
+    if (['2', '3', '4', '5', '6'].includes(m1000Digit)) expectedSource = 'institutional';
+  } else if (/hospital|snf|skilled nursing|acute|inpatient|rehab|irf|ltch|psych/i.test(m1000Val)) {
     expectedSource = 'institutional';
   }
 
@@ -470,9 +545,12 @@ function validatePrimaryDiagnosis(data) {
   let diagnosisCode = data.primary_diagnosis_code || '';
   const diagnosisDescription = data.primary_diagnosis || data.primary_diagnosis_description || '';
 
-  // If no explicit code, try to extract from description
+  // If no explicit code, try to extract from description. Allow alphanumerics
+  // in the 3rd character and after the decimal — 7th-character extensions
+  // (S72.001A), M1A/C4A/Z3A codes — or the old digits-only pattern captured a
+  // dangling "S72." out of "S72.001A - hip fx".
   if (!diagnosisCode && diagnosisDescription) {
-    const codeMatch = diagnosisDescription.match(/\b([A-Z]\d{2}\.?\d{0,2})\b/i);
+    const codeMatch = diagnosisDescription.match(/\b([A-Z][0-9][0-9A-Z]\.?[A-Z0-9]{0,4})\b/i);
     if (codeMatch) {
       diagnosisCode = codeMatch[1].toUpperCase();
     }
@@ -483,10 +561,15 @@ function validatePrimaryDiagnosis(data) {
     diagnosisCode = data.m1021_primary_diagnosis_code || '';
   }
 
-  // Validate the code format if we have one
+  // Validate the code format if we have one. The 3rd character may be a letter
+  // in valid ICD-10-CM codes (M1A.0, C4A, Z3A, O9A) and the characters after
+  // the decimal may include letters (7th-character extensions like S72.001A —
+  // the norm for fracture/aftercare codes). Mirrors the readiness-checklist
+  // pattern in src/components/oasis/oasisReadinessChecklist.js; the previous
+  // digits-only pattern flagged those valid, common codes as invalid.
   if (diagnosisCode) {
     const cleanCode = diagnosisCode.toUpperCase().replace(/[^A-Z0-9.]/g, '');
-    const validFormat = /^[A-Z]\d{2}\.?\d{0,4}$/.test(cleanCode);
+    const validFormat = /^[A-Z][0-9][0-9A-Z]\.?[A-Z0-9]{0,4}$/.test(cleanCode);
 
     if (!validFormat) {
       discrepancies.push({
@@ -517,6 +600,22 @@ function validatePrimaryDiagnosis(data) {
   };
 }
 
+// Parse a date value for calendar-day math: date-only "YYYY-MM-DD" strings are
+// parsed as LOCAL midnight (a bare `new Date("2025-01-31")` is UTC midnight,
+// which mixes badly with locally-parsed "01/01/2025" values); everything else
+// falls through to the platform parser. Returns null when unparseable. Mirrors
+// toLocalDate in src/components/oasis/dischargeComplianceEnforcer.js.
+function parseDateForDayMath(v) {
+  if (!v) return null;
+  const iso = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(String(v).trim());
+  if (iso) {
+    const d = new Date(Number(iso[1]), Number(iso[2]) - 1, Number(iso[3]));
+    return Number.isNaN(d.getTime()) ? null : d;
+  }
+  const d = new Date(v);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
 // Validate episode timing from dates
 function validateEpisodeTiming(data) {
   const discrepancies = [];
@@ -544,15 +643,23 @@ function validateEpisodeTiming(data) {
   // Calculate from dates if available
   if (socDate && assessmentDate) {
     try {
-      const soc = new Date(socDate);
-      const assessment = new Date(assessmentDate);
-      // Invalid dates produce NaN (no throw), which would leave daysSinceSoc as
-      // NaN and surface "Days since SOC: NaN" in the evidence. Only compute when
-      // both dates parse.
-      if (!Number.isNaN(soc.getTime()) && !Number.isNaN(assessment.getTime())) {
-        daysSinceSoc = Math.floor((assessment - soc) / (1000 * 60 * 60 * 24));
+      // Whole CALENDAR days, not a raw-millisecond floor: a floor-of-ms diff
+      // undercounts by one across spring-forward DST (03/01 -> 03/31 in a US
+      // zone is 29.96 days of ms) and whenever the formats mix local-parsed
+      // (MM/DD/YYYY) with UTC-parsed (YYYY-MM-DD) dates — letting day 31 of
+      // care validate as "early". Mirrors daysBetween in
+      // src/components/oasis/dischargeComplianceEnforcer.js.
+      const soc = parseDateForDayMath(socDate);
+      const assessment = parseDateForDayMath(assessmentDate);
+      if (soc && assessment) {
+        daysSinceSoc = Math.round(
+          (Date.UTC(assessment.getFullYear(), assessment.getMonth(), assessment.getDate()) -
+            Date.UTC(soc.getFullYear(), soc.getMonth(), soc.getDate())) / (1000 * 60 * 60 * 24)
+        );
 
-        if (daysSinceSoc > 30) {
+        // Day 31 of care (daysSinceSoc >= 30, zero-based) starts the second
+        // 30-day period — '> 30' validated day 31 as "early".
+        if (daysSinceSoc >= 30) {
           expectedTiming = 'late';
         }
       }
@@ -590,14 +697,12 @@ function validateEpisodeTiming(data) {
 // literal owner email and the admin checks are duplicated here. Keep in sync.
 // PDGM payment/revenue is restricted to administrators; clinical staff (nurses)
 // must never receive dollar figures, even by calling this endpoint directly.
-const SUPER_ADMIN_EMAIL = ((typeof Deno !== 'undefined' && Deno.env.get('SUPER_ADMIN_EMAIL')) || '').trim().toLowerCase() || null;
 function canViewFinancials(user) {
   if (!user) return false;
   return (
     user.role === 'admin' ||
     user.account_type === 'agency_admin' ||
-    user.account_type === 'super_admin' ||
-    String(user.email || '').trim().toLowerCase() === SUPER_ADMIN_EMAIL
+    user.account_type === 'super_admin'
   );
 }
 
@@ -609,6 +714,7 @@ Deno.serve(async (req) => {
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    if (isDeactivatedUser(user)) return DEACTIVATED_USER_RESPONSE();
 
     const { pdgmData, correctedPdgmData, wageIndex } = await req.json();
 
@@ -616,17 +722,21 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'No PDGM data provided' }, { status: 400 });
     }
 
-    // Fetch agency settings for wage index
-    let appliedWageIndex = wageIndex || 1.0;
-    try {
-      const agencySettings = await base44.asServiceRole.entities.AgencySettings.list('-created_date', 1);
-      if (agencySettings && agencySettings.length > 0 && agencySettings[0].wage_index) {
-        appliedWageIndex = agencySettings[0].wage_index;
+    // Wage index: an EXPLICIT caller value wins (e.g. the admin rate-verification
+    // preview passes 1.0 to show the national-standardized amount); the agency's
+    // saved wage_index applies only when the caller didn't specify one.
+    let appliedWageIndex = Number.isFinite(Number(wageIndex)) && Number(wageIndex) > 0 ? Number(wageIndex) : 0;
+    if (!appliedWageIndex) {
+      try {
+        const agencySettings = await resolveAgencySettings(base44, user?.agency_name);
+        if (agencySettings?.wage_index) {
+          appliedWageIndex = agencySettings.wage_index;
+        }
+      } catch (e) {
+        console.log('No agency settings found, using default wage index');
       }
-    } catch (e) {
-      // If no settings found, use default or provided value
-      console.log('No agency settings found, using default wage index');
     }
+    if (!appliedWageIndex) appliedWageIndex = 1.0;
 
     // Load the admin-editable PDGM rate set (PDGMRateConfig) and merge it over the
     // built-in defaults, so the agency can keep their case-mix weights / base rate
@@ -636,7 +746,19 @@ Deno.serve(async (req) => {
     let isOfficial = false;
     let icdMap = ICD10_CLINICAL_GROUPS;
     try {
-      const rateRows = await base44.asServiceRole.entities.PDGMRateConfig.list('-created_date', 1);
+      let rateRows = [];
+      if (user?.agency_name) {
+        rateRows = await base44.asServiceRole.entities.PDGMRateConfig
+          .filter({ agency_name: user.agency_name }, '-created_date', 1).catch(() => []);
+      }
+      if (!rateRows?.length) {
+        // Callers with an agency must not inherit another tenant's (or a lone
+        // unscoped) rate row — fall through to built-in defaults instead.
+        if (!user?.agency_name) {
+          const newest = await base44.asServiceRole.entities.PDGMRateConfig.list('-created_date', 5).catch(() => []);
+          if ((newest || []).length <= 1) rateRows = (newest || []).slice(0, 1);
+        }
+      }
       const rateConfig = rateRows && rateRows.length > 0 ? rateRows[0] : null;
       if (rateConfig) {
         rates = deepMergeNumbers(DEFAULT_RATES, rateConfig.rates);
@@ -733,9 +855,13 @@ Deno.serve(async (req) => {
       },
       original: originalRevenue,
       corrected: correctedRevenue,
-      revenueDifference: revenueDifference ? Math.round(revenueDifference * 100) / 100 : null,
-      percentageIncrease: percentageIncrease ? parseFloat(percentageIncrease) : null,
-      financialImpact: revenueDifference ? {
+      // Gate on "a correction was computed" (revenueDifference != null), not on
+      // truthiness — a legitimate $0.00 delta was reported as null while
+      // percentageIncrease (the truthy string '0.00') was reported as 0, so
+      // consumers couldn't distinguish "no correction" from "no change".
+      revenueDifference: revenueDifference != null ? Math.round(revenueDifference * 100) / 100 : null,
+      percentageIncrease: percentageIncrease != null ? parseFloat(percentageIncrease) : null,
+      financialImpact: revenueDifference != null ? {
         perEpisode: Math.round(revenueDifference * 100) / 100,
         annual30Episodes: Math.round(revenueDifference * 30 * 100) / 100,
         annual60Episodes: Math.round(revenueDifference * 60 * 100) / 100
@@ -755,7 +881,7 @@ Deno.serve(async (req) => {
 
   } catch (error) {
     console.error('PDGM calculation error:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
 });
 
@@ -818,17 +944,35 @@ function calculatePDGMRevenue(data, wageIndex = 1.0, rates = DEFAULT_RATES, isOf
   // Try multiple fields for ICD-10 code
   let icd10Code = data.primary_diagnosis_code || '';
 
-  // If no code found, try to extract from primary_diagnosis text (e.g., "I50.9 - Heart Failure")
+  // If no code found, try to extract from primary_diagnosis text (e.g., "I50.9 - Heart Failure").
+  // Must match validatePrimaryDiagnosis / oasisReadinessChecklist — the old digits-only
+  // pattern truncated S72.001A to "S72." and missed M1A/C4A/Z3A codes entirely.
   if (!icd10Code && primaryDiagnosis) {
-    const codeMatch = primaryDiagnosis.match(/\b([A-Z]\d{2}\.?\d{0,2})\b/i);
+    const codeMatch = primaryDiagnosis.match(/\b([A-Z][0-9][0-9A-Z]\.?[A-Z0-9]{0,4})\b/i);
     if (codeMatch) {
       icd10Code = codeMatch[1].toUpperCase();
     }
   }
 
   const comorbidities = data.comorbidities || [];
-  const admissionSource = (data.admission_source || 'community').toLowerCase();
-  const episodeTiming = (data.episode_timing || 'early').toLowerCase();
+  // Normalize free-text variants onto the two real PDGM buckets. An
+  // unrecognized value ("inpatient", "hospital", "2nd") used to build a key
+  // like "inpatient_early" that missed every rate table and silently priced
+  // the period at the community_early fallback.
+  const rawSource = String(data.admission_source || 'community').trim().toLowerCase();
+  const admissionSource =
+    /inst|inpatient|hospital|snf|skilled|facility|rehab|acute|ltch|irf/.test(rawSource)
+      ? 'institutional'
+      : 'community';
+  const rawTiming = String(data.episode_timing || 'early').trim().toLowerCase();
+  const episodeTiming = /late|subsequent|second|(?:^|\D)0?2(?:\D|$)/.test(rawTiming) ? 'late' : 'early';
+  const inputWarnings = [];
+  if (rawSource !== admissionSource) {
+    inputWarnings.push(`Admission source "${data.admission_source}" interpreted as ${admissionSource}`);
+  }
+  if (rawTiming !== episodeTiming) {
+    inputWarnings.push(`Episode timing "${data.episode_timing}" interpreted as ${episodeTiming}`);
+  }
   const functionalData = data.functional_scores || {};
 
   // Create source-timing key for lookups
@@ -871,6 +1015,7 @@ function calculatePDGMRevenue(data, wageIndex = 1.0, rates = DEFAULT_RATES, isOf
     estimateDisclaimer: isOfficial
       ? null
       : 'Estimate only — based on approximate case-mix weights, not confirmed official CMS PDGM rates. Set your official numbers in Admin → PDGM Rate Settings and mark them official.',
+    ...(inputWarnings.length ? { inputWarnings } : {}),
     basePayment: basePayment,
     wageIndex: wageIndex,
     adjustedBasePayment: adjustedBasePayment,

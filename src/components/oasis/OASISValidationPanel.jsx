@@ -21,11 +21,14 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { buildOasisReadinessChecklist, groupReadinessItemsByCategory } from "./oasisReadinessChecklist";
 
 export default function OASISValidationPanel({ pdgmData, analysisResults }) {
   if (!pdgmData) return null;
 
   const validationChecks = performValidationChecks(pdgmData, analysisResults);
+  const readinessChecklist = buildOasisReadinessChecklist(pdgmData, analysisResults);
+  const readinessGroups = groupReadinessItemsByCategory(readinessChecklist.items);
   const { totalChecks, passedChecks, criticalIssues, warningIssues, infoIssues } = validationChecks.summary;
   const validationScore = totalChecks > 0
     ? Math.min(100, Math.max(0, Math.round((passedChecks / totalChecks) * 100)))
@@ -92,6 +95,70 @@ export default function OASISValidationPanel({ pdgmData, analysisResults }) {
             <Info className="w-5 h-5 text-blue-600 mx-auto mb-1" />
             <p className="text-2xl font-bold text-blue-700">{infoIssues}</p>
             <p className="text-xs text-blue-600">Info</p>
+          </div>
+        </div>
+
+
+        {/* Pre-submit OASIS Readiness Checklist */}
+        <div className="bg-white p-4 rounded-lg border border-navy-100">
+          <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between mb-3">
+            <div>
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="w-5 h-5 text-navy-600" />
+                <h3 className="font-semibold text-slate-900">Pre-submit Readiness Checklist</h3>
+              </div>
+              <p className="text-sm text-slate-600 mt-1">
+                Confirms required OASIS data, PDGM-critical fields, quality review, and reviewer sign-off before submission.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Badge className={`${
+                readinessChecklist.summary.status === 'ready' ? 'bg-green-600' :
+                readinessChecklist.summary.status === 'needs_review' ? 'bg-yellow-600' :
+                'bg-red-600'
+              } text-white`}>
+                {readinessChecklist.summary.readinessScore}% ready
+              </Badge>
+              <Badge variant="outline">{readinessChecklist.summary.blockingItems} blocking</Badge>
+              <Badge variant="outline">{readinessChecklist.summary.highPriorityItems} high-priority</Badge>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2">
+            {readinessGroups.map((group) => {
+              const groupFailures = group.items.filter((item) => item.status !== 'complete');
+              return (
+                <div key={group.category} className="rounded-lg border border-slate-200 p-3 bg-slate-50/70">
+                  <div className="flex items-center justify-between gap-2 mb-2">
+                    <p className="text-sm font-semibold text-slate-800">{group.category}</p>
+                    {groupFailures.length === 0 ? (
+                      <Badge className="bg-green-100 text-green-800">Complete</Badge>
+                    ) : (
+                      <Badge className="bg-orange-100 text-orange-800">{groupFailures.length} to review</Badge>
+                    )}
+                  </div>
+                  <div className="space-y-1.5">
+                    {group.items.map((item) => (
+                      <div key={item.id} className="flex items-start gap-2 text-xs text-slate-700">
+                        {item.status === 'complete' ? (
+                          <CheckCircle2 className="w-3.5 h-3.5 mt-0.5 text-green-600 flex-shrink-0" />
+                        ) : item.blocksSubmission ? (
+                          <XCircle className="w-3.5 h-3.5 mt-0.5 text-red-600 flex-shrink-0" />
+                        ) : (
+                          <AlertTriangle className="w-3.5 h-3.5 mt-0.5 text-yellow-600 flex-shrink-0" />
+                        )}
+                        <span>
+                          <span className="font-medium">{item.label}</span>
+                          {item.status !== 'complete' && (
+                            <span className="block text-slate-500">{item.action}</span>
+                          )}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
 
@@ -311,9 +378,17 @@ function validateAdmissionSourceTiming(data) {
     const m1000Val = String(m1000).trim();
     let expectedSource = 'community';
     
-    if (['2', '3', '4'].includes(m1000Val) || 
-        m1000Val.toLowerCase().includes('hospital') || 
-        m1000Val.toLowerCase().includes('snf')) {
+    // 2=acute, 3=LTCH, 4=SNF, 5=IRF, 6=psych — all institutional under PDGM.
+    // This must mirror calculatePDGM's validateAdmissionSource exactly, or the
+    // panel raises a high-severity mismatch against the very value the pricing
+    // engine agreed with. It previously compared the WHOLE string to a bare digit
+    // (so "02" and "5 - IRF" read as community) and scanned only two keywords.
+    // As there, an explicit code decides and keywords are a fallback only for
+    // values carrying no code — CMS's own response-1 wording contains "inpatient".
+    const m1000Digit = (m1000Val.replace(/^0+(?=\d)/, '').match(/\b([1-7])\b/) || [])[1];
+    if (m1000Digit) {
+      if (['2', '3', '4', '5', '6'].includes(m1000Digit)) expectedSource = 'institutional';
+    } else if (/hospital|snf|skilled nursing|acute|inpatient|rehab|irf|ltch|psych/i.test(m1000Val)) {
       expectedSource = 'institutional';
     }
     
@@ -402,7 +477,10 @@ function validateDiagnosis(data) {
   // Validate ICD-10 code format
   if (diagnosisCode) {
     const cleanCode = diagnosisCode.toUpperCase().replace(/[^A-Z0-9.]/g, '');
-    const validFormat = /^[A-Z]\d{2}\.?\d{0,4}$/.test(cleanCode);
+    // ICD-10-CM allows a letter in the 3rd position and alphabetic 7th-character
+    // extensions (e.g. M1A.0, C4A, Z3A, O9A, S72.001A). Mirror the canonical
+    // pattern in oasisReadinessChecklist.js so those valid codes aren't flagged.
+    const validFormat = /^[A-Z][0-9][0-9A-Z]\.?[A-Z0-9]{0,4}$/.test(cleanCode);
     
     if (!validFormat) {
       issues.push({
@@ -529,12 +607,22 @@ function validateDates(data) {
   
   const socDate = data.soc_date || data.patient_info?.soc_date || data.m0102_soc_roc_date;
   const assessmentDate = data.assessment_date || data.patient_info?.assessment_date;
+  // Same nesting fallback as the two lines above. Reading only the top level made
+  // the Late SOC check below dead: every pdgmData producer writes the type under
+  // patient_info, so the condition was never true.
+  const assessmentType = data.assessment_type || data.patient_info?.assessment_type;
   
   if (socDate && assessmentDate) {
     try {
       const soc = new Date(socDate);
       const assessment = new Date(assessmentDate);
-      
+
+      // NaN arithmetic never throws, so an unparseable date would otherwise slip
+      // through validation silently; raise it explicitly via the catch below.
+      if (Number.isNaN(soc.getTime()) || Number.isNaN(assessment.getTime())) {
+        throw new Error('Unparseable SOC/assessment date');
+      }
+
       if (assessment < soc) {
         issues.push({
           severity: 'critical',
@@ -552,7 +640,7 @@ function validateDates(data) {
       
       const daysDiff = Math.floor((assessment - soc) / (1000 * 60 * 60 * 24));
       
-      if (daysDiff > 5 && data.assessment_type?.toLowerCase().includes('soc')) {
+      if (daysDiff > 5 && assessmentType?.toLowerCase().includes('soc')) {
         issues.push({
           severity: 'medium',
           title: 'Late SOC Assessment',

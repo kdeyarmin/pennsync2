@@ -1,23 +1,77 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
+// <<<BEGIN SHARED HELPER: schedulerAuth — generated, edit base44/_shared/backendHelpers.mjs>>>
+const SCHEDULER_SECRET_HEADER = 'x-internal-secret';
+function isSchedulerAdmin(user) {
+  return !!user && (
+    user.role === 'admin' || user.account_type === 'agency_admin' ||
+    user.account_type === 'super_admin'
+  );
+}
+// Constant-time string compare for the shared-secret check (mirrors
+// createTelehealthToken's timingSafeEqual). A plain === short-circuits on the
+// first differing character, so response timing could leak how much of the
+// secret matched. Dependency-free char-code XOR so the identical source runs
+// under Deno (consumers) and Node (tests).
+function timingSafeEqualStr(a, b) {
+  if (typeof a !== 'string' || typeof b !== 'string' || a.length !== b.length) return false;
+  let mismatch = 0;
+  for (let i = 0; i < a.length; i++) mismatch |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return mismatch === 0;
+}
+function getSchedulerAuthError(req, user) {
+  if (isSchedulerAdmin(user)) return null;
+  const expectedSecret = String(Deno.env.get('INTERNAL_FN_SECRET') || '').trim();
+  if (!expectedSecret) {
+    return Response.json(
+      { error: 'Server misconfigured: INTERNAL_FN_SECRET is required for scheduled/internal functions' },
+      { status: 500 },
+    );
+  }
+  const providedSecret = String(req.headers.get(SCHEDULER_SECRET_HEADER) || '').trim();
+  if (timingSafeEqualStr(providedSecret, expectedSecret)) return null;
+  return Response.json(
+    { error: user ? 'Forbidden: admin or scheduler secret required' : 'Unauthorized: scheduler secret required' },
+    { status: user ? 403 : 401 },
+  );
+}
+// <<<END SHARED HELPER: schedulerAuth>>>
+
+// <<<BEGIN SHARED HELPER: batchNeverDispatched — generated, edit base44/_shared/backendHelpers.mjs>>>
+function batchNeverDispatched(payload, status) {
+  const d = payload || {};
+  if (!d.error || typeof d.successful === 'number') return false;
+  // Requeue only what a later run could actually send. A 5xx is infrastructure
+  // — unreadable credentials, a platform blip — and clears on its own. A 4xx is
+  // bad input for THIS row (disallowed file_url, unusable recipient numbers) and
+  // would fail identically on every future tick; there is no UI listing
+  // ScheduledFax rows, so an unsendable row must reach a terminal status rather
+  // than retry forever with nobody watching. An unknown status requeues, because
+  // a stuck 'pending' row is recoverable and a destroyed PHI document is not.
+  const code = Number(status);
+  return !Number.isFinite(code) || code >= 500;
+}
+// <<<END SHARED HELPER: batchNeverDispatched>>>
+
+// <<<BEGIN SHARED HELPER: requireActiveUser — generated, edit base44/_shared/backendHelpers.mjs>>>
+const isDeactivatedUser = (u) => !!u && u.is_active === false;
+const DEACTIVATED_USER_RESPONSE = () => Response.json(
+  { error: 'Unauthorized - account is deactivated' },
+  { status: 403 },
+);
+// <<<END SHARED HELPER: requireActiveUser>>>
+
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
 
-    // Authorization: opt-in lockdown for this privileged scheduled job (mirrors
-    // processTrainingRenewals / syncFaxStatuses). When INTERNAL_FN_SECRET is set,
-    // require an admin OR the internal-secret header; the no-identity cron path is
-    // allowed only while no secret is configured.
+    // Authorization: privileged scheduled job (mirrors processTrainingRenewals /
+    // syncFaxStatuses). Admins can run it with session auth; scheduled/internal callers must send `x-internal-secret`; every other caller is rejected.
     const me = await base44.auth.me().catch(() => null);
-    const isAdmin = me?.role === 'admin';
-    const internalSecret = Deno.env.get('INTERNAL_FN_SECRET');
-    if (internalSecret) {
-      if (!isAdmin && req.headers.get('x-internal-secret') !== internalSecret) {
-        return Response.json({ error: 'Forbidden' }, { status: 403 });
-      }
-    } else if (me && !isAdmin) {
-      return Response.json({ error: 'Forbidden: admin access required' }, { status: 403 });
-    }
+    const authError = getSchedulerAuthError(req, me);
+    if (authError) return authError;
+    if (isDeactivatedUser(me)) return DEACTIVATED_USER_RESPONSE();
 
     const now = new Date();
 
@@ -47,8 +101,8 @@ Deno.serve(async (req) => {
     // Sort by priority (urgent first, then high, normal, low)
     const priorityOrder = { urgent: 0, high: 1, normal: 2, low: 3 };
     dueFaxes.sort((a, b) => {
-      const aPriority = priorityOrder[a.priority] || 2;
-      const bPriority = priorityOrder[b.priority] || 2;
+      const aPriority = priorityOrder[a.priority] ?? 2;
+      const bPriority = priorityOrder[b.priority] ?? 2;
       if (aPriority !== bPriority) return aPriority - bPriority;
       // If same priority, sort by scheduled time (earliest first)
       return new Date(a.scheduled_time) - new Date(b.scheduled_time);
@@ -72,13 +126,20 @@ Deno.serve(async (req) => {
           status: 'processing', claimed_by: runId, claimed_at: new Date().toISOString(),
         });
       } catch (claimErr) {
-        console.error(`Could not claim scheduled fax ${scheduledFax.id}; skipping`, claimErr);
+        console.error('Could not claim scheduled fax; skipping', claimErr?.message || claimErr);
         continue;
       }
       const claimCheck = await base44.asServiceRole.entities.ScheduledFax
         .filter({ id: scheduledFax.id }, '-created_date', 1).catch(() => []);
       if (!claimCheck[0] || claimCheck[0].claimed_by !== runId) {
         // Another run claimed it first — skip to avoid a duplicate send.
+        continue;
+      }
+      // Honor durable cancel stamp (parity with processScheduledFaxes / SMS).
+      if (claimCheck[0].canceled_at || claimCheck[0].status === 'cancelled') {
+        await base44.asServiceRole.entities.ScheduledFax.update(scheduledFax.id, {
+          status: 'cancelled', claimed_by: '', claimed_at: null,
+        }).catch(() => {});
         continue;
       }
       try {
@@ -95,13 +156,39 @@ Deno.serve(async (req) => {
           document_name: scheduledFax.document_name,
           patient_id: scheduledFax.patient_id,
           cover_page_details: scheduledFax.cover_page_details,
-          priority: scheduledFax.priority
+          priority: scheduledFax.priority,
+          sent_by: scheduledFax.created_by || me?.email || 'scheduler@system',
+          internal_secret: Deno.env.get('INTERNAL_FN_SECRET') || '',
         });
 
         const data = sendResult?.data || {};
         const recipientCount = scheduledFax.to_numbers?.length || 0;
         const successful = data.successful || 0;
         const failed = data.failed ?? (recipientCount - successful);
+
+        // The batch was rejected before any recipient was attempted (bad
+        // credentials, disallowed file_url, agency config). Marking it 'failed'
+        // destroys the queued PHI document — this processor only ever reads
+        // status 'pending', and no UI can requeue a failed row. Release the claim
+        // so a later run sends it. Requeue ONLY when nothing was transmitted:
+        // Telnyx fax has no idempotency key, so requeueing a partially-sent batch
+        // would re-fax PHI. Mirrors the processScheduledFaxes sibling.
+        if (batchNeverDispatched(data, sendResult?.status)) {
+          console.error('A scheduled fax was not dispatched and has been requeued:', data.error);
+          const mid = await base44.asServiceRole.entities.ScheduledFax
+            .filter({ id: scheduledFax.id }, '-created_date', 1).catch(() => []);
+          if (mid[0]?.canceled_at || mid[0]?.status === 'cancelled') {
+            await base44.asServiceRole.entities.ScheduledFax.update(scheduledFax.id, {
+              status: 'cancelled', claimed_by: '', claimed_at: null,
+            }).catch(() => {});
+            continue;
+          }
+          await base44.asServiceRole.entities.ScheduledFax.update(scheduledFax.id, {
+            status: 'pending', claimed_by: '', claimed_at: null,
+          }).catch((err) => console.error('Failed to requeue scheduled fax:', err?.message || err));
+          continue;
+        }
+
         sentCount += successful;
         failedCount += failed;
 
@@ -112,7 +199,23 @@ Deno.serve(async (req) => {
         });
 
       } catch (error) {
-        console.error(`Failed to process scheduled fax ${scheduledFax.id}:`, error);
+        console.error('Failed to process scheduled fax:', error?.message || error);
+        // A non-2xx from sendBatchFax rejects rather than resolving, so the
+        // never-dispatched signal arrives here too — requeue, don't destroy.
+        if (batchNeverDispatched(error?.response?.data, error?.response?.status)) {
+          const mid = await base44.asServiceRole.entities.ScheduledFax
+            .filter({ id: scheduledFax.id }, '-created_date', 1).catch(() => []);
+          if (mid[0]?.canceled_at || mid[0]?.status === 'cancelled') {
+            await base44.asServiceRole.entities.ScheduledFax.update(scheduledFax.id, {
+              status: 'cancelled', claimed_by: '', claimed_at: null,
+            }).catch(() => {});
+            continue;
+          }
+          await base44.asServiceRole.entities.ScheduledFax.update(scheduledFax.id, {
+            status: 'pending', claimed_by: '', claimed_at: null,
+          }).catch((err) => console.error('Failed to requeue scheduled fax:', err?.message || err));
+          continue;
+        }
         await base44.asServiceRole.entities.ScheduledFax.update(scheduledFax.id, {
           status: 'failed'
         });
@@ -131,6 +234,6 @@ Deno.serve(async (req) => {
 
   } catch (error) {
     console.error('Scheduled fax processing error:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
 });

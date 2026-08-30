@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, Clock, User, FileCheck, Mail } from 'lucide-react';
 import { toast } from 'sonner';
+import { formatLocalDate } from '@/lib/dateLocal';
 
 export default function DocumentAuditLogViewer() {
   const [logs, setLogs] = useState([]);
@@ -20,10 +21,12 @@ export default function DocumentAuditLogViewer() {
   const fetchAuditLogs = async () => {
     try {
       setIsLoading(true);
-      const packages = await base44.entities.DocumentPackage.list();
-      const tokens = await base44.entities.DocumentPackageToken.list();
-      const signatures = await base44.entities.DocumentSignature.list();
-      const reminders = await base44.entities.ReminderLog.list();
+      // Explicit sort + high limit: a bare .list() is silently capped at the SDK
+      // default (~50 rows), which truncated the audit log.
+      const packages = await base44.entities.DocumentPackage.list('-created_date', 5000);
+      const tokens = await base44.entities.DocumentPackageToken.list('-created_date', 5000);
+      const signatures = await base44.entities.DocumentSignature.list('-created_date', 5000);
+      const reminders = await base44.entities.ReminderLog.list('-created_date', 5000);
 
       const auditEvents = [];
 
@@ -54,7 +57,7 @@ export default function DocumentAuditLogViewer() {
             packageId: pkg.id,
             signer: pkg.signer_name,
             signerEmail: pkg.signer_email,
-            details: `Due on ${new Date(pkg.due_date).toLocaleDateString()}`,
+            details: `Due on ${formatLocalDate(pkg.due_date) || pkg.due_date}`,
             icon: Calendar,
             color: 'yellow',
           });

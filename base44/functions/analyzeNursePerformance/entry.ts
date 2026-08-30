@@ -1,5 +1,13 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
+// <<<BEGIN SHARED HELPER: requireActiveUser — generated, edit base44/_shared/backendHelpers.mjs>>>
+const isDeactivatedUser = (u) => !!u && u.is_active === false;
+const DEACTIVATED_USER_RESPONSE = () => Response.json(
+  { error: 'Unauthorized - account is deactivated' },
+  { status: 403 },
+);
+// <<<END SHARED HELPER: requireActiveUser>>>
+
 // Tolerant JSON extractor: we ask for strict JSON in-prompt instead of passing
 // response_json_schema, because the provider rejects deeply-nested object
 // schemas that lack an explicit `required` array at every level.
@@ -25,23 +33,44 @@ Deno.serve(async (req) => {
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    if (isDeactivatedUser(user)) return DEACTIVATED_USER_RESPONSE();
 
     const { nurse_email, date_range_days = 30 } = await req.json();
 
-    // Admins can view any nurse, nurses can only view themselves
-    const targetEmail = (user.role === 'admin' && nurse_email) ? nurse_email : user.email;
+    // Admins can view another nurse; nurses can only view themselves.
+    // Facility admins with an agency are agency-scoped (parity with
+    // generatePersonalizedLearningPath); only super_admin / admin-without-agency
+    // stay platform-wide.
+    const isSuperAdmin = user.account_type === 'super_admin';
+    const isAgencyScopedAdmin =
+      user.account_type === 'agency_admin'
+      || (user.role === 'admin' && !!user.agency_name && !isSuperAdmin);
+    const isPlatformAdmin = isSuperAdmin || (user.role === 'admin' && !user.agency_name);
+    let targetEmail = user.email;
+    if (nurse_email && nurse_email !== user.email && (isPlatformAdmin || isAgencyScopedAdmin)) {
+      if (isPlatformAdmin) {
+        targetEmail = nurse_email;
+      } else {
+        const [target] = await base44.asServiceRole.entities.User.filter({ email: nurse_email }, '-created_date', 1);
+        if (!target || !user.agency_name || target.agency_name !== user.agency_name) {
+          return Response.json({ error: 'Forbidden' }, { status: 403 });
+        }
+        targetEmail = nurse_email;
+      }
+    }
     
     const dateThreshold = new Date();
     dateThreshold.setDate(dateThreshold.getDate() - date_range_days);
 
     // Fetch all relevant data
-    const [activities, recommendations, audits, visits, patients, carePlans, incidents] = await Promise.all([
-      base44.asServiceRole.entities.UserActivity.filter({ user_email: targetEmail }),
-      base44.asServiceRole.entities.TrainingRecommendation.filter({ nurse_email: targetEmail }),
-      base44.asServiceRole.entities.ComplianceAudit.filter({ nurse_email: targetEmail }),
-      base44.asServiceRole.entities.Visit.filter({ created_by: targetEmail }),
-      base44.asServiceRole.entities.Patient.list('-created_date', 5000),
-      base44.asServiceRole.entities.CarePlan.list('-created_date', 5000),
+    // Note: patient counts are derived from this nurse's visits below, so we do
+    // NOT bulk-read the whole Patient table (a needless 5000-record PHI fetch
+    // that was fetched and never used).
+    const [activities, recommendations, audits, visits, incidents] = await Promise.all([
+      base44.asServiceRole.entities.UserActivity.filter({ user_email: targetEmail }, '-created_date', 5000),
+      base44.asServiceRole.entities.TrainingRecommendation.filter({ nurse_email: targetEmail }, '-created_date', 5000),
+      base44.asServiceRole.entities.ComplianceAudit.filter({ nurse_email: targetEmail }, '-created_date', 5000),
+      base44.asServiceRole.entities.Visit.filter({ created_by: targetEmail }, '-created_date', 5000),
       base44.asServiceRole.entities.Incident.list('-created_date', 5000)
     ]);
 
@@ -90,7 +119,12 @@ Deno.serve(async (req) => {
       const totalMinutes = visitsWithDuration.reduce((sum, v) => {
         const start = new Date(`2000-01-01T${v.start_time}`);
         const end = new Date(`2000-01-01T${v.end_time}`);
-        return sum + ((end - start) / (1000 * 60));
+        let minutes = (end - start) / (1000 * 60);
+        // An overnight visit (e.g. 22:00 → 01:00) would otherwise contribute a
+        // large negative duration and drag the average below zero. Wrap past
+        // midnight rather than counting it as negative time.
+        if (minutes < 0) minutes += 24 * 60;
+        return sum + minutes;
       }, 0);
       metrics.avg_visit_duration = Math.round(totalMinutes / visitsWithDuration.length);
     }
@@ -228,7 +262,6 @@ Return ONLY valid JSON, no prose or code fences, with this shape:
 {"strengths":[""],"areas_for_improvement":[{"area":"","suggestion":"","priority":""}],"training_recommendations":[{"topic":"","reason":"","urgency":""}],"risk_factors":[""],"overall_summary":"","performance_grade":""}`;
 
     const insights = parseLLMJson(await base44.asServiceRole.integrations.Core.InvokeLLM({
-      model: "claude_opus_4_8",
       prompt: analysisPrompt
     })) || {};
 
@@ -294,20 +327,18 @@ Return ONLY valid JSON, no prose or code fences, with this shape:
 
     // Calculate patient outcomes
     const nursePatientIds = [...new Set(visits.map(v => v.patient_id))];
-    const nurseCarePlans = carePlans.filter(cp => nursePatientIds.includes(cp.patient_id));
-    const metGoals = nurseCarePlans.filter(cp => cp.status === 'met').length;
-    const activeGoals = nurseCarePlans.filter(cp => cp.status === 'active').length;
-    
-    const nurseIncidents = incidents.filter(i => 
-      visits.some(v => v.id === i.visit_id)
+
+    // "incidents_reported" = incidents this nurse actually reported. The old
+    // visit_id join was always empty (writers don't set visit_id); attribute by
+    // created_by (the reporter) — NOT by patient, which would count every incident
+    // on a shared patient against every nurse who ever visited them.
+    const nurseIncidents = incidents.filter(i =>
+      i.created_by === targetEmail ||
+      (i.visit_id && visits.some(v => v.id === i.visit_id))
     );
 
     const patientOutcomes = {
       total_patients: nursePatientIds.length,
-      care_plans_managed: nurseCarePlans.length,
-      goals_met: metGoals,
-      goals_active: activeGoals,
-      goal_achievement_rate: nurseCarePlans.length > 0 ? Math.round((metGoals / nurseCarePlans.length) * 100) : 0,
       incidents_reported: nurseIncidents.length,
       high_severity_incidents: nurseIncidents.filter(i => i.severity === 'high').length
     };
@@ -345,7 +376,6 @@ PERFORMANCE TRENDS:
 - AI Tool Usage: ${metrics.suggestion_acceptance_rate}% acceptance rate
 
 QUALITY INDICATORS:
-- Goal Achievement: ${patientOutcomes.goal_achievement_rate}%
 - Template Usage: ${metrics.template_usage} times
 - Unaddressed Recommendations: ${recommendations.filter(r => !r.addressed).length}
 
@@ -355,7 +385,6 @@ Return ONLY valid JSON, no prose or code fences, with this shape:
 {"risk_level":"low|moderate|high|critical","risk_score":0,"warning_signs":[""],"contributing_factors":[""],"recommendations":[""],"positive_indicators":[""]}`;
 
     const burnoutAnalysis = parseLLMJson(await base44.asServiceRole.integrations.Core.InvokeLLM({
-      model: "claude_opus_4_8",
       prompt: burnoutPrompt
     })) || {};
 
@@ -376,7 +405,7 @@ Return ONLY valid JSON, no prose or code fences, with this shape:
   } catch (error) {
     console.error('Error analyzing nurse performance:', error);
     return Response.json({ 
-      error: error.message,
+      error: 'Internal server error',
     }, { status: 500 });
   }
 });

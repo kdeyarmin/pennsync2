@@ -1,16 +1,18 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { Award, Printer, Search } from "lucide-react";
 import { base44 } from "@/api/base44Client";
-import { generateTrainingCertificate } from "@/functions/generateTrainingCertificate";
+import { createCertificateBlobUrl } from "@/components/learning/certificatePdf";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import LoadingState from "@/components/ui/LoadingState";
 import { HideWhenEmbedded } from "@/components/ui/embeddedPage";
+import { formatLocalDate, isPastLocalDueDate } from '@/lib/dateLocal';
 
-const formatDate = (value) => value ? new Date(value).toLocaleDateString() : "—";
+const formatDate = (value) => formatLocalDate(value) || "—";
 
 export default function EmployeeTranscriptCenter() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -18,7 +20,9 @@ export default function EmployeeTranscriptCenter() {
   const { data: currentUser } = useQuery({ queryKey: ["currentUser"], queryFn: () => base44.auth.me() });
   const { data: certificates = [], isLoading } = useQuery({
     queryKey: ["employee-transcript-certificates", currentUser?.email],
-    queryFn: () => base44.entities.TrainingCertificate.filter({ user_id: currentUser?.email }, '-issued_at', 300),
+    // Exclude revoked certificates — RLS still returns the learner's own revoked
+    // rows, so without this the transcript listed them and offered Print/Download.
+    queryFn: () => base44.entities.TrainingCertificate.filter({ user_id: currentUser?.email, revoked: false }, '-issued_at', 300),
     enabled: !!currentUser?.email,
     initialData: []
   });
@@ -27,18 +31,8 @@ export default function EmployeeTranscriptCenter() {
     ? certificates.filter(c => c.course_title?.toLowerCase().includes(searchQuery.toLowerCase()))
     : certificates;
 
-  const createPdfUrl = async (certificate) => {
-    const response = await generateTrainingCertificate({
-      moduleName: certificate.course_title,
-      completionDate: certificate.completion_date || certificate.issued_at,
-      score: certificate.score
-    });
-    const blob = new Blob([response.data], { type: 'application/pdf' });
-    return window.URL.createObjectURL(blob);
-  };
-
   const downloadCertificate = async (certificate) => {
-    const url = await createPdfUrl(certificate);
+    const url = await createCertificateBlobUrl(certificate);
     const anchor = document.createElement('a');
     anchor.href = url;
     anchor.download = `${certificate.course_title.replace(/\s+/g, '_')}_certificate.pdf`;
@@ -47,17 +41,23 @@ export default function EmployeeTranscriptCenter() {
   };
 
   const printCertificate = async (certificate) => {
-    const url = await createPdfUrl(certificate);
+    const url = await createCertificateBlobUrl(certificate);
     const printWindow = window.open(url, '_blank');
-    setTimeout(() => printWindow?.print(), 600);
+    // Popup blockers and installed-app webviews (iOS standalone/WKWebView)
+    // return null — surface a hint instead of failing silently.
+    if (!printWindow) {
+      toast.error('Unable to open the certificate. Please allow pop-ups, or use Download instead.');
+      return;
+    }
+    setTimeout(() => printWindow.print(), 600);
   };
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
       <HideWhenEmbedded>
-        <div className="rounded-3xl bg-gradient-to-r from-slate-900 to-indigo-700 text-white p-6 shadow-xl">
+        <div className="page-header-gradient">
           <h1 className="text-2xl sm:text-3xl font-bold mb-2">Employee Transcript</h1>
-          <p className="text-indigo-100">Chronological certificate and completion history for assigned in-services.</p>
+          <p className="relative text-navy-100">Chronological certificate and completion history for assigned in-services.</p>
         </div>
       </HideWhenEmbedded>
 
@@ -88,7 +88,7 @@ export default function EmployeeTranscriptCenter() {
             </div>
           ) : (
             filtered.map((certificate) => {
-              const isExpired = certificate.expiration_date && new Date(certificate.expiration_date) < new Date();
+              const isExpired = certificate.expiration_date && isPastLocalDueDate(certificate.expiration_date);
               return (
                 <div key={certificate.id} className={`rounded-2xl border p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white transition-all hover:shadow-sm ${
                   isExpired ? 'border-red-200 bg-red-50/30' : ''

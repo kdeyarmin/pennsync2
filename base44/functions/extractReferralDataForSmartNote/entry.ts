@@ -1,5 +1,14 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
+// <<<BEGIN SHARED HELPER: requireActiveUser — generated, edit base44/_shared/backendHelpers.mjs>>>
+const isDeactivatedUser = (u) => !!u && u.is_active === false;
+const DEACTIVATED_USER_RESPONSE = () => Response.json(
+  { error: 'Unauthorized - account is deactivated' },
+  { status: 403 },
+);
+// <<<END SHARED HELPER: requireActiveUser>>>
+
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -7,6 +16,7 @@ Deno.serve(async (req) => {
     // Require authentication: previously unauthenticated, so any caller could
     // read a referral's full demographics/clinical PHI by id (IDOR).
     const user = await base44.auth.me();
+    if (isDeactivatedUser(user)) return DEACTIVATED_USER_RESPONSE();
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -21,7 +31,7 @@ Deno.serve(async (req) => {
     // referrals the caller may see (the frontend reads Referral the same way).
     // The prior asServiceRole read bypassed RLS — any caller could read any
     // referral's demographics/clinical PHI by id, despite the "fixed" comment.
-    const referral = await base44.entities.Referral.filter({ id: referral_id });
+    const referral = await base44.entities.Referral.filter({ id: referral_id }, undefined, 5000);
     if (!referral?.length || !referral[0].extracted_data) {
       return Response.json({ error: 'Referral not found or not processed' }, { status: 404 });
     }
@@ -79,7 +89,7 @@ Deno.serve(async (req) => {
     return Response.json({ smartNoteData });
   } catch (error) {
     console.error('Error extracting referral data:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
 });
 

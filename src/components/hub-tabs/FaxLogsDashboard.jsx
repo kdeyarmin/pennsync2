@@ -14,6 +14,14 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 
+// Filter buttons map to groups of terminal/transient statuses so that, e.g., the
+// 'Sent' filter also shows the terminal 'delivered' status and 'Queued' shows 'sending'.
+const STATUS_GROUPS = {
+  sent: ['sent', 'delivered'],
+  queued: ['queued', 'sending'],
+  failed: ['failed'],
+};
+
 export default function FaxLogsDashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("all");
@@ -32,8 +40,9 @@ export default function FaxLogsDashboard() {
       log.to_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       log.document_name?.toLowerCase().includes(searchQuery.toLowerCase());
     
-    const matchesStatus = selectedStatus === "all" || log.status === selectedStatus;
-    
+    const statusGroup = STATUS_GROUPS[selectedStatus];
+    const matchesStatus = selectedStatus === "all" || (statusGroup ? statusGroup.includes(log.status) : log.status === selectedStatus);
+
     return matchesSearch && matchesStatus;
   });
 
@@ -59,7 +68,7 @@ export default function FaxLogsDashboard() {
       }));
 
       const result = await ai.run({
-        model: "claude_sonnet_4_6",
+        model: "automatic",
         prompt: `Analyze these fax transmission failures and provide:
 1. Common failure patterns and root causes
 2. Specific recommendations for each failure type
@@ -108,7 +117,10 @@ Provide actionable insights in a structured format with clear sections.`,
 
   const retryFax = async (faxId) => {
     try {
-      await base44.functions.invoke('retryFailedFax', { fax_id: faxId });
+      const res = await base44.functions.invoke('retryFailedFax', { fax_log_id: faxId });
+      const data = res?.data ?? res;
+      if (data?.error) throw new Error(data.error);
+      if (data?.success === false) throw new Error(data?.message || 'Fax retry was not started');
       toast.success("Fax retry initiated");
       refetch();
     } catch (error) {
@@ -160,7 +172,6 @@ Provide actionable insights in a structured format with clear sections.`,
         <Button
           onClick={generateAIInsights}
           disabled={ai.loading || failedLogs.length === 0}
-          className="bg-gradient-to-r from-navy-600 to-indigo-600"
         >
           <Brain className="w-4 h-4 mr-2" />
           {ai.loading ? "Analyzing..." : "Generate AI Insights"}

@@ -39,6 +39,8 @@ import {
   Calendar
 } from "lucide-react";
 import { format } from "date-fns";
+import { formatEastern } from "@/components/utils/timezone";
+import { ALL_ROWS } from '@/lib/queryLimits';
 
 export default function RegulatoryMonitor({ isAdmin = false }) {
   const queryClient = useQueryClient();
@@ -53,7 +55,7 @@ export default function RegulatoryMonitor({ isAdmin = false }) {
 
   const { data: updates = [] } = useQuery({
     queryKey: ['regulatoryUpdates'],
-    queryFn: () => base44.entities.RegulatoryUpdate.filter({}, '-created_date'),
+    queryFn: () => base44.entities.RegulatoryUpdate.filter({}, '-created_date', ALL_ROWS),
   });
 
   const { data: currentUser } = useQuery({
@@ -65,7 +67,7 @@ export default function RegulatoryMonitor({ isAdmin = false }) {
     try {
       const cached = localStorage.getItem('last_regulatory_scan');
       if (cached) setLastScanDate(new Date(cached));
-    } catch {}
+    } catch { /* no-op */ }
   }, []);
 
   const createUpdateMutation = useMutation({
@@ -86,7 +88,7 @@ export default function RegulatoryMonitor({ isAdmin = false }) {
 
     try {
       const result = await ai.run({
-        model: "claude_opus_4_8",
+        model: "automatic",
         prompt: `You are a healthcare regulatory monitoring assistant for a home health/hospice agency.
 
 Current date: ${format(new Date(), 'yyyy-MM-dd')}
@@ -182,7 +184,7 @@ Return JSON:
         });
       }
 
-      try { localStorage.setItem('last_regulatory_scan', new Date().toISOString()); } catch {}
+      try { localStorage.setItem('last_regulatory_scan', new Date().toISOString()); } catch { /* no-op */ }
       setLastScanDate(new Date());
 
     } catch (error) {
@@ -210,6 +212,12 @@ Return JSON:
     return `REG-${src}-${slug}`;
   };
 
+  // Once a human has reviewed the update, the AI-draft caveat in the summary is
+  // stale — nurses would still read "verify before acting" on content an admin
+  // already verified. reviewed_by/reviewed_at carry the audit trail.
+  const stripDraftPrefix = (summary) =>
+    String(summary || '').replace(/^\[AI-SUGGESTED DRAFT[^\]]*\]\s*/, '');
+
   const handleApprove = async () => {
     if (!selectedUpdate) return;
 
@@ -217,6 +225,7 @@ Return JSON:
       id: selectedUpdate.id,
       data: {
         status: 'approved',
+        summary: stripDraftPrefix(selectedUpdate.summary),
         reviewed_by: currentUser?.email,
         reviewed_at: new Date().toISOString(),
         implementation_notes: implementationNotes
@@ -325,6 +334,7 @@ Return JSON:
       id: selectedUpdate.id,
       data: {
         status: 'implemented',
+        summary: stripDraftPrefix(selectedUpdate.summary),
         reviewed_by: currentUser?.email,
         reviewed_at: new Date().toISOString(),
         implementation_notes: summaryNote,
@@ -548,7 +558,7 @@ Return JSON:
               <div>
                 <p className="text-sm font-medium mb-1">Effective Date:</p>
                 <p className="text-sm text-slate-700">
-                  {selectedUpdate.effective_date ? format(new Date(selectedUpdate.effective_date), 'MMMM d, yyyy') : 'TBD'}
+                  {selectedUpdate.effective_date ? formatEastern(selectedUpdate.effective_date, 'MMMM d, yyyy') : 'TBD'}
                 </p>
               </div>
 
@@ -649,7 +659,6 @@ Return JSON:
             </Button>
             <Button 
               onClick={handleApprove}
-              className="bg-green-600 hover:bg-green-700"
             >
               <CheckCircle2 className="w-4 h-4 mr-1" />
               Approve
@@ -695,7 +704,7 @@ function RegulatoryUpdateCard({ update, isAdmin, onReview, getImpactColor, getSt
               {update.effective_date && (
                 <span className="text-xs text-slate-500 flex items-center gap-1">
                   <Calendar className="w-3 h-3" />
-                  Effective: {format(new Date(update.effective_date), 'MMM d, yyyy')}
+                  Effective: {formatEastern(update.effective_date, 'MMM d, yyyy')}
                 </span>
               )}
             </div>

@@ -1,7 +1,7 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -13,7 +13,7 @@ import EmbeddedPage from "@/components/ui/embeddedPage";
 import TemplateLibrary from "@/components/documents/TemplateLibrary";
 import PDFTemplateBuilder from "@/components/documents/PDFTemplateBuilder";
 import DocumentAnalytics from "@/components/documents/DocumentAnalytics";
-import { isSuperAdmin } from "@/lib/superAdmin";
+import { isAdminView } from "@/lib/roles";
 
 const DocumentSignatures = lazy(() => import("@/components/hub-tabs/DocumentSignatures"));
 const CreateSignatureRequest = lazy(() => import("@/components/hub-tabs/CreateSignatureRequest"));
@@ -43,7 +43,7 @@ export default function DocumentHub() {
     queryFn: () => base44.auth.me(),
   });
 
-  const isAdmin = currentUser?.role === 'admin' || isSuperAdmin(currentUser);
+  const isAdmin = isAdminView(currentUser);
 
   const validTabKeys = isAdmin ? [...TAB_KEYS, "audit"] : TAB_KEYS;
 

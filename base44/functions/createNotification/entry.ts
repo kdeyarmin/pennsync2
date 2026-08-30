@@ -1,5 +1,174 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
+// <<<BEGIN SHARED HELPER: resolveAgencySettings — generated, edit base44/_shared/backendHelpers.mjs>>>
+async function resolveAgencySettings(base44, agencyName) {
+  let settings = [];
+  const key = String(agencyName || '').trim();
+  if (key) {
+    settings = await base44.asServiceRole.entities.AgencySettings
+      .filter({ agency_code: key }, '-created_date', 1)
+      .catch(() => []);
+    if (!settings?.length) {
+      settings = await base44.asServiceRole.entities.AgencySettings
+        .filter({ office_name: key }, '-created_date', 1)
+        .catch(() => []);
+    }
+  }
+  if (!settings?.length) {
+    // Fail closed when the agency hint missed (or no hint but multiple tenant
+    // rows exist). Newest-row-wins would silently apply another agency's fax
+    // line / dial allowlist / wage index / quiet-hour timezone.
+    if (key) return null;
+    const newest = await base44.asServiceRole.entities.AgencySettings
+      .list('-created_date', 5)
+      .catch(() => []);
+    if ((newest || []).length > 1) return null;
+    settings = (newest || []).slice(0, 1);
+  }
+  return settings?.[0] || null;
+}
+// <<<END SHARED HELPER: resolveAgencySettings>>>
+
+// <<<BEGIN SHARED HELPER: requireActiveUser — generated, edit base44/_shared/backendHelpers.mjs>>>
+const isDeactivatedUser = (u) => !!u && u.is_active === false;
+const DEACTIVATED_USER_RESPONSE = () => Response.json(
+  { error: 'Unauthorized - account is deactivated' },
+  { status: 403 },
+);
+// <<<END SHARED HELPER: requireActiveUser>>>
+
+// <<<BEGIN SHARED HELPER: requireAgencyAdminAgency — generated, edit base44/_shared/backendHelpers.mjs>>>
+function agencyAdminMissingAgencyResponse(user) {
+  if (user && user.account_type === 'agency_admin' && !String(user.agency_name || '').trim()) {
+    return Response.json({ error: 'Forbidden: agency_name is required.' }, { status: 403 });
+  }
+  return null;
+}
+// <<<END SHARED HELPER: requireAgencyAdminAgency>>>
+
+
+// <<<BEGIN SHARED HELPER: brandedEmail — generated, edit base44/_shared/backendHelpers.mjs>>>
+const BRAND_EMAIL = {
+  navy: '#213a76', navyDeep: '#1c2f5e', gold: '#c7901f',
+  ink: '#111a2b', slate: '#334155', muted: '#5b6a7f', line: '#e4e9f1',
+  wash: '#eef3fc', panel: '#f5f8fd',
+  logo: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ee80d98929370f9e8f2932/02eed9872_pennsynclogoupdated.png',
+};
+// Callout tones. 'info' is on-brand navy; success/warn/urgent reuse the manual
+// theme's green/amber/red and are used ONLY for genuine status (never decoration).
+const EMAIL_TONES = {
+  info:    { bg: '#eef3fc', border: '#88a5e0', text: '#213a76' },
+  success: { bg: '#effdf4', border: '#86efac', text: '#15803d' },
+  warn:    { bg: '#fff8ec', border: '#fcd68a', text: '#b45309' },
+  urgent:  { bg: '#fef2f2', border: '#fca5a5', text: '#b91c1c' },
+};
+function escapeEmailHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+// Allow only absolute http(s)/mailto links in email buttons, then HTML-escape the
+// whole attribute value. Rejects dangerous/unusable schemes (javascript:, data:,
+// protocol-relative //host, app-relative paths that don't resolve in an inbox) so
+// a user-controlled URL can never inject a scheme or break out of the attribute.
+// Returns '' for a rejected URL, and the caller then renders no button.
+function safeEmailHref(raw) {
+  const url = String(raw ?? '').trim();
+  const lower = url.toLowerCase();
+  const ok = lower.startsWith('https://') || lower.startsWith('http://') || lower.startsWith('mailto:');
+  return ok ? escapeEmailHtml(url) : '';
+}
+function emailParagraph(text) {
+  return `<p style="margin:0 0 14px;font-size:15px;line-height:1.62;color:${BRAND_EMAIL.slate};">${escapeEmailHtml(text)}</p>`;
+}
+function renderEmailSection(section) {
+  const s = section || {};
+  const parts = [];
+  if (s.heading) {
+    parts.push(`<h2 style="margin:20px 0 8px;font-size:16px;font-weight:800;color:${BRAND_EMAIL.ink};">${escapeEmailHtml(s.heading)}</h2>`);
+  }
+  for (const p of (Array.isArray(s.paragraphs) ? s.paragraphs : [])) parts.push(emailParagraph(p));
+  if (s.pre) {
+    parts.push(`<pre style="margin:4px 0 16px;padding:14px 16px;background:${BRAND_EMAIL.panel};border:1px solid ${BRAND_EMAIL.line};border-radius:10px;font-family:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;font-size:12.5px;line-height:1.5;color:${BRAND_EMAIL.ink};white-space:pre-wrap;word-break:break-word;">${escapeEmailHtml(s.pre)}</pre>`);
+  }
+  if (Array.isArray(s.rows) && s.rows.length) {
+    const rows = s.rows.map((r) =>
+      `<tr><td style="padding:5px 0;font-size:13.5px;color:${BRAND_EMAIL.muted};vertical-align:top;white-space:nowrap;">${escapeEmailHtml(r[0])}</td>` +
+      `<td style="padding:5px 0 5px 16px;font-size:14px;color:${BRAND_EMAIL.ink};font-weight:600;vertical-align:top;">${escapeEmailHtml(r[1])}</td></tr>`
+    ).join('');
+    parts.push(`<table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin:4px 0 16px;background:${BRAND_EMAIL.panel};border:1px solid ${BRAND_EMAIL.line};border-radius:10px;"><tr><td style="padding:8px 16px;"><table role="presentation" cellpadding="0" cellspacing="0" width="100%">${rows}</table></td></tr></table>`);
+  }
+  if (Array.isArray(s.bullets) && s.bullets.length) {
+    const items = s.bullets.map((b) =>
+      `<li style="margin:0 0 7px;font-size:14.5px;line-height:1.55;color:${BRAND_EMAIL.slate};">${escapeEmailHtml(b)}</li>`
+    ).join('');
+    parts.push(`<ul style="margin:0 0 16px;padding-left:20px;">${items}</ul>`);
+  }
+  if (s.callout && s.callout.text) {
+    const t = EMAIL_TONES[s.callout.tone] || EMAIL_TONES.info;
+    parts.push(`<table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin:4px 0 16px;"><tr><td style="padding:13px 16px;background:${t.bg};border-left:4px solid ${t.border};border-radius:8px;font-size:14px;line-height:1.55;color:${t.text};font-weight:600;">${escapeEmailHtml(s.callout.text)}</td></tr></table>`);
+  }
+  if (s.button && s.button.href) {
+    const href = safeEmailHref(s.button.href);
+    if (href) {
+      parts.push(`<div style="margin:6px 0 18px;"><a href="${href}" target="_blank" rel="noopener" style="display:inline-block;padding:13px 26px;border-radius:8px;background:${BRAND_EMAIL.navy};color:#ffffff;font-weight:700;font-size:15px;line-height:1;text-decoration:none;">${escapeEmailHtml(s.button.label || 'Open PennSync')}</a></div>`);
+    }
+  }
+  if (s.note) {
+    parts.push(`<p style="margin:0 0 14px;font-size:12.5px;line-height:1.55;color:${BRAND_EMAIL.muted};">${escapeEmailHtml(s.note)}</p>`);
+  }
+  return parts.join('');
+}
+/**
+ * Build a branded PennSync email. Returns an HTML string for SendEmail's body.
+ * opts: { preheader, eyebrow, tone('brand'|'urgent'), title, intro(string|string[]),
+ *         sections[{ heading, paragraphs[], pre, rows[[k,v]], bullets[], callout{text,tone},
+ *         button{href,label}, note }], signoffName, footerNote }
+ */
+function renderBrandedEmail(opts) {
+  const o = opts || {};
+  const rule = o.tone === 'urgent' ? '#dc2626' : BRAND_EMAIL.gold;
+  const intro = Array.isArray(o.intro) ? o.intro : (o.intro ? [o.intro] : []);
+  const sections = Array.isArray(o.sections) ? o.sections : [];
+  const signoff = o.signoffName === null ? '' : (o.signoffName || 'The PennSync by CareMetric Team');
+  const preheader = o.preheader ? escapeEmailHtml(o.preheader) : '';
+  const eyebrow = o.eyebrow
+    ? `<p style="margin:0 0 6px;font-size:12px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:${BRAND_EMAIL.gold};">${escapeEmailHtml(o.eyebrow)}</p>`
+    : '';
+  const introHtml = intro.map(emailParagraph).join('');
+  const sectionsHtml = sections.map(renderEmailSection).join('');
+  const signoffHtml = signoff
+    ? `<p style="margin:22px 0 2px;font-size:15px;line-height:1.6;color:${BRAND_EMAIL.slate};">Warm regards,<br /><strong style="color:${BRAND_EMAIL.navy};">${escapeEmailHtml(signoff)}</strong></p>`
+    : '';
+  const footerNote = o.footerNote
+    ? `<p style="margin:0 0 8px;font-size:11.5px;line-height:1.5;color:${BRAND_EMAIL.muted};">${escapeEmailHtml(o.footerNote)}</p>`
+    : '';
+  return `<!doctype html>
+<html lang="en"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="color-scheme" content="light only" /><title>${escapeEmailHtml(o.title || 'PennSync by CareMetric')}</title></head>
+<body style="margin:0;padding:0;background:${BRAND_EMAIL.wash};">
+<span style="display:none;max-height:0;overflow:hidden;opacity:0;color:${BRAND_EMAIL.wash};">${preheader}</span>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${BRAND_EMAIL.wash};"><tr><td align="center" style="padding:28px 14px;">
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:600px;max-width:100%;background:#ffffff;border:1px solid ${BRAND_EMAIL.line};border-radius:16px;overflow:hidden;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+  <tr><td style="background:linear-gradient(180deg,#25407e 0%,${BRAND_EMAIL.navyDeep} 100%);padding:28px 28px 24px;text-align:center;">
+    <img src="${BRAND_EMAIL.logo}" width="54" height="54" alt="PennSync" style="display:inline-block;width:54px;height:54px;border-radius:13px;border:0;" />
+    <div style="margin-top:11px;font-size:23px;font-weight:800;letter-spacing:-.3px;color:#ffffff;">Penn<span style="color:${BRAND_EMAIL.gold};">Sync</span></div>
+    <div style="margin-top:4px;font-size:10.5px;font-weight:600;letter-spacing:4px;text-transform:uppercase;color:#b6c9ee;">by CareMetric</div>
+    <div style="width:58px;height:4px;border-radius:3px;background:${rule};margin:14px auto 0;"></div>
+  </td></tr>
+  <tr><td style="padding:30px 32px 6px;">
+    ${eyebrow}<h1 style="margin:0;font-size:22px;font-weight:800;color:${BRAND_EMAIL.navy};">${escapeEmailHtml(o.title || '')}</h1>
+  </td></tr>
+  <tr><td style="padding:14px 32px 4px;">${introHtml}${sectionsHtml}${signoffHtml}</td></tr>
+  <tr><td style="padding:24px 32px 30px;text-align:center;">
+    <div style="height:1px;background:${BRAND_EMAIL.line};margin-bottom:16px;"></div>
+    <div style="font-size:13px;font-weight:800;color:${BRAND_EMAIL.navy};">Penn<span style="color:${BRAND_EMAIL.gold};">Sync</span> <span style="font-weight:600;color:${BRAND_EMAIL.muted};">by CareMetric</span></div>
+    ${footerNote}<p style="margin:8px 0 0;font-size:11.5px;line-height:1.5;color:${BRAND_EMAIL.muted};">This is an automated message from PennSync by CareMetric — please do not reply to this email.</p>
+  </td></tr>
+</table></td></tr></table>
+</body></html>`;
+}
+// <<<END SHARED HELPER: brandedEmail>>>
+
 /**
  * Creates a notification and sends it via appropriate channels based on user preferences
  * 
@@ -16,6 +185,14 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
  * }
  */
 
+function getAppBaseUrl() {
+  const fromEnv = String(Deno.env.get('APP_PUBLIC_URL') || Deno.env.get('APP_URL') || '').trim().replace(/\/+$/, '');
+  if (fromEnv) {
+    try { return new URL(fromEnv).origin; } catch { /* fall through */ }
+  }
+  return 'https://caremetricai.base44.app';
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -25,7 +202,12 @@ Deno.serve(async (req) => {
     if (!currentUser) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    if (isDeactivatedUser(currentUser)) return DEACTIVATED_USER_RESPONSE();
 
+    {
+      const _agencyAdminGate = agencyAdminMissingAgencyResponse(currentUser);
+      if (_agencyAdminGate) return _agencyAdminGate;
+    }
     const body = await req.json();
     const { user_email, title, message, type, priority = 'medium', action_url, action_label, metadata, patient_id } = body;
 
@@ -66,12 +248,56 @@ Deno.serve(async (req) => {
       }
     }
 
+    const isAdminLike = (u) => !!u && (
+      u.role === 'admin' || u.account_type === 'agency_admin' || u.account_type === 'super_admin'
+    );
+    const callerIsAdmin = isAdminLike(currentUser);
+    // Non-admins may only create low-risk peer/admin-notify types (account
+    // deletion uses system_update → admins). High-severity clinical/system
+    // types are admin-only.
+    const NON_ADMIN_TYPES = new Set([
+      'system_update', 'info', 'message_received', 'task_assigned', 'task_due_soon',
+    ]);
+    if (!callerIsAdmin && !NON_ADMIN_TYPES.has(type)) {
+      return Response.json({ error: 'Only admins can create this notification type' }, { status: 403 });
+    }
+    const recipientEmail = String(user_email).trim().toLowerCase();
+    const callerEmail = String(currentUser.email || '').trim().toLowerCase();
+    // Resolve the recipient once for peer-notify and agency-admin tenant gates.
+    const recipientRows = await base44.asServiceRole.entities.User
+      .filter({ email: recipientEmail }, undefined, 1)
+      .catch(() => []);
+    const recipient = recipientRows?.[0] || null;
+    if (!callerIsAdmin && recipientEmail !== callerEmail) {
+      // Peer notify: recipient must be an admin (e.g. account-deletion request).
+      if (!recipient || !isAdminLike(recipient)) {
+        return Response.json({
+          error: 'Non-admins may only notify themselves or an administrator',
+        }, { status: 403 });
+      }
+    }
+    // Agency-scoped admins (and peer-notifies from agency-scoped staff) may only
+    // target users in their own agency — otherwise createNotification is a
+    // cross-tenant spam / phishing channel via service-role Notification + email.
+    const callerIsAgencyScoped = currentUser.account_type !== 'super_admin'
+      && currentUser.agency_name
+      && (currentUser.account_type === 'agency_admin' || currentUser.role === 'admin');
+    if (callerIsAgencyScoped ||
+        (!callerIsAdmin && recipientEmail !== callerEmail)) {
+      if (!currentUser.agency_name || !recipient ||
+          recipient.agency_name !== currentUser.agency_name) {
+        return Response.json({
+          error: 'Forbidden: recipient is outside your agency',
+        }, { status: 403 });
+      }
+    }
+
     // If this is a patient-related notification, verify the recipient has charted on this patient
     if (patient_id && type !== 'compliance_alert' && type !== 'report_ready' && type !== 'training_due') {
       const chartedVisits = await base44.asServiceRole.entities.Visit.filter({
         patient_id: patient_id,
         created_by: user_email
-      });
+      }, undefined, 5000);
 
       if (!chartedVisits || chartedVisits.length === 0) {
         return Response.json({
@@ -84,12 +310,17 @@ Deno.serve(async (req) => {
     // Get user's notification preferences
     const preferences = await base44.asServiceRole.entities.NotificationPreference.filter({
       user_email: user_email
-    });
+    }, undefined, 5000);
 
     const userPrefs = preferences[0] || {
       email_notifications_enabled: true,
       in_app_notifications_enabled: true,
       push_notifications_enabled: false,
+      // Default to instant delivery: shouldSendEmail requires digest_mode ===
+      // 'instant', so omitting it here made the email_notifications_enabled:true
+      // default unreachable — a user who never opened Notification Settings got
+      // NO emails at all, including priority:'critical' patient alerts.
+      digest_mode: 'instant',
       preferences: {}
     };
 
@@ -124,14 +355,15 @@ Deno.serve(async (req) => {
                            userPrefs.digest_mode === 'instant';
 
     if (shouldSendEmail) {
-      // Check quiet hours. The quiet_hours start/end times are entered by the
-      // user in THEIR local time, but Deno Deploy runs in UTC — using
-      // now.getHours() compared the window against UTC and shifted it by the
-      // agency's offset (~4–5h for ET), so emails fired during the user's night
-      // or were suppressed during their day. Evaluate the current HH:MM in the
-      // agency's configured timezone instead (default America/New_York).
-      const agencyRows = await base44.asServiceRole.entities.AgencySettings.list('-created_date', 1).catch(() => []);
-      const tz = agencyRows[0]?.business_hours_timezone || agencyRows[0]?.duty_timezone || 'America/New_York';
+      // Check quiet hours. Quiet-hour start/end times are entered relative to the
+      // agency's configured business timezone (Agency Settings), not an arbitrary
+      // per-user IANA zone — Deno has no browser timezone for the recipient.
+      // Evaluate the current HH:MM in that agency timezone (default America/New_York).
+      const agencySettingsRow = await resolveAgencySettings(
+        base44,
+        recipient?.agency_name || currentUser?.agency_name,
+      );
+      const tz = agencySettingsRow?.business_hours_timezone || agencySettingsRow?.duty_timezone || 'America/New_York';
       let currentTime;
       try {
         currentTime = new Intl.DateTimeFormat('en-GB', {
@@ -158,18 +390,26 @@ Deno.serve(async (req) => {
       // Send email if not in quiet hours or if critical priority
       if (!inQuietHours || safePriority === 'critical') {
         try {
+          // Deep-link the in-app action_url (a relative path) into an absolute URL
+          // so the email button actually works.
+          const appBase = getAppBaseUrl();
           await base44.asServiceRole.integrations.Core.SendEmail({
             to: user_email,
-            subject: `[Penn Sync] ${title}`,
-            body: `
-              ${message}
-              
-              ${safeActionUrl ? `\n\nView details: ${safeActionUrl}` : ''}
-              
-              ---
-              This notification was sent because you have email notifications enabled for this type of alert.
-              To manage your notification preferences, visit the Notification Settings page.
-            `
+            from_name: 'PennSync by CareMetric',
+            subject: `${title} · PennSync by CareMetric`,
+            body: renderBrandedEmail({
+              preheader: message,
+              eyebrow: 'Notification',
+              tone: safePriority === 'critical' ? 'urgent' : 'brand',
+              title,
+              intro: message,
+              sections: [
+                ...(safeActionUrl
+                  ? [{ button: { href: `${appBase}${safeActionUrl}`, label: action_label || 'View in PennSync' } }]
+                  : []),
+              ],
+              footerNote: 'You’re receiving this because email notifications are enabled for this alert type. Manage your preferences on the Notification Settings page in PennSync.',
+            }),
           });
         } catch (emailError) {
           console.error('Failed to send email:', emailError);
@@ -190,7 +430,7 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error('Error creating notification:', error);
     return Response.json({ 
-      error: error.message || 'Internal server error' 
+      error: 'Internal server error' 
     }, { status: 500 });
   }
 });

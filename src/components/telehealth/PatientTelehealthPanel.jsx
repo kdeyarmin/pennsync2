@@ -1,5 +1,6 @@
-import { useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { todayEastern, nowEastern } from "@/components/utils/timezone";
 import { Video, Copy, Calendar, MessageSquare } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,8 +11,11 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import SessionDocumentation from "@/components/telehealth/SessionDocumentation";
 import TelehealthCall from "@/components/telehealth/TelehealthCall";
-import { generateJoinToken, buildPatientJoinLink } from "@/components/telehealth/telehealthUtils";
+import { generateJoinToken, buildPatientJoinLink, hashJoinToken } from "@/components/telehealth/telehealthUtils";
+import { rememberJoinLink, getPatientJoinLink } from "@/components/telehealth/joinLinkAccess";
 import { toast } from "sonner";
+import { hostedAbsoluteUrl } from '@/lib/assetPath';
+import { ROUTER_PATHS } from '@/routes';
 
 const visitTypes = {
   routine_followup: { label: "Routine Follow-up", visitType: "routine_visit" },
@@ -30,6 +34,16 @@ export default function PatientTelehealthPanel({ patient, currentUser }) {
   const [participantList, setParticipantList] = useState([]);
   const [newSession, setNewSession] = useState({ visit_type: "routine_followup", scheduled_at: "" });
   const endingRef = useRef(false);
+
+  // Clear sticky live-session UI when the chart switches patients mid-panel.
+  useEffect(() => {
+    setActiveSession(null);
+    setShowNewSession(false);
+    setShowDocumentation(false);
+    setParticipantList([]);
+    setNewSession({ visit_type: "routine_followup", scheduled_at: "" });
+    endingRef.current = false;
+  }, [patient?.id]);
 
   const { data: sessions = [] } = useQuery({
     queryKey: ["patient-telehealth-sessions", patient?.id],
@@ -59,21 +73,33 @@ export default function PatientTelehealthPanel({ patient, currentUser }) {
   });
 
   const textLink = useMutation({
-    mutationFn: ({ to_number, body }) => base44.functions.invoke("sendSms", { to_number, body, patient_id: patient?.id }),
+    mutationFn: async ({ to_number, body }) => {
+      const res = await base44.functions.invoke("sendSms", { to_number, body, patient_id: patient?.id });
+      const data = res?.data ?? res;
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
     onSuccess: () => toast.success("Join link texted to the patient"),
     onError: (e) => toast.error(e?.message || "Couldn't send the text")
   });
 
-  const textPatient = (session) => {
+  const textPatient = async (session) => {
     const phone = patient?.phone || patient?.phone_number || patient?.cell;
     if (!phone) {
       toast.error("No phone number on file for this patient");
       return;
     }
+    let link;
+    try {
+      link = await getPatientJoinLink(session);
+    } catch (e) {
+      toast.error(e?.message || "Couldn't generate the join link");
+      return;
+    }
     const greeting = patient?.first_name ? `Hi ${patient.first_name}, ` : "Hi, ";
     textLink.mutate({
       to_number: phone,
-      body: `${greeting}here's your secure telehealth visit link: ${session.invite_link}`
+      body: `${greeting}here's your secure telehealth visit link: ${link}`
     });
   };
 
@@ -91,7 +117,9 @@ export default function PatientTelehealthPanel({ patient, currentUser }) {
     setActiveSession({ ...session, participant_list: participants, started_at: new Date().toISOString() });
   };
 
-  const endSession = async () => {
+  // Memoized so the identity passed as VideoRoom's onDisconnect is stable across
+  // renders (participant-list updates re-render this component frequently).
+  const endSession = useCallback(async () => {
     // Guard against the End button + Telnyx "disconnected" event both firing.
     if (!activeSession || endingRef.current) return;
     endingRef.current = true;
@@ -104,7 +132,8 @@ export default function PatientTelehealthPanel({ patient, currentUser }) {
     });
     setActiveSession({ ...activeSession, ended_at: endedAt.toISOString(), duration_minutes: duration, participant_list: participantList });
     setShowDocumentation(true);
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- updateMutation.mutateAsync is a stable reference; deps limited to values that affect behavior.
+  }, [activeSession, participantList]);
 
   const saveDocumentation = async (docData) => {
     if (!activeSession) return;
@@ -121,16 +150,30 @@ export default function PatientTelehealthPanel({ patient, currentUser }) {
       docData.notes ? `Additional Notes: ${docData.notes}` : "",
     ].filter(Boolean).join("\n");
 
+    // The Visit schema types every vital_signs.* as a NUMBER, but the
+    // documentation form yields raw input strings. Coerce to numbers and drop
+    // anything unparseable — otherwise the create is rejected, or string vitals
+    // corrupt downstream numeric trend/average logic.
+    const coercedVitals = {};
+    for (const [key, value] of Object.entries(docData.vitals_captured || {})) {
+      if (value === "" || value == null) continue;
+      const numeric = parseFloat(value);
+      if (Number.isFinite(numeric)) coercedVitals[key] = numeric;
+    }
+
     const visit = await createVisitMutation.mutateAsync({
       patient_id: patient.id,
-      visit_date: new Date().toISOString().slice(0, 10),
-      visit_time: new Date().toTimeString().slice(0, 5),
+      // Agency-local (Eastern) calendar date so it matches the local visit_time
+      // below; toISOString() would yield the UTC date and chart the visit a day
+      // ahead for late-evening ET visits.
+      visit_date: todayEastern(),
+      visit_time: nowEastern().toTimeString().slice(0, 5),
       visit_type: visitTypes[activeSession.visit_type]?.visitType || "routine_visit",
       status: "completed",
       start_time: activeSession.started_at,
       end_time: activeSession.ended_at || new Date().toISOString(),
       nurse_notes: compiledNote,
-      vital_signs: docData.vitals_captured,
+      vital_signs: Object.keys(coercedVitals).length > 0 ? coercedVitals : null,
       ai_tags: ["telehealth", activeSession.visit_type],
     });
 
@@ -149,7 +192,10 @@ export default function PatientTelehealthPanel({ patient, currentUser }) {
   const createSession = async () => {
     const roomName = `telehealth-${patient.id}-${Date.now()}`;
     // Patient-facing capability link: the token is the patient's access grant.
-    const inviteLink = buildPatientJoinLink(window.location.origin, roomName, generateJoinToken());
+    // Only the token's SHA-256 hash is persisted; the raw link stays in this
+    // tab's memory (rememberJoinLink) for the copy/text actions.
+    const joinToken = generateJoinToken();
+    rememberJoinLink(roomName, buildPatientJoinLink(hostedAbsoluteUrl('/', { routerPaths: ROUTER_PATHS }), roomName, joinToken));
     await createMutation.mutateAsync({
       room_name: roomName,
       patient_id: patient.id,
@@ -157,9 +203,15 @@ export default function PatientTelehealthPanel({ patient, currentUser }) {
       host_email: currentUser?.email,
       host_name: currentUser?.full_name,
       visit_type: newSession.visit_type,
-      scheduled_at: newSession.scheduled_at || new Date().toISOString(),
+      // datetime-local yields a naive "YYYY-MM-DDTHH:mm" wall-clock string; the
+      // backend's Date.parse reads that as UTC, shifting the patient's guest
+      // join window by the agency's offset. Resolve it in the nurse's zone here
+      // and persist a real instant.
+      scheduled_at: newSession.scheduled_at && !Number.isNaN(new Date(newSession.scheduled_at).getTime())
+        ? new Date(newSession.scheduled_at).toISOString()
+        : new Date().toISOString(),
       status: "scheduled",
-      invite_link: inviteLink,
+      join_token_hash: await hashJoinToken(joinToken),
       participant_list: [currentUser?.full_name || currentUser?.email, `${patient.first_name} ${patient.last_name}`].filter(Boolean),
     });
   };
@@ -224,9 +276,9 @@ export default function PatientTelehealthPanel({ patient, currentUser }) {
                 <div>
                   <p className="font-semibold text-slate-900">{visitTypes[session.visit_type]?.label || session.visit_type}</p>
                   <p className="text-sm text-slate-500 flex items-center gap-2"><Calendar className="w-3 h-3" />{session.scheduled_at ? new Date(session.scheduled_at).toLocaleString() : 'Now'}</p>
-                  {session.invite_link && (
+                  {(session.join_token_hash || session.invite_link) && (
                     <div className="flex flex-wrap items-center gap-3 mt-1">
-                      <button type="button" className="text-sm text-indigo-600 underline flex items-center gap-1" onClick={async () => { try { await navigator.clipboard.writeText(session.invite_link); toast.success('Join link copied'); } catch { toast.error("Couldn't copy the link — copy it manually."); } }}><Copy className="w-3 h-3" />Copy join link</button>
+                      <button type="button" className="text-sm text-indigo-600 underline flex items-center gap-1" onClick={async () => { try { const link = await getPatientJoinLink(session); await navigator.clipboard.writeText(link); toast.success('Join link copied'); } catch (e) { toast.error(e?.message || "Couldn't copy the link — copy it manually."); } }}><Copy className="w-3 h-3" />Copy join link</button>
                       <button type="button" className="text-sm text-indigo-600 underline flex items-center gap-1 disabled:opacity-50" disabled={textLink.isPending} onClick={() => textPatient(session)}><MessageSquare className="w-3 h-3" />Text to patient</button>
                     </div>
                   )}

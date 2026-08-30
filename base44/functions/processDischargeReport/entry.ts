@@ -1,9 +1,48 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
-// Operational logs are gated behind FUNCTIONS_DEBUG so they don't run in
-// production by default. console.error/warn remain ungated for visibility.
-const DEBUG = !!Deno.env.get('FUNCTIONS_DEBUG');
-const debugLog = (...args) => { if (DEBUG) console.log(...args); };
+// <<<BEGIN SHARED HELPER: requireActiveUser — generated, edit base44/_shared/backendHelpers.mjs>>>
+const isDeactivatedUser = (u) => !!u && u.is_active === false;
+const DEACTIVATED_USER_RESPONSE = () => Response.json(
+  { error: 'Unauthorized - account is deactivated' },
+  { status: 403 },
+);
+// <<<END SHARED HELPER: requireActiveUser>>>
+
+
+// Platform-wide: role:admin without agency, or super_admin. Facility admins
+// with an agency_name may run the import but only against their agency's charts.
+const canRunDischargeImport = (u) => !!u && (
+  u.account_type === 'super_admin'
+  || u.role === 'admin'
+  || u.account_type === 'agency_admin'
+);
+
+// Does an MRN-matched chart carry a different person's name?
+//
+// Stricter than the import-side helper this was ported from, deliberately.
+// That one returns "no conflict" as soon as the surnames match, without ever
+// comparing first names — but discharging is destructive, and spouses and
+// siblings on service together share a surname, so one misread MRN digit could
+// close the wrong family member's chart. Whenever BOTH first names are known,
+// they must agree. Surnames may still legitimately differ (marriage), which is
+// why a first-name match alone clears the check.
+// A row with no name at all never conflicts, so MRN-only discharge rows keep
+// matching exactly as before.
+const foldNamePart = (v) => String(v || '').toLowerCase().replace(/[^a-z]/g, '');
+function mrnNameConflict(row, rec) {
+  const rowLast = foldNamePart(row.last_name);
+  const recLast = foldNamePart(rec?.last_name);
+  const rowFirst = foldNamePart(row.first_name);
+  const recFirst = foldNamePart(rec?.first_name);
+  if (!rowLast && !rowFirst) return false;
+  if (rowFirst && recFirst) return rowFirst !== recFirst;
+  if (!rowLast || !recLast) return false;
+  return !(rowLast === recLast || rowLast.includes(recLast) || recLast.includes(rowLast));
+}
+
+// Operational debug logs are compiled out in production (the FUNCTIONS_DEBUG
+// secret was retired). console.error/warn remain ungated for visibility.
+const debugLog = (..._args) => {};
 
 Deno.serve(async (req) => {
   try {
@@ -11,7 +50,9 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
     
     const user = await base44.auth.me();
-    if (!user || user.role !== 'admin') {
+    
+    if (isDeactivatedUser(user)) return DEACTIVATED_USER_RESPONSE();
+    if (!canRunDischargeImport(user)) {
       return Response.json({ error: 'Admin access required' }, { status: 403 });
     }
 
@@ -61,7 +102,25 @@ Deno.serve(async (req) => {
     // Fetch patients to match the discharge records against (bounded to the
     // SDK's 5000/request max; omitting a limit silently caps at the SDK default
     // of 50).
-    const allPatients = await base44.asServiceRole.entities.Patient.list('-created_date', 5000);
+    let allPatients = await base44.asServiceRole.entities.Patient.list('-created_date', 5000);
+    const isAgencyScoped = user.account_type !== 'super_admin'
+      && user.agency_name
+      && (user.account_type === 'agency_admin' || user.role === 'admin');
+    if (isAgencyScoped) {
+      const agencyUsers = await base44.asServiceRole.entities.User
+        .list('-created_date', 5000).catch(() => []);
+      const agencyEmails = new Set(
+        (agencyUsers || [])
+          .filter((u) => u.agency_name === user.agency_name && u.email)
+          .map((u) => u.email),
+      );
+      allPatients = (allPatients || []).filter((p) =>
+        (p.created_by && agencyEmails.has(p.created_by))
+        || (Array.isArray(p.assigned_nurses) && p.assigned_nurses.some((e) => agencyEmails.has(e))),
+      );
+    } else if (user.account_type === 'agency_admin' && !user.agency_name) {
+      return Response.json({ error: 'Forbidden: agency_name is required' }, { status: 403 });
+    }
     
     const results = {
       total_processed: dischargedPatientsData.length,
@@ -86,8 +145,18 @@ Deno.serve(async (req) => {
     const nameMap = new Map();
 
     for (const patient of allPatients) {
+      // Only consider charts that can actually be discharged as match candidates.
+      // An already-discharged / merged / archived duplicate sharing a name (or MRN)
+      // must not shadow the active chart or create a false "ambiguous" match that
+      // blocks discharging the real patient.
+      if (patient.is_archived || patient.status === 'merged' || patient.status === 'discharged') continue;
       if (patient.medical_record_number) {
-        mrnMap.set(patient.medical_record_number.trim().toLowerCase(), patient);
+        // Bucket per MRN for the same reason the name map does. Last-write-wins
+        // meant two charts sharing an MRN silently resolved to whichever was
+        // iterated last.
+        const mrnKey = patient.medical_record_number.trim().toLowerCase();
+        if (!mrnMap.has(mrnKey)) mrnMap.set(mrnKey, []);
+        mrnMap.get(mrnKey).push(patient);
       }
       const nameKey = `${patient.first_name?.toLowerCase()}_${patient.last_name?.toLowerCase()}`;
       if (!nameMap.has(nameKey)) nameMap.set(nameKey, []);
@@ -105,8 +174,40 @@ Deno.serve(async (req) => {
         let matchingPatient = null;
 
         if (dischargeData.medical_record_number) {
+          // An MRN hit used to be trusted outright, with no name cross-check —
+          // but this MRN is AI-extracted from an uploaded document, exactly the
+          // source that produces digit errors, and the name branch below is
+          // skipped once matchingPatient is set. One mangled digit therefore
+          // discharged whichever active chart owned that MRN, dropping a patient
+          // off the census and cancelling their scheduled care. Same guard
+          // processPatientFileUpdate already applies to its MRN matches.
           const mrn = dischargeData.medical_record_number.trim().toLowerCase();
-          matchingPatient = mrnMap.get(mrn);
+          const mrnCandidates = mrnMap.get(mrn) || [];
+          const displayName = `${dischargeData.first_name || ''} ${dischargeData.last_name || ''}`.trim();
+
+          if (mrnCandidates.length > 1) {
+            results.ambiguous++;
+            results.ambiguous_patients.push({
+              name: displayName,
+              mrn: dischargeData.medical_record_number,
+              candidate_count: mrnCandidates.length,
+              reason: 'Multiple active charts share this MRN',
+            });
+            continue;
+          }
+
+          const mrnMatch = mrnCandidates[0] || null;
+          if (mrnMatch && mrnNameConflict(dischargeData, mrnMatch)) {
+            results.ambiguous++;
+            results.ambiguous_patients.push({
+              name: displayName,
+              mrn: dischargeData.medical_record_number,
+              candidate_count: 1,
+              reason: 'MRN belongs to a chart with a different name',
+            });
+            continue;
+          }
+          matchingPatient = mrnMatch;
         }
 
         if (!matchingPatient && dischargeData.first_name && dischargeData.last_name) {
@@ -215,7 +316,7 @@ Deno.serve(async (req) => {
     return Response.json({ 
       success: false,
       error: 'Failed to process discharge report',
-      details: error.message
+      details: 'Internal server error'
     }, { status: 500 });
   }
 });

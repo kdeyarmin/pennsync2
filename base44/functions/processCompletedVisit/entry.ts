@@ -1,5 +1,47 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
+// <<<BEGIN SHARED HELPER: requireActiveUser — generated, edit base44/_shared/backendHelpers.mjs>>>
+const isDeactivatedUser = (u) => !!u && u.is_active === false;
+const DEACTIVATED_USER_RESPONSE = () => Response.json(
+  { error: 'Unauthorized - account is deactivated' },
+  { status: 403 },
+);
+// <<<END SHARED HELPER: requireActiveUser>>>
+
+/** Explicit patient access — Patient/Visit RLS treats role:admin as platform-wide. */
+async function assertPatientAccess(base44, user, patient) {
+  if (!patient) return Response.json({ error: 'Patient not found' }, { status: 404 });
+  const isSuperAdmin = user.account_type === 'super_admin';
+  const isAgencyScopedAdmin =
+    user.account_type === 'agency_admin'
+    || (user.role === 'admin' && !!user.agency_name && !isSuperAdmin);
+  const isPlatformAdmin = isSuperAdmin || (user.role === 'admin' && !user.agency_name);
+  const isAssigned = Array.isArray(patient.assigned_nurses)
+    && patient.assigned_nurses.includes(user.email);
+  if (!isPlatformAdmin && !isAgencyScopedAdmin && patient.created_by !== user.email && !isAssigned) {
+    return Response.json({ error: 'Forbidden' }, { status: 403 });
+  }
+  if (isAgencyScopedAdmin) {
+    if (!user.agency_name) {
+      return Response.json({ error: 'Forbidden' }, { status: 403 });
+    }
+    const agencyUsers = await base44.asServiceRole.entities.User
+      .list('-created_date', 5000).catch(() => []);
+    const agencyEmails = new Set(
+      (agencyUsers || [])
+        .filter((u) => u.agency_name === user.agency_name && u.email)
+        .map((u) => u.email),
+    );
+    const inAgency = (patient.created_by && agencyEmails.has(patient.created_by))
+      || (Array.isArray(patient.assigned_nurses)
+        && patient.assigned_nurses.some((e) => agencyEmails.has(e)));
+    if (!inAgency) {
+      return Response.json({ error: 'Forbidden' }, { status: 403 });
+    }
+  }
+  return null;
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -9,6 +51,7 @@ Deno.serve(async (req) => {
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    if (isDeactivatedUser(user)) return DEACTIVATED_USER_RESPONSE();
 
     const { visit_id } = await req.json();
 
@@ -35,10 +78,22 @@ Deno.serve(async (req) => {
     // double-click / retry would otherwise (a) overwrite nurse_notes with a fresh
     // narrative generated FROM the previous narrative — progressively corrupting
     // the documentation — and (b) create duplicate follow-up tasks + notifications
-    // every time. If AI follow-up tasks already exist for this visit it has been
-    // processed; return the prior result instead of re-running.
+    // every time. Prefer the durable ai_processed_at stamp; fall back to existing
+    // AI tasks for visits processed before that field existed.
+    if (visit.ai_processed_at) {
+      const existingAiTasks = await base44.entities.Task
+        .filter({ related_visit_id: visit_id, source: 'ai_generated' }, undefined, 5000)
+        .catch(() => []);
+      return Response.json({
+        success: true,
+        already_processed: true,
+        visit,
+        tasks_created: 0,
+        tasks: existingAiTasks || [],
+      });
+    }
     const existingAiTasks = await base44.entities.Task
-      .filter({ related_visit_id: visit_id, source: 'ai_generated' })
+      .filter({ related_visit_id: visit_id, source: 'ai_generated' }, undefined, 5000)
       .catch(() => []);
     if (existingAiTasks && existingAiTasks.length > 0) {
       return Response.json({
@@ -50,6 +105,30 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Claim BEFORE the LLM work. The task-existence check above is TOCTOU: two
+    // concurrent submits both see zero tasks, both run InvokeLLM, then both
+    // overwrite nurse_notes and create duplicate tasks. Claim + re-read mirrors
+    // onDocumentSigned / sendRenewalReminders.
+    const claimToken = typeof crypto !== 'undefined' && crypto.randomUUID
+      ? crypto.randomUUID()
+      : `ai-process-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    try {
+      await base44.entities.Visit.update(visit_id, { ai_process_claimed_by: claimToken });
+    } catch {
+      return Response.json({ error: 'Could not claim visit for processing' }, { status: 409 });
+    }
+    const claimCheck = await base44.entities.Visit.filter({ id: visit_id }, '-created_date', 1).catch(() => []);
+    if (!claimCheck[0] || claimCheck[0].ai_process_claimed_by !== claimToken) {
+      return Response.json({
+        success: true,
+        already_processed: true,
+        visit: claimCheck[0] || visit,
+        tasks_created: 0,
+        tasks: [],
+        skipped: 'claimed by concurrent run',
+      });
+    }
+
     // Always generate the narrative from the ORIGINAL raw input, never from a
     // prior AI narrative. raw_transcription is the canonical raw source; fall back
     // to nurse_notes for older visits that predate it.
@@ -57,18 +136,9 @@ Deno.serve(async (req) => {
       ? visit.raw_transcription
       : (visit.nurse_notes || '');
 
-    // Patient and active care plans are independent reads — fetch concurrently.
-    const [patient, carePlans] = await Promise.all([
-      base44.entities.Patient.get(visit.patient_id),
-      base44.entities.CarePlan.filter({
-        patient_id: visit.patient_id,
-        status: 'active'
-      })
-    ]);
-
-    if (!patient) {
-      return Response.json({ error: 'Patient not found' }, { status: 404 });
-    }
+    const patient = await base44.entities.Patient.get(visit.patient_id);
+    const denied = await assertPatientAccess(base44, user, patient);
+    if (denied) return denied;
 
     // Generate Medicare-compliant narrative
     const narrativePrompt = `You are a clinical documentation specialist. Generate a Medicare-compliant visit narrative based on the following information:
@@ -92,9 +162,6 @@ ${visit.vital_signs ? `
 NURSE NOTES (RAW):
 ${rawNotes || 'No notes provided'}
 
-ACTIVE CARE PLANS:
-${carePlans.map(cp => `- ${cp.problem}: ${cp.goal}`).join('\n') || 'None'}
-
 Generate a comprehensive, Medicare-compliant narrative that includes:
 1. Assessment findings
 2. Interventions provided
@@ -110,7 +177,7 @@ Use proper medical terminology and follow Medicare documentation requirements. B
     // halving the clinician's wait on visit completion.
     const narrativePromise = base44.integrations.Core.InvokeLLM({
       prompt: narrativePrompt,
-      model: 'claude_opus_4_8'
+      model: 'automatic'
     });
 
     // Generate follow-up tasks
@@ -120,7 +187,6 @@ PATIENT: ${patient.first_name} ${patient.last_name}
 VISIT TYPE: ${visit.visit_type}
 VITAL SIGNS: ${JSON.stringify(visit.vital_signs || {})}
 CLINICAL NOTES: ${visit.nurse_notes || 'None'}
-ACTIVE CARE PLANS: ${carePlans.map(cp => cp.problem).join(', ') || 'None'}
 
 Analyze the visit data and generate follow-up tasks. Return a JSON array of tasks with this structure:
 {
@@ -188,7 +254,8 @@ Only suggest tasks that are clinically necessary. If no follow-up is needed, ret
     const visitUpdate = {
       nurse_notes: narrativeText,
       ai_tags: extractTags(narrativeText),
-      status: 'completed'
+      status: 'completed',
+      ai_processed_at: new Date().toISOString(),
     };
     if (!visit.raw_transcription || !visit.raw_transcription.trim()) {
       visitUpdate.raw_transcription = rawNotes;
@@ -233,7 +300,7 @@ Only suggest tasks that are clinically necessary. If no follow-up is needed, ret
       message: `Medicare-compliant narrative generated for ${patient.first_name} ${patient.last_name}. ${createdTasks.length} follow-up task${createdTasks.length !== 1 ? 's' : ''} created.`,
       type: 'info',
       priority: 'medium',
-      action_url: `/patientdetails?id=${visit.patient_id}`,
+      action_url: `/PatientDetails?id=${visit.patient_id}`,
       action_label: 'View Patient Chart',
       metadata: {
         patient_id: visit.patient_id,
@@ -253,7 +320,7 @@ Only suggest tasks that are clinically necessary. If no follow-up is needed, ret
   } catch (error) {
     console.error('Process completed visit error:', error);
     return Response.json({
-      error: error.message
+      error: 'Internal server error'
     }, { status: 500 });
   }
 });
@@ -263,12 +330,17 @@ function extractTags(narrative) {
   const tags = [];
   const text = narrative.toLowerCase();
   
-  // Clinical indicators
-  if (text.includes('stable') || text.includes('improving')) tags.push('stable');
+  // Clinical indicators. 'stable' and 'med' must match on a word boundary:
+  // 'unstable'.includes('stable') is true, so a narrative documenting an
+  // UNSTABLE patient was auto-tagged 'stable', and bare 'med' also fired on
+  // "medical", "immediately" and "medium". The rest stay substring matches on
+  // purpose (e.g. "breath" has to match "breathing"). `text` is already
+  // lowercased.
+  if (/\bstable\b/.test(text) || text.includes('improving')) tags.push('stable');
   if (text.includes('decline') || text.includes('worsening')) tags.push('declining');
   if (text.includes('pain')) tags.push('pain_management');
   if (text.includes('wound')) tags.push('wound_care');
-  if (text.includes('medication') || text.includes('med')) tags.push('medication');
+  if (text.includes('medication') || /\bmeds?\b/.test(text)) tags.push('medication');
   if (text.includes('edema') || text.includes('swelling')) tags.push('edema');
   if (text.includes('breath') || text.includes('respiratory')) tags.push('respiratory');
   if (text.includes('cardiac') || text.includes('heart')) tags.push('cardiac');

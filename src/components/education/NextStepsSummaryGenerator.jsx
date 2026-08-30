@@ -22,6 +22,7 @@ import {
   ArrowRight
 } from "lucide-react";
 import { toast } from 'sonner';
+import { escapeHtml } from "@/lib/escapeHtml";
 
 export default function NextStepsSummaryGenerator({ patient, educationMaterial, diagnosis }) {
   const [sessionNotes, setSessionNotes] = useState("");
@@ -35,7 +36,7 @@ export default function NextStepsSummaryGenerator({ patient, educationMaterial, 
   const generateSummary = async () => {
     try {
       const result = await ai.run({
-        model: "claude_sonnet_4_6",
+        model: "automatic",
         prompt: `You are creating a personalized "Next Steps" and "What to Watch For" summary for a patient after an education session. This should be simple, actionable, and easy for patients/caregivers to follow at home.
 
 PATIENT: ${patient ? `${patient.first_name} ${patient.last_name}` : 'Unknown'}
@@ -161,17 +162,13 @@ Return JSON:
     const selectedSteps = (summary.immediate_next_steps || []).filter((_, idx) => selectedItems[`step_${idx}`]);
     const selectedDaily = (summary.daily_checklist || []).filter((_, idx) => selectedItems[`daily_${idx}`]);
 
-    const escapeHtml = (str) => {
-      if (str == null) return '';
-      return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
-    };
-    
     const printWindow = window.open('', '_blank');
+    // Popup blockers and installed-app webviews (iOS standalone/WKWebView)
+    // return null here — bail with a hint instead of throwing on .document.
+    if (!printWindow) {
+      toast.error('Unable to open the print view. Please allow pop-ups and try again.');
+      return;
+    }
     printWindow.document.write(`
       <html>
         <head>
@@ -298,7 +295,7 @@ Return JSON:
             <Button
               onClick={generateSummary}
               disabled={ai.loading}
-              className="w-full bg-green-600 hover:bg-green-700"
+              className="w-full"
             >
               {ai.loading ? (
                 <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Generating Summary...</>

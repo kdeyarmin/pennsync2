@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAICall } from "@/hooks/useAICall";
+import AICaveat from "@/components/ui/AICaveat";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -31,7 +32,17 @@ export default function TemplateEditor({
   const [expandedSections, setExpandedSections] = useState({});
   const [clinicalResponses, setClinicalResponses] = useState({});
   const ai = useAICall();
+  const [aiEnhanced, setAiEnhanced] = useState(false);
   const [copied, setCopied] = useState(false);
+
+  // The editor is not remounted when a different template is selected (no key in
+  // TemplateLibrary), so re-sync local state on templateData change — otherwise
+  // the textarea keeps the previous template's content and the AI-enhanced
+  // caveat lingers from a prior template's enhance.
+  useEffect(() => {
+    setContent(templateData?.content?.template_content || '');
+    setAiEnhanced(false);
+  }, [templateData]);
 
   const clinicalPrompts = templateData?.content?.clinical_prompts || [];
   const requiredFields = templateData?.content?.required_fields || [];
@@ -74,11 +85,12 @@ ${content}
 Return the enhanced, complete clinical note ready for documentation. Keep all factual information accurate. Fill in bracketed placeholders appropriately.`;
 
       const result = await ai.run({
-        model: "claude_sonnet_4_6",
+        model: "automatic",
         prompt
       });
 
       setContent(result);
+      setAiEnhanced(true);
       if (onContentChange) {
         onContentChange(result);
       }
@@ -88,10 +100,18 @@ Return the enhanced, complete clinical note ready for documentation. Keep all fa
     }
   };
 
-  const handleCopyToClipboard = () => {
-    navigator.clipboard.writeText(content);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const handleCopyToClipboard = async () => {
+    if (requiredFields.length > 0) {
+      toast.error(`Fill required fields before copying: ${requiredFields.slice(0, 3).join(', ')}${requiredFields.length > 3 ? '…' : ''}`);
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(content);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error('Could not copy to clipboard');
+    }
   };
 
   const handleContentChange = (newContent) => {
@@ -214,7 +234,7 @@ Return the enhanced, complete clinical note ready for documentation. Keep all fa
             <Button
               onClick={handleEnhanceWithAI}
               disabled={ai.loading}
-              className="w-full bg-gradient-to-r from-navy-600 to-gold-600 hover:from-navy-700 hover:to-gold-700"
+              className="w-full"
             >
               {ai.loading ? (
                 <>
@@ -258,6 +278,7 @@ Return the enhanced, complete clinical note ready for documentation. Keep all fa
             className="min-h-[500px] font-mono text-sm"
             placeholder="Template content will appear here..."
           />
+          {aiEnhanced && <AICaveat label="AI-enhanced — verify accuracy before saving or using" className="mt-2" />}
         </CardContent>
       </Card>
     </div>

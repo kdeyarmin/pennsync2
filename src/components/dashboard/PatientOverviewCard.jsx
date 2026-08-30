@@ -10,13 +10,13 @@ import {
   Heart
 } from "lucide-react";
 import { createPageUrl } from "@/utils";
-import { Link } from "react-router-dom";
+import { formatLocalDate } from "@/lib/dateLocal";
+import { Link } from "react-router";
 
-export default function PatientOverviewCard({ patient, visits, carePlans, alerts, isSelected, onSelect, view }) {
+export default function PatientOverviewCard({ patient, visits, alerts, isSelected, onSelect, view }) {
   // Copy before sorting — sort() mutates in place, and `visits` is a prop owned
   // by the parent; reordering it as a render side effect corrupts the caller.
   const recentVisit = [...visits].sort((a, b) => new Date(b.visit_date) - new Date(a.visit_date))[0];
-  const activeCarePlans = carePlans.filter(cp => cp.status === 'active');
   const criticalAlerts = alerts.filter(a => a.severity === 'critical' || a.severity === 'high');
 
   const getStatusColor = (status) => {
@@ -122,20 +122,16 @@ export default function PatientOverviewCard({ patient, visits, carePlans, alerts
           {patient.admission_date && (
             <div className="flex items-center gap-2 text-sm text-slate-700">
               <Calendar className="w-4 h-4 text-green-500" />
-              <span>Admitted: {new Date(patient.admission_date).toLocaleDateString()}</span>
+              <span>Admitted: {formatLocalDate(patient.admission_date)}</span>
             </div>
           )}
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-2 mb-4 p-3 bg-slate-50 rounded-lg">
+        <div className="grid grid-cols-2 gap-2 mb-4 p-3 bg-slate-50 rounded-lg">
           <div className="text-center">
             <p className="text-xs text-slate-600">Visits</p>
             <p className="text-lg font-bold text-blue-600">{visits.length}</p>
-          </div>
-          <div className="text-center">
-            <p className="text-xs text-slate-600">Care Plans</p>
-            <p className="text-lg font-bold text-green-600">{activeCarePlans.length}</p>
           </div>
           <div className="text-center">
             <p className="text-xs text-slate-600">Alerts</p>
@@ -150,7 +146,7 @@ export default function PatientOverviewCard({ patient, visits, carePlans, alerts
           <div className="p-2 bg-blue-50 rounded border border-blue-200 mb-3">
             <p className="text-xs text-blue-600 font-medium mb-1">Last Visit</p>
             <p className="text-xs text-slate-700">
-              {new Date(recentVisit.visit_date).toLocaleDateString()} - {recentVisit.visit_type?.replace('_', ' ')}
+              {formatLocalDate(recentVisit.visit_date)} - {recentVisit.visit_type?.replace('_', ' ')}
             </p>
           </div>
         )}

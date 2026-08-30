@@ -7,11 +7,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Download, FileText, Users, Loader2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
+import { useSearchParams } from 'react-router';
 import ReportFilters from './ReportFilters';
 import { toCsvRows } from "@/components/admin/csvExport";
 import { toast } from 'sonner';
+import { ALL_ROWS } from '@/lib/queryLimits';
+import { formatLocalDate } from '@/lib/dateLocal';
 
-const formatDate = (value) => value ? new Date(value).toLocaleDateString() : '—';
+const formatDate = (value) => formatLocalDate(value) || '—';
 
 const statusColors = {
   assigned: 'bg-blue-100 text-blue-800',
@@ -22,7 +25,10 @@ const statusColors = {
 };
 
 export default function CourseRosterReport() {
-  const [selectedCourse, setSelectedCourse] = useState('');
+  // Allow deep-linking to a specific course's roster (e.g. from the course
+  // manager's per-course "View roster" link: ?tab=roster&course=<id>).
+  const [searchParams] = useSearchParams();
+  const [selectedCourse, setSelectedCourse] = useState(() => searchParams.get('course') || '');
   const [filters, setFilters] = useState({
     businessLine: 'home_health',
     dateStart: '',
@@ -32,7 +38,7 @@ export default function CourseRosterReport() {
 
   const { data: courses = [] } = useQuery({
     queryKey: ['roster-courses'],
-    queryFn: () => base44.entities.TrainingCourse.filter({ status: 'published' }, 'title'),
+    queryFn: () => base44.entities.TrainingCourse.filter({ status: 'published' }, 'title', ALL_ROWS),
     initialData: []
   });
 
@@ -43,10 +49,21 @@ export default function CourseRosterReport() {
     enabled: !!selectedCourse
   });
 
-  // Apply status filter
-  const filteredRoster = filters.status === 'all'
-    ? roster
-    : roster.filter(a => a.status === filters.status);
+  // Apply status, employee-search, and date-range filters (the roster is already
+  // scoped to one course, so the Business Line input is hidden below rather than
+  // silently ignored). Both the table and the CSV/PDF exports read filteredRoster.
+  const filteredRoster = roster.filter((a) => {
+    if (filters.status !== 'all' && a.status !== filters.status) return false;
+    if (filters.employee && !(a.assigned_to_user_id || '').toLowerCase().includes(filters.employee.toLowerCase())) return false;
+    const activityDate = a.assigned_date || a.created_date;
+    if (filters.dateStart) {
+      if (!activityDate || new Date(activityDate) < new Date(filters.dateStart)) return false;
+    }
+    if (filters.dateEnd) {
+      if (!activityDate || new Date(activityDate) > new Date(`${filters.dateEnd}T23:59:59.999`)) return false;
+    }
+    return true;
+  });
 
   const selectedCourseTitle = courses.find(c => c.id === selectedCourse)?.title || '';
 
@@ -121,6 +138,7 @@ export default function CourseRosterReport() {
           { value: 'home_health', label: 'Home Health' },
           { value: 'hospice', label: 'Hospice' }
         ]}
+        showBusinessLine={false}
         showCourse={false}
         showPlan={false}
       />

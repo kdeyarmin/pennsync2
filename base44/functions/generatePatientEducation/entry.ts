@@ -1,9 +1,52 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
+// <<<BEGIN SHARED HELPER: requireActiveUser — generated, edit base44/_shared/backendHelpers.mjs>>>
+const isDeactivatedUser = (u) => !!u && u.is_active === false;
+const DEACTIVATED_USER_RESPONSE = () => Response.json(
+  { error: 'Unauthorized - account is deactivated' },
+  { status: 403 },
+);
+// <<<END SHARED HELPER: requireActiveUser>>>
+
+/** Explicit patient access — Patient RLS treats role:admin as platform-wide. */
+async function assertPatientAccess(base44, user, patient) {
+  if (!patient) return Response.json({ error: 'Patient not found' }, { status: 404 });
+  const isSuperAdmin = user.account_type === 'super_admin';
+  const isAgencyScopedAdmin =
+    user.account_type === 'agency_admin'
+    || (user.role === 'admin' && !!user.agency_name && !isSuperAdmin);
+  const isPlatformAdmin = isSuperAdmin || (user.role === 'admin' && !user.agency_name);
+  const isAssigned = Array.isArray(patient.assigned_nurses)
+    && patient.assigned_nurses.includes(user.email);
+  if (!isPlatformAdmin && !isAgencyScopedAdmin && patient.created_by !== user.email && !isAssigned) {
+    return Response.json({ error: 'Forbidden' }, { status: 403 });
+  }
+  if (isAgencyScopedAdmin) {
+    if (!user.agency_name) {
+      return Response.json({ error: 'Forbidden' }, { status: 403 });
+    }
+    const agencyUsers = await base44.asServiceRole.entities.User
+      .list('-created_date', 5000).catch(() => []);
+    const agencyEmails = new Set(
+      (agencyUsers || [])
+        .filter((u) => u.agency_name === user.agency_name && u.email)
+        .map((u) => u.email),
+    );
+    const inAgency = (patient.created_by && agencyEmails.has(patient.created_by))
+      || (Array.isArray(patient.assigned_nurses)
+        && patient.assigned_nurses.some((e) => agencyEmails.has(e)));
+    if (!inAgency) {
+      return Response.json({ error: 'Forbidden' }, { status: 403 });
+    }
+  }
+  return null;
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
+    if (isDeactivatedUser(user)) return DEACTIVATED_USER_RESPONSE();
 
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
@@ -18,25 +61,23 @@ Deno.serve(async (req) => {
     // Get patient via the RLS-scoped client (NOT asServiceRole) so the
     // platform enforces this caller may access this patient, and we avoid
     // loading every patient in the tenant via .list() (IDOR / over-fetch).
-    const patientResults = await base44.entities.Patient.filter({ id: patientId });
+    // Agency-scoped admins still need assertPatientAccess: bare role:admin RLS
+    // is platform-wide (HOSTED-RLS-PROOF §5b).
+    const patientResults = await base44.entities.Patient.filter({ id: patientId }, undefined, 5000);
     const patient = patientResults[0];
+    const denied = await assertPatientAccess(base44, user, patient);
+    if (denied) return denied;
 
-    if (!patient) {
-      return Response.json({ error: 'Patient not found' }, { status: 404 });
-    }
-
-    // Get recent visit if visitId provided (RLS-scoped)
+    // Get recent visit if visitId provided (RLS-scoped). Bind visit to patient
+    // so notes from another chart cannot be mixed into this patient's education.
     let visitData = null;
     if (visitId) {
-      const visits = await base44.entities.Visit.filter({ id: visitId });
+      const visits = await base44.entities.Visit.filter({ id: visitId }, undefined, 5000);
       visitData = visits[0];
+      if (visitData && String(visitData.patient_id || '') !== String(patientId)) {
+        return Response.json({ error: 'visitId does not belong to this patient' }, { status: 400 });
+      }
     }
-
-    // Get care plans (RLS-scoped)
-    const carePlans = await base44.entities.CarePlan.filter({
-      patient_id: patientId,
-      status: 'active'
-    });
 
     // Use LLM to generate personalized education topics
     const educationPrompt = `You are a healthcare education specialist. Based on the patient's medical information, generate 3-4 personalized educational topics that would benefit this patient.
@@ -50,13 +91,10 @@ Patient Information:
 - Fall Risk: ${patient.functional_status?.fall_risk || 'Not documented'}
 ${visitData?.nurse_notes ? `\nLatest Visit Notes: ${visitData.nurse_notes.substring(0, 500)}` : ''}
 
-Care Plan Goals:
-${carePlans.map(cp => `- ${cp.problem}: ${cp.goal}`).join('\n')}
-
 Return JSON: { "topics": [{ "title": "string", "reason": "brief explanation why this education is needed", "key_points": ["point1", "point2", "point3"] }] }`;
 
     const topicsResult = await base44.integrations.Core.InvokeLLM({
-      model: "claude_opus_4_8",
+      model: "automatic",
       prompt: educationPrompt,
       response_json_schema: {
         type: 'object',
@@ -79,7 +117,7 @@ Return JSON: { "topics": [{ "title": "string", "reason": "brief explanation why 
     // Generate detailed content for each topic
     const educationMaterials = [];
 
-    for (const topic of topicsResult.topics || []) {
+    for (const topic of topicsResult?.topics || []) {
       const contentPrompt = `Create patient-friendly educational material on "${topic.title}" for a patient with ${patient.primary_diagnosis || 'chronic health condition'}.
 
 Key Points to Cover:
@@ -96,7 +134,7 @@ Instructions:
 Do NOT use medical jargon. Make it conversational and supportive.`;
 
       const contentResult = await base44.integrations.Core.InvokeLLM({
-        model: "claude_sonnet_4_6",
+        model: "automatic",
         prompt: contentPrompt
       });
 
@@ -126,7 +164,7 @@ Do NOT use medical jargon. Make it conversational and supportive.`;
   } catch (error) {
     console.error('Education generation error:', error);
     return Response.json(
-      { error: error.message },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }

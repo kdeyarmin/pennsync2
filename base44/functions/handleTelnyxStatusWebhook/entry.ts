@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
 
 /**
  * handleTelnyxStatusWebhook — the single inbound webhook for the whole Telnyx
@@ -20,24 +20,81 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
  */
 
 // ---- credential resolution (inlined; parity-guarded) ----
+// <<<BEGIN SHARED HELPER: resolveTelnyxCreds — generated, edit base44/_shared/backendHelpers.mjs>>>
 async function resolveTelnyxCreds(base44) {
   const pick = (v) => (v && String(v).trim() ? String(v).trim() : null);
-  let apiKey = pick(Deno.env.get('TELNYX_API_KEY'));
-  let publicKey = pick(Deno.env.get('TELNYX_PUBLIC_KEY'));
-  let messagingProfileId = pick(Deno.env.get('TELNYX_MESSAGING_PROFILE_ID'));
-  let voiceConnectionId = pick(Deno.env.get('TELNYX_VOICE_CONNECTION_ID')) || pick(Deno.env.get('TELNYX_CONNECTION_ID'));
-  let faxConnectionId = pick(Deno.env.get('TELNYX_FAX_CONNECTION_ID'));
+  let record = null;
+  let readError = null;
   try {
-    const rows = await base44.asServiceRole.entities.IntegrationSecret.filter({ provider: 'telnyx' });
-    const rec = rows?.[0] || {};
-    if (!apiKey) apiKey = pick(rec.api_key);
-    if (!publicKey) publicKey = pick(rec.public_key);
-    if (!messagingProfileId) messagingProfileId = pick(rec.messaging_profile_id);
-    if (!voiceConnectionId) voiceConnectionId = pick(rec.voice_connection_id);
-    if (!faxConnectionId) faxConnectionId = pick(rec.fax_connection_id);
-  } catch { /* ignore */ }
-  return { apiKey, publicKey, messagingProfileId, voiceConnectionId, faxConnectionId };
+    const rows = await base44.asServiceRole.entities.IntegrationSecret
+      .filter({ provider: 'telnyx' }, '-updated_date', 5000);
+    const list = Array.isArray(rows) ? rows : [];
+    // Deterministic row selection. This read used to be unsorted with no is_active
+    // filter and took rows[0], and saveTelnyxSecret picks from the same unordered
+    // query — so with two telnyx rows the admin could be writing one row while the
+    // senders read the other, and re-entering the key could never fix it.
+    record = list.find((r) => r && r.is_active === true && pick(r.api_key))
+      || list.find((r) => r && pick(r.api_key))
+      || list[0]
+      || null;
+  } catch (err) {
+    // Do NOT collapse this into "not configured". A failed read (this invocation
+    // path carries no service token, entity 404, 401/403, rate limit, platform
+    // blip) is a completely different problem from an unconfigured integration,
+    // and reporting them identically is what sent operators chasing a credential
+    // they had already entered correctly.
+    readError = (err && err.message) ? String(err.message) : 'IntegrationSecret read failed';
+    // The catch used to be bare, so an unreadable credential row left no
+    // server-side breadcrumb at all — the only signal was a misleading
+    // "not configured" reply. Log it; unattended runs have nowhere else to say so.
+    console.error('resolveTelnyxCreds: could not read the Telnyx IntegrationSecret row:', readError);
+  }
+  const rec = record || {};
+  return {
+    apiKey: pick(rec.api_key),
+    publicKey: pick(rec.public_key),
+    messagingProfileId: pick(rec.messaging_profile_id),
+    voiceConnectionId: pick(rec.voice_connection_id),
+    faxConnectionId: pick(rec.fax_connection_id),
+    record,
+    readError,
+  };
 }
+
+// Build the caller-facing message for a missing Telnyx credential. Distinguishing
+// "could not read" from "not stored" is the whole point: the first is not fixed by
+// entering a key, and telling an admin to enter one is what caused two reverted
+// env-fallback regressions.
+function telnyxCredsMessage(creds, what) {
+  const label = what || 'credentials';
+  if (creds && creds.readError) {
+    return `Could not read Telnyx ${label} — the stored-credential lookup failed (${creds.readError}). This is NOT a missing key, so re-entering it will not help. Retry; if it persists, this function is running without service-role access to IntegrationSecret.`;
+  }
+  return `Telnyx ${label} not configured — add the API key in Admin › Telnyx (it is stored on the IntegrationSecret row; TELNYX_* environment variables are not read).`;
+}
+// <<<END SHARED HELPER: resolveTelnyxCreds>>>
+
+// <<<BEGIN SHARED HELPER: resolveFaxRetryConfig — generated, edit base44/_shared/backendHelpers.mjs>>>
+async function resolveFaxRetryConfig(base44, agencyName) {
+  const key = String(agencyName || '').trim();
+  if (key) {
+    const rows = await base44.asServiceRole.entities.FaxRetryConfig
+      .filter({ agency_name: key }, '-created_date', 1)
+      .catch(() => []);
+    if (rows?.[0]) return rows[0];
+  }
+  const newest = await base44.asServiceRole.entities.FaxRetryConfig
+    .list('-created_date', 5)
+    .catch(() => []);
+  const legacy = (newest || []).filter((r) => !String(r?.agency_name || '').trim());
+  // Prefer a single unscoped legacy row when the agency-specific row is missing.
+  if (legacy.length === 1) return legacy[0];
+  if (key) return null;
+  if ((newest || []).length > 1) return null;
+  return newest?.[0] || null;
+}
+// <<<END SHARED HELPER: resolveFaxRetryConfig>>>
+
 
 // ---- value mapping (mirrors telnyxUtils.js) ----
 function mapMessageStatus(status) {
@@ -109,17 +166,39 @@ const PERMANENT_FAILURE_PATTERNS = [
   /rejected/i, /blocked/i, /do not call/i, /unallocated/i, /disconnected/i,
   /forbidden/i, /not in service/i, /no such number/i, /malformed/i,
 ];
+// Transient signals win over a coincidental permanent word ("rejected - line
+// busy" is retryable). Checked first. Mirrors src/components/fax/faxRetry.js.
+const TRANSIENT_FAILURE_PATTERNS = [
+  /busy/i, /no.?answer/i, /temporar/i, /timeout/i, /timed out/i,
+  /try again/i, /congestion/i, /\b(429|500|502|503|504)\b/,
+];
 function classifyFaxFailure(errorCode, errorMessage) {
   const s = `${errorCode ?? ''} ${errorMessage ?? ''}`.trim();
   if (!s) return 'transient';
+  if (TRANSIENT_FAILURE_PATTERNS.some((re) => re.test(s))) return 'transient';
   return PERMANENT_FAILURE_PATTERNS.some((re) => re.test(s)) ? 'permanent' : 'transient';
+}
+function numberOrNull(value) {
+  // Number(null)/Number("") are both 0, which makes an unset entity field
+  // indistinguishable from an explicit zero. Mirrors src/components/fax/faxRetry.js.
+  if (value === null || value === undefined) return null;
+  if (typeof value === 'string' && value.trim() === '') return null;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
 }
 function faxRetryConfig(config) {
   const c = config || {};
+  // Coerce first: entity fields can arrive as numeric strings ("5") from a JSON/form
+  // round-trip, and Number.isFinite("5") is false — which would silently drop the
+  // admin's configured value in favor of the default. Mirrors src/components/fax/faxRetry.js.
+  // An unset max_retries must mean "use the default", not 0 retries — see
+  // numberOrNull above and src/components/fax/faxRetry.js.
+  const maxRetriesNum = numberOrNull(c.max_retries);
+  const baseDelayNum = numberOrNull(c.retry_delay_minutes);
   return {
     enabled: c.auto_retry_enabled !== false,
-    maxRetries: Number.isFinite(c.max_retries) ? Math.max(0, c.max_retries) : 3,
-    baseDelayMinutes: Number.isFinite(c.retry_delay_minutes) && c.retry_delay_minutes > 0 ? c.retry_delay_minutes : 15,
+    maxRetries: maxRetriesNum === null ? 3 : Math.max(0, maxRetriesNum),
+    baseDelayMinutes: baseDelayNum !== null && baseDelayNum > 0 ? baseDelayNum : 15,
     notifyOnFinalFailure: c.notify_on_final_failure !== false,
     priorityMultiplier: c.priority_multiplier && typeof c.priority_multiplier === 'object' ? c.priority_multiplier : {},
   };
@@ -147,9 +226,15 @@ function planFaxRetry(opts) {
 function normalizeE164(raw) {
   if (!raw) return null;
   const digits = String(raw).replace(/[^\d]/g, '');
+  // Already-+ international is decided FIRST and never falls through to the NANP
+  // branches. A 10-digit international number ("+49 89 123456") was otherwise
+  // rewritten as an unrelated "+1..." US subscriber, which also slipped past the
+  // +1-only international cost control. Mirrors src/components/voice/phoneUtils.js.
+  if (String(raw).trim().startsWith('+')) {
+    return digits.length >= 8 && digits.length <= 15 && digits[0] !== '0' ? `+${digits}` : null;
+  }
   if (digits.length === 10) return `+1${digits}`;
   if (digits.length === 11 && digits.startsWith('1')) return `+${digits}`;
-  if (String(raw).trim().startsWith('+') && digits.length >= 8 && digits.length <= 15 && digits[0] !== '0') return `+${digits}`;
   return null;
 }
 function getThreadId(a, b) {
@@ -323,8 +408,10 @@ function decodeClientState(b64) {
 // ---- Call Control command helper ----
 // Returns { ok, status } so callers can fall back on failure instead of
 // silently stranding a live (billed) call leg.
-// TODO(verify): confirm Call Control action paths/field names against the live
-// Telnyx v2 API for your account (answer/transfer/speak/hangup/record_start).
+// TODO(verify): confirm Call Control action paths against your live Telnyx
+// account if command routing ever changes. Field names for record_start
+// (max_length) / transcription_start (transcription_engine_config.language)
+// and hangup_cause enum values are verified against Telnyx v2 docs/SDK.
 async function callCommand(apiKey, callControlId, command, payload = {}) {
   try {
     const resp = await fetch(`https://api.telnyx.com/v2/calls/${encodeURIComponent(callControlId)}/actions/${command}`, {
@@ -363,12 +450,42 @@ async function sendAutoReply(apiKey, messagingProfileId, from, to, text) {
   }
 }
 
-async function getAgencyConfig(base44) {
-  const settings = await base44.asServiceRole.entities.AgencySettings.list('-created_date', 1).catch(() => []);
-  const s = settings[0] || {};
+async function getAgencyConfig(base44, agencyHint) {
+  // Prefer a settings row matching the nurse/agency when multi-tenant rows exist.
+  let rows = [];
+  const key = String(agencyHint || '').trim();
+  if (key) {
+    rows = await base44.asServiceRole.entities.AgencySettings
+      .filter({ agency_code: key }, '-created_date', 1).catch(() => []);
+    if (!rows?.length) {
+      rows = await base44.asServiceRole.entities.AgencySettings
+        .filter({ office_name: key }, '-created_date', 1).catch(() => []);
+    }
+  }
+  if (!rows?.length) {
+    const newest = await base44.asServiceRole.entities.AgencySettings.list('-created_date', 5).catch(() => []);
+    if ((newest || []).length > 1) {
+      // Multi-tenant miss (with or without a hint): empty config (safe defaults
+      // below) rather than another agency's greetings/transfer targets.
+      rows = [];
+    } else {
+      rows = (newest || []).slice(0, 1);
+    }
+  }
+  const s = rows[0] || {};
+  // The office / after-hours numbers become Call Control `transfer` targets, and
+  // Telnyx rejects a formatted number — so a stored "(724) 465-0440" would
+  // dead-end every after-hours call at the apology fallback. Normalize to E.164
+  // at point of use (raw kept only when unnormalizable, preserving the old
+  // failure mode for genuine garbage).
+  const toE164 = (raw) => normalizeE164(raw) || (raw ? String(raw).trim() : '');
   return {
     settings: s,
-    mainOffice: s.main_office_number_e164 || '',
+    mainOffice: toE164(s.main_office_number_e164),
+    // As-entered forms for SPOKEN greetings / reply TEXT ({office} substitution):
+    // an admin's "724-465-0440" reads/speaks better than "+17244650440".
+    mainOfficeDisplay: String(s.main_office_number_e164 || '').trim(),
+    afterHoursTransferDisplay: String(s.after_hours_transfer_number_e164 || s.main_office_number_e164 || '').trim(),
     defaultOffDuty: s.default_off_duty_template || '',
     smsEnabled: s.sms_messaging_enabled ?? true,
     afterHoursReplyEnabled: s.after_hours_sms_auto_reply_enabled !== false,
@@ -378,9 +495,31 @@ async function getAgencyConfig(base44) {
     voicemailEnabled: s.voicemail_enabled === true,
     voicemailGreeting: s.voicemail_greeting || '',
     afterHoursAction: s.after_hours_call_action || 'transfer',
-    afterHoursTransfer: s.after_hours_transfer_number_e164 || s.main_office_number_e164 || '',
+    afterHoursTransfer: toE164(s.after_hours_transfer_number_e164 || s.main_office_number_e164),
     afterHoursGreeting: s.after_hours_call_greeting || '',
   };
+}
+
+/** Match a dialed/to number to an AgencySettings row (fax/office lines). */
+async function resolveAgencySettingsByNumber(base44, e164) {
+  const target = normalizeE164(e164);
+  if (!target) return null;
+  const rows = await base44.asServiceRole.entities.AgencySettings.list('-created_date', 200).catch(() => []);
+  for (const row of (rows || [])) {
+    const candidates = [
+      row.office_fax_number_e164,
+      row.outbound_fax_number_e164,
+      row.main_office_number_e164,
+      row.after_hours_transfer_number_e164,
+    ];
+    if (candidates.some((c) => normalizeE164(c) === target)) return row;
+  }
+  // Single-tenant: legacy configs often store only the office machine number
+  // while the blind Telnyx transmit line is what receives stray fax-backs.
+  // With exactly one settings row that fallback is safe; multi-tenant misses
+  // must fail closed so PHI is not routed to the wrong office.
+  if ((rows || []).length === 1) return rows[0];
+  return null;
 }
 
 const STOP_WORDS = ['STOP', 'STOPALL', 'UNSUBSCRIBE', 'CANCEL', 'END', 'QUIT'];
@@ -401,7 +540,10 @@ async function handleOutboundMessageStatus(base44, payload) {
   if (!mapped) return Response.json({ success: true, skipped: 'unknown status', status: recipientStatus });
 
   const rows = await base44.asServiceRole.entities.SmsMessage.filter({ provider_message_id: providerId }, '-created_date', 1).catch(() => []);
-  if (!rows.length) return Response.json({ success: false, message: 'SmsMessage not found' });
+  // 404 (not 200) so Telnyx redelivers: sendSms persists provider_message_id
+  // only AFTER the API round-trip, so a fast DLR can race the write. Acking it
+  // would lose the status forever — SMS has no poller to reconcile later.
+  if (!rows.length) return Response.json({ success: false, message: 'SmsMessage not found' }, { status: 404 });
   const row = rows[0];
   // Forward-only: ignore an unchanged or out-of-order (lower-rank) transition.
   if ((SMS_RANK[mapped] || 0) <= (SMS_RANK[row.status] || 0)) {
@@ -435,14 +577,14 @@ async function handleInboundMessage(base44, apiKey, messagingProfileId, payload)
   const providerMessageId = payload?.id || null;
   if (!source || !destination) return Response.json({ success: true, skipped: 'missing parties' });
 
-  const config = await getAgencyConfig(base44);
   const patientNum = normalizeE164(source) || source;
   const workNum = normalizeE164(destination) || destination;
 
-  // Resolve the nurse who owns this work number.
+  // Resolve the nurse who owns this work number — then load THAT agency's
+  // settings (newest-row-wins would apply another tenant's auto-reply/SMS gates).
   let nurse = null;
   for (const variant of phoneVariants(workNum)) {
-    const matches = await base44.asServiceRole.entities.User.filter({ work_phone_number: variant }).catch(() => []);
+    const matches = await base44.asServiceRole.entities.User.filter({ work_phone_number: variant }, undefined, 5000).catch(() => []);
     if (matches.length > 0) { nurse = matches[0]; break; }
   }
   if (!nurse) {
@@ -452,6 +594,7 @@ async function handleInboundMessage(base44, apiKey, messagingProfileId, payload)
     }).catch(() => {});
     return Response.json({ success: true, skipped: 'unresolved work number' });
   }
+  const config = await getAgencyConfig(base44, nurse.agency_name);
 
   // Idempotency: Telnyx may re-deliver. If we already stored this id, ack.
   if (providerMessageId) {
@@ -463,7 +606,7 @@ async function handleInboundMessage(base44, apiKey, messagingProfileId, payload)
   // Resolve patient (best effort).
   let patientId = null;
   for (const variant of phoneVariants(patientNum)) {
-    const m = await base44.asServiceRole.entities.Patient.filter({ phone: variant }).catch(() => []);
+    const m = await base44.asServiceRole.entities.Patient.filter({ phone: variant }, undefined, 5000).catch(() => []);
     if (m.length > 0) { patientId = m[0].id; break; }
   }
 
@@ -507,9 +650,15 @@ async function handleInboundMessage(base44, apiKey, messagingProfileId, payload)
   if (START_WORDS.includes(keyword)) {
     await recordConsent('opted_in', 'keyword_start');
     await sendReply('You are now subscribed to texts from your care team. Reply STOP to opt out, HELP for help.');
+    // The sender just re-subscribed — the rest of this handler (after-hours /
+    // off-duty auto-replies) must treat them as opted in, not the stale
+    // pre-keyword ledger state.
+    priorOptedOut = false;
   } else if (HELP_WORDS.includes(keyword)) {
-    if (!priorOptedOut && smsEnabled) {
-      const office = config.mainOffice ? ` or call our office at ${config.mainOffice}` : '';
+    // CTIA requires a HELP response regardless of opt-out state — it's an
+    // informational carrier keyword, not marketing, and contains no PHI.
+    if (smsEnabled) {
+      const office = config.mainOfficeDisplay ? ` or call our office at ${config.mainOfficeDisplay}` : '';
       await sendReply(`This is your home-health care team. Reply STOP to unsubscribe${office}.`);
     }
   }
@@ -519,13 +668,13 @@ async function handleInboundMessage(base44, apiKey, messagingProfileId, payload)
   const offDuty = isOffDutyNow(nurse, new Date(), config.settings);
   const agencyClosed = !isAgencyOpen(config.settings);
   if (agencyClosed && config.afterHoursReplyEnabled && !priorOptedOut && smsEnabled) {
-    const office = config.mainOffice || 'the main office';
+    const office = config.mainOfficeDisplay || 'the main office';
     const msg = (config.afterHoursReply || config.defaultOffDuty ||
       `Thanks for your message. Our office is currently closed. For anything urgent, please call ${office}. We'll reply during business hours.`)
       .replace(/\{office\}/gi, office);
     await sendReply(msg);
   } else if (offDuty && !priorOptedOut && smsEnabled) {
-    const office = config.mainOffice || '724-465-0440';
+    const office = config.mainOfficeDisplay || '724-465-0440';
     const msg = (nurse.off_duty_message || config.defaultOffDuty ||
       `Thank you for your text, but I am currently not working. Please contact the office at ${office}.`)
       .replace(/\{office\}/gi, office);
@@ -561,18 +710,149 @@ async function handleInboundMessage(base44, apiKey, messagingProfileId, payload)
 }
 
 // ============================ FAX ============================
+// Monotonic rank so a late/out-of-order or re-delivered fax webhook can't regress
+// a terminal state (e.g. a stale 'sending' from media.processed arriving after
+// 'delivered', which would re-open the fax and re-poll/re-send a delivered PHI
+// document). Mirrors the SMS_RANK/CALL_RANK guards. 'delivered' and 'failed' are
+// both terminal and share the top rank so neither can overwrite the other.
+// 'retrying'/'retried' (set by retryFailedFax) must also rank as terminal for
+// the ORIGINAL fax id: a redelivered 'failed' webhook for a row already claimed
+// by a retry would otherwise pass the guard (unranked -> 0), re-plan a retry,
+// and cause a duplicate PHI transmission on top of the in-flight attempt.
+const FAX_RANK = { queued: 1, sending: 2, sent: 3, delivered: 4, failed: 4, retrying: 4, retried: 5 };
+
+// Inbound fax handling: Telnyx delivers a received fax as `fax.received` with
+// the media URL. The app does NOT expect inbound faxes by default — outbound
+// faxes transmit from a blind Telnyx line but are PRESENTED under the office
+// fax machine's number, so fax-backs are dialed straight to the office. Any
+// stray fax that still lands on the blind line (e.g. a machine auto-redialing
+// the transmitting number) is passed straight through to the office fax
+// machine. Opt-in ingestion (fax_receiving_enabled) keeps the legacy behavior:
+// an IncomingFax row that the processInboundFaxes job OCRs and matches to
+// referral follow-ups.
+async function handleInboundFax(base44, payload) {
+  const providerId = payload?.id;
+  if (!providerId) return Response.json({ success: true, skipped: 'no fax id' });
+  // `fax.received` is inbound-only at Telnyx, but keep the direction check as
+  // a guard against provider payload quirks.
+  if (payload?.direction && payload.direction !== 'inbound') {
+    return Response.json({ success: true, skipped: 'not inbound' });
+  }
+  const mediaUrl = payload?.media_url || payload?.original_media_url;
+  if (!mediaUrl) return Response.json({ success: true, skipped: 'no media url' });
+
+  // Idempotency: Telnyx re-delivers webhooks. Suppress a redelivery only once
+  // the fax is SETTLED — either routed to the office (status 'routed') or
+  // captured in-app for OCR (the ingestion path, processing_status 'pending').
+  // A FAILED office-forward row (created 'completed' but never 'routed') is
+  // left retryable so a redelivery can complete the forward — otherwise a
+  // transient forward error silently dropped the fax forever.
+  const existing = await base44.asServiceRole.entities.IncomingFax.filter({ telnyx_fax_id: providerId }, undefined, 5000).catch(() => []);
+  const settled = (Array.isArray(existing) ? existing : []).find(
+    (r) => r?.status === 'routed' || r?.processing_status === 'pending',
+  );
+  if (settled) {
+    return Response.json({ success: true, deduped: true });
+  }
+
+  // Match the dialed fax line to the owning agency's settings. Fail closed when
+  // the dialed number doesn't match any agency — newest-row would mis-route PHI.
+  const dialedFax = normalizeE164(payload?.to) || payload?.to || '';
+  const settings = await resolveAgencySettingsByNumber(base44, dialedFax);
+  if (!settings) {
+    console.error('inbound fax: no AgencySettings match for dialed line');
+    return Response.json({ success: true, skipped: 'unresolved fax line' });
+  }
+
+  if (settings?.fax_receiving_enabled) {
+    // Opt-in ingestion: keep the fax in-app for OCR + referral matching.
+    const record = await base44.asServiceRole.entities.IncomingFax.create({
+      // Route to whoever owns the agency settings (an admin) until the
+      // processing job matches it to a patient/referral.
+      user_email: settings.created_by || 'unassigned',
+      sender_fax_number: payload?.from || '',
+      received_at: new Date().toISOString(),
+      document_url: mediaUrl,
+      page_count: Number.isFinite(payload?.page_count) ? payload.page_count : undefined,
+      telnyx_fax_id: providerId,
+      processing_status: 'pending',
+      status: 'unread',
+    });
+    return Response.json({ success: true, incoming_fax_id: record.id });
+  }
+
+  // Default posture: pass the fax straight through to the office machine.
+  // Requires the office fax number + fax creds; the self-loop guard skips the
+  // forward if the office number IS the line that received it (misconfig).
+  const officeFax = normalizeE164(settings?.office_fax_number_e164);
+  const receivedOn = normalizeE164(payload?.to);
+  const creds = await resolveTelnyxCreds(base44);
+  if (!creds.apiKey || !creds.faxConnectionId || !officeFax || !receivedOn || officeFax === receivedOn) {
+    return Response.json({ success: true, skipped: 'fax receiving disabled' });
+  }
+
+  // The row is the at-most-once guard; marked 'routed' on success, left
+  // 'unread' on failure so a stray fax is never silently dropped (it stays
+  // visible to admins with its media URL). processing_status 'completed' keeps
+  // the OCR job away from it. On a redelivery after a failed forward, REUSE the
+  // prior unrouted row instead of creating a duplicate.
+  const record = (Array.isArray(existing) ? existing : []).find(
+    (r) => r?.processing_status === 'completed' && r?.status !== 'routed',
+  ) || await base44.asServiceRole.entities.IncomingFax.create({
+    user_email: settings?.created_by || 'unassigned',
+    sender_fax_number: payload?.from || '',
+    received_at: new Date().toISOString(),
+    document_url: mediaUrl,
+    page_count: Number.isFinite(payload?.page_count) ? payload.page_count : undefined,
+    telnyx_fax_id: providerId,
+    processing_status: 'completed',
+    status: 'unread',
+  });
+  let forwarded = false;
+  try {
+    const resp = await fetch('https://api.telnyx.com/v2/faxes', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${creds.apiKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        connection_id: creds.faxConnectionId,
+        from: receivedOn,
+        to: officeFax,
+        media_url: mediaUrl,
+        quality: 'high',
+      }),
+    });
+    forwarded = resp.ok;
+    if (!resp.ok) console.error('inbound fax office-forward rejected', { status: resp.status });
+  } catch (err) {
+    console.error('inbound fax office-forward failed:', err?.message);
+  }
+  if (forwarded) {
+    await base44.asServiceRole.entities.IncomingFax.update(record.id, {
+      status: 'routed',
+      routed_to: `office fax ${officeFax}`,
+    }).catch(() => {});
+  }
+  return Response.json({ success: true, forwarded_to_office: forwarded, incoming_fax_id: record.id });
+}
+
 async function handleFaxEvent(base44, payload) {
   const providerId = payload?.id;
   const mapped = mapFaxStatus(payload?.status);
   if (!providerId) return Response.json({ success: true, skipped: 'no fax id' });
   if (!mapped) return Response.json({ success: true, skipped: 'unknown status', status: payload?.status });
 
-  const rows = await base44.asServiceRole.entities.FaxLog.filter({ telnyx_fax_id: providerId }).catch(() => []);
-  if (!rows.length) return Response.json({ success: false, message: 'FaxLog not found' });
+  const rows = await base44.asServiceRole.entities.FaxLog.filter({ telnyx_fax_id: providerId }, undefined, 5000).catch(() => []);
+  // 404 so Telnyx redelivers after the sender persists telnyx_fax_id (senders
+  // write the id only after the API call, so a fast status callback can race it).
+  if (!rows.length) return Response.json({ success: false, message: 'FaxLog not found' }, { status: 404 });
   const faxLog = rows[0];
-  // Idempotency: Telnyx re-delivers webhooks. If the status is unchanged, ack
-  // without re-running side effects (critically, without re-bumping retry_count).
-  if (mapped === faxLog.status) return Response.json({ success: true, status: mapped, deduped: true });
+  // Idempotency + forward-only: ignore an unchanged or out-of-order (lower-rank)
+  // transition. Telnyx re-delivers webhooks and can deliver them out of order, so
+  // this ack's without re-running side effects (critically, without re-bumping
+  // retry_count or re-scheduling a send for an already-terminal fax).
+  if ((FAX_RANK[mapped] || 0) <= (FAX_RANK[faxLog.status] || 0)) {
+    return Response.json({ success: true, status: faxLog.status, deduped: true });
+  }
 
   const update = {
     status: mapped,
@@ -585,10 +865,15 @@ async function handleFaxEvent(base44, payload) {
   let exhaustedNow = false;
   if (mapped === 'failed') {
     const failureReason = payload?.failure_reason || payload?.failover?.failure_reason || 'Fax delivery failed';
-    // Honor the admin FaxRetryConfig: schedule a retry or give up (and notify once).
-    const cfgRows = await base44.asServiceRole.entities.FaxRetryConfig.list('-created_date', 1).catch(() => []);
-    const cfg = cfgRows[0] || {};
-    const maxRetries = faxRetryConfig(cfg).maxRetries;
+    // Honor the admin FaxRetryConfig for the sender's agency (never global newest).
+    let senderAgency = '';
+    if (faxLog.sent_by) {
+      const [sender] = await base44.asServiceRole.entities.User
+        .filter({ email: faxLog.sent_by }, undefined, 1).catch(() => []);
+      senderAgency = sender?.agency_name || '';
+    }
+    const cfg = (await resolveFaxRetryConfig(base44, senderAgency)) || {};
+    const retryCfg = faxRetryConfig(cfg);
     const plan = planFaxRetry({
       retryCount: faxLog.retry_count || 0,
       errorCode: payload?.failure_code || payload?.error_code,
@@ -596,20 +881,20 @@ async function handleFaxEvent(base44, payload) {
       priority: faxLog.priority || 'normal',
       config: cfg,
     });
-    // Only schedule a retry the cron will actually honor. planFaxRetry plans a
-    // retry whenever attempts < maxRetries (nextRetryCount = attempts + 1), but the
-    // cron's isFaxRetryDue refuses any fax whose retry_count >= maxRetries — so a
-    // planned retry with nextRetryCount === maxRetries would be written yet never
-    // re-sent AND never notified (stranded forever). Treat that boundary case as
-    // exhausted so the sender is told the fax failed.
-    if (plan.willRetry && plan.nextRetryCount < maxRetries) {
+    // planFaxRetry already encodes the budget (attempts < maxRetries). Schedule
+    // whenever it says willRetry — including nextRetryCount === maxRetries, which
+    // is the last allowed send (isFaxRetryDue uses `>` so the cron still honors it).
+    if (plan.willRetry) {
       update.next_retry_at = plan.nextRetryAt;
       update.retry_count = plan.nextRetryCount;
     } else {
-      exhaustedNow = !faxLog.final_failure_notified;
+      exhaustedNow = retryCfg.notifyOnFinalFailure && !faxLog.final_failure_notified;
       update.final_failure_notified = true;
-      // Record that we reached the retry cap even though no further send is scheduled.
-      if (plan.willRetry) update.retry_count = plan.nextRetryCount;
+      if (exhaustedNow) {
+        update.failure_notify_claimed_by = typeof crypto !== 'undefined' && crypto.randomUUID
+          ? crypto.randomUUID()
+          : `fax-fail-${Date.now()}`;
+      }
     }
     update.failure_reason = failureReason;
   }
@@ -617,30 +902,60 @@ async function handleFaxEvent(base44, payload) {
   await base44.asServiceRole.entities.FaxLog.update(faxLog.id, update);
 
   // Tell the sender when a fax was delivered successfully (parity with the old
-  // handleTwilioFaxWebhook). Guarded by delivery_confirmation_sent so a
-  // re-delivered webhook can't double-notify.
+  // handleTwilioFaxWebhook). Claim + re-read so poller/webhook races don't
+  // double-notify; release stamp if create fails so a later run can retry.
   if (mapped === 'delivered' && faxLog.sent_by && !faxLog.delivery_confirmation_sent) {
-    await base44.asServiceRole.entities.FaxLog.update(faxLog.id, { delivery_confirmation_sent: true }).catch(() => {});
-    const recipientName = faxLog.to_name ? `${faxLog.to_name} (${faxLog.to_number})` : faxLog.to_number;
-    await base44.asServiceRole.entities.Notification.create({
-      user_email: faxLog.sent_by,
-      title: '✅ Fax delivered',
-      message: `Your fax to ${recipientName} was delivered successfully (${update.pages || faxLog.pages || 'N/A'} pages).`,
-      type: 'fax_delivered', priority: 'medium', metadata: { related_entity: 'FaxLog', related_entity_id: faxLog.id },
-      is_read: false, action_url: `/SendFax?tab=logs&fax_id=${faxLog.id}`,
-    }).catch((err) => console.error('Failed to send fax delivered notification:', err));
+    const claimToken = typeof crypto !== 'undefined' && crypto.randomUUID
+      ? crypto.randomUUID()
+      : `fax-del-${Date.now()}`;
+    await base44.asServiceRole.entities.FaxLog.update(faxLog.id, {
+      delivery_confirmation_sent: true,
+      delivery_notify_claimed_by: claimToken,
+    }).catch(() => {});
+    const claimCheck = await base44.asServiceRole.entities.FaxLog
+      .filter({ id: faxLog.id }, '-created_date', 1).catch(() => []);
+    if (claimCheck[0]?.delivery_notify_claimed_by === claimToken) {
+      const recipientName = faxLog.to_name ? `${faxLog.to_name} (${faxLog.to_number})` : faxLog.to_number;
+      try {
+        await base44.asServiceRole.entities.Notification.create({
+          user_email: faxLog.sent_by,
+          title: '✅ Fax delivered',
+          message: `Your fax to ${recipientName} was delivered successfully (${update.pages || faxLog.pages || 'N/A'} pages).`,
+          type: 'fax_delivered', priority: 'medium', metadata: { related_entity: 'FaxLog', related_entity_id: faxLog.id },
+          is_read: false, action_url: `/SendFax?tab=logs&fax_id=${faxLog.id}`,
+        });
+      } catch (err) {
+        console.error('Failed to send fax delivered notification:', err);
+        await base44.asServiceRole.entities.FaxLog.update(faxLog.id, {
+          delivery_confirmation_sent: false,
+          delivery_notify_claimed_by: '',
+        }).catch(() => {});
+      }
+    }
   }
 
   // Tell the sender when a fax has permanently failed (no retries left).
-  if (exhaustedNow && faxLog.sent_by) {
-    const recipient = faxLog.to_name ? `${faxLog.to_name} (${faxLog.to_number})` : faxLog.to_number;
-    await base44.asServiceRole.entities.Notification.create({
-      user_email: faxLog.sent_by,
-      title: '❌ Fax failed',
-      message: `"${faxLog.document_name || 'Your document'}" to ${recipient} could not be delivered (${update.failure_reason}). Verify the number and resend.`,
-      type: 'fax_failed', priority: 'high', metadata: { related_entity: 'FaxLog', related_entity_id: faxLog.id },
-      is_read: false, action_url: `/SendFax?fax_id=${faxLog.id}`,
-    }).catch((err) => console.error('Failed to send fax failure notification:', err));
+  if (exhaustedNow && faxLog.sent_by && update.failure_notify_claimed_by) {
+    const claimCheck = await base44.asServiceRole.entities.FaxLog
+      .filter({ id: faxLog.id }, '-created_date', 1).catch(() => []);
+    if (claimCheck[0]?.failure_notify_claimed_by === update.failure_notify_claimed_by) {
+      const recipient = faxLog.to_name ? `${faxLog.to_name} (${faxLog.to_number})` : faxLog.to_number;
+      try {
+        await base44.asServiceRole.entities.Notification.create({
+          user_email: faxLog.sent_by,
+          title: '❌ Fax failed',
+          message: `"${faxLog.document_name || 'Your document'}" to ${recipient} could not be delivered (${update.failure_reason}). Verify the number and resend.`,
+          type: 'fax_failed', priority: 'high', metadata: { related_entity: 'FaxLog', related_entity_id: faxLog.id },
+          is_read: false, action_url: `/SendFax?fax_id=${faxLog.id}`,
+        });
+      } catch (err) {
+        console.error('Failed to send fax failure notification:', err);
+        await base44.asServiceRole.entities.FaxLog.update(faxLog.id, {
+          final_failure_notified: false,
+          failure_notify_claimed_by: '',
+        }).catch(() => {});
+      }
+    }
   }
   return Response.json({ success: true, status: mapped });
 }
@@ -648,14 +963,22 @@ async function handleFaxEvent(base44, payload) {
 // ============================ VOICE ============================
 // ---- find-me-follow-me ringdown (mirrors src/components/voice/onCall.js) ----
 const RING_TIMEOUT_SECS_DEFAULT = 20;
+// Dedupe key so two spellings of the same number (e.g. "+12155550100" vs
+// "2155550100") count as ONE ringdown target. Mirrors src/components/voice/onCall.js.
+function ringdownDedupeKey(n) {
+  const digits = String(n).replace(/\D/g, '');
+  return digits.length >= 10 ? digits.slice(-10) : String(n).trim().toLowerCase();
+}
 function buildRingdown(opts) {
   const { primary = null, others = [], office = null, maxTargets = 4 } = opts || {};
   const seen = new Set();
   const out = [];
   const push = (num, kind) => {
     const n = String(num || '').trim();
-    if (!n || seen.has(n)) return;
-    seen.add(n);
+    if (!n) return;
+    const key = ringdownDedupeKey(n);
+    if (seen.has(key)) return;
+    seen.add(key);
     out.push({ to: n, kind });
   };
   push(primary, 'primary');
@@ -665,22 +988,32 @@ function buildRingdown(opts) {
   return out.slice(0, cap);
 }
 const UNANSWERED_CAUSES = new Set([
-  'no_answer', 'no_user_response', 'user_busy', 'call_rejected', 'timeout',
-  'normal_temporary_failure', 'unallocated_number', 'recovery_on_timer_expire', 'originator_cancel',
+  // Telnyx call.hangup HangupCause enum (docs + SDK). Keep in sync with
+  // src/components/voice/onCall.js UNANSWERED_HANGUP_CAUSES.
+  'no_answer', 'user_busy', 'call_rejected', 'timeout', 'not_found', 'originator_cancel',
 ]);
 function isUnansweredHangup(cause) {
   return UNANSWERED_CAUSES.has(String(cause || '').toLowerCase());
 }
 
 // Other on-duty nurses' cells (for the ringdown backup list), excluding the
-// primary nurse and anyone without a cell.
-async function otherOnDutyCells(base44, config, primaryEmail) {
-  const users = await base44.asServiceRole.entities.User.list('full_name', 500).catch(() => []);
+// primary nurse and anyone without a cell. Scoped to the primary nurse's agency:
+// without this filter a patient calling agency A's work number could be bridged
+// to agency B's nurse's personal cell (a cross-tenant PHI conversation) in any
+// multi-tenant deployment — every sibling read here filters by agency.
+async function otherOnDutyCells(base44, config, primaryEmail, primaryAgency) {
+  const agency = String(primaryAgency || '').trim();
+  // Fail closed: if the primary nurse has no agency, an equality filter would
+  // match every OTHER agency-less (legacy/malformed) user and bridge the patient
+  // call to their personal cell. An unattributable primary gets no backup ring.
+  if (!agency) return [];
+  const users = await base44.asServiceRole.entities.User.list('full_name', 5000).catch(() => []);
   const now = new Date();
   const cells = [];
   for (const u of Array.isArray(users) ? users : []) {
     if (!u || u.email === primaryEmail) continue;
     if (!u.personal_cell_e164) continue;
+    if (String(u.agency_name || '').trim() !== agency) continue; // same agency only
     if (isOffDutyNow(u, now, config.settings)) continue; // only currently on-duty
     cells.push(u.personal_cell_e164);
   }
@@ -695,7 +1028,7 @@ async function decideInboundRouting(base44, config, workNum) {
 
   let nurse = null;
   for (const variant of (workNum ? phoneVariants(workNum) : [])) {
-    const matches = await base44.asServiceRole.entities.User.filter({ work_phone_number: variant }).catch(() => []);
+    const matches = await base44.asServiceRole.entities.User.filter({ work_phone_number: variant }, undefined, 5000).catch(() => []);
     if (matches.length > 0) { nurse = matches[0]; break; }
   }
   if (!nurse) {
@@ -705,7 +1038,7 @@ async function decideInboundRouting(base44, config, workNum) {
   }
 
   if (agencyClosed) {
-    const office = config.afterHoursTransfer || config.mainOffice || 'the main office';
+    const office = config.afterHoursTransferDisplay || 'the main office';
     if (config.afterHoursAction === 'voicemail' && config.voicemailEnabled) {
       const greeting = (config.afterHoursGreeting || config.voicemailGreeting ||
         'Our office is currently closed. Please leave a message after the tone and we will return your call.').replace(/\{office\}/gi, office);
@@ -722,7 +1055,7 @@ async function decideInboundRouting(base44, config, workNum) {
 
   // Off duty = toggled off, after the 5pm auto-off, or a scheduled window.
   if (isOffDutyNow(nurse, new Date(), config.settings)) {
-    const office = config.mainOffice || '724-465-0440';
+    const office = config.mainOfficeDisplay || '724-465-0440';
     const greeting = (nurse.off_duty_message ||
       'Thank you for your call, I am not working right now. Please hold while I connect you to Penn Home Health.').replace(/\{office\}/gi, office);
     // Speak the message, then connect them to the office so they don't have to
@@ -734,7 +1067,7 @@ async function decideInboundRouting(base44, config, workNum) {
   // On duty: find-me-follow-me ringdown — ring the nurse's cell first, then any
   // other on-duty nurse, then the office. Caller id = the work number on every
   // leg so the patient never sees a personal cell.
-  const others = await otherOnDutyCells(base44, config, nurse.email);
+  const others = await otherOnDutyCells(base44, config, nurse.email, nurse.agency_name);
   const maxTargets = Number.isFinite(Number(config.settings?.ringdown_max)) ? Number(config.settings.ringdown_max) : 4;
   const targets = buildRingdown({ primary: nurse.personal_cell_e164, others, office: config.mainOffice, maxTargets });
   if (targets.length > 0) {
@@ -751,8 +1084,9 @@ async function logInboundCall(base44, callControlId, callerNum, workNum, route) 
   // (no nurse) must NOT be mislabeled as an off-duty transfer.
   const callMode = !route.nurse ? 'unresolved'
     : route.action === 'voicemail' ? 'voicemail'
-      : (route.action === 'ringdown' || (route.action === 'bridge' && route.nurse?.personal_cell_e164)) ? 'masked_bridge'
-        : 'office_transfer';
+      : route.action === 'hangup' ? 'unresolved'
+        : (route.action === 'ringdown' || (route.action === 'bridge' && route.nurse?.personal_cell_e164)) ? 'masked_bridge'
+          : 'office_transfer';
   const logRow = await base44.asServiceRole.entities.CallLog.create({
     direction: 'inbound', from_number: callerNum, to_number: route.to || '', displayed_number: workNum,
     nurse_email: route.nurse?.email || null, call_mode: callMode, status: 'ringing', provider_call_id: callControlId,
@@ -788,9 +1122,21 @@ async function handleCallEvent(base44, apiKey, eventType, payload) {
     // Step 1: a fresh inbound call rings in. Answer it first (consistent with the
     // outbound path), carrying the routing decision forward in client_state.
     if (eventType === 'call.initiated' && direction === 'incoming' && !state) {
-      const config = await getAgencyConfig(base44);
       const callerNum = normalizeE164(payload?.from) || payload?.from || '';
       const workNum = normalizeE164(payload?.to) || payload?.to || '';
+      // Resolve agency from the dialed work number's nurse (or matching settings
+      // lines) so multi-tenant IVR uses that tenant's greetings/transfer targets.
+      let agencyHint = '';
+      for (const variant of phoneVariants(workNum)) {
+        const matches = await base44.asServiceRole.entities.User
+          .filter({ work_phone_number: variant }, undefined, 1).catch(() => []);
+        if (matches[0]?.agency_name) { agencyHint = matches[0].agency_name; break; }
+      }
+      if (!agencyHint) {
+        const byLine = await resolveAgencySettingsByNumber(base44, workNum);
+        agencyHint = byLine?.agency_code || byLine?.office_name || '';
+      }
+      const config = await getAgencyConfig(base44, agencyHint);
       const route = await decideInboundRouting(base44, config, workNum);
       await logInboundCall(base44, callControlId, callerNum, workNum, route);
       await callCommand(apiKey, callControlId, 'answer', {
@@ -806,7 +1152,7 @@ async function handleCallEvent(base44, apiKey, eventType, payload) {
       const next = (Number(state.idx) || 0) + 1;
       const hasNext = Array.isArray(state.targets) && state.targets[next];
       if (hasNext) {
-        await startRingdown(apiKey, state.a_leg, state.targets, state.callerId, next);
+        await startRingdown(base44, apiKey, state.a_leg, state.targets, state.callerId, next);
       } else {
         // Ringdown exhausted: nobody answered. Mark the inbound call as missed
         // BEFORE hanging up the caller leg. The CallLog status enum has no
@@ -831,7 +1177,7 @@ async function handleCallEvent(base44, apiKey, eventType, payload) {
     // (find-me-follow-me), or speak the greeting then continue once it finishes.
     if (eventType === 'call.answered' && state?.t === 'inbound_ivr') {
       if (state.action === 'ringdown') {
-        await startRingdown(apiKey, callControlId, state.targets || [], state.callerId, 0);
+        await startRingdown(base44, apiKey, callControlId, state.targets || [], state.callerId, 0);
         return Response.json({ success: true, inbound_ivr: 'ringdown' });
       }
       const greeting = String(state.greeting || '').slice(0, 320);
@@ -850,11 +1196,26 @@ async function handleCallEvent(base44, apiKey, eventType, payload) {
     // no routing state. Re-derive the route and act so the call is never stranded
     // on a silent answered leg.
     if (eventType === 'call.answered' && direction === 'incoming' && !state) {
-      const config = await getAgencyConfig(base44);
       const workNum = normalizeE164(payload?.to) || payload?.to || '';
+      let agencyHint = '';
+      for (const variant of phoneVariants(workNum)) {
+        const matches = await base44.asServiceRole.entities.User
+          .filter({ work_phone_number: variant }, undefined, 1).catch(() => []);
+        if (matches[0]?.agency_name) { agencyHint = matches[0].agency_name; break; }
+      }
+      if (!agencyHint) {
+        const byLine = await resolveAgencySettingsByNumber(base44, workNum);
+        agencyHint = byLine?.agency_code || byLine?.office_name || '';
+      }
+      const config = await getAgencyConfig(base44, agencyHint);
       const route = await decideInboundRouting(base44, config, workNum);
+      // Log here as well as on call.initiated: without a CallLog row every later
+      // write for this call (status, voicemail recording, transcript, the new-
+      // voicemail notification) finds no row and is silently dropped. logInboundCall
+      // no-ops when a row already exists, so a delayed call.initiated can't double-write.
+      await logInboundCall(base44, callControlId, normalizeE164(payload?.from) || payload?.from || '', workNum, route);
       if (route.action === 'ringdown') {
-        await startRingdown(apiKey, callControlId, route.targets || [], route.callerId, 0);
+        await startRingdown(base44, apiKey, callControlId, route.targets || [], route.callerId, 0);
         return Response.json({ success: true, inbound_recovered: 'ringdown' });
       }
       const greeting = String(route.greeting || '').slice(0, 320);
@@ -896,7 +1257,7 @@ async function handleCallEvent(base44, apiKey, eventType, payload) {
       ? await base44.asServiceRole.entities.CallLog.filter({ provider_call_id: callControlId }, '-created_date', 1).catch(() => [])
       : [];
     if (!rows.length && state?.call_log_id) {
-      rows = await base44.asServiceRole.entities.CallLog.filter({ id: state.call_log_id }).catch(() => []);
+      rows = await base44.asServiceRole.entities.CallLog.filter({ id: state.call_log_id }, undefined, 5000).catch(() => []);
     }
     if (rows.length) {
       const cur = rows[0];
@@ -919,22 +1280,43 @@ async function handleCallEvent(base44, apiKey, eventType, payload) {
 
 // Ring the next find-me-follow-me target on the original caller leg. The dialed
 // leg carries the ringdown client_state so an unanswered hangup can advance.
-async function startRingdown(apiKey, aLegId, targets, callerId, idx = 0) {
+// A transfer command can be REJECTED outright (e.g. a malformed stored office
+// number) with no hangup event to advance on — so on failure, try each
+// remaining target in order, and if every one is rejected apologize and hang up
+// rather than stranding the caller on a silent answered (billed) leg.
+async function startRingdown(base44, apiKey, aLegId, targets, callerId, idx = 0) {
   const list = Array.isArray(targets) ? targets : [];
-  const target = list[idx];
-  if (!target) { await callCommand(apiKey, aLegId, 'hangup', {}); return; }
-  await callCommand(apiKey, aLegId, 'transfer', {
-    to: target.to,
-    from: callerId || target.to,
-    timeout_secs: RING_TIMEOUT_SECS_DEFAULT,
-    client_state: encodeClientState({ t: 'ringdown', targets: list, idx, callerId, a_leg: aLegId }),
-  });
+  for (let i = Math.max(0, Number(idx) || 0); i < list.length; i++) {
+    const target = list[i];
+    if (!target || !target.to) continue;
+    const r = await callCommand(apiKey, aLegId, 'transfer', {
+      to: target.to,
+      from: callerId || target.to,
+      timeout_secs: RING_TIMEOUT_SECS_DEFAULT,
+      client_state: encodeClientState({ t: 'ringdown', targets: list, idx: i, callerId, a_leg: aLegId }),
+    });
+    if (r.ok) return;
+  }
+  // Every target was rejected, so no dialed leg exists to carry the ringdown
+  // client_state and the exhaustion branch above can never fire for this call.
+  // Mark the inbound log missed here too, otherwise the trailing call.hangup maps
+  // to 'completed' and the call disappears from the callback queue.
+  const inboundLogs = await base44.asServiceRole.entities.CallLog
+    .filter({ provider_call_id: aLegId }, '-created_date', 1).catch(() => []);
+  if (inboundLogs.length && inboundLogs[0].status !== 'failed') {
+    await base44.asServiceRole.entities.CallLog.update(inboundLogs[0].id, {
+      status: 'failed',
+      failure_reason: 'No answer — all on-call targets were unavailable',
+    }).catch(() => {});
+  }
+  await callCommand(apiKey, aLegId, 'speak', { ...SPEAK_DEFAULTS, payload: 'We are unable to connect your call at this time. Please try again later.' });
+  await callCommand(apiKey, aLegId, 'hangup', {});
 }
 
 async function continueAfterGreeting(base44, apiKey, callControlId, action, to, callerId, targets = null) {
   // Find-me-follow-me: ring the targets in order on the caller leg.
   if (action === 'ringdown') {
-    await startRingdown(apiKey, callControlId, targets || (to ? [{ to, kind: 'primary' }] : []), callerId, 0);
+    await startRingdown(base44, apiKey, callControlId, targets || (to ? [{ to, kind: 'primary' }] : []), callerId, 0);
     return;
   }
   // A plain bridge and a greet-then-transfer both end in a transfer; unify them
@@ -948,16 +1330,19 @@ async function continueAfterGreeting(base44, apiKey, callControlId, action, to, 
     }
   } else if (action === 'voicemail') {
     // Bound the recording so a silent/abandoned line can't leave a billed leg
-    // open indefinitely (matches the old 120s voicemail cap). TODO(verify):
-    // record_start field names (format/channels/max_length_secs) against the API.
+    // open indefinitely (matches the old 120s voicemail cap). Telnyx field is
+    // max_length (seconds), not max_length_secs.
     await callCommand(apiKey, callControlId, 'record_start', {
-      format: 'mp3', channels: 'single', max_length_secs: 120,
+      format: 'mp3', channels: 'single', max_length: 120,
       client_state: encodeClientState({ t: 'voicemail' }),
     });
-    // Restore the voicemail transcription the old handler captured. Best-effort:
-    // transcripts arrive on call.transcription events. TODO(verify): transcription_start
-    // field names against the live API.
-    await callCommand(apiKey, callControlId, 'transcription_start', { language: 'en', client_state: encodeClientState({ t: 'voicemail' }) });
+    // Real-time transcription: language lives under transcription_engine_config
+    // (top-level `language` is not a valid TranscriptionStartRequest field).
+    await callCommand(apiKey, callControlId, 'transcription_start', {
+      transcription_engine: 'A',
+      transcription_engine_config: { language: 'en', transcription_engine: 'A' },
+      client_state: encodeClientState({ t: 'voicemail' }),
+    });
   } else {
     await callCommand(apiKey, callControlId, 'hangup', {});
   }
@@ -1004,7 +1389,8 @@ async function saveVoicemail(base44, payload) {
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const { apiKey, publicKey, messagingProfileId } = await resolveTelnyxCreds(base44);
+    const telnyxCreds = await resolveTelnyxCreds(base44);
+    const { apiKey, publicKey, messagingProfileId } = telnyxCreds;
 
     // Read the raw body ONCE — signature is over the exact bytes.
     const rawBody = await req.text();
@@ -1023,6 +1409,7 @@ Deno.serve(async (req) => {
 
     if (eventType === 'message.received') return await handleInboundMessage(base44, apiKey, messagingProfileId, payload);
     if (eventType.startsWith('message.')) return await handleOutboundMessageStatus(base44, payload);
+    if (eventType === 'fax.received') return await handleInboundFax(base44, payload);
     if (eventType.startsWith('fax.')) return await handleFaxEvent(base44, payload);
     if (eventType.startsWith('call.')) return await handleCallEvent(base44, apiKey, eventType, payload);
 

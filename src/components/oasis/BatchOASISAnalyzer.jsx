@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import { base44 } from "@/api/base44Client";
+import { toLocalISODate } from "@/lib/dateLocal";
 import { toCsvRows } from "@/components/admin/csvExport";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -27,7 +28,7 @@ import {
   AlertCircle
 } from "lucide-react";
 import { processOASISBatch } from "@/functions/processOASISBatch";
-import OASISComparisonView from "./OASISComparisonView";
+import EnhancedMultiReportComparison from "./EnhancedMultiReportComparison";
 
 export default function BatchOASISAnalyzer({ onSingleAnalysis, onBatchComplete }) {
   const [files, setFiles] = useState([]);
@@ -47,7 +48,6 @@ export default function BatchOASISAnalyzer({ onSingleAnalysis, onBatchComplete }
   const [error, setError] = useState(null);
   const [showComparison, setShowComparison] = useState(false);
   const [groupBy, setGroupBy] = useState('none'); // none, patient, issue_type, score
-  const [processingStartTime, setProcessingStartTime] = useState(null);
   const [estimatedTimeRemaining, setEstimatedTimeRemaining] = useState(null);
 
   const handleFileSelect = (e) => {
@@ -97,7 +97,9 @@ export default function BatchOASISAnalyzer({ onSingleAnalysis, onBatchComplete }
     setError(null);
     setBatchResults(null);
     setOverallProgress(0);
-    setProcessingStartTime(Date.now());
+    // Local start time — a setState value wouldn't be visible in this closure,
+    // so the elapsed-time estimate below must read this local, not state.
+    const startTime = Date.now();
 
     const updatedFiles = [...files];
     const uploadedUrls = [];
@@ -124,7 +126,7 @@ export default function BatchOASISAnalyzer({ onSingleAnalysis, onBatchComplete }
 
         // Estimate time remaining
         if (i > 0) {
-          const elapsed = Date.now() - processingStartTime;
+          const elapsed = Date.now() - startTime;
           const avgTimePerFile = elapsed / i;
           const remaining = (files.length - i) * avgTimePerFile;
           setEstimatedTimeRemaining(Math.round(remaining / 1000));
@@ -177,8 +179,11 @@ export default function BatchOASISAnalyzer({ onSingleAnalysis, onBatchComplete }
 
       // Update file statuses based on results
       if (response.data?.results) {
-        response.data.results.forEach((result, _idx) => {
-          const fileIndex = files.findIndex(f => f.name === result.fileName);
+        response.data.results.forEach((result) => {
+          // Match the first file with this name that is still analyzing, so two
+          // files sharing a name each claim their own result instead of both
+          // overwriting the first (leaving the second stuck on "analyzing").
+          const fileIndex = files.findIndex((f, i) => f.name === result.fileName && updatedFiles[i]?.status === 'analyzing');
           if (fileIndex !== -1) {
             updatedFiles[fileIndex] = {
               ...updatedFiles[fileIndex],
@@ -248,7 +253,7 @@ export default function BatchOASISAnalyzer({ onSingleAnalysis, onBatchComplete }
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `OASIS_Batch_Reports_${new Date().toISOString().split('T')[0]}.zip`;
+    a.download = `OASIS_Batch_Reports_${toLocalISODate()}.zip`;
     document.body.appendChild(a);
     a.click();
     window.URL.revokeObjectURL(url);
@@ -310,7 +315,7 @@ export default function BatchOASISAnalyzer({ onSingleAnalysis, onBatchComplete }
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `OASIS_Batch_Results_${new Date().toISOString().split('T')[0]}.csv`;
+    a.download = `OASIS_Batch_Results_${toLocalISODate()}.csv`;
     document.body.appendChild(a);
     a.click();
     window.URL.revokeObjectURL(url);
@@ -556,7 +561,6 @@ export default function BatchOASISAnalyzer({ onSingleAnalysis, onBatchComplete }
                   size="sm"
                   variant="outline"
                   onClick={handlePause}
-                  className="text-orange-600 border-orange-300 hover:bg-orange-50"
                 >
                   <Pause className="w-4 h-4 mr-1" />
                   Pause
@@ -566,7 +570,6 @@ export default function BatchOASISAnalyzer({ onSingleAnalysis, onBatchComplete }
                   size="sm"
                   variant="outline"
                   onClick={handleResume}
-                  className="text-green-600 border-green-300 hover:bg-green-50"
                 >
                   <Play className="w-4 h-4 mr-1" />
                   Resume
@@ -602,7 +605,6 @@ export default function BatchOASISAnalyzer({ onSingleAnalysis, onBatchComplete }
                         size="sm" 
                         variant="outline"
                         onClick={downloadCSVReport}
-                        className="border-green-300 text-green-700 hover:bg-green-50"
                       >
                         <FileSpreadsheet className="w-4 h-4 mr-1" />
                         Export CSV
@@ -620,7 +622,7 @@ export default function BatchOASISAnalyzer({ onSingleAnalysis, onBatchComplete }
                       </Button>
                     )}
                     {successCount > 0 && (
-                      <Button size="sm" onClick={downloadAllReports} className="bg-green-600 hover:bg-green-700">
+                      <Button size="sm" onClick={downloadAllReports} >
                         <Download className="w-4 h-4 mr-1" />
                         Download ZIP
                       </Button>
@@ -735,9 +737,15 @@ export default function BatchOASISAnalyzer({ onSingleAnalysis, onBatchComplete }
 
         {/* Comparison View */}
         {showComparison && successCount >= 2 && (
-          <OASISComparisonView 
-            availableReports={files.filter(f => f.status === 'success')}
-            onClose={() => setShowComparison(false)}
+          <EnhancedMultiReportComparison
+            savedReports={files
+              .filter(f => f.status === 'success' && f.result)
+              .map(f => ({
+                ...f.result,
+                fileName: f.name,
+                pdgm_data: f.result?.pdgm_data,
+                timestamp: new Date().toISOString()
+              }))}
           />
         )}
 

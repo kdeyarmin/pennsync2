@@ -1,5 +1,7 @@
 import { useMemo } from "react";
 import { base44 } from "@/api/base44Client";
+import { agencyQueryKey } from '@/lib/agencyRoster';
+import { isAdminView } from "@/lib/roles";
 import { useQuery } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -21,7 +23,7 @@ export default function TimeOff() {
     queryFn: () => base44.auth.me(),
   });
 
-  const isAdmin = currentUser?.role === "admin";
+  const isAdmin = isAdminView(currentUser);
   const isApprover = isAdmin || currentUser?.is_manager === true;
 
   // The current user's own requests (for the "My Time Off" tab).
@@ -58,13 +60,19 @@ export default function TimeOff() {
 
   // Candidate approvers for the request form. User listing is admin-oriented;
   // if it's not permitted for this user we fall back gracefully to "route to admins".
+  // Agency-scoped callers only see same-agency approvers (backend enforces too).
   const { data: approvers = [] } = useQuery({
-    queryKey: ["timeoff", "approvers", currentUser?.email],
+    queryKey: ["timeoff", "approvers", currentUser?.email, agencyQueryKey(currentUser)],
     queryFn: async () => {
       try {
         const users = await base44.entities.User.list("full_name", 500);
-        return users
-          .filter((u) => u.email && (u.role === "admin" || u.is_manager === true))
+        const { filterUsersByCallerAgency } = await import("@/lib/agencyScope");
+        const scoped = filterUsersByCallerAgency(users, currentUser);
+        return scoped
+          .filter((u) =>
+            u.email
+            && (u.role === "admin" || u.account_type === "agency_admin" || u.is_manager === true),
+          )
           .filter((u) => u.email !== currentUser?.email)
           .map((u) => ({ email: u.email, name: u.full_name || u.email, role: u.role }));
       } catch {

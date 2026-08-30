@@ -22,20 +22,22 @@ import {
   Award
 } from "lucide-react";
 import { toast } from "sonner";
-import { format, parseISO } from "date-fns";
+import { formatLocalDate } from "@/lib/dateLocal";
+import { isAdminLike } from "@/lib/superAdmin";
+import { useConfirm } from "@/components/ui/confirm-dialog";
+import { PATIENT_HISTORY_ROWS } from '@/lib/queryLimits';
+import { isSafeExternalUrl } from "@/components/utils/security";
 
-// Guarded date formatter: format(parseISO(undefined)) throws a RangeError, which
-// would white-screen the whole approvals card if any credential has a null date.
-const fmtDate = (value) => {
-  if (!value) return "—";
-  try { return format(parseISO(value), "MMM d, yyyy"); } catch { return "—"; }
-};
+// Guarded date formatter: date-only ISO strings must use local calendar parsing
+// (parseISO treats YYYY-MM-DD as UTC midnight and can shift the displayed day).
+const fmtDate = (value) => formatLocalDate(value, { month: 'short', day: 'numeric', year: 'numeric' }) || "—";
 
 export default function AdminCredentialApproval() {
   const [selectedCredential, setSelectedCredential] = useState(null);
   const [rejectionReason, setRejectionReason] = useState("");
   const [showRejectDialog, setShowRejectDialog] = useState(false);
   const queryClient = useQueryClient();
+  const confirm = useConfirm();
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -44,111 +46,68 @@ export default function AdminCredentialApproval() {
 
   const { data: pendingCredentials = [] } = useQuery({
     queryKey: ['pendingCredentials'],
-    queryFn: () => base44.entities.PersonnelCredential.filter({ status: 'pending_approval' }),
+    queryFn: () => base44.entities.PersonnelCredential.filter({ status: 'pending_approval' }, undefined, PATIENT_HISTORY_ROWS),
     initialData: [],
   });
 
+  // Approval/rejection goes through the admin-gated reviewPersonnelCredential
+  // backend function (which supersedes old approved copies and notifies the
+  // employee) — the entity's write RLS is admin-only and the decision fields
+  // are stamped server-side.
   const approveMutation = useMutation({
     mutationFn: async (credential) => {
-      // Mark old credential as expired if it exists
-      const oldCredentials = await base44.entities.PersonnelCredential.filter({
-        user_id: credential.user_id,
-        title: credential.title,
-        status: 'approved'
+      const res = await base44.functions.invoke('reviewPersonnelCredential', {
+        credential_id: credential.id,
+        action: 'approve',
       });
-
-      if (oldCredentials.length > 0) {
-        await Promise.all(
-          oldCredentials.map(old =>
-            base44.entities.PersonnelCredential.update(old.id, {
-              status: 'expired',
-              notes: (old.notes || '') + `\n[Superseded by renewal on ${format(new Date(), 'yyyy-MM-dd')}]`
-            })
-          )
-        );
-      }
-
-      // Approve new credential
-      await base44.entities.PersonnelCredential.update(credential.id, {
-        status: 'approved',
-        approved_by: currentUser?.email,
-        approved_at: new Date().toISOString()
-      });
-
-      // Notify employee
-      await base44.integrations.Core.SendEmail({
-        to: credential.user_id,
-        subject: `✅ Credential Approved - ${credential.title}`,
-        body: `Dear ${credential.user_name},
-
-Your credential renewal has been approved:
-
-Credential: ${credential.title}
-Type: ${credential.item_type}
-New Expiration: ${fmtDate(credential.expiration_date)}
-Approved By: ${currentUser?.full_name}
-
-Your personnel file has been updated. You can view your current credentials in the Personnel File section.
-
-Thank you,
-Credential Management System`
-      });
+      const data = res?.data ?? res;
+      if (data?.error) throw new Error(data.error);
+      return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['pendingCredentials'] });
-      queryClient.invalidateQueries({ queryKey: ['userCredentials'] });
       toast.success("Credential approved and employee notified");
     },
-    onError: () => {
-      toast.error("Failed to approve credential");
+    onError: (err) => {
+      toast.error(err?.message || "Failed to approve credential");
+    },
+    // Refresh regardless of outcome so a partial/mail failure never masks an
+    // already-written approval by leaving the item looking still-pending.
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['pendingCredentials'] });
+      queryClient.invalidateQueries({ queryKey: ['userCredentials'] });
+      queryClient.invalidateQueries({ queryKey: ['personnel-credentials'] });
+      queryClient.invalidateQueries({ queryKey: ['allPersonnelCredentials'] });
     }
   });
 
   const rejectMutation = useMutation({
     mutationFn: async ({ credential, reason }) => {
-      await base44.entities.PersonnelCredential.update(credential.id, {
-        status: 'rejected',
+      const res = await base44.functions.invoke('reviewPersonnelCredential', {
+        credential_id: credential.id,
+        action: 'reject',
         rejection_reason: reason,
-        approved_by: currentUser?.email,
-        approved_at: new Date().toISOString()
       });
-
-      // Notify employee
-      await base44.integrations.Core.SendEmail({
-        to: credential.user_id,
-        subject: `❌ Credential Renewal Requires Revision - ${credential.title}`,
-        body: `Dear ${credential.user_name},
-
-Your credential renewal submission requires revision:
-
-Credential: ${credential.title}
-Type: ${credential.item_type}
-
-Reason for rejection:
-${reason}
-
-Please re-upload a corrected document in your Personnel File.
-
-If you have questions, please contact your supervisor.
-
-Thank you,
-Credential Management System`
-      });
+      const data = res?.data ?? res;
+      if (data?.error) throw new Error(data.error);
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['pendingCredentials'] });
+      queryClient.invalidateQueries({ queryKey: ['userCredentials'] });
+      queryClient.invalidateQueries({ queryKey: ['personnel-credentials'] });
+      queryClient.invalidateQueries({ queryKey: ['allPersonnelCredentials'] });
       setShowRejectDialog(false);
       setRejectionReason("");
       setSelectedCredential(null);
       toast.success("Credential rejected and employee notified");
     },
-    onError: () => {
-      toast.error("Failed to reject credential");
+    onError: (err) => {
+      toast.error(err?.message || "Failed to reject credential");
     }
   });
 
-  const handleApprove = (credential) => {
-    if (window.confirm(`Approve ${credential.title} for ${credential.user_name}?`)) {
+  const handleApprove = async (credential) => {
+    if (await confirm({ title: "Approve credential?", description: `Approve ${credential.title} for ${credential.user_name}?`, confirmText: "Approve" })) {
       approveMutation.mutate(credential);
     }
   };
@@ -161,7 +120,12 @@ Credential Management System`
     });
   };
 
-  if (currentUser?.role !== 'admin') {
+  // Match the hosting page's Approvals-tab gate (isAgencyAdmin): any admin-like
+  // account, not only role === 'admin'. NOTE: the PersonnelCredential RLS read
+  // rule still only recognizes role 'admin', so agency_admin/super_admin accounts
+  // whose role is 'user' will see an empty list until the read is moved behind a
+  // backend function / the RLS policy is widened.
+  if (!isAdminLike(currentUser)) {
     return null;
   }
 
@@ -208,12 +172,12 @@ Credential Management System`
                 </div>
 
                 <div className="mb-3">
-                  {cred.uploaded_file_url && (
+                  {cred.uploaded_file_url && isSafeExternalUrl(cred.uploaded_file_url) && (
                     <a
                       href={cred.uploaded_file_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 text-sm text-indigo-600 hover:text-indigo-700"
+                      className="inline-flex items-center gap-2 text-sm text-indigo-600 hover:text-indigo-700 hover:underline"
                     >
                       <FileText className="w-4 h-4" />
                       View Document
@@ -227,7 +191,6 @@ Credential Management System`
                     size="sm"
                     onClick={() => handleApprove(cred)}
                     disabled={approveMutation.isPending}
-                    className="bg-green-600 hover:bg-green-700"
                   >
                     <CheckCircle2 className="w-4 h-4 mr-2" />
                     Approve
