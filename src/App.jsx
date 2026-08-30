@@ -38,6 +38,9 @@ const JoinTelehealth = lazy(() => import('@/pages/JoinTelehealth'));
 // Store Connect, so it must render before the auth gate.
 const PrivacyPolicy = lazy(() => import('@/pages/PrivacyPolicy'));
 
+// OAuth consent page for the app's MCP server — manages its own auth redirect.
+const OAuthConsent = lazy(() => import('@/pages/OAuthConsent'));
+
 // Shown when a non-admin navigates directly to an admin-only route. Admin pages
 // are hidden from the sidebar/palette for non-admins, but routes are reachable
 // by URL, so this is the client-side authorization gate (server RLS is the real
@@ -187,6 +190,8 @@ const AuthenticatedApp = () => {
           <Route path="/followup/*" element={<ProviderFollowUpPortal />} />
           {/* Public privacy policy — required in-app pre-auth (App Store 5.1.1(i)) */}
           <Route path="/privacy" element={<PrivacyPolicy />} />
+          {/* MCP OAuth consent — manages its own auth redirect via ?ctx handle */}
+          <Route path="/consent" element={<OAuthConsent />} />
           {/* Catch-all so a public-segment URL that matches no inner route (e.g.
               /privacy/extra) renders the not-found page instead of a blank
               screen — this <Routes> block has no fallback otherwise. */}
