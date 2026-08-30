@@ -1,0 +1,15 @@
+/* Larger landscape iPads fall above the portrait/tablet breakpoint in index.css. */
+@media (pointer: coarse) and (min-width: 1025px) and (max-width: 1366px) {
+  button,
+  input,
+  select,
+  textarea {
+    min-height: 44px;
+  }
+
+  [data-radix-dialog-content] {
+    width: auto !important;
+    max-width: 90vw !important;
+    margin: auto;
+  }
+}

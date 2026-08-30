@@ -35,7 +35,7 @@ final class WebViewController: UIViewController {
     /// match the origin the shell actually loads. Keep any hosted subpath here:
     /// all same-origin `target=_blank` links, signer links, and telehealth links
     /// are resolved relative to this app base.
-    private let appURL = URL(string: "https://caremetricai.base44.app/")!
+    private let appURL = URL(string: "https://pennsync.base44.app/")!
 
     private var webView: WKWebView!
     private lazy var downloadHandler = BlobDownloadHandler(presenter: self)

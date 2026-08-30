@@ -54,6 +54,7 @@
 	-->
 	<key>WKAppBoundDomains</key>
 	<array>
+		<string>pennsync.base44.app</string>
 		<string>base44.app</string>
 		<string>base44.com</string>
 	</array>
