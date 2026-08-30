@@ -110,20 +110,20 @@ export default function SkillsObservationForm({ employee, competency, checklist,
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <label className="flex items-center gap-2 rounded-xl border p-3">
+                <div className="flex items-center gap-2 rounded-xl border p-3">
                   <Checkbox
                     checked={!!form[itemId]?.observed}
                     onCheckedChange={(checked) => setForm((prev) => ({ ...prev, [itemId]: { ...prev[itemId], observed: !!checked } }))}
                   />
                   <span className="text-sm">Observed in practice</span>
-                </label>
-                <label className="flex items-center gap-2 rounded-xl border p-3">
+                </div>
+                <div className="flex items-center gap-2 rounded-xl border p-3">
                   <Checkbox
                     checked={!!form[itemId]?.met_criteria}
                     onCheckedChange={(checked) => setForm((prev) => ({ ...prev, [itemId]: { ...prev[itemId], met_criteria: !!checked } }))}
                   />
                   <span className="text-sm">Met competency criteria</span>
-                </label>
+                </div>
               </div>
 
               <div className="space-y-2">
