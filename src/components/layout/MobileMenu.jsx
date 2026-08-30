@@ -41,8 +41,8 @@ export default function MobileMenu({ open, onClose, navCategories, adminItems, i
   if (!open) return null;
 
   return (
-    <div className="md:hidden fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-sm" onClick={onClose} role="button" aria-label="Close menu" tabIndex={-1}>
-      <div className="absolute left-0 top-0 bottom-0 w-72 bg-white flex flex-col shadow-2xl" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true" aria-label="Navigation menu">
+    <div className="md:hidden fixed inset-0 z-[60] bg-slate-900/40 backdrop-blur-sm" onClick={onClose} role="button" aria-label="Close menu" tabIndex={-1}>
+      <div className="absolute inset-y-0 left-0 flex w-[min(18rem,calc(100vw-2rem))] max-w-full flex-col bg-white pb-[env(safe-area-inset-bottom)] pt-[env(safe-area-inset-top)] shadow-2xl" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true" aria-label="Navigation menu">
         {/* Header */}
         <div className="h-16 flex items-center justify-between px-4 border-b border-slate-200 flex-shrink-0">
           <div className="flex items-center gap-2">

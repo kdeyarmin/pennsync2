@@ -424,7 +424,7 @@ export default function Layout() {
           className="flex-1 min-w-0 overflow-x-hidden pt-[calc(4rem_+_env(safe-area-inset-top))] md:pt-0 pb-[calc(5rem_+_env(safe-area-inset-bottom))] md:pb-0 min-h-screen overscroll-none"
           style={{ background: "var(--app-shell-background)" }}
         >
-          <div className="p-4 sm:p-6 md:p-8 lg:p-10 min-w-0 max-w-[1600px] mx-auto">
+          <div className="mx-auto w-full min-w-0 max-w-[1600px] p-4 sm:p-6 md:p-8 lg:p-10">
             <Breadcrumbs currentPageName={currentPageName} />
             <PageTransition>
               <Outlet key={location.pathname} />
