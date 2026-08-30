@@ -220,6 +220,7 @@ export const ROUTER_PATHS = [
   '/join',
   '/signer',
   '/followup',
+  '/consent',
   '/privacy',
   '/consent',
   ...PAGE_NAMES.map((name) => `/${name}`),

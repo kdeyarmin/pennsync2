@@ -33,6 +33,9 @@ import { isPublicTokenPath } from '@/lib/publicRoutes';
 // the whole app — so plain lazy() is sufficient here.
 const JoinTelehealth = lazy(() => import('@/pages/JoinTelehealth'));
 
+// MCP OAuth consent page — public, ctx-token-gated, no app login required.
+const OAuthConsent = lazy(() => import('@/pages/OAuthConsent'));
+
 // Public privacy policy — App Store Guideline 5.1.1(i) requires it reachable
 // from within the app without signing in, and the same URL is entered in App
 // Store Connect, so it must render before the auth gate.
@@ -188,6 +191,8 @@ const AuthenticatedApp = () => {
           <Route path="/signer/*" element={<SignerPortal />} />
           {/* Provider follow-up response portal — token-gated, no app login */}
           <Route path="/followup/*" element={<ProviderFollowUpPortal />} />
+          {/* MCP OAuth consent — ctx-token-gated, no app login */}
+          <Route path="/consent/*" element={<OAuthConsent />} />
           {/* Public privacy policy — required in-app pre-auth (App Store 5.1.1(i)) */}
           <Route path="/privacy" element={<PrivacyPolicy />} />
           {/* MCP OAuth consent — manages its own auth redirect via ?ctx handle */}
