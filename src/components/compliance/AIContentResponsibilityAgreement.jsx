@@ -3,7 +3,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sparkles, ShieldCheck, LogOut, Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -129,11 +128,12 @@ export default function AIContentResponsibilityAgreement() {
                         htmlFor={id}
                         className="flex cursor-pointer items-start gap-3 rounded-lg border border-slate-200 bg-white p-3 shadow-sm transition-colors hover:border-navy-300"
                       >
-                        <Checkbox
+                        <input
                           id={id}
+                          type="checkbox"
                           checked={checked[index]}
-                          onCheckedChange={(value) => setAcknowledgment(index, value)}
-                          className={`mt-0.5 ${checked[index] ? "border-navy-600 bg-navy-600 text-white" : ""}`}
+                          onChange={(event) => setAcknowledgment(index, event.target.checked)}
+                          className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer accent-navy-600"
                         />
                         <span className="text-sm leading-relaxed text-slate-700">{text}</span>
                       </label>
