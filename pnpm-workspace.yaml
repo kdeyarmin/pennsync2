@@ -4,7 +4,7 @@ allowBuilds:
 overrides:
   '@telnyx/video>uuid': 11.1.1
   brace-expansion@^1.1.7: 1.1.17
-  esbuild: 0.28.1
+  esbuild: 0.28.2
   quill: 2.0.3
   # GHSA-2m8v-j782-fhvr (high): Socket.IO zero-attachment memory exhaustion in
   # socket.io-parser <4.2.7, reached transitively via @base44/sdk >
@@ -35,7 +35,7 @@ minimumReleaseAgeExclude:
   - globals@17.8.0
   - jsdom@30.0.0
   - typescript@7.0.2
-  - esbuild@0.28.1
+  - esbuild@0.28.2
   - framer-motion@12.43.0
   - lucide-react@1.28.0
   - pdfjs-dist@6.2.108
