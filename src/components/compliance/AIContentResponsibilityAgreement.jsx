@@ -41,8 +41,8 @@ export default function AIContentResponsibilityAgreement() {
 
   const allChecked = useMemo(() => checked.every(Boolean), [checked]);
 
-  const toggle = (index) =>
-    setChecked((prev) => prev.map((v, i) => (i === index ? !v : v)));
+  const setAcknowledgment = (index, value) =>
+    setChecked((prev) => prev.map((current, i) => (i === index ? value === true : current)));
 
   const accept = async () => {
     if (!allChecked || saving) return;
@@ -132,7 +132,7 @@ export default function AIContentResponsibilityAgreement() {
                         <Checkbox
                           id={id}
                           checked={checked[index]}
-                          onCheckedChange={() => toggle(index)}
+                          onCheckedChange={(value) => setAcknowledgment(index, value)}
                           className={`mt-0.5 ${checked[index] ? "border-navy-600 bg-navy-600 text-white" : ""}`}
                         />
                         <span className="text-sm leading-relaxed text-slate-700">{text}</span>
