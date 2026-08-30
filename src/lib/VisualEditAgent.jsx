@@ -46,10 +46,13 @@ function allowedEditorOrigins() {
  */
 function postToEditors(data) {
 	const payload = { ...data };
-	if (payload.isDynamicContent) {
+	// Never include DOM text: the redaction previously keyed off a manually
+	// supplied `data-dynamic-content` marker that production patient/chart
+	// components never set, so selecting an element could leak PHI (names,
+	// note text) to the parent editor origin. The editor identifies elements
+	// by source file/line metadata, which is already in the payload.
+	if ('content' in payload) {
 		payload.content = '';
-	} else if (typeof payload.content === 'string' && payload.content.length > 120) {
-		payload.content = `${payload.content.slice(0, 120)}…`;
 	}
 	const origins = [...allowedEditorOrigins()].filter((o) => o !== window.location.origin);
 	if (origins.length === 0) {

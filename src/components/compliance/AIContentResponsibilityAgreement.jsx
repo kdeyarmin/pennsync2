@@ -8,7 +8,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sparkles, ShieldCheck, LogOut, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { BRAND_LOGO_URL } from "@/lib/brand";
-import { logAudit } from "@/components/utils/auditLogger";
 import {
   AI_CONTENT_AGREEMENT_TITLE,
   AI_CONTENT_AGREEMENT_INTRO,
@@ -50,20 +49,28 @@ export default function AIContentResponsibilityAgreement() {
     setSaving(true);
     try {
       const acceptedAt = new Date().toISOString();
-      await base44.auth.updateMe(buildAiContentAgreementAcceptance(acceptedAt));
 
-      // Durable, timestamped attestation record for compliance/audit.
-      await logAudit({
+      // Durable, timestamped attestation record for compliance/audit — written
+      // BEFORE the User flag. `logAudit` never throws, so if it were written
+      // after a successful updateMe a failed audit write would leave the gate
+      // permanently satisfied with no attestation on record. UserActivity
+      // creation throwing here aborts acceptance so the user can retry.
+      await base44.entities.UserActivity.create({
+        user_email: user?.email || "system",
+        user_name: user?.full_name || "System",
         action: "ai_content_agreement_accepted",
-        entityType: "User",
-        entityId: user?.id || null,
+        entity_type: "User",
+        entity_id: user?.id || null,
         details: {
           agreement_version: AI_CONTENT_AGREEMENT_VERSION,
           accepted_at: acceptedAt,
           acknowledgments: AI_CONTENT_AGREEMENT_ACKNOWLEDGMENTS,
+          severity: "info",
+          timestamp: acceptedAt,
         },
-        severity: "info",
       });
+
+      await base44.auth.updateMe(buildAiContentAgreementAcceptance(acceptedAt));
 
       // Other surfaces read the user via a ["currentUser"] query; keep them in
       // step, then refresh the auth context so App.jsx re-evaluates the gate.
