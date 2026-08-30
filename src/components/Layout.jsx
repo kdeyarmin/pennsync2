@@ -388,7 +388,7 @@ export default function Layout() {
         Skip to content
       </a>
       <CommandPalette isAdmin={isAdmin} isSuperAdmin={isSuperAdminUser} user={currentUser} />
-      <div className="min-h-screen flex">
+      <div className="min-h-screen flex w-full max-w-full overflow-x-hidden">
         <DesktopSidebar
           collapsed={sidebarCollapsed}
           onToggleCollapse={() => setSidebarCollapsed(v => !v)}
@@ -421,7 +421,7 @@ export default function Layout() {
 
         <main
           id="main-content"
-          className="flex-1 pt-[calc(4rem_+_env(safe-area-inset-top))] md:pt-0 pb-[calc(5rem_+_env(safe-area-inset-bottom))] md:pb-0 min-h-screen w-0 md:w-auto overscroll-none"
+          className="flex-1 min-w-0 overflow-x-hidden pt-[calc(4rem_+_env(safe-area-inset-top))] md:pt-0 pb-[calc(5rem_+_env(safe-area-inset-bottom))] md:pb-0 min-h-screen overscroll-none"
           style={{ background: "var(--app-shell-background)" }}
         >
           <div className="p-4 sm:p-6 md:p-8 lg:p-10 min-w-0 max-w-[1600px] mx-auto">
