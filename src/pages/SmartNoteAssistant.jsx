@@ -26,10 +26,10 @@ import QuickPhraseTextarea from "../components/smartNote/QuickPhraseTextarea";
 import FacilityRequirementsChecklist from "../components/smartNote/FacilityRequirementsChecklist";
 import ConstrainedNoteReviewer from "../components/smartNote/ConstrainedNoteReviewer";
 import NoteReadinessBar from "../components/smartNote/NoteReadinessBar";
-import { persistVisitNote } from "../components/smartNote/persistVisitNote";
+import { persistVisitNote, OfflineSaveError } from "../components/smartNote/persistVisitNote";
 import { getPriorNote, parseNoteSections } from "../components/smartNote/noteHelpers";
 import { evaluateFacilityRules, summarizeFacilityRules } from "../components/smartNote/compliance/facilityDocRules";
-import { describePlaceholders, countPlaceholders } from "../components/smartNote/compliance/placeholderGuard";
+import { describePlaceholders, countPlaceholders, findPlaceholders } from "../components/smartNote/compliance/placeholderGuard";
 import { claimDictation, releaseDictation } from "@/components/smartNote/dictationController";
 import { generateFollowUpTasks } from "@/functions/generateFollowUpTasks";
 import { analyzeVisitForSupplyUsage } from "@/functions/analyzeVisitForSupplyUsage";
@@ -66,6 +66,7 @@ const buildExportFindings = (result) => {
 import SmartNoteNav from "../components/smartNote/SmartNoteNav";
 import CollapsibleSection, { openOnDesktop } from "../components/smartNote/CollapsibleSection";
 import StickyActionBar from "../components/smartNote/StickyActionBar";
+import PlaceholderAlert from "../components/smartNote/PlaceholderAlert";
 import PageContainer from "@/components/ui/PageContainer";
 import { HideWhenEmbedded } from "@/components/ui/embeddedPage";
 import { ALL_ROWS } from '@/lib/queryLimits';
@@ -115,6 +116,8 @@ export default function SmartNoteAssistant({ visitId = null }) {
   const [followUpTasks, setFollowUpTasks] = useState([]);
   const [facilityAck, setFacilityAck] = useState(false);
   const [generatingTasks, setGeneratingTasks] = useState(false);
+  // Why the last save attempt failed, kept on screen instead of only in a toast.
+  const [saveError, setSaveError] = useState(null);
   const recRef = useRef(null);
   const recStopRef = useRef(null);
   const textareaRef = useRef(null);
@@ -360,6 +363,7 @@ export default function SmartNoteAssistant({ visitId = null }) {
       toast.error("Acknowledge the denial-risk findings before saving to the chart.");
       return;
     }
+    setSaveError(null);
     setSaving(true);
     try {
       let result = api.result;
@@ -378,7 +382,13 @@ export default function SmartNoteAssistant({ visitId = null }) {
       clearDraft(patientId);
     } catch (err) {
       console.error("Save to chart error:", err);
-      toast.error("Saving to the chart failed.");
+      // OfflineSaveError carries the one message that tells the nurse their work
+      // is safe and what to do; the generic catch used to swallow it.
+      const message = err instanceof OfflineSaveError
+        ? err.message
+        : "Saving to the chart failed \u2014 your draft is still here. Try again.";
+      setSaveError(message);
+      toast.error(message);
     } finally {
       setSaving(false);
     }
@@ -484,11 +494,25 @@ export default function SmartNoteAssistant({ visitId = null }) {
 
   const ready = note.trim().length >= 20;
 
+  // Walk the nurse through the template scaffolding one blank at a time, starting
+  // from wherever the caret is so repeated presses move forward and then wrap.
+  const blanksAlertRef = useRef(null);
+  const jumpToNextBlank = () => {
+    const blanks = findPlaceholders(note);
+    if (!blanks.length) return;
+    const caret = textareaRef.current?.getCaret?.() ?? 0;
+    const next = blanks.find((b) => b.index >= caret) || blanks[0];
+    textareaRef.current?.selectRange?.(next.index, next.index + next.value.length);
+  };
+
   // Status shown beside the sticky Review button, so the reason it is disabled is
   // always on screen rather than only in a toast after the click.
-  const reviewStatus = ready
-    ? `${note.length} chars \u2014 ready`
-    : `${20 - note.trim().length} more characters needed`;
+  const draftBlanks = countPlaceholders(note);
+  const reviewStatus = !ready
+    ? `${20 - note.trim().length} more characters needed`
+    : draftBlanks > 0
+      ? `${draftBlanks} blank${draftBlanks === 1 ? "" : "s"} to fill before review`
+      : `${note.length} chars \u2014 ready`;
 
   const vitalsRecorded = useMemo(
     () => VITAL_FIELDS.filter((f) => {
@@ -674,6 +698,10 @@ export default function SmartNoteAssistant({ visitId = null }) {
                 vitals={vitals}
                 complianceRules={complianceRules}
               />
+
+              <div ref={blanksAlertRef} tabIndex={-1} className="focus:outline-none">
+                <PlaceholderAlert note={note} onJump={jumpToNextBlank} />
+              </div>
 
               <VitalSignValidator noteText={note} />
 
