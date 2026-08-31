@@ -63,8 +63,7 @@ const buildExportFindings = (result) => {
   return [...missing, ...denial];
 };
 
-import StepIndicator from "../components/smartNote/StepIndicator";
-import SmartNoteTabs from "../components/smartNote/SmartNoteTabs";
+import SmartNoteNav from "../components/smartNote/SmartNoteNav";
 import PageContainer from "@/components/ui/PageContainer";
 import { HideWhenEmbedded } from "@/components/ui/embeddedPage";
 import { ALL_ROWS } from '@/lib/queryLimits';
@@ -490,7 +489,7 @@ export default function SmartNoteAssistant({ visitId = null }) {
         <SmartNoteHeader careScope={careScope} onReset={reset} step={step} activeTab={activeTab} />
       </HideWhenEmbedded>
 
-      <SmartNoteTabs activeTab={activeTab} setActiveTab={setActiveTab} />
+      <SmartNoteNav step={step} activeTab={activeTab} setActiveTab={setActiveTab} />
 
       {activeTab === "drafter" && (
         <StructuredNoteDrafter
@@ -524,8 +523,6 @@ export default function SmartNoteAssistant({ visitId = null }) {
               <p className="text-xs text-emerald-700 font-medium">Draft restored.</p>
             </div>
           )}
-
-          <StepIndicator step={step} />
 
           {step === 1 && (
             <div className="space-y-3">
