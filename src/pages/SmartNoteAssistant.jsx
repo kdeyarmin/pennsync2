@@ -27,7 +27,7 @@ import FacilityRequirementsChecklist from "../components/smartNote/FacilityRequi
 import ConstrainedNoteReviewer from "../components/smartNote/ConstrainedNoteReviewer";
 import NoteReadinessBar from "../components/smartNote/NoteReadinessBar";
 import { persistVisitNote, OfflineSaveError } from "../components/smartNote/persistVisitNote";
-import { getPriorNote, parseNoteSections } from "../components/smartNote/noteHelpers";
+import { getPriorNote } from "../components/smartNote/noteHelpers";
 import { evaluateFacilityRules, summarizeFacilityRules } from "../components/smartNote/compliance/facilityDocRules";
 import { describePlaceholders, countPlaceholders, findPlaceholders } from "../components/smartNote/compliance/placeholderGuard";
 import { claimDictation, releaseDictation } from "@/components/smartNote/dictationController";
@@ -114,7 +114,6 @@ export default function SmartNoteAssistant({ visitId = null }) {
   const [listening, setListening] = useState(false);
   const [activeTab, setActiveTab] = useState("builder");
   const [draftRestored, setDraftRestored] = useState(false);
-  const [signatureImage, setSignatureImage] = useState(null);
   const [followUpTasks, setFollowUpTasks] = useState([]);
   const [facilityAck, setFacilityAck] = useState(false);
   const [generatingTasks, setGeneratingTasks] = useState(false);
@@ -449,7 +448,7 @@ export default function SmartNoteAssistant({ visitId = null }) {
 
   const reset = () => {
     setNote(""); setSaved(false); setSavedVisitId(null); setSavedAuditId(null);
-    setStep(1); setDraftRestored(false); setSignatureImage(null); setFollowUpTasks([]);
+    setStep(1); setDraftRestored(false); setFollowUpTasks([]);
     setVitals({}); setExistingVisitId(null); setFacilityAck(false);
     facilityOverrideRef.current = null;
     clearDraft(patientIdRef.current);
@@ -549,7 +548,6 @@ export default function SmartNoteAssistant({ visitId = null }) {
 
       {activeTab === "drafter" && (
         <StructuredNoteDrafter
-          patient={patient}
           onDraftReady={(draft, vType, structuredVitals) => {
             setNote(draft);
             setVisitType(vType);
@@ -848,11 +846,8 @@ export default function SmartNoteAssistant({ visitId = null }) {
                     analysisScore={api.coverage}
                     analysis={{ overall_score: api.coverage, compliance_score: api.coverage, findings: buildExportFindings(api.result) }}
                     currentUser={currentUser}
-                    signatureImage={signatureImage}
-                    setSignatureImage={setSignatureImage}
                     onReset={reset}
                     originalNote={note}
-                    noteSections={parseNoteSections(api.finalNote)}
                     onSave={() => {
                       if (facilityBlocked) {
                         toast.error("Document the required facility item(s) or acknowledge the override before saving.");
