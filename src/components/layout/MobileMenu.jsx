@@ -4,7 +4,6 @@ import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { X, LogOut, Shield } from "lucide-react";
-import FeedbackButton from "@/components/feedback/FeedbackButton";
 import { BRAND_LOGO_URL } from "@/lib/brand";
 import { userRoleLabel } from "@/lib/roles";
 
@@ -144,7 +143,6 @@ export default function MobileMenu({ open, onClose, navCategories, adminItems, i
 
         {/* Footer */}
         <div className="flex-shrink-0 border-t border-slate-200 p-3 space-y-2">
-          <FeedbackButton />
           <div className="flex items-center gap-3 pt-2">
             <div className="w-9 h-9 bg-gradient-to-br from-navy-500 to-navy-700 rounded-full flex items-center justify-center text-white text-sm font-semibold flex-shrink-0">
               {currentUser?.full_name?.charAt(0)?.toUpperCase() || 'U'}
