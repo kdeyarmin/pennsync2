@@ -15,6 +15,11 @@ import { describePlaceholders } from "./compliance/placeholderGuard";
 import { computeCoverageScore } from "./compliance/coverageScore";
 import { compareVisits, buildTrendSummary, detectSustainedTrends } from "./compliance/visitComparison";
 import { crossCheckChart } from "./compliance/chartCrossCheck";
+import { analyzeDocumentationStrength } from "./compliance/documentationStrength";
+import { reviewCopyForward } from "./compliance/noteSimilarity";
+import { extractVitals } from "./compliance/factExtraction";
+import DocumentationStrengthPanel from "./DocumentationStrengthPanel";
+import CopyForwardPanel from "./CopyForwardPanel";
 import VisitComparisonPanel from "./VisitComparisonPanel";
 import ChartCrossCheckPanel from "./ChartCrossCheckPanel";
 import DenialRiskPanel from "./DenialRiskPanel";
@@ -143,6 +148,29 @@ export default function ConstrainedNoteReviewer({ roughNote, serviceLine = "home
     const priorTexts = history.slice(-4).map((h) => h?.note || "").filter(Boolean);
     return detectSustainedTrends([...priorTexts, roughNote]);
   }, [patient, roughNote]);
+
+  // Deterministic documentation-STRENGTH grading. presenceDetection above answers
+  // "is homebound mentioned?"; this answers "does the homebound statement carry
+  // the factual support a reviewer looks for?" — the difference between
+  // "Patient is homebound." passing and being flagged as a potential gap.
+  // Graded against the text the nurse will actually use (final note once built).
+  const strength = useMemo(
+    () => analyzeDocumentationStrength(finalNote || roughNote, { serviceLine }),
+    [finalNote, roughNote, serviceLine],
+  );
+
+  // Deterministic copy-forward / visit-specificity review against the patient's
+  // recent notes. ADVISORY ONLY — it never blocks a save and never alleges
+  // cloning; repeated wording is expected for a stable patient.
+  const copyForward = useMemo(() => {
+    const history = Array.isArray(patient?.enhanced_notes_history) ? patient.enhanced_notes_history : [];
+    const priors = history.slice(-5).reverse();
+    const priorTexts = priors.length ? priors : (priorNote ? [{ note: priorNote }] : []);
+    return reviewCopyForward(finalNote || roughNote, priorTexts, {
+      currentVitals: extractVitals(finalNote || roughNote),
+      priorVitals: priorTexts.map((p) => extractVitals(p?.note || p?.text || "")),
+    });
+  }, [finalNote, roughNote, patient, priorNote]);
 
   // Deterministic chart cross-check: how the note lines up against the standing
   // chart (allergies, med list, fall risk). Advisory only — never edits the note.
@@ -632,6 +660,32 @@ export default function ConstrainedNoteReviewer({ roughNote, serviceLine = "home
 
           {/* Already self-collapsing and closed by default — left as it is. */}
           <ClinicalIndicatorsPanel narrativeText={roughNote} />
+
+          {strength.needsReview.length > 0 && (
+            <CollapsibleSection
+              title="Documentation strength"
+              icon={ShieldAlert}
+              badge={`${strength.needsReview.length} to strengthen`}
+              badgeVariant={strength.weakest === "weak" ? "warning" : "secondary"}
+              summary="Whether these statements carry the support a reviewer looks for"
+              defaultOpen={strength.weakest === "weak"}
+            >
+              <DocumentationStrengthPanel findings={strength.needsReview} />
+            </CollapsibleSection>
+          )}
+
+          {copyForward.comparedCount > 0 && copyForward.band.id !== "low" && (
+            <CollapsibleSection
+              title="Visit-specific detail"
+              icon={Copy}
+              badge={copyForward.band.label}
+              badgeVariant={copyForward.band.tone === "red" ? "destructive" : copyForward.band.tone === "amber" ? "warning" : "secondary"}
+              summary="How this note compares with recent documentation"
+              defaultOpen={copyForward.band.id === "very_high"}
+            >
+              <CopyForwardPanel review={copyForward} />
+            </CollapsibleSection>
+          )}
 
           {gaps.length > 0 && (
             <div className="bg-white border border-amber-200 rounded-xl p-4 shadow-sm">
