@@ -249,6 +249,9 @@ export default function SmartNoteAssistant({ visitId = null }) {
     // AudioVisitCapture).
     setSavedVisitId(null);
     setSavedAuditId(null);
+    // Same reasoning: a failure recorded against the previous patient's note must
+    // not be reported against this one, which no save has been attempted on.
+    setSaveError(null);
     if (patientId !== boundPatientRef.current) setExistingVisitId(null);
     let incoming = null;
     const saved = sessionStorage.getItem(draftKeyFor(patientId));
@@ -448,7 +451,7 @@ export default function SmartNoteAssistant({ visitId = null }) {
 
   const reset = () => {
     setNote(""); setSaved(false); setSavedVisitId(null); setSavedAuditId(null);
-    setStep(1); setDraftRestored(false); setFollowUpTasks([]);
+    setStep(1); setDraftRestored(false); setFollowUpTasks([]); setSaveError(null);
     setVitals({}); setExistingVisitId(null); setFacilityAck(false);
     facilityOverrideRef.current = null;
     clearDraft(patientIdRef.current);
@@ -708,7 +711,7 @@ export default function SmartNoteAssistant({ visitId = null }) {
               <StickyActionBar status={reviewStatus}>
                 <Button
                   onClick={startReview}
-                  disabled={!ready}
+                  disabled={!ready || draftBlanks > 0}
                   className="h-11 px-5 gap-1.5 text-sm font-semibold w-full sm:w-auto"
                 >
                   <ClipboardList className="w-4 h-4" /> Review & Complete <ArrowRight className="w-3.5 h-3.5" />

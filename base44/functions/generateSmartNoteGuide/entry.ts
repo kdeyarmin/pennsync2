@@ -339,7 +339,7 @@ Deno.serve(async (req) => {
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(6, 95, 70);
-    doc.text('Step 5: Review & Finalize', margin + 5, yPos + 5);
+    doc.text('Step 2 (continued): Finalize & Save', margin + 5, yPos + 5);
     yPos += 15;
 
     doc.setFontSize(11);
@@ -347,12 +347,11 @@ Deno.serve(async (req) => {
     doc.setTextColor(60, 60, 60);
 
     const finalizeItems = [
-      { label: 'Review Enhanced Note', desc: 'Read through the AI-enhanced note. Yellow highlights indicate areas that may need your attention or completion.' },
-      { label: 'Edit if Needed', desc: 'The enhanced note is fully editable. Make any necessary adjustments to ensure accuracy.' },
-      { label: 'Copy to Clipboard', desc: 'Click "Copy to Clipboard" to copy the note for pasting into your EHR system.' },
-      { label: 'Save to System', desc: 'Click "Save Note" to store the visit documentation in PennSync for future reference.' },
-      { label: 'Generate Tasks', desc: 'Optionally generate follow-up tasks based on the visit documentation.' },
-      { label: 'Generate Care Plans', desc: 'Create or update care plans based on assessment findings.' }
+      { label: 'Review the Generated Note', desc: 'Read the note through. A banner above it reports whether every value traced back to what you documented; "Show verification detail" breaks that down sentence by sentence.' },
+      { label: 'Edit if Needed', desc: 'The note is fully editable. Editing it marks the note as changed, so re-check before saving.' },
+      { label: 'Copy', desc: 'Click "Copy" (or "Copy All") to copy the note for pasting into your EHR system.' },
+      { label: 'Save to Chart', desc: 'Click "Save to chart" to store the visit documentation in PennSync. If the button is unavailable, the checklist directly above it lists every reason.' },
+      { label: 'Follow-up Tasks', desc: 'Follow-up tasks are generated from the note automatically when it is first saved.' }
     ];
 
     finalizeItems.forEach(item => {
