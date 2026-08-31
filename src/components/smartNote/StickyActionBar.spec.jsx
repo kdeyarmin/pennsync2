@@ -27,14 +27,19 @@ describe("StickyActionBar — the always-reachable primary action", () => {
     expect(container.querySelector("[aria-live='polite']")).toHaveTextContent("Ready to review");
   });
 
-  it("pins itself clear of the mobile bottom nav", () => {
+  it("pins itself clear of the mobile bottom nav, and returns to flow on desktop", () => {
     const { container } = renderWithProviders(
       <StickyActionBar><button type="button">Go</button></StickyActionBar>,
     );
-    const bar = container.firstChild;
-    expect(bar.className).toContain("sticky");
-    // Must clear MobileBottomNav (fixed, h-16) plus the iOS safe area below md.
-    expect(bar.className).toContain("bottom-[calc(4rem+env(safe-area-inset-bottom)+0.5rem)]");
-    expect(bar.className).toContain("md:bottom-4");
+    // position: sticky is inert inside the app shell (see the component comment),
+    // so the bar must be fixed below md — with a spacer so it covers nothing.
+    const spacer = container.firstChild;
+    expect(spacer.className).toContain("md:hidden");
+    expect(spacer).toHaveAttribute("aria-hidden", "true");
+
+    const bar = spacer.nextSibling;
+    expect(bar.className).toContain("fixed");
+    expect(bar.className).toContain("bottom-[calc(4rem+env(safe-area-inset-bottom))]");
+    expect(bar.className).toContain("md:static");
   });
 });
