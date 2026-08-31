@@ -388,7 +388,7 @@ export default function Layout() {
         Skip to content
       </a>
       <CommandPalette isAdmin={isAdmin} isSuperAdmin={isSuperAdminUser} user={currentUser} />
-      <div className="min-h-screen md:h-screen flex w-full max-w-full overflow-x-hidden md:overflow-y-hidden">
+      <div className="min-h-screen md:h-screen flex w-full max-w-full overflow-x-clip-safe md:overflow-y-hidden">
         <DesktopSidebar
           collapsed={sidebarCollapsed}
           onToggleCollapse={() => setSidebarCollapsed(v => !v)}
