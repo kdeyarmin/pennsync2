@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { renderWithProviders } from "@/test/testUtils";
 import CollapsibleSection, { openOnDesktop } from "./CollapsibleSection";
@@ -56,5 +56,41 @@ describe("openOnDesktop", () => {
   it("defaults to expanded where matchMedia is unavailable", () => {
     window.matchMedia = undefined;
     expect(openOnDesktop()).toBe(true);
+  });
+});
+
+describe("CollapsibleSection — defaults that depend on late-arriving data", () => {
+  it("opens when its default flips true after the data loads", () => {
+    const { rerender } = render(
+      <CollapsibleSection title="Facility requirements" defaultOpen={false}>
+        <p>Document SpO2 every visit</p>
+      </CollapsibleSection>,
+    );
+    expect(screen.queryByText(/document spo2/i)).not.toBeInTheDocument();
+
+    rerender(
+      <CollapsibleSection title="Facility requirements" defaultOpen>
+        <p>Document SpO2 every visit</p>
+      </CollapsibleSection>,
+    );
+    expect(screen.getByText(/document spo2/i)).toBeInTheDocument();
+  });
+
+  it("respects a section the nurse collapsed by hand", async () => {
+    const { rerender } = render(
+      <CollapsibleSection title="Facility requirements" defaultOpen>
+        <p>Document SpO2 every visit</p>
+      </CollapsibleSection>,
+    );
+    await userEvent.click(screen.getByRole("button", { name: /facility requirements/i }));
+    expect(screen.queryByText(/document spo2/i)).not.toBeInTheDocument();
+
+    // A re-render with the same (still true) default must not undo that.
+    rerender(
+      <CollapsibleSection title="Facility requirements" defaultOpen>
+        <p>Document SpO2 every visit</p>
+      </CollapsibleSection>,
+    );
+    expect(screen.queryByText(/document spo2/i)).not.toBeInTheDocument();
   });
 });

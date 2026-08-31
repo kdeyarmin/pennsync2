@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { renderWithProviders } from "@/test/testUtils";
 import StickyActionBar from "./StickyActionBar";
 
@@ -15,7 +15,9 @@ describe("StickyActionBar — the always-reachable primary action", () => {
   });
 
   it("announces status changes without the region itself coming and going", () => {
-    const { container, rerender } = renderWithProviders(
+    // Plain render: rerender must update the SAME instance, not remount it —
+    // a remounted live region would not announce.
+    const { container, rerender } = render(
       <StickyActionBar status={null}><button type="button">Go</button></StickyActionBar>,
     );
     const live = container.querySelector("[aria-live='polite']");

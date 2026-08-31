@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { ChevronDown } from "lucide-react";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
 import { Badge } from "@/components/ui/badge";
@@ -23,6 +23,17 @@ export default function CollapsibleSection({
   className = "",
 }) {
   const [open, setOpen] = useState(defaultOpen);
+
+  // Some defaults depend on data that arrives after mount (facility rules load
+  // from the server), and a plain initial value would leave those sections shut
+  // for good. Opening on a false→true flip fixes that. It deliberately never
+  // force-closes, so a section the nurse collapsed by hand stays collapsed.
+  const wasDefaultOpen = useRef(defaultOpen);
+  useEffect(() => {
+    if (defaultOpen && !wasDefaultOpen.current) setOpen(true);
+    wasDefaultOpen.current = defaultOpen;
+  }, [defaultOpen]);
+
   return (
     <Collapsible
       open={open}

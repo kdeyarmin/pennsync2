@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { renderWithProviders } from "@/test/testUtils";
 import AcknowledgeGate, { AcknowledgeControl } from "./AcknowledgeGate";
@@ -27,7 +27,7 @@ describe("AcknowledgeGate — the shared override control", () => {
 
   it("reveals the justification box only once the override is actually taken", async () => {
     const onJustificationChange = vi.fn();
-    const { rerender } = renderWithProviders(
+    const { rerender } = render(
       <AcknowledgeGate
         title="Denial risk"
         label="Save as documented."

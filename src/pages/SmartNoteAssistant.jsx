@@ -6,7 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import {
   CheckCircle2, Loader2, ArrowRight, ClipboardList, User,
-  Mic, Square, AlertTriangle, Sparkles
+  Mic, Square, AlertTriangle, Sparkles, Activity, Building2, ShieldCheck
 } from "lucide-react";
 import { todayEastern } from "../components/utils/timezone";
 import { logActivity, ActivityActions } from "../components/utils/activityLogger";
@@ -15,7 +15,7 @@ import SmartNoteHeader from "../components/smartNote/SmartNoteHeader";
 import VisitSummaryGenerator from "../components/smartNote/VisitSummaryGenerator";
 import NoteTemplateSelector from "../components/smartNote/NoteTemplateSelector";
 import VitalSignValidator from "../components/smartNote/VitalSignValidator";
-import VitalSignsForm from "../components/visit/VitalSignsForm";
+import VitalSignsForm, { VITAL_FIELDS } from "../components/visit/VitalSignsForm";
 import StructuredNoteDrafter from "../components/smartNote/StructuredNoteDrafter";
 import VisitAudioRecorder from "../components/smartNote/VisitAudioRecorder";
 import VitalsTrendAnalysis from "../components/smartNote/VitalsTrendAnalysis";
@@ -64,6 +64,8 @@ const buildExportFindings = (result) => {
 };
 
 import SmartNoteNav from "../components/smartNote/SmartNoteNav";
+import CollapsibleSection, { openOnDesktop } from "../components/smartNote/CollapsibleSection";
+import StickyActionBar from "../components/smartNote/StickyActionBar";
 import PageContainer from "@/components/ui/PageContainer";
 import { HideWhenEmbedded } from "@/components/ui/embeddedPage";
 import { ALL_ROWS } from '@/lib/queryLimits';
@@ -482,6 +484,34 @@ export default function SmartNoteAssistant({ visitId = null }) {
 
   const ready = note.trim().length >= 20;
 
+  // Status shown beside the sticky Review button, so the reason it is disabled is
+  // always on screen rather than only in a toast after the click.
+  const reviewStatus = ready
+    ? `${note.length} chars \u2014 ready`
+    : `${20 - note.trim().length} more characters needed`;
+
+  const vitalsRecorded = useMemo(
+    () => VITAL_FIELDS.filter((f) => {
+      const v = vitals?.[f.key];
+      return v !== null && v !== undefined && v !== "";
+    }).length,
+    [vitals],
+  );
+  // Expanded where there is room, collapsed on a phone so the editor stays put.
+  const [vitalsOpenByDefault] = useState(openOnDesktop);
+
+  // Same evaluation the checklist runs, lifted so the section header can show what
+  // is outstanding while collapsed (and open itself when something is).
+  const step1Facility = useMemo(
+    () => summarizeFacilityRules(evaluateFacilityRules({
+      rules: facilityDocRules,
+      patient: patientDetail || patient,
+      noteText: note,
+      visitType,
+    })),
+    [facilityDocRules, patientDetail, patient, note, visitType],
+  );
+
   return (
     <PageContainer>
 
@@ -526,12 +556,14 @@ export default function SmartNoteAssistant({ visitId = null }) {
 
           {step === 1 && (
             <div className="space-y-3">
+              {/* Who and what kind of visit. Compact, and honest that a patient is
+                  required before the note can reach a chart. */}
               <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 space-y-4">
                 <div>
                   <div className="flex items-center gap-1.5 mb-2">
                     <User className="w-3.5 h-3.5 text-navy-600" />
                     <span className="text-xs font-semibold text-slate-600 uppercase tracking-wide">Patient</span>
-                    <span className="text-xs text-slate-400 font-normal normal-case ml-1">optional</span>
+                    <span className="text-xs text-amber-700 font-semibold normal-case ml-1">required to save</span>
                   </div>
                   <SearchablePatientSelect
                     patients={patients}
@@ -539,6 +571,22 @@ export default function SmartNoteAssistant({ visitId = null }) {
                     onValueChange={setPatientId}
                     className="bg-slate-50 border-slate-200 h-12 sm:h-11 text-sm rounded-xl"
                   />
+                  {!patientId && (
+                    <p className="text-xs text-slate-500 mt-1.5">
+                      You can start writing now — a patient is required before this note can be saved to a chart.
+                    </p>
+                  )}
+                  {patient && (
+                    <div className="flex items-center gap-2 text-xs text-navy-700 bg-navy-50 border border-navy-200 rounded-lg px-3 py-2 mt-2">
+                      <User className="w-3.5 h-3.5 shrink-0" />
+                      <span>
+                        <strong>{patient.first_name} {patient.last_name}</strong>
+                        {patient.primary_diagnosis ? ` \u00b7 ${patient.primary_diagnosis}` : ""}
+                        {patient.current_medications?.length > 0 ? ` \u00b7 ${patient.current_medications.length} meds` : ""}
+                        {patient.functional_status?.fall_risk === "high" && <span className="ml-2 inline-flex items-center gap-1 text-rose-600 font-bold"><AlertTriangle className="w-3.5 h-3.5" aria-hidden="true" /> High Fall Risk</span>}
+                      </span>
+                    </div>
+                  )}
                 </div>
                 <div className="border-t border-slate-100" />
                 <div>
@@ -565,33 +613,9 @@ export default function SmartNoteAssistant({ visitId = null }) {
                 </div>
               </div>
 
-              {patient && (
-                <div className="flex items-center gap-2 text-xs text-navy-700 bg-navy-50 border border-navy-200 rounded-lg px-3 py-2">
-                  <User className="w-3.5 h-3.5 shrink-0" />
-                  <span>
-                    <strong>{patient.first_name} {patient.last_name}</strong>
-                    {patient.primary_diagnosis ? ` · ${patient.primary_diagnosis}` : ""}
-                    {patient.current_medications?.length > 0 ? ` · ${patient.current_medications.length} meds` : ""}
-                    {patient.functional_status?.fall_risk === "high" && <span className="ml-2 inline-flex items-center gap-1 text-rose-600 font-bold"><AlertTriangle className="w-3.5 h-3.5" aria-hidden="true" /> High Fall Risk</span>}
-                  </span>
-                </div>
-              )}
-
-              <VitalSignsForm vitalSigns={vitals} onChange={setVitals} />
-
-              <NoteTemplateSelector currentVisitType={visitType} onSelect={(content, type) => {
-                setNote(content); setVisitType(type);
-                setTimeout(() => textareaRef.current?.focus(), 100);
-              }} />
-
-              <ComplianceChecklist isHospice={isHospice} />
-
-              <FacilityRequirementsChecklist
-                patient={patientDetail || patient}
-                noteText={note}
-                visitType={visitType}
-              />
-
+              {/* The editor the nurse came here for, directly under the patient
+                  card. Everything that used to sit between the two is now below
+                  it, collapsed. */}
               <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
                 <div className="flex items-center justify-between px-4 py-2 bg-slate-50 border-b border-slate-100">
                   <span className="text-xs font-semibold text-navy-700">Your Rough Notes / Bullet Points</span>
@@ -606,24 +630,6 @@ export default function SmartNoteAssistant({ visitId = null }) {
                     </Button>
                   </div>
                 </div>
-                <div className="px-4 py-2 bg-navy-50 border-b border-navy-100">
-                  <div className="flex items-center gap-1.5 mb-1.5">
-                    <Mic className="w-3 h-3 text-navy-500" />
-                    <span className="text-[11px] font-semibold text-navy-600 uppercase tracking-wide">Voice input — optional</span>
-                  </div>
-                  <div className="space-y-2">
-                    <Button
-                      variant={listening ? "destructive" : "default"}
-                      className={`h-9 gap-2 text-xs font-semibold shadow-sm ${listening ? 'animate-pulse' : 'bg-navy-600 hover:bg-navy-700 text-white'}`}
-                      onClick={listening ? stopDictation : startDictation}
-                    >
-                      {listening ? <><Square className="w-4 h-4 fill-current" /> Stop Dictation</> : <><Mic className="w-4 h-4" /> Live Dictation</>}
-                    </Button>
-                    <VisitAudioRecorder
-                      onTranscribed={(text) => setNote(prev => prev ? prev + "\n\n" + text : text)}
-                    />
-                  </div>
-                </div>
                 <QuickPhraseTextarea
                   ref={textareaRef}
                   value={note}
@@ -632,20 +638,32 @@ export default function SmartNoteAssistant({ visitId = null }) {
                   patientName={patient ? `${patient.first_name} ${patient.last_name}` : undefined}
                   visitType={visitType}
                   userEmail={currentUser?.email}
-                  placeholder={"Enter bullet points or rough draft — AI will NOT invent information.\n\nType / or .shortcut to insert a saved quick phrase.\n\n• BP 148/90, HR 82, O2 95% RA, pain 3/10\n• homebound: unable to leave without considerable effort\n• skilled need: wound assessment and dressing change\n• wound R heel 2×3 cm granulating, no odor\n• taught med schedule, pt verbalized understanding\n• fall risk — clutter noted, discussed w/ family"}
+                  placeholder={"Enter bullet points or rough draft \u2014 AI will NOT invent information.\n\nType / or .shortcut to insert a saved quick phrase.\n\n\u2022 BP 148/90, HR 82, O2 95% RA, pain 3/10\n\u2022 homebound: unable to leave without considerable effort\n\u2022 skilled need: wound assessment and dressing change\n\u2022 wound R heel 2\u00d73 cm granulating, no odor\n\u2022 taught med schedule, pt verbalized understanding\n\u2022 fall risk \u2014 clutter noted, discussed w/ family"}
                   className="w-full min-h-[240px] sm:min-h-[320px] text-sm border-0 px-4 py-3 focus:ring-0 bg-white font-mono resize-none outline-none leading-relaxed" spellCheck={false}
                 />
-                <div className="flex items-center justify-between px-4 py-3 border-t border-slate-100 bg-slate-50 gap-3">
-                  <span className={`text-xs shrink-0 ${ready ? "text-emerald-600 font-medium" : "text-slate-400"}`}>
-                    {ready ? `${note.length} chars — ready` : `${20 - note.trim().length} more chars needed`}
-                  </span>
-                  <Button
-                    onClick={startReview}
-                    disabled={!ready}
-                    className="h-11 sm:h-9 px-5 gap-1.5 text-sm font-semibold w-full sm:w-auto"
+                {/* Voice is a real feature but a minority path; it no longer sits
+                    between the nurse and the box they type in. */}
+                <div className="border-t border-slate-100">
+                  <CollapsibleSection
+                    title="Voice input"
+                    icon={Mic}
+                    summary="Dictate or record instead of typing"
+                    defaultOpen={false}
+                    className="border-0 shadow-none rounded-none bg-transparent"
                   >
-                    <ClipboardList className="w-4 h-4" /> Review & Complete <ArrowRight className="w-3.5 h-3.5" />
-                  </Button>
+                    <div className="space-y-2">
+                      <Button
+                        variant={listening ? "destructive" : "default"}
+                        className={`h-9 gap-2 text-xs font-semibold shadow-sm ${listening ? 'animate-pulse' : 'bg-navy-600 hover:bg-navy-700 text-white'}`}
+                        onClick={listening ? stopDictation : startDictation}
+                      >
+                        {listening ? <><Square className="w-4 h-4 fill-current" /> Stop Dictation</> : <><Mic className="w-4 h-4" /> Live Dictation</>}
+                      </Button>
+                      <VisitAudioRecorder
+                        onTranscribed={(text) => setNote(prev => prev ? prev + "\n\n" + text : text)}
+                      />
+                    </div>
+                  </CollapsibleSection>
                 </div>
               </div>
 
@@ -658,6 +676,58 @@ export default function SmartNoteAssistant({ visitId = null }) {
               />
 
               <VitalSignValidator noteText={note} />
+
+              <StickyActionBar status={reviewStatus}>
+                <Button
+                  onClick={startReview}
+                  disabled={!ready}
+                  className="h-11 px-5 gap-1.5 text-sm font-semibold w-full sm:w-auto"
+                >
+                  <ClipboardList className="w-4 h-4" /> Review & Complete <ArrowRight className="w-3.5 h-3.5" />
+                </Button>
+              </StickyActionBar>
+
+              {/* Supporting material. Still one tap away, and each header keeps
+                  showing its own status while collapsed. */}
+              <CollapsibleSection
+                title="Vital Signs"
+                icon={Activity}
+                badge={`${vitalsRecorded} of ${VITAL_FIELDS.length} recorded`}
+                badgeVariant={vitalsRecorded > 0 ? "info" : "secondary"}
+                defaultOpen={vitalsOpenByDefault}
+              >
+                <VitalSignsForm vitalSigns={vitals} onChange={setVitals} />
+              </CollapsibleSection>
+
+              <NoteTemplateSelector currentVisitType={visitType} onSelect={(content, type) => {
+                setNote(content); setVisitType(type);
+                setTimeout(() => textareaRef.current?.focus(), 100);
+              }} />
+
+              {step1Facility.applicable > 0 && (
+                <CollapsibleSection
+                  title="Facility Documentation Requirements"
+                  icon={Building2}
+                  badge={step1Facility.missing > 0 ? `${step1Facility.missing} still needed` : "All documented"}
+                  badgeVariant={step1Facility.missingCritical > 0 ? "destructive" : step1Facility.missing > 0 ? "warning" : "success"}
+                  defaultOpen={step1Facility.missing > 0}
+                >
+                  <FacilityRequirementsChecklist
+                    patient={patientDetail || patient}
+                    noteText={note}
+                    visitType={visitType}
+                  />
+                </CollapsibleSection>
+              )}
+
+              <CollapsibleSection
+                title="Medicare compliance checks"
+                icon={ShieldCheck}
+                summary="What this note is checked against"
+                defaultOpen={false}
+              >
+                <ComplianceChecklist isHospice={isHospice} />
+              </CollapsibleSection>
 
             </div>
           )}
