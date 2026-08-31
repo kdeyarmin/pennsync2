@@ -93,6 +93,21 @@ test("a quick-scan failure is NOT an upload failure: the file URL survives", asy
   assert.doesNotMatch(result.scanMessage, /Failed to upload/i);
 });
 
+// A quick-scan failure is deliberately not a stage: it can never be reported as
+// a failed upload, and `failedAt` must stay limited to the two fatal steps.
+test("only the fatal steps are stages, and a scan failure carries no failedAt", async () => {
+  assert.deepEqual(Object.values(REFERRAL_UPLOAD_STAGES).sort(), ["upload", "validate"]);
+
+  const result = await runReferralUpload({
+    file: fakeFile(),
+    uploadFile: okUpload(),
+    quickScan: failScan(new Error("model unavailable")),
+  });
+
+  assert.equal(result.ok, true);
+  assert.equal("failedAt" in result, false);
+});
+
 test("a timed-out quick scan says it timed out rather than blaming the upload", async () => {
   const timeout = Object.assign(new Error("AI request timed out"), { code: "AI_TIMEOUT" });
   const result = await runReferralUpload({

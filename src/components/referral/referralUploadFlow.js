@@ -9,13 +9,18 @@
  * The user then re-uploaded the same file, it uploaded fine again, the scan
  * failed again, and the message never changed.
  *
- * The three stages fail for different reasons and need different handling, so
- * they are separated here:
- *   - `validate` — the file itself is unusable; nothing was sent.
- *   - `upload`   — fatal; there is no document to attach to a referral.
- *   - `scan`     — NOT fatal; the document is stored and the user can type the
- *                  handful of intake fields themselves. The full clinical
- *                  extraction runs later, at processing time.
+ * The work runs in three steps that fail for different reasons, and the result
+ * shape says which:
+ *   - validation — the file itself is unusable; nothing was sent. Returns
+ *     `{ ok: false, failedAt: "validate" }`.
+ *   - upload — fatal; there is no document to attach to a referral. Returns
+ *     `{ ok: false, failedAt: "upload" }`.
+ *   - quick scan — NOT fatal, so it is deliberately absent from
+ *     REFERRAL_UPLOAD_STAGES and never appears in `failedAt`. The document is
+ *     stored and the user can type the handful of intake fields themselves, so
+ *     it returns `{ ok: true, scan: null, scanMessage, scanError }` and the
+ *     caller shows `scanMessage` as a warning rather than an upload failure.
+ *     The full clinical extraction runs later, at processing time.
  *
  * Kept free of React and the Base44 SDK (the upload and scan calls are injected)
  * so it is unit-testable in isolation, matching referralUploadUtils.js and
@@ -25,7 +30,10 @@
 import { validateReferralFile, getDocumentType } from "./referralUploadUtils.js";
 import { uploadFailureMessage, MISSING_FILE_URL_MESSAGE } from "../../lib/uploadError.js";
 
-/** Stage names used by the `failedAt` field of a failed result. */
+/**
+ * The stages that can produce a failed result, i.e. the only values `failedAt`
+ * ever takes. A quick-scan failure is not one of them — see the header.
+ */
 export const REFERRAL_UPLOAD_STAGES = Object.freeze({
   VALIDATE: "validate",
   UPLOAD: "upload",
