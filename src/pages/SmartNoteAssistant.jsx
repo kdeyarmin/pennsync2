@@ -67,6 +67,8 @@ import SmartNoteNav from "../components/smartNote/SmartNoteNav";
 import CollapsibleSection, { openOnDesktop } from "../components/smartNote/CollapsibleSection";
 import StickyActionBar from "../components/smartNote/StickyActionBar";
 import PlaceholderAlert from "../components/smartNote/PlaceholderAlert";
+import SaveBlockers from "../components/smartNote/SaveBlockers";
+import AcknowledgeGate from "../components/smartNote/AcknowledgeGate";
 import PageContainer from "@/components/ui/PageContainer";
 import { HideWhenEmbedded } from "@/components/ui/embeddedPage";
 import { ALL_ROWS } from '@/lib/queryLimits';
@@ -802,29 +804,31 @@ export default function SmartNoteAssistant({ visitId = null }) {
                   />
 
                   {facilityMissingCritical.length > 0 && (
-                    <div className="bg-rose-50 border border-rose-200 rounded-xl px-4 py-3">
-                      <div className="flex items-center gap-2 text-sm font-semibold text-rose-800">
-                        <AlertTriangle className="w-4 h-4" />
-                        Critical facility requirement{facilityMissingCritical.length > 1 ? "s" : ""} not documented
-                      </div>
-                      <ul className="mt-1 ml-6 list-disc text-sm text-rose-700">
+                    <AcknowledgeGate
+                      tone="red"
+                      title={`Critical facility requirement${facilityMissingCritical.length > 1 ? "s" : ""} not documented`}
+                      checked={facilityAck}
+                      onCheckedChange={setFacilityAck}
+                      label="Add the required detail above, or acknowledge saving without it. This override is recorded."
+                    >
+                      <ul className="ml-6 list-disc text-sm text-red-800">
                         {facilityMissingCritical.map((r) => (
                           <li key={r.rule.id || r.rule.rule_name}>{r.rule.requirement_label || r.rule.rule_name}</li>
                         ))}
                       </ul>
-                      <label className="mt-2 flex items-start gap-2 text-xs text-rose-800">
-                        <input
-                          type="checkbox"
-                          className="mt-0.5 rounded"
-                          checked={facilityAck}
-                          onChange={(e) => setFacilityAck(e.target.checked)}
-                        />
-                        <span>
-                          Add the required detail above, or acknowledge saving without it. This override is recorded.
-                        </span>
-                      </label>
-                    </div>
+                    </AcknowledgeGate>
                   )}
+
+                  <SaveBlockers
+                    error={saveError}
+                    items={[
+                      { label: "Fix the fact-check findings above, then re-check.", blocked: !!api.fixRequired },
+                      { label: "Select a patient — a note can only be saved to a chart.", blocked: !patientId },
+                      { label: "Acknowledge the chart safety conflict.", blocked: !!api.chartRisk?.hasUnacknowledgedCritical },
+                      { label: "Acknowledge the denial-risk findings.", blocked: !!api.denialRisk?.hasUnacknowledgedCritical },
+                      { label: "Document the critical facility requirement, or acknowledge the override.", blocked: facilityBlocked },
+                    ]}
+                  />
 
                   <FinalNoteDisplay
                     finalNote={api.finalNote}
