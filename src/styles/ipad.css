@@ -1,3 +1,14 @@
+/* Shared touch-scrolling behavior for phones, tablets, and the native shell. */
+body {
+  overscroll-behavior-x: none;
+  overscroll-behavior-y: auto;
+}
+
+.app-page-scroll {
+  -webkit-overflow-scrolling: touch;
+  touch-action: manipulation;
+}
+
 /* Larger landscape iPads fall above the portrait/tablet breakpoint in index.css. */
 @media (pointer: coarse) and (min-width: 1025px) and (max-width: 1366px) {
   button,
