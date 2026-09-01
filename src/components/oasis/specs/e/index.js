@@ -1,4 +1,7 @@
-// OASIS-E spec metadata.
+// OASIS-E spec metadata — SUPERSEDED (by OASIS-E1 on 2025-01-01, then E2).
+//
+// Retained so an assessment completed under OASIS-E resolves to the instrument
+// in force at the time rather than being re-read under a later version.
 //
 // This module holds METADATA AND PROVENANCE ONLY. It deliberately does NOT
 // contain a reconstructed CMS item bank: the repository does not carry the
@@ -15,13 +18,12 @@
 export const OASIS_E_SPEC = Object.freeze({
   id: "oasis-e",
   label: "OASIS-E",
-  // OASIS-E took effect for assessments with an M0090 date on or after
-  // 2023-01-01. Stated as the version PennSync's guidance is PATTERNED AFTER,
-  // not as a claim that PennSync contains the instrument.
   effective_date: "2023-01-01",
-  retired_date: null,
-  source: "CMS OASIS Guidance Manual",
-  source_url: "https://www.cms.gov/medicare/quality/home-health/oasis-user-manuals",
+  // Superseded when OASIS-E1 took effect. Leaving this null had OASIS-E
+  // resolving as the current instrument two versions after it stopped being one.
+  retired_date: "2025-01-01",
+  source: "CMS OASIS-E Manual (Updated January 1, 2024)",
+  source_url: "https://www.cms.gov/files/document/oasis-emanual2024-update.pdf",
   // The single most important field in this module.
   completeness: "partial",
   notes:

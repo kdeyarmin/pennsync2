@@ -26,6 +26,35 @@
 // Nothing here is graded by an LLM. The classification is data and the UI
 // consequences are deterministic.
 //
+// SOURCE CHECK (2026-09-01) — WHAT IT FOUND
+// The item numbers below were checked against the published CMS manuals:
+//   OASIS-E  (Updated 01/01/2024) https://www.cms.gov/files/document/oasis-emanual2024-update.pdf
+//   OASIS-E1 (Effective 01/01/2025) https://www.cms.gov/files/document/draft-oasis-e1-manual-04-28-2024.pdf
+//   OASIS-E2 (Effective 04/01/2026) https://www.cms.gov/files/document/oasis-e2-draft-508-11-14-25.pdf
+//
+// It found considerably more wrong than the three therapy items already demoted:
+//   - FIVE item numbers appear in NO manual at all: M1020, M1300, M1350, M1900,
+//     M2110. Primary Diagnosis is M1021 (M1023 is Other Diagnoses); Prior
+//     Functioning is GG0100.
+//   - FOUR were real but are retired from the current instrument: M1030, M1242,
+//     M1730 ("Depression Screening — Removed"), M1910 ("Falls Risk Assessment
+//     — Removed"). Depression is now D0150/D0160; falls are J1800/J1900; pain
+//     is J0510/J0520/J0530.
+//   - M2200 (Therapy Need) was removed per CMS-1780-F, confirming the earlier
+//     demotion.
+//   - M0069 was "Gender", NOT "Prognosis" as PennSync labelled it, and is
+//     replaced by A0810 Sex in OASIS-E2. Wrong meaning AND retired.
+//
+// TWO DIFFERENT CHECKS, DELIBERATELY SEPARATE
+//   source_verified_*  — FACTUAL: does this item number exist in the current
+//                        CMS manual, and what is its title? A lookup. Done.
+//   reviewed_by/at     — CLINICAL: is PennSync's use of this item appropriate,
+//                        and is an abbreviated response set safe as a screening
+//                        prompt? A judgement. NOT done, and not automatable.
+//
+// A source check is not a sign-off. Both fields are reported separately so no
+// screen can present the first as the second.
+//
 // CLINICAL SIGN-OFF IS TRACKED, NOT ASSUMED
 // A classification is only as good as the person who made it. Every entry
 // therefore carries its own review provenance:
@@ -49,6 +78,12 @@ export const VERIFICATION_LEVELS = Object.freeze([
   "verified",
   "abbreviated",
   "unverified",
+  // Was a real CMS item, but is NOT in the instrument currently in effect.
+  // Distinct from `not_a_cms_item`: a nurse may legitimately remember it.
+  "retired",
+  // The item number appears in NO published CMS manual that PennSync checked.
+  "not_a_cms_item",
+  // Not a CMS item and never claimed to be — a PennSync-authored question.
   "pennsync_screening",
 ]);
 
@@ -59,169 +94,412 @@ export const VERIFICATION_LEVELS = Object.freeze([
  * PennSync screening item — the whole point of the classification.
  */
 export const ITEM_VERIFICATION = Object.freeze({
-  // ── PennSync screening items ────────────────────────────────────────────
-  // These three carried CMS item numbers attached to content that does not
-  // belong to them. M2102/M2110 are assistance items in the CMS instrument
-  // (this repo says so itself in AIProactiveOASISAssistant.jsx), and M2200
-  // (Therapy Need) was discontinued under PDGM. Rather than invent the correct
-  // CMS content, PennSync keeps the useful screening question and drops the
-  // false item-number attribution entirely.
-  m2102: {
-    level: "pennsync_screening",
+  // -- Item numbers that appear in NO published CMS manual -----------------
+  m1020: {
+    level: "not_a_cms_item",
+    official_item: null,
+    note:
+      "This item number appears in no published CMS OASIS manual PennSync checked (E, E1, E2). Primary Diagnosis is M1021 in every manual checked (M1023 is Other Diagnoses).",
     reviewed_by: "",
     reviewed_at: "",
     review_source: "",
+    source_verified_at: "2026-09-01",
+    source_verified_against: "CMS OASIS-E2 Manual (Effective 04/01/2026), Chapter 3",
+  },
+  m1300: {
+    level: "not_a_cms_item",
+    official_item: null,
+    note:
+      "This item number appears in no published CMS OASIS manual PennSync checked (E, E1, E2).",
+    reviewed_by: "",
+    reviewed_at: "",
+    review_source: "",
+    source_verified_at: "2026-09-01",
+    source_verified_against: "CMS OASIS-E2 Manual (Effective 04/01/2026), Chapter 3",
+  },
+  m1350: {
+    level: "not_a_cms_item",
+    official_item: null,
+    note:
+      "This item number appears in no published CMS OASIS manual PennSync checked (E, E1, E2).",
+    reviewed_by: "",
+    reviewed_at: "",
+    review_source: "",
+    source_verified_at: "2026-09-01",
+    source_verified_against: "CMS OASIS-E2 Manual (Effective 04/01/2026), Chapter 3",
+  },
+  m1900: {
+    level: "not_a_cms_item",
+    official_item: null,
+    note:
+      "This item number appears in no published CMS OASIS manual PennSync checked (E, E1, E2). Prior Functioning is GG0100.",
+    reviewed_by: "",
+    reviewed_at: "",
+    review_source: "",
+    source_verified_at: "2026-09-01",
+    source_verified_against: "CMS OASIS-E2 Manual (Effective 04/01/2026), Chapter 3",
+  },
+
+  // -- Real CMS items, retired from the instrument now in effect -----------
+  m1030: {
+    level: "retired",
+    official_item: null,
+    former_item: "M1030",
+    official_title: "Therapies the patient receives at home",
+    note:
+      "Retired from the OASIS instrument currently in effect. Present in OASIS-E; absent from E1 and E2. "
+      + "Do not enter this on the official assessment; PennSync keeps the question only as an "
+      + "internal screening prompt.",
+    reviewed_by: "",
+    reviewed_at: "",
+    review_source: "",
+    source_verified_at: "2026-09-01",
+    source_verified_against: "CMS OASIS-E2 Manual (Effective 04/01/2026), Chapter 3",
+  },
+  m1242: {
+    level: "retired",
+    official_item: null,
+    former_item: "M1242",
+    official_title: "Frequency of Pain Interfering with activity or movement",
+    note:
+      "Retired from the OASIS instrument currently in effect. Present in OASIS-E; absent from E1 and E2. Pain is now J0510/J0520/J0530. "
+      + "Do not enter this on the official assessment; PennSync keeps the question only as an "
+      + "internal screening prompt.",
+    reviewed_by: "",
+    reviewed_at: "",
+    review_source: "",
+    source_verified_at: "2026-09-01",
+    source_verified_against: "CMS OASIS-E2 Manual (Effective 04/01/2026), Chapter 3",
+  },
+  m1730: {
+    level: "retired",
+    official_item: null,
+    former_item: "M1730",
+    official_title: "Depression Screening",
+    note:
+      "Retired from the OASIS instrument currently in effect. The OASIS-E manual lists this item as Removed; absent from E1 and E2. Depression is now D0150/D0160 (PHQ). "
+      + "Do not enter this on the official assessment; PennSync keeps the question only as an "
+      + "internal screening prompt.",
+    reviewed_by: "",
+    reviewed_at: "",
+    review_source: "",
+    source_verified_at: "2026-09-01",
+    source_verified_against: "CMS OASIS-E2 Manual (Effective 04/01/2026), Chapter 3",
+  },
+  m1910: {
+    level: "retired",
+    official_item: null,
+    former_item: "M1910",
+    official_title: "Falls Risk Assessment",
+    note:
+      "Retired from the OASIS instrument currently in effect. The OASIS-E manual lists this item as Removed; absent from E1 and E2. Falls are now J1800/J1900. "
+      + "Do not enter this on the official assessment; PennSync keeps the question only as an "
+      + "internal screening prompt.",
+    reviewed_by: "",
+    reviewed_at: "",
+    review_source: "",
+    source_verified_at: "2026-09-01",
+    source_verified_against: "CMS OASIS-E2 Manual (Effective 04/01/2026), Chapter 3",
+  },
+  m0069: {
+    level: "retired",
+    official_item: null,
+    former_item: "M0069",
+    official_title: "Gender",
+    note:
+      "Retired from the OASIS instrument currently in effect. Replaced by A0810 Sex in OASIS-E2 (Appendix D, Table D1). PennSync labelled it Prognosis, which was never its meaning. "
+      + "Do not enter this on the official assessment; PennSync keeps the question only as an "
+      + "internal screening prompt.",
+    reviewed_by: "",
+    reviewed_at: "",
+    review_source: "",
+    source_verified_at: "2026-09-01",
+    source_verified_against: "CMS OASIS-E2 Manual (Effective 04/01/2026), Chapter 3",
+  },
+
+  // -- PennSync screening questions (never CMS items) ----------------------
+  m2102: {
+    level: "pennsync_screening",
     official_item: null,
     pennsync_item: "PS-THERAPY-PT",
-    evidence: "src/components/oasis/AIProactiveOASISAssistant.jsx:138 describes M2102 as "
-      + "\"Types and Sources of Assistance\", contradicting the item bank's \"Physical Therapy\" label.",
     note:
-      "Not a CMS OASIS item. Previously mislabelled as M2102, which is an assistance item in "
-      + "the CMS instrument, not a physical-therapy need question. Kept as a PennSync screening "
-      + "question; enter therapy need on the official assessment in your EMR.",
+      "Not a CMS OASIS item. Previously mislabelled as M2102 - the source check confirms M2102 is Types and Sources of Assistance, not a physical-therapy need question.",
+    reviewed_by: "",
+    reviewed_at: "",
+    review_source: "",
+    source_verified_at: "2026-09-01",
+    source_verified_against: "CMS OASIS-E2 Manual (Effective 04/01/2026), Chapter 3",
   },
   m2110: {
     level: "pennsync_screening",
+    official_item: null,
+    pennsync_item: "PS-THERAPY-OT",
+    note:
+      "Not a CMS OASIS item. M2110 appears in none of OASIS-E, E1 or E2.",
     reviewed_by: "",
     reviewed_at: "",
     review_source: "",
-    official_item: null,
-    pennsync_item: "PS-THERAPY-OT",
-    evidence: "M2110 is an assistance item in the CMS instrument, not an occupational-therapy "
-      + "need question. Not independently confirmed against a CMS source by PennSync.",
-    note:
-      "Not a CMS OASIS item. Previously mislabelled as M2110, which is an assistance item in "
-      + "the CMS instrument, not an occupational-therapy need question.",
+    source_verified_at: "2026-09-01",
+    source_verified_against: "CMS OASIS-E2 Manual (Effective 04/01/2026), Chapter 3",
   },
   m2200: {
     level: "pennsync_screening",
-    reviewed_by: "",
-    reviewed_at: "",
-    review_source: "",
     official_item: null,
     pennsync_item: "PS-THERAPY-SLP",
-    evidence: "M2200 (Therapy Need) was discontinued under PDGM. Not independently confirmed "
-      + "against a CMS source by PennSync.",
     note:
-      "Not a CMS OASIS item. Previously mislabelled as M2200 (Therapy Need), which was "
-      + "discontinued under PDGM and is not a speech-language-pathology need question.",
+      "Not a CMS OASIS item. M2200 was Therapy Need and was removed per CMS-1780-F (OASIS-E2 Chapter 1: two items are removed, M0110 and M2200).",
+    reviewed_by: "",
+    reviewed_at: "",
+    review_source: "",
+    source_verified_at: "2026-09-01",
+    source_verified_against: "CMS OASIS-E2 Manual (Effective 04/01/2026), Chapter 3",
   },
 
-  // ── Abbreviated response sets ───────────────────────────────────────────
-  // Real CMS items, but PennSync's response list is a shortened screening
-  // version. Safe to prompt a review; never a substitute for the official set.
-  m1020: {
-    level: "abbreviated",
-    reviewed_by: "",
-    reviewed_at: "",
-    review_source: "",
-    official_item: "M1020",
-    note:
-      "PennSync offers a short diagnosis picklist. The official item records an ICD-10 "
-      + "diagnosis code — enter it on the assessment in your EMR.",
-  },
-  m1030: {
-    level: "abbreviated",
-    reviewed_by: "",
-    reviewed_at: "",
-    review_source: "",
-    official_item: "M1030",
-    note: "PennSync's therapy list is abbreviated and does not reproduce the official response set.",
-  },
-  m1100: {
-    level: "abbreviated",
-    reviewed_by: "",
-    reviewed_at: "",
-    review_source: "",
-    official_item: "M1100",
-    note:
-      "PennSync offers a shortened living-situation list. The official item has a larger "
-      + "residence-by-assistance response set.",
-  },
+  // -- Current CMS item whose response list PennSync abbreviates -----------
   m2420: {
     level: "abbreviated",
+    official_item: "M2420",
+    official_title: "Discharge Disposition",
+    note:
+      "A current CMS item, but PennSync's response list is a shortened screening version "
+      + "and does not reproduce the official response set. Confirm the disposition response in your EMR.",
     reviewed_by: "",
     reviewed_at: "",
     review_source: "",
-    official_item: "M2420",
-    note:
-      "PennSync's discharge-disposition list is abbreviated and does not reproduce the official "
-      + "response set. Confirm the disposition response in your EMR.",
+    source_verified_at: "2026-09-01",
+    source_verified_against: "CMS OASIS-E2 Manual (Effective 04/01/2026), Chapter 3",
   },
 
-  // ── Verified against the app's own canonical scales ─────────────────────
-  // The functional and pain items are the ones PennSync scores against, and
-  // their response counts are asserted by oasisScales.spec.js against the
-  // canonical scale table used throughout the app.
-  m1800: {
+  // -- Item number and title confirmed against the current CMS manual ------
+  m1100: {
     level: "verified",
+    official_item: "M1100",
+    official_title: "Patient Living Situation",
     reviewed_by: "",
     reviewed_at: "",
-    review_source: "src/components/oasis/oasisScales.js (app canonical scale table)",
+    review_source: "",
+    source_verified_at: "2026-09-01",
+    source_verified_against: "CMS OASIS-E2 Manual (Effective 04/01/2026), Chapter 3",
+  },
+  m1740: {
+    level: "verified",
+    official_item: "M1740",
+    official_title: "Cognitive, behavioral, and psychiatric symptoms",
+    reviewed_by: "",
+    reviewed_at: "",
+    review_source: "",
+    source_verified_at: "2026-09-01",
+    source_verified_against: "CMS OASIS-E2 Manual (Effective 04/01/2026), Chapter 3",
+  },
+  m1700: {
+    level: "verified",
+    official_item: "M1700",
+    official_title: "Cognitive Functioning",
+    reviewed_by: "",
+    reviewed_at: "",
+    review_source: "",
+    source_verified_at: "2026-09-01",
+    source_verified_against: "CMS OASIS-E2 Manual (Effective 04/01/2026), Chapter 3",
+  },
+  m1400: {
+    level: "verified",
+    official_item: "M1400",
+    official_title: "When is the patient dyspneic or noticeably Short of Breath?",
+    reviewed_by: "",
+    reviewed_at: "",
+    review_source: "",
+    source_verified_at: "2026-09-01",
+    source_verified_against: "CMS OASIS-E2 Manual (Effective 04/01/2026), Chapter 3",
+  },
+  m1340: {
+    level: "verified",
+    official_item: "M1340",
+    official_title: "Does this patient have a Surgical Wound?",
+    reviewed_by: "",
+    reviewed_at: "",
+    review_source: "",
+    source_verified_at: "2026-09-01",
+    source_verified_against: "CMS OASIS-E2 Manual (Effective 04/01/2026), Chapter 3",
+  },
+  m1306: {
+    level: "verified",
+    official_item: "M1306",
+    official_title: "Unhealed Pressure Ulcer/Injury at Stage 2 or Higher",
+    reviewed_by: "",
+    reviewed_at: "",
+    review_source: "",
+    source_verified_at: "2026-09-01",
+    source_verified_against: "CMS OASIS-E2 Manual (Effective 04/01/2026), Chapter 3",
+  },
+  m1800: {
+    level: "verified",
     official_item: "M1800",
+    official_title: "Grooming",
+    reviewed_by: "",
+    reviewed_at: "",
+    review_source: "",
+    source_verified_at: "2026-09-01",
+    source_verified_against: "CMS OASIS-E2 Manual (Effective 04/01/2026), Chapter 3",
   },
   m1810: {
     level: "verified",
+    official_item: "M1810",
+    official_title: "Current Ability to Dress Upper Body",
     reviewed_by: "",
     reviewed_at: "",
-    review_source: "src/components/oasis/oasisScales.js (app canonical scale table)",
-    official_item: "M1810",
+    review_source: "",
+    source_verified_at: "2026-09-01",
+    source_verified_against: "CMS OASIS-E2 Manual (Effective 04/01/2026), Chapter 3",
   },
   m1820: {
     level: "verified",
+    official_item: "M1820",
+    official_title: "Current Ability to Dress Lower Body",
     reviewed_by: "",
     reviewed_at: "",
-    review_source: "src/components/oasis/oasisScales.js (app canonical scale table)",
-    official_item: "M1820",
+    review_source: "",
+    source_verified_at: "2026-09-01",
+    source_verified_against: "CMS OASIS-E2 Manual (Effective 04/01/2026), Chapter 3",
+  },
+  m2001: {
+    level: "verified",
+    official_item: "M2001",
+    official_title: "Drug Regimen Review",
+    reviewed_by: "",
+    reviewed_at: "",
+    review_source: "",
+    source_verified_at: "2026-09-01",
+    source_verified_against: "CMS OASIS-E2 Manual (Effective 04/01/2026), Chapter 3",
+  },
+  m2010: {
+    level: "verified",
+    official_item: "M2010",
+    official_title: "Patient/Caregiver High-Risk Drug Education",
+    reviewed_by: "",
+    reviewed_at: "",
+    review_source: "",
+    source_verified_at: "2026-09-01",
+    source_verified_against: "CMS OASIS-E2 Manual (Effective 04/01/2026), Chapter 3",
+  },
+  m2020: {
+    level: "verified",
+    official_item: "M2020",
+    official_title: "Management of Oral Medications",
+    reviewed_by: "",
+    reviewed_at: "",
+    review_source: "",
+    source_verified_at: "2026-09-01",
+    source_verified_against: "CMS OASIS-E2 Manual (Effective 04/01/2026), Chapter 3",
   },
   m1830: {
     level: "verified",
+    official_item: "M1830",
+    official_title: "Bathing",
     reviewed_by: "",
     reviewed_at: "",
-    review_source: "src/components/oasis/oasisScales.js (app canonical scale table)",
-    official_item: "M1830",
+    review_source: "",
+    source_verified_at: "2026-09-01",
+    source_verified_against: "CMS OASIS-E2 Manual (Effective 04/01/2026), Chapter 3",
   },
   m1840: {
     level: "verified",
+    official_item: "M1840",
+    official_title: "Toilet Transferring",
     reviewed_by: "",
     reviewed_at: "",
-    review_source: "src/components/oasis/oasisScales.js (app canonical scale table)",
-    official_item: "M1840",
+    review_source: "",
+    source_verified_at: "2026-09-01",
+    source_verified_against: "CMS OASIS-E2 Manual (Effective 04/01/2026), Chapter 3",
   },
   m1845: {
     level: "verified",
+    official_item: "M1845",
+    official_title: "Toileting Hygiene",
     reviewed_by: "",
     reviewed_at: "",
-    review_source: "src/components/oasis/oasisScales.js (app canonical scale table)",
-    official_item: "M1845",
+    review_source: "",
+    source_verified_at: "2026-09-01",
+    source_verified_against: "CMS OASIS-E2 Manual (Effective 04/01/2026), Chapter 3",
   },
   m1850: {
     level: "verified",
+    official_item: "M1850",
+    official_title: "Transferring",
     reviewed_by: "",
     reviewed_at: "",
-    review_source: "src/components/oasis/oasisScales.js (app canonical scale table)",
-    official_item: "M1850",
+    review_source: "",
+    source_verified_at: "2026-09-01",
+    source_verified_against: "CMS OASIS-E2 Manual (Effective 04/01/2026), Chapter 3",
   },
   m1860: {
     level: "verified",
+    official_item: "M1860",
+    official_title: "Ambulation/Locomotion",
     reviewed_by: "",
     reviewed_at: "",
-    review_source: "src/components/oasis/oasisScales.js (app canonical scale table)",
-    official_item: "M1860",
+    review_source: "",
+    source_verified_at: "2026-09-01",
+    source_verified_against: "CMS OASIS-E2 Manual (Effective 04/01/2026), Chapter 3",
   },
   m1870: {
     level: "verified",
-    reviewed_by: "",
-    reviewed_at: "",
-    review_source: "src/components/oasis/oasisScales.js (app canonical scale table)",
     official_item: "M1870",
-  },
-  m1242: {
-    level: "verified",
+    official_title: "Feeding or Eating",
     reviewed_by: "",
     reviewed_at: "",
-    review_source: "src/components/oasis/oasisScales.js (app canonical scale table)",
-    official_item: "M1242",
+    review_source: "",
+    source_verified_at: "2026-09-01",
+    source_verified_against: "CMS OASIS-E2 Manual (Effective 04/01/2026), Chapter 3",
+  },
+  m1033: {
+    level: "verified",
+    official_item: "M1033",
+    official_title: "Risk of Hospitalization",
+    reviewed_by: "",
+    reviewed_at: "",
+    review_source: "",
+    source_verified_at: "2026-09-01",
+    source_verified_against: "CMS OASIS-E2 Manual (Effective 04/01/2026), Chapter 3",
+  },
+  m1610: {
+    level: "verified",
+    official_item: "M1610",
+    official_title: "Urinary Incontinence or Urinary Catheter Presence",
+    reviewed_by: "",
+    reviewed_at: "",
+    review_source: "",
+    source_verified_at: "2026-09-01",
+    source_verified_against: "CMS OASIS-E2 Manual (Effective 04/01/2026), Chapter 3",
+  },
+  m1620: {
+    level: "verified",
+    official_item: "M1620",
+    official_title: "Bowel Incontinence Frequency",
+    reviewed_by: "",
+    reviewed_at: "",
+    review_source: "",
+    source_verified_at: "2026-09-01",
+    source_verified_against: "CMS OASIS-E2 Manual (Effective 04/01/2026), Chapter 3",
+  },
+  m1630: {
+    level: "verified",
+    official_item: "M1630",
+    official_title: "Ostomy for Bowel Elimination",
+    reviewed_by: "",
+    reviewed_at: "",
+    review_source: "",
+    source_verified_at: "2026-09-01",
+    source_verified_against: "CMS OASIS-E2 Manual (Effective 04/01/2026), Chapter 3",
+  },
+  m2401: {
+    level: "verified",
+    official_item: "M2401",
+    official_title: "Intervention Synopsis",
+    reviewed_by: "",
+    reviewed_at: "",
+    review_source: "",
+    source_verified_at: "2026-09-01",
+    source_verified_against: "CMS OASIS-E2 Manual (Effective 04/01/2026), Chapter 3",
   },
 });
 
@@ -243,6 +521,13 @@ export function classifyItem(itemId) {
       pennsyncItem: entry.pennsync_item ?? null,
       note: entry.note || "",
       evidence: entry.evidence || "",
+      officialTitle: entry.official_title || "",
+      formerItem: entry.former_item || null,
+      // FACTUAL source check (does the number exist, what is its title) — kept
+      // separate from clinical sign-off below, which is a judgement.
+      sourceVerifiedAt: entry.source_verified_at || "",
+      sourceVerifiedAgainst: entry.source_verified_against || "",
+      sourceVerified: !!entry.source_verified_at,
       // Review provenance travels with the classification so no caller can
       // present a classification as signed off when nobody has signed it off.
       reviewedBy: entry.reviewed_by || "",
@@ -256,6 +541,11 @@ export function classifyItem(itemId) {
     id: key,
     level: "unverified",
     evidence: "",
+    officialTitle: "",
+    formerItem: null,
+    sourceVerifiedAt: "",
+    sourceVerifiedAgainst: "",
+    sourceVerified: false,
     reviewedBy: "",
     reviewedAt: "",
     reviewSource: "",
@@ -272,7 +562,8 @@ export function classifyItem(itemId) {
 
 /** True only when PennSync may present the item as an official CMS item. */
 export function isOfficialCmsItem(itemId) {
-  return classifyItem(itemId).level !== "pennsync_screening";
+  const level = classifyItem(itemId).level;
+  return !["pennsync_screening", "retired", "not_a_cms_item"].includes(level);
 }
 
 /**
@@ -281,7 +572,11 @@ export function isOfficialCmsItem(itemId) {
  */
 export function officialItemNumber(itemId) {
   const c = classifyItem(itemId);
-  return c.level === "pennsync_screening" ? null : c.officialItem;
+  // A retired item, an invented number and a PennSync question must never be
+  // shown wearing a CMS item number: each would send a nurse to the official
+  // assessment looking for something that is not there.
+  const NO_NUMBER = ["pennsync_screening", "retired", "not_a_cms_item"];
+  return NO_NUMBER.includes(c.level) ? null : c.officialItem;
 }
 
 const DISCLAIMERS = {
@@ -297,6 +592,13 @@ const DISCLAIMERS = {
   pennsync_screening:
     "PennSync screening question — not an official CMS OASIS item. Use it to prompt review; "
     + "enter official responses in your EMR.",
+  retired:
+    "This item is NOT in the OASIS instrument currently in effect — it was retired. PennSync keeps "
+    + "the question as an internal prompt only. Do not enter it on the official assessment; use the "
+    + "current item in your EMR.",
+  not_a_cms_item:
+    "This item number appears in no published CMS OASIS manual. Treat the question as a PennSync "
+    + "prompt only and enter official responses in your EMR.",
 };
 
 /** The deterministic caveat a screen must show for an item. */
@@ -311,6 +613,8 @@ export function describeVerification(itemId) {
     verified: { label: "Verified item", tone: "success" },
     abbreviated: { label: "Abbreviated response set", tone: "warning" },
     unverified: { label: "Unverified wording", tone: "warning" },
+    retired: { label: "Retired CMS item", tone: "destructive" },
+    not_a_cms_item: { label: "Not a CMS item", tone: "destructive" },
     pennsync_screening: { label: "PennSync screening item", tone: "info" },
   }[level];
 }
@@ -404,9 +708,16 @@ export function buildClinicalReviewWorksheet(items, { specLabel = ACTIVE_OASIS_S
     "- `verified` — title and response set confirmed against a CMS source",
     "- `abbreviated` — a real CMS item whose PennSync response list is shortened",
     "- `unverified` — a real CMS item number whose PennSync wording is unconfirmed",
+    "- `retired` — was a real CMS item, but is not in the instrument now in effect",
+    "- `not_a_cms_item` — the number appears in no published CMS manual",
     "- `pennsync_screening` — not a CMS item; must never display an item number",
     "",
-    "| PennSync id | Item number shown | PennSync label | Current classification | PennSync's evidence | Reviewer: correct? | Reviewer: CMS source | Reviewer initials / date |",
+    "PennSync's own source check (2026-09-01) against the published OASIS-E, E1 and E2",
+    "manuals is recorded in the \"Source check\" column. That check is FACTUAL — does the",
+    "item number exist, and what is its title. It is **not** a clinical sign-off, which is",
+    "what the reviewer columns are for.",
+    "",
+    "| PennSync id | Item number shown | PennSync label | Current classification | Source check / note | Reviewer: correct? | Reviewer: CMS source | Reviewer initials / date |",
     "| --- | --- | --- | --- | --- | --- | --- | --- |",
   ].filter((line, i, arr) => !(line === "" && arr[i - 1] === "")).join("\n");
 
@@ -416,7 +727,8 @@ export function buildClinicalReviewWorksheet(items, { specLabel = ACTIVE_OASIS_S
     r.officialItem || "— (none)",
     (r.label || "").replace(/\|/g, "\\|"),
     `\`${r.level}\``,
-    (r.evidence || r.note || "—").replace(/\|/g, "\\|"),
+    [r.sourceVerified ? `Checked ${r.sourceVerifiedAt}` : "Not checked", r.officialTitle, r.note || r.evidence]
+      .filter(Boolean).join(" · ").replace(/\|/g, "\\|") || "—",
     r.clinicallyReviewed ? `Confirmed by ${r.reviewedBy}` : " ",
     r.reviewSource ? r.reviewSource.replace(/\|/g, "\\|") : " ",
     r.clinicallyReviewed ? r.reviewedAt : " ",
@@ -434,4 +746,28 @@ export function buildClinicalReviewWorksheet(items, { specLabel = ACTIVE_OASIS_S
   ].join("\n");
 
   return `${header}\n${body}\n${footer}\n`;
+}
+
+/**
+ * Status of the FACTUAL source check — separate from clinical sign-off.
+ *
+ * @param {string[]} [itemIds]
+ */
+export function sourceCheckStatus(itemIds) {
+  const ids = Array.isArray(itemIds) && itemIds.length
+    ? [...new Set(itemIds.map((i) => String(i || "").toLowerCase()).filter(Boolean))]
+    : Object.keys(ITEM_VERIFICATION);
+  const rows = ids.map(classifyItem);
+  const problems = rows.filter((r) => ["retired", "not_a_cms_item"].includes(r.level));
+  return {
+    total: ids.length,
+    checked: rows.filter((r) => r.sourceVerified).length,
+    retired: rows.filter((r) => r.level === "retired").length,
+    notCmsItems: rows.filter((r) => r.level === "not_a_cms_item").length,
+    problems: problems.map((r) => ({ id: r.id, level: r.level, note: r.note })),
+    statement: problems.length === 0
+      ? "Every item number in PennSync's internal set exists in the CMS instrument currently in effect."
+      : `${problems.length} of ${ids.length} items in PennSync's internal set are retired or are not `
+        + "CMS item numbers. They are kept as internal prompts only — enter official responses in your EMR.",
+  };
 }

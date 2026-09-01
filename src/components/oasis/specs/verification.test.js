@@ -17,6 +17,7 @@ import {
   isClinicallyReviewed,
   isOfficialCmsItem,
   pendingClinicalReview,
+  sourceCheckStatus,
   itemDisclaimer,
   officialItemNumber,
 } from "./verification.js";
@@ -24,6 +25,7 @@ import {
 // ── The honesty guarantees ─────────────────────────────────────────────────
 
 test("the spec never claims to contain the authoritative CMS instrument", () => {
+  assert.equal(ACTIVE_OASIS_SPEC.completeness, "partial");
   assert.equal(OASIS_E_SPEC.completeness, "partial");
   assert.match(OASIS_E_SPEC.notes, /does not contain the authoritative CMS OASIS instrument/i);
   assert.ok(OASIS_E_SPEC.source, "a source must be named");
@@ -59,10 +61,51 @@ test("the three mislabelled therapy items are recorded as PennSync screening ite
 });
 
 test("an abbreviated response set is labelled as abbreviated, not as the official set", () => {
-  const c = classifyItem("m1030");
+  const c = classifyItem("m2420");
   assert.equal(c.level, "abbreviated");
-  assert.equal(c.officialItem, "M1030");
-  assert.match(itemDisclaimer("m1030"), /abbreviated and may not match the official CMS response set/i);
+  assert.equal(c.officialItem, "M2420");
+  assert.match(itemDisclaimer("m2420"), /abbreviated and may not match the official CMS response set/i);
+});
+
+test("a retired item is not presented as current, and shows no CMS number", () => {
+  // Verified 2026-09-01: the OASIS-E manual lists M1730 as Removed, and it is
+  // absent from E1 and E2.
+  const c = classifyItem("m1730");
+  assert.equal(c.level, "retired");
+  assert.equal(c.officialItem, null);
+  assert.equal(c.formerItem, "M1730");
+  assert.equal(officialItemNumber("m1730"), null);
+  assert.match(itemDisclaimer("m1730"), /NOT in the OASIS instrument currently in effect/i);
+  assert.match(c.note, /D0150\/D0160/, "the note must say where the current item lives");
+});
+
+test("an item number found in no CMS manual is marked as such", () => {
+  const c = classifyItem("m1020");
+  assert.equal(c.level, "not_a_cms_item");
+  assert.equal(c.officialItem, null);
+  assert.match(c.note, /appears in no published CMS OASIS manual/i);
+  assert.match(c.note, /M1021/, "the note must name the real item");
+});
+
+test("the factual source check is recorded separately from clinical sign-off", () => {
+  // A lookup ("does this number exist, what is its title") is not a judgement
+  // ("is PennSync's use of it appropriate"). Conflating them would let an
+  // automated check masquerade as a reviewer.
+  const c = classifyItem("m1860");
+  assert.equal(c.sourceVerified, true);
+  assert.equal(c.sourceVerifiedAt, "2026-09-01");
+  assert.match(c.sourceVerifiedAgainst, /OASIS-E2 Manual/);
+  assert.equal(c.officialTitle, "Ambulation/Locomotion");
+  assert.equal(c.clinicallyReviewed, false, "a source check is NOT a sign-off");
+  assert.equal(c.reviewedBy, "");
+});
+
+test("the source check reports the items it found retired or invented", () => {
+  const status = sourceCheckStatus();
+  assert.equal(status.retired, 5);
+  assert.equal(status.notCmsItems, 4);
+  assert.match(status.statement, /retired or are not\s+CMS item numbers/i);
+  assert.match(status.statement, /enter official responses in your EMR/i);
 });
 
 test("an unregistered item fails closed to unverified", () => {
@@ -110,9 +153,20 @@ test("the active spec is a member of the known set", () => {
   assert.equal(getOasisSpec("oasis-z"), null);
 });
 
-test("an assessment date inside a version's window resolves to that version", () => {
-  assert.equal(resolveSpecForDate("2026-08-31").id, "oasis-e");
-  assert.equal(resolveSpecForDate(new Date("2023-01-01")).id, "oasis-e");
+test("an assessment date resolves to the version in force at the time", () => {
+  // Verified effective dates: E 2023-01-01, E1 2025-01-01, E2 2026-04-01.
+  assert.equal(resolveSpecForDate("2026-08-31").id, "oasis-e2");
+  assert.equal(resolveSpecForDate(new Date("2023-06-01")).id, "oasis-e");
+  assert.equal(resolveSpecForDate("2025-06-01").id, "oasis-e1");
+});
+
+test("the active spec is the version currently in effect, not a superseded one", () => {
+  // PennSync claimed OASIS-E with no retirement date while OASIS-E2 had been in
+  // force since 2026-04-01 — two versions behind.
+  assert.equal(ACTIVE_OASIS_SPEC.id, "oasis-e2");
+  assert.equal(ACTIVE_OASIS_SPEC.effective_date, "2026-04-01");
+  assert.equal(ACTIVE_OASIS_SPEC.retired_date, null);
+  assert.equal(getOasisSpec("oasis-e").retired_date, "2025-01-01");
 });
 
 test("a date before every known version resolves to null rather than guessing", () => {
@@ -142,7 +196,7 @@ test("review provenance travels with the classification", () => {
   const c = classifyItem("m1800");
   assert.equal(c.clinicallyReviewed, false);
   assert.equal(c.reviewedBy, "");
-  assert.match(c.reviewSource, /canonical scale table/i, "the app's own source is named honestly");
+  assert.equal(c.reviewSource, "", "clinical review is still outstanding for every item");
 });
 
 test("an unregistered item is reported as unreviewed, not silently omitted", () => {
@@ -151,11 +205,15 @@ test("an unregistered item is reported as unreviewed, not silently omitted", () 
   assert.equal(c.reviewSource, "");
 });
 
-test("the three demoted items carry the evidence behind the demotion", () => {
-  assert.match(classifyItem("m2102").evidence, /AIProactiveOASISAssistant\.jsx:138/);
-  assert.match(classifyItem("m2200").evidence, /discontinued under PDGM/i);
-  // Where PennSync did NOT independently confirm, it says so rather than implying it did.
-  assert.match(classifyItem("m2110").evidence, /Not independently confirmed/i);
+test("the three demoted therapy items now cite the CMS source, not internal inference", () => {
+  // The original demotion rested on the repository contradicting itself. The
+  // 2026-09-01 source check confirmed all three against the CMS manuals.
+  assert.match(classifyItem("m2102").note, /Types and Sources of Assistance/);
+  assert.match(classifyItem("m2200").note, /removed per CMS-1780-F/i);
+  assert.match(classifyItem("m2110").note, /appears in none of OASIS-E, E1 or E2/i);
+  for (const id of ["m2102", "m2110", "m2200"]) {
+    assert.equal(classifyItem(id).sourceVerified, true, `${id} must cite the source check`);
+  }
 });
 
 test("pendingClinicalReview lists every unreviewed item, worst classification first", () => {

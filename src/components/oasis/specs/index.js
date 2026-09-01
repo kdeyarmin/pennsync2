@@ -27,6 +27,8 @@
 // Pure data + pure functions. No React, no SDK — unit-testable offline.
 
 export { OASIS_E_SPEC } from "./e/index.js";
+export { OASIS_E1_SPEC } from "./e1/index.js";
+export { OASIS_E2_SPEC } from "./e2/index.js";
 export {
   ACTIVE_OASIS_SPEC,
   KNOWN_OASIS_SPECS,
@@ -36,6 +38,7 @@ export {
 export {
   ITEM_VERIFICATION,
   VERIFICATION_LEVELS,
+  sourceCheckStatus,
   classifyItem,
   describeVerification,
   isOfficialCmsItem,

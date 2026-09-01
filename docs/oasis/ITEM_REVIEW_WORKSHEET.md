@@ -1,4 +1,4 @@
-# PennSync OASIS item review worksheet (OASIS-E)
+# PennSync OASIS item review worksheet (OASIS-E2)
 
 PennSync does **not** contain the authoritative CMS OASIS instrument. The
 classifications below were derived from internal evidence and from the app's own
@@ -13,46 +13,53 @@ Classification key:
 - `verified` — title and response set confirmed against a CMS source
 - `abbreviated` — a real CMS item whose PennSync response list is shortened
 - `unverified` — a real CMS item number whose PennSync wording is unconfirmed
+- `retired` — was a real CMS item, but is not in the instrument now in effect
+- `not_a_cms_item` — the number appears in no published CMS manual
 - `pennsync_screening` — not a CMS item; must never display an item number
 
-| PennSync id | Item number shown | PennSync label | Current classification | PennSync's evidence | Reviewer: correct? | Reviewer: CMS source | Reviewer initials / date |
+PennSync's own source check (2026-09-01) against the published OASIS-E, E1 and E2
+manuals is recorded in the "Source check" column. That check is FACTUAL — does the
+item number exist, and what is its title. It is **not** a clinical sign-off, which is
+what the reviewer columns are for.
+
+| PennSync id | Item number shown | PennSync label | Current classification | Source check / note | Reviewer: correct? | Reviewer: CMS source | Reviewer initials / date |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `m0069` | M0069 | M0069 — Prognosis | `unverified` | PennSync has not verified this item's wording or response set against a CMS source. |   |   |   |
-| `m1020` | M1020 | M1020 — Primary Diagnosis | `abbreviated` | PennSync offers a short diagnosis picklist. The official item records an ICD-10 diagnosis code — enter it on the assessment in your EMR. |   |   |   |
-| `m1030` | M1030 | M1030 — Therapies at Home | `abbreviated` | PennSync's therapy list is abbreviated and does not reproduce the official response set. |   |   |   |
-| `m1100` | M1100 | M1100 — Patient Living Situation | `abbreviated` | PennSync offers a shortened living-situation list. The official item has a larger residence-by-assistance response set. |   |   |   |
-| `m1730` | M1730 | M1730 — Depression Screening | `unverified` | PennSync has not verified this item's wording or response set against a CMS source. |   |   |   |
-| `m1740` | M1740 | M1740 — Cognitive, Behavioral & Psychiatric Symptoms | `unverified` | PennSync has not verified this item's wording or response set against a CMS source. |   |   |   |
-| `m1700` | M1700 | M1700 — Cognitive Functioning | `unverified` | PennSync has not verified this item's wording or response set against a CMS source. |   |   |   |
-| `m1400` | M1400 | M1400 — Respiratory Status: Dyspnea | `unverified` | PennSync has not verified this item's wording or response set against a CMS source. |   |   |   |
-| `m1340` | M1340 | M1340 — Surgical Wound | `unverified` | PennSync has not verified this item's wording or response set against a CMS source. |   |   |   |
-| `m1306` | M1306 | M1306 — Unhealed Pressure Ulcer(s) | `unverified` | PennSync has not verified this item's wording or response set against a CMS source. |   |   |   |
-| `m1350` | M1350 | M1350 — Skin Lesion or Open Wound | `unverified` | PennSync has not verified this item's wording or response set against a CMS source. |   |   |   |
-| `m1800` | M1800 | M1800 — Grooming | `verified` | — |   | src/components/oasis/oasisScales.js (app canonical scale table) |   |
-| `m1810` | M1810 | M1810 — Upper Body Dressing | `verified` | — |   | src/components/oasis/oasisScales.js (app canonical scale table) |   |
-| `m1820` | M1820 | M1820 — Lower Body Dressing | `verified` | — |   | src/components/oasis/oasisScales.js (app canonical scale table) |   |
-| `m2001` | M2001 | M2001 — Drug Regimen Review | `unverified` | PennSync has not verified this item's wording or response set against a CMS source. |   |   |   |
-| `m2010` | M2010 | M2010 — High-Risk Drug Education | `unverified` | PennSync has not verified this item's wording or response set against a CMS source. |   |   |   |
-| `m2020` | M2020 | M2020 — Management of Oral Medications | `unverified` | PennSync has not verified this item's wording or response set against a CMS source. |   |   |   |
-| `m1910` | M1910 | M1910 — Fall Risk Assessment | `unverified` | PennSync has not verified this item's wording or response set against a CMS source. |   |   |   |
-| `m1900` | M1900 | M1900 — Prior Functioning | `unverified` | PennSync has not verified this item's wording or response set against a CMS source. |   |   |   |
-| `m1830` | M1830 | M1830 — Bathing | `verified` | — |   | src/components/oasis/oasisScales.js (app canonical scale table) |   |
-| `m1840` | M1840 | M1840 — Toilet Transferring | `verified` | — |   | src/components/oasis/oasisScales.js (app canonical scale table) |   |
-| `m1845` | M1845 | M1845 — Toileting Hygiene | `verified` | — |   | src/components/oasis/oasisScales.js (app canonical scale table) |   |
-| `m1850` | M1850 | M1850 — Transferring | `verified` | — |   | src/components/oasis/oasisScales.js (app canonical scale table) |   |
-| `m1860` | M1860 | M1860 — Ambulation/Locomotion | `verified` | — |   | src/components/oasis/oasisScales.js (app canonical scale table) |   |
-| `m1870` | M1870 | M1870 — Feeding or Eating | `verified` | — |   | src/components/oasis/oasisScales.js (app canonical scale table) |   |
-| `m1033` | M1033 | M1033 — Risk for Hospitalization | `unverified` | PennSync has not verified this item's wording or response set against a CMS source. |   |   |   |
-| `m1242` | M1242 | M1242 — Frequency of Pain | `verified` | — |   | src/components/oasis/oasisScales.js (app canonical scale table) |   |
-| `m1300` | M1300 | M1300 — Pressure Ulcer Risk | `unverified` | PennSync has not verified this item's wording or response set against a CMS source. |   |   |   |
-| `m1610` | M1610 | M1610 — Urinary Incontinence | `unverified` | PennSync has not verified this item's wording or response set against a CMS source. |   |   |   |
-| `m1620` | M1620 | M1620 — Bowel Incontinence | `unverified` | PennSync has not verified this item's wording or response set against a CMS source. |   |   |   |
-| `m1630` | M1630 | M1630 — Ostomy | `unverified` | PennSync has not verified this item's wording or response set against a CMS source. |   |   |   |
-| `m2102` | — (none) | Physical therapy need (PennSync screening item) | `pennsync_screening` | src/components/oasis/AIProactiveOASISAssistant.jsx:138 describes M2102 as "Types and Sources of Assistance", contradicting the item bank's "Physical Therapy" label. |   |   |   |
-| `m2110` | — (none) | Occupational therapy need (PennSync screening item) | `pennsync_screening` | M2110 is an assistance item in the CMS instrument, not an occupational-therapy need question. Not independently confirmed against a CMS source by PennSync. |   |   |   |
-| `m2200` | — (none) | Speech-language pathology need (PennSync screening item) | `pennsync_screening` | M2200 (Therapy Need) was discontinued under PDGM. Not independently confirmed against a CMS source by PennSync. |   |   |   |
-| `m2401` | M2401 | M2401 — Intervention Synopsis | `unverified` | PennSync has not verified this item's wording or response set against a CMS source. |   |   |   |
-| `m2420` | M2420 | M2420 — Discharge Disposition | `abbreviated` | PennSync's discharge-disposition list is abbreviated and does not reproduce the official response set. Confirm the disposition response in your EMR. |   |   |   |
+| `m0069` | — (none) | Terminal prognosis (PennSync screening item) | `retired` | Checked 2026-09-01 · Gender · Retired from the OASIS instrument currently in effect. Replaced by A0810 Sex in OASIS-E2 (Appendix D, Table D1). PennSync labelled it Prognosis, which was never its meaning. Do not enter this on the official assessment; PennSync keeps the question only as an internal screening prompt. |   |   |   |
+| `m1020` | — (none) | Primary diagnosis (PennSync screening item) | `not_a_cms_item` | Checked 2026-09-01 · This item number appears in no published CMS OASIS manual PennSync checked (E, E1, E2). Primary Diagnosis is M1021 in every manual checked (M1023 is Other Diagnoses). |   |   |   |
+| `m1030` | — (none) | Therapies at home (PennSync screening item — retired CMS item) | `retired` | Checked 2026-09-01 · Therapies the patient receives at home · Retired from the OASIS instrument currently in effect. Present in OASIS-E; absent from E1 and E2. Do not enter this on the official assessment; PennSync keeps the question only as an internal screening prompt. |   |   |   |
+| `m1100` | M1100 | M1100 — Patient Living Situation | `verified` | Checked 2026-09-01 · Patient Living Situation |   |   |   |
+| `m1730` | — (none) | Depression screening (PennSync screening item — retired CMS item) | `retired` | Checked 2026-09-01 · Depression Screening · Retired from the OASIS instrument currently in effect. The OASIS-E manual lists this item as Removed; absent from E1 and E2. Depression is now D0150/D0160 (PHQ). Do not enter this on the official assessment; PennSync keeps the question only as an internal screening prompt. |   |   |   |
+| `m1740` | M1740 | M1740 — Cognitive, Behavioral & Psychiatric Symptoms | `verified` | Checked 2026-09-01 · Cognitive, behavioral, and psychiatric symptoms |   |   |   |
+| `m1700` | M1700 | M1700 — Cognitive Functioning | `verified` | Checked 2026-09-01 · Cognitive Functioning |   |   |   |
+| `m1400` | M1400 | M1400 — Respiratory Status: Dyspnea | `verified` | Checked 2026-09-01 · When is the patient dyspneic or noticeably Short of Breath? |   |   |   |
+| `m1340` | M1340 | M1340 — Surgical Wound | `verified` | Checked 2026-09-01 · Does this patient have a Surgical Wound? |   |   |   |
+| `m1306` | M1306 | M1306 — Unhealed Pressure Ulcer(s) | `verified` | Checked 2026-09-01 · Unhealed Pressure Ulcer/Injury at Stage 2 or Higher |   |   |   |
+| `m1350` | — (none) | Skin lesion or open wound (PennSync screening item) | `not_a_cms_item` | Checked 2026-09-01 · This item number appears in no published CMS OASIS manual PennSync checked (E, E1, E2). |   |   |   |
+| `m1800` | M1800 | M1800 — Grooming | `verified` | Checked 2026-09-01 · Grooming |   |   |   |
+| `m1810` | M1810 | M1810 — Upper Body Dressing | `verified` | Checked 2026-09-01 · Current Ability to Dress Upper Body |   |   |   |
+| `m1820` | M1820 | M1820 — Lower Body Dressing | `verified` | Checked 2026-09-01 · Current Ability to Dress Lower Body |   |   |   |
+| `m2001` | M2001 | M2001 — Drug Regimen Review | `verified` | Checked 2026-09-01 · Drug Regimen Review |   |   |   |
+| `m2010` | M2010 | M2010 — High-Risk Drug Education | `verified` | Checked 2026-09-01 · Patient/Caregiver High-Risk Drug Education |   |   |   |
+| `m2020` | M2020 | M2020 — Management of Oral Medications | `verified` | Checked 2026-09-01 · Management of Oral Medications |   |   |   |
+| `m1910` | — (none) | Fall risk assessment (PennSync screening item — retired CMS item) | `retired` | Checked 2026-09-01 · Falls Risk Assessment · Retired from the OASIS instrument currently in effect. The OASIS-E manual lists this item as Removed; absent from E1 and E2. Falls are now J1800/J1900. Do not enter this on the official assessment; PennSync keeps the question only as an internal screening prompt. |   |   |   |
+| `m1900` | — (none) | Prior functioning (PennSync screening item) | `not_a_cms_item` | Checked 2026-09-01 · This item number appears in no published CMS OASIS manual PennSync checked (E, E1, E2). Prior Functioning is GG0100. |   |   |   |
+| `m1830` | M1830 | M1830 — Bathing | `verified` | Checked 2026-09-01 · Bathing |   |   |   |
+| `m1840` | M1840 | M1840 — Toilet Transferring | `verified` | Checked 2026-09-01 · Toilet Transferring |   |   |   |
+| `m1845` | M1845 | M1845 — Toileting Hygiene | `verified` | Checked 2026-09-01 · Toileting Hygiene |   |   |   |
+| `m1850` | M1850 | M1850 — Transferring | `verified` | Checked 2026-09-01 · Transferring |   |   |   |
+| `m1860` | M1860 | M1860 — Ambulation/Locomotion | `verified` | Checked 2026-09-01 · Ambulation/Locomotion |   |   |   |
+| `m1870` | M1870 | M1870 — Feeding or Eating | `verified` | Checked 2026-09-01 · Feeding or Eating |   |   |   |
+| `m1033` | M1033 | M1033 — Risk for Hospitalization | `verified` | Checked 2026-09-01 · Risk of Hospitalization |   |   |   |
+| `m1242` | — (none) | Frequency of pain (PennSync screening item — retired CMS item) | `retired` | Checked 2026-09-01 · Frequency of Pain Interfering with activity or movement · Retired from the OASIS instrument currently in effect. Present in OASIS-E; absent from E1 and E2. Pain is now J0510/J0520/J0530. Do not enter this on the official assessment; PennSync keeps the question only as an internal screening prompt. |   |   |   |
+| `m1300` | — (none) | Pressure ulcer risk (PennSync screening item) | `not_a_cms_item` | Checked 2026-09-01 · This item number appears in no published CMS OASIS manual PennSync checked (E, E1, E2). |   |   |   |
+| `m1610` | M1610 | M1610 — Urinary Incontinence | `verified` | Checked 2026-09-01 · Urinary Incontinence or Urinary Catheter Presence |   |   |   |
+| `m1620` | M1620 | M1620 — Bowel Incontinence | `verified` | Checked 2026-09-01 · Bowel Incontinence Frequency |   |   |   |
+| `m1630` | M1630 | M1630 — Ostomy | `verified` | Checked 2026-09-01 · Ostomy for Bowel Elimination |   |   |   |
+| `m2102` | — (none) | Physical therapy need (PennSync screening item) | `pennsync_screening` | Checked 2026-09-01 · Not a CMS OASIS item. Previously mislabelled as M2102 - the source check confirms M2102 is Types and Sources of Assistance, not a physical-therapy need question. |   |   |   |
+| `m2110` | — (none) | Occupational therapy need (PennSync screening item) | `pennsync_screening` | Checked 2026-09-01 · Not a CMS OASIS item. M2110 appears in none of OASIS-E, E1 or E2. |   |   |   |
+| `m2200` | — (none) | Speech-language pathology need (PennSync screening item) | `pennsync_screening` | Checked 2026-09-01 · Not a CMS OASIS item. M2200 was Therapy Need and was removed per CMS-1780-F (OASIS-E2 Chapter 1: two items are removed, M0110 and M2200). |   |   |   |
+| `m2401` | M2401 | M2401 — Intervention Synopsis | `verified` | Checked 2026-09-01 · Intervention Synopsis |   |   |   |
+| `m2420` | M2420 | M2420 — Discharge Disposition | `abbreviated` | Checked 2026-09-01 · Discharge Disposition · A current CMS item, but PennSync's response list is a shortened screening version and does not reproduce the official response set. Confirm the disposition response in your EMR. |   |   |   |
 
 **36 of 36 items await sign-off.**
 

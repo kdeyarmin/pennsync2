@@ -1,6 +1,6 @@
 import { Info } from "lucide-react";
 import { ACTIVE_OASIS_SPEC } from "./specs/registry.js";
-import { clinicalReviewStatus } from "./specs/verification.js";
+import { clinicalReviewStatus, sourceCheckStatus } from "./specs/verification.js";
 
 /**
  * The standing scope statement for every OASIS surface.
@@ -19,6 +19,7 @@ import { clinicalReviewStatus } from "./specs/verification.js";
  */
 export default function OasisScopeNotice({ className = "" }) {
   const review = clinicalReviewStatus();
+  const source = sourceCheckStatus();
   return (
     <div
       role="note"
@@ -39,6 +40,19 @@ export default function OasisScopeNotice({ className = "" }) {
         {/* The sign-off gap belongs on screen, not only in an audit document:
             a classification nobody qualified has confirmed must not read as
             settled just because it is rendered confidently. */}
+        {/* A CMS source check on 2026-09-01 found item numbers in PennSync's
+            internal set that are retired or appear in no CMS manual. Those
+            questions are kept as internal prompts, but a nurse must not go
+            looking for them on the official assessment. */}
+        {source.problems.length > 0 && (
+          <p className="text-amber-900">
+            <strong>
+              {source.problems.length} of {source.total} items
+            </strong>{" "}
+            are retired CMS items or are not CMS item numbers. They are PennSync prompts only —
+            enter official responses in your EMR.
+          </p>
+        )}
         {!review.complete && (
           <p className="text-navy-700">
             <strong>

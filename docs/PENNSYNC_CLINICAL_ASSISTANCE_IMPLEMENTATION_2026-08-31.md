@@ -319,7 +319,7 @@ response set. Confirm the wording and response in your EMR."
 
 ## 8. Tests added
 
-**245 new tests across 13 suites** (227 under `node --test`, 18 under Vitest), all deterministic and offline.
+**~260 new tests across 13 suites**, all deterministic and offline.
 
 | Suite | Tests | Focus |
 | --- | --- | --- |
@@ -444,6 +444,37 @@ No regressions. No test was skipped, disabled or quarantined.
    entity (governance data and rule-version snapshotting already exist).
 
 ## 14. Risks still requiring human / clinical / regulatory review
+
+### CMS source check, 2026-09-01 — what it found
+
+The OASIS classifications were re-checked against the published CMS manuals
+(OASIS-E updated 01/01/2024, OASIS-E1 effective 01/01/2025, OASIS-E2 effective
+04/01/2026). It found substantially more wrong than the three therapy items
+originally demoted:
+
+| Finding | Detail |
+| --- | --- |
+| **Wrong active version** | PennSync claimed OASIS-E with no retirement date. **OASIS-E2 has been in effect since 2026-04-01** — PennSync was two versions behind, so every "patterned after" statement in the UI was wrong. |
+| **4 invented item numbers** | `M1020`, `M1300`, `M1350`, `M1900` appear in **none** of E, E1 or E2. Primary Diagnosis is **M1021** (M1023 is Other Diagnoses); Prior Functioning is **GG0100**. |
+| **5 retired items** | `M1030`, `M1242`, `M1730`, `M1910`, `M0069`. The OASIS-E manual lists M1730 ("Depression Screening") and M1910 ("Falls Risk Assessment") explicitly as *Removed*. Depression is now D0150/D0160; falls are J1800/J1900; pain is J0510/J0520/J0530. |
+| **M0069 doubly wrong** | It was **"Gender"**, not "Prognosis" as PennSync labelled it, and is replaced by **A0810 Sex** in E2. |
+| **3 therapy demotions confirmed** | M2102 *is* "Types and Sources of Assistance"; M2200 was removed per CMS-1780-F; M2110 appears in no manual. The original inference was right. |
+
+**9 of 36 items** are retired or are not CMS item numbers. All are kept — the
+scoring engine and stored responses key off these ids — but they no longer
+display a CMS item number, their notes say where the current item lives, and the
+OASIS scope notice reports the count on screen.
+
+**The source check is recorded separately from clinical sign-off.**
+`source_verified_at` / `source_verified_against` record a *factual* lookup (does
+this number exist, what is its title). `reviewed_by` / `reviewed_at` remain empty
+for all 36: whether PennSync's *use* of an item is clinically appropriate is a
+judgement, and an automated check must not masquerade as a reviewer.
+
+**Still outstanding for a human:** the scoring engine (`oasisScoringEngine.js`
+and six other modules) keys off several retired/invented ids. Whether to remap
+those to current items is a product decision with PDGM implications — not made
+here.
 
 1. **The OASIS item classifications need clinical sign-off — now tracked, not
    assumed.** The three `pennsync_screening` demotions are supported by the

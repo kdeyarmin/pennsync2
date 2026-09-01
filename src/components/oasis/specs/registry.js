@@ -6,15 +6,22 @@
 // version's effective dates in place.
 
 import { OASIS_E_SPEC } from "./e/index.js";
+import { OASIS_E1_SPEC } from "./e1/index.js";
+import { OASIS_E2_SPEC } from "./e2/index.js";
 
 /** Every OASIS version PennSync knows about, oldest effective date first. */
-export const KNOWN_OASIS_SPECS = Object.freeze([OASIS_E_SPEC]);
+export const KNOWN_OASIS_SPECS = Object.freeze([OASIS_E_SPEC, OASIS_E1_SPEC, OASIS_E2_SPEC]);
 
 /**
- * The version PennSync's current guidance is patterned after.
+ * The version currently in effect.
+ *
+ * A source check on 2026-09-01 found this was OASIS-E2 (effective 2026-04-01),
+ * while PennSync claimed OASIS-E with no retirement date — two versions behind,
+ * which made every "patterned after" statement in the UI wrong.
+ *
  * NOT a claim that PennSync holds the official instrument — see spec.completeness.
  */
-export const ACTIVE_OASIS_SPEC = OASIS_E_SPEC;
+export const ACTIVE_OASIS_SPEC = OASIS_E2_SPEC;
 
 /** @param {string} id */
 export function getOasisSpec(id) {
