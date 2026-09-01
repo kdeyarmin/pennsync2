@@ -40,7 +40,15 @@ export default function CrossDocumentReviewPanel({
   const [reasons, setReasons] = useState({});
   const [errors, setErrors] = useState({});
 
+  // "Create task" is only offered when a caller can actually create one.
+  // Rendering it without `onCreateTask` recorded the finding as `task_created`
+  // and confirmed the action in the UI while no Task row existed — a clinical
+  // follow-up assumed rather than queued, which is precisely the failure this
+  // module's wording rules exist to prevent.
+  const available = onCreateTask ? RESOLUTIONS : RESOLUTIONS.filter((r) => r !== "task_created");
+
   const decide = (finding, resolution) => {
+    if (resolution === "task_created" && !onCreateTask) return;
     const out = resolveFinding(finding, resolution, {
       actorEmail: currentUserEmail,
       reason: reasons[finding.id] || "",
@@ -128,7 +136,7 @@ export default function CrossDocumentReviewPanel({
                       />
                     </label>
                     <div className="flex flex-wrap gap-1.5">
-                      {RESOLUTIONS.map((r) => (
+                      {available.map((r) => (
                         <Button
                           key={r}
                           size="sm"

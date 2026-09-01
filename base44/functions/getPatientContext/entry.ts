@@ -97,7 +97,11 @@ Deno.serve(async (req) => {
       // Small, bounded reads: the briefing needs current goals and the most
       // recent assessment date, not the full history.
       e.CarePlan.filter({ patient_id: patientId }, '-updated_date', 20),
-      e.OASISAssessment.filter({ patient_id: patientId }, '-created_date', 10),
+      // Sorted by assessment_date, the CLINICAL chronology. Ordering by
+      // created_date meant a backfilled older assessment entered after a newer
+      // one would be picked as "most recent", and with enough late-created
+      // backfills the actual latest assessment could fall outside the page.
+      e.OASISAssessment.filter({ patient_id: patientId }, '-assessment_date', 10),
     ]);
 
     return Response.json({

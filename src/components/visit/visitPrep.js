@@ -229,7 +229,12 @@ export function buildVisitPrep({
   }
 
   // ── Care-plan goals and teaching needs ───────────────────────────────────
-  const activePlans = carePlans.filter((p) => p && p.status !== "discontinued" && p.status !== "completed");
+  // CarePlan.status enum is active | met | not_met | revised. Excluding
+  // "discontinued" and "completed" — values the enum does not contain — meant
+  // goals already met, not met or revised were all presented to a nurse as
+  // current. Match the enum by INCLUSION so a future value cannot silently
+  // become "active" either.
+  const activePlans = carePlans.filter((p) => p && (p.status === "active" || p.status == null));
   // CarePlan carries one `goal` string per problem row, not a goals array.
   const goals = activePlans
     .map((p) => [p.problem, p.goal].filter(Boolean).join(" — "))

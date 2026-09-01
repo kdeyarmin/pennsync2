@@ -46,7 +46,11 @@ export default function EmrHandoffPanel({
   statusError = null,
   disabled = false,
 }) {
-  // { [key]: "ok" | "failed" } — keyed by "all" or a section id.
+  // { [key]: { state: "ok" | "failed", text } } — keyed by "all" or a section id.
+  // The copied TEXT is kept so a "Copied" badge cannot outlive the content it
+  // referred to: after an edit the clipboard holds the old note, and a stale
+  // green tick would tell the nurse the wrong thing at the exact moment it
+  // matters.
   const [copyState, setCopyState] = useState({});
   const [showSections, setShowSections] = useState(false);
 
@@ -57,17 +61,35 @@ export default function EmrHandoffPanel({
 
   const copy = async (key, text) => {
     try {
-      if (!navigator?.clipboard?.writeText) throw new Error("Clipboard unavailable");
+      // `typeof navigator` — a bare `navigator?.` still throws where the global
+      // is undefined rather than merely null (SSR, a worker, some test hosts).
+      if (typeof navigator === "undefined" || !navigator.clipboard?.writeText) {
+        throw new Error("Clipboard unavailable");
+      }
       await navigator.clipboard.writeText(text);
-      setCopyState((prev) => ({ ...prev, [key]: "ok" }));
-      // Report the operational status on the first successful whole-note copy.
-      if (key === "all") onReportStatus?.("copied_to_emr");
+      setCopyState((prev) => ({ ...prev, [key]: { state: "ok", text } }));
+      // DELIBERATELY does not report `copied_to_emr`.
+      //
+      // A clipboard write puts text on the device clipboard. It is not evidence
+      // that the nurse switched to the EMR, pasted, or that the paste worked —
+      // and this panel's whole contract is that a status means the nurse
+      // reported doing something, never that PennSync inferred it. Auto-reporting
+      // here would have let Documentation Readiness treat a visit as handed off
+      // on the strength of a button press.
     } catch {
-      setCopyState((prev) => ({ ...prev, [key]: "failed" }));
+      setCopyState((prev) => ({ ...prev, [key]: { state: "failed", text } }));
     }
   };
 
-  const allState = copyState.all;
+  /** The copy state for `key`, but only while it still refers to `text`. */
+  const stateFor = (key, text) => {
+    const entry = copyState[key];
+    if (!entry) return null;
+    if (entry.state === "ok" && entry.text !== text) return null;
+    return entry.state;
+  };
+
+  const allState = stateFor("all", noteText);
 
   return (
     <section
@@ -115,6 +137,12 @@ export default function EmrHandoffPanel({
               ? <><CheckCircle2 className="w-4 h-4" aria-hidden="true" /> Copied — paste into your EMR</>
               : <><Copy className="w-4 h-4" aria-hidden="true" /> Copy to EMR</>}
           </Button>
+          {allState === "ok" && onReportStatus && getHandoffStatus(handoffStatus).order === 0 && (
+            <p className="text-xs text-slate-600 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2">
+              Copied to your clipboard. Once you have pasted it into your EMR, record that below —
+              PennSync cannot see the EMR and will not assume the step happened.
+            </p>
+          )}
           {allState === "failed" && (
             <p role="alert" className="flex items-start gap-2 text-xs text-red-800 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
               <AlertTriangle className="w-3.5 h-3.5 mt-0.5 shrink-0" aria-hidden="true" />
@@ -141,7 +169,7 @@ export default function EmrHandoffPanel({
             {showSections && (
               <ul className="divide-y divide-slate-100">
                 {sections.map((section) => {
-                  const state = copyState[section.id];
+                  const state = stateFor(section.id, section.text);
                   return (
                     <li key={section.id} className="p-3 space-y-1.5">
                       <div className="flex items-center justify-between gap-2">

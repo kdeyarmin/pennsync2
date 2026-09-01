@@ -76,6 +76,44 @@ test("a bedfast OASIS response against an independent narrative is flagged with 
   assert.match(f.evidence[0], /ambulates independently/i);
 });
 
+test("OASIS responses are read from the ARRAY shape they are actually persisted in", () => {
+  // OASISAssessment.oasis_items is an array of { item_number, response } — see
+  // the entity schema and SmartOASISAssessment's save path. Treating it as an
+  // object map made every lookup return null on a real saved assessment, so the
+  // OASIS checks silently did nothing while the panel reported no findings.
+  const r = reviewCrossDocumentConsistency({
+    oasis: { oasis_items: [{ item_number: "M1860", response: "5" }] },
+    noteText: "Patient ambulates independently around the home.",
+  });
+  assert.equal(has(r, "function_conflict"), true, "the array shape must be understood");
+  assert.match(get(r, "function_conflict").sourceA.detail, /Response 5/);
+});
+
+test("a medication deficit is detected from the persisted array shape too", () => {
+  const r = reviewCrossDocumentConsistency({
+    oasis: { oasis_items: [{ item_number: "M2020", response: "3" }] },
+    noteText: "Assessed the patient. Vitals stable.",
+  });
+  assert.equal(has(r, "med_deficit_no_intervention"), true);
+});
+
+test("a fall-risk OASIS response is read from the array shape", () => {
+  const r = reviewCrossDocumentConsistency({
+    oasis: { oasis_items: [{ item_number: "M1910", response: "1" }] },
+    noteText: "Assessed the patient. Vitals stable.",
+  });
+  assert.equal(has(r, "fall_risk_no_intervention"), true);
+});
+
+test("a non-numeric or absent response does not fabricate a finding", () => {
+  const r = reviewCrossDocumentConsistency({
+    oasis: { oasis_items: [{ item_number: "M1860", response: "" }, { item_number: "M2020" }] },
+    noteText: "Patient ambulates independently around the home.",
+  });
+  assert.equal(has(r, "function_conflict"), false);
+  assert.equal(has(r, "med_deficit_no_intervention"), false);
+});
+
 test("OASIS values are read whether stored nested or flat", () => {
   const nested = reviewCrossDocumentConsistency({
     oasis: { oasis_items: { m1860: 5 } },
@@ -133,12 +171,28 @@ test("a documented decline with no plan change or open follow-up is flagged", ()
   assert.match(f.evidence[0], /worsened/i);
 });
 
-test("an open follow-up task means the decline was acted on", () => {
+test("an open, relevant follow-up task means the decline was acted on", () => {
   const r = reviewCrossDocumentConsistency({
     noteText: "The sacral wound has worsened since the last visit.",
     openTasks: [{ id: "t1", title: "Notify provider", status: "pending" }],
   });
   assert.equal(has(r, "decline_no_plan_change"), false);
+});
+
+test("an unrelated or cancelled task does NOT silence a documented decline", () => {
+  // Suppressing on any task merely "not completed" let a supply errand — or a
+  // cancelled task — hide a clinical deterioration.
+  const unrelated = reviewCrossDocumentConsistency({
+    noteText: "The sacral wound has worsened since the last visit.",
+    openTasks: [{ id: "t1", title: "Reorder gauze supplies", status: "pending", type: "other" }],
+  });
+  assert.equal(has(unrelated, "decline_no_plan_change"), true);
+
+  const cancelled = reviewCrossDocumentConsistency({
+    noteText: "The sacral wound has worsened since the last visit.",
+    openTasks: [{ id: "t1", title: "Notify provider", status: "cancelled" }],
+  });
+  assert.equal(has(cancelled, "decline_no_plan_change"), true);
 });
 
 test("a plan change in the note also satisfies the decline check", () => {

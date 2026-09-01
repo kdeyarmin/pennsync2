@@ -21,18 +21,24 @@ const TONE = {
  * "we found nothing" and "we did not look" must read differently.
  */
 export default function DocumentationReadinessPanel({
-  visits = [],
-  drafts = [],
-  complianceAudits = [],
-  openTasks = [],
-  oasisFindings = [],
-  adrCases = [],
-  incidents = [],
+  // Deliberately NOT defaulted to []. The engine treats "not supplied" and
+  // "empty" as different answers, and a default here would erase that
+  // distinction for every caller — turning "we did not look" back into "we
+  // found nothing".
+  visits,
+  drafts,
+  complianceAudits,
+  openTasks,
+  oasisFindings,
+  adrCases,
+  incidents,
   patient = null,
+  handoffTrackingSince = null,
   className = "",
 }) {
   const result = assessDocumentationReadiness({
     visits, drafts, complianceAudits, openTasks, oasisFindings, adrCases, incidents, patient,
+    handoffTrackingSince,
   });
   const tone = TONE[result.status.tone] || TONE.warning;
   const StatusIcon = tone.icon;
@@ -79,6 +85,20 @@ export default function DocumentationReadinessPanel({
       </div>
 
       {/* Showing what was checked keeps "nothing found" distinct from "not looked at". */}
+      {result.notChecked.length > 0 && (
+        <div className="rounded-lg border border-slate-200 bg-white px-3 py-2">
+          <p className="text-xs font-semibold text-slate-600">
+            {result.notChecked.length} check{result.notChecked.length === 1 ? "" : "s"} could not run
+          </p>
+          <ul className="mt-1 ml-4 list-disc text-xs text-slate-500 space-y-0.5">
+            {result.notChecked.map((c, i) => <li key={i}>{c}</li>)}
+          </ul>
+          <p className="text-xs text-slate-400 mt-1">
+            This status covers only the checks that ran.
+          </p>
+        </div>
+      )}
+
       <details className="rounded-lg border border-slate-200 bg-white px-3 py-2">
         <summary className="cursor-pointer text-xs font-semibold text-slate-700 min-h-[32px] flex items-center gap-1.5">
           <ListChecks className="w-3.5 h-3.5" aria-hidden="true" /> What PennSync checked ({result.checked.length})

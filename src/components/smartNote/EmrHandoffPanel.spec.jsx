@@ -49,7 +49,10 @@ describe("EmrHandoffPanel — moving prepared documentation into the EMR", () =>
     expect(screen.getByText(/Edited by you/i)).toBeInTheDocument();
   });
 
-  it("copies the whole note and reports the copied status", async () => {
+  it("copies the whole note without asserting the EMR step happened", async () => {
+    // A clipboard write is not evidence the nurse switched apps, pasted, or that
+    // the paste worked. Auto-reporting `copied_to_emr` would let Documentation
+    // Readiness treat the visit as handed off on a button press alone.
     const user = userEvent.setup();
     mockClipboard(vi.fn().mockResolvedValue(undefined));
     const onReportStatus = vi.fn();
@@ -58,8 +61,24 @@ describe("EmrHandoffPanel — moving prepared documentation into the EMR", () =>
     await user.click(screen.getByRole("button", { name: /copy to emr/i }));
 
     await waitFor(() => expect(navigator.clipboard.writeText).toHaveBeenCalledWith(NOTE));
-    expect(onReportStatus).toHaveBeenCalledWith("copied_to_emr");
+    expect(onReportStatus).not.toHaveBeenCalled();
     expect(await screen.findByText(/paste into your EMR/i)).toBeInTheDocument();
+    expect(screen.getByText(/will not assume the step happened/i)).toBeInTheDocument();
+  });
+
+  it("clears the Copied badge once the note is edited", async () => {
+    const user = userEvent.setup();
+    mockClipboard(vi.fn().mockResolvedValue(undefined));
+    const { rerender } = renderWithProviders(<EmrHandoffPanel noteText={NOTE} />);
+
+    await user.click(screen.getByRole("button", { name: /copy to emr/i }));
+    expect(await screen.findByText(/paste into your EMR/i)).toBeInTheDocument();
+
+    // The clipboard now holds the OLD text; a lingering green tick would tell
+    // the nurse the wrong thing at the moment it matters most.
+    rerender(<EmrHandoffPanel noteText={`${NOTE}\nAdded a line.`} />);
+    expect(screen.queryByText(/paste into your EMR/i)).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /copy to emr/i })).toBeInTheDocument();
   });
 
   it("shows an inline recovery path when the clipboard fails, and does not claim it copied", async () => {

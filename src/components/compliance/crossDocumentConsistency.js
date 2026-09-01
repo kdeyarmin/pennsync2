@@ -18,6 +18,7 @@
 //
 // Pure + offline so it runs under `node --test`. It may only import other plain
 // `.js` modules with explicit extensions (never `.jsx`).
+import { answersFromOasisItems } from "../oasis/outcomeMeasureEngine.js";
 
 /** Resolution actions a reviewer may take. PennSync records the choice only. */
 export const RESOLUTIONS = Object.freeze(["acknowledged", "resolved", "task_created", "not_applicable"]);
@@ -39,14 +40,29 @@ function finding({ id, severity, title, sourceA, sourceB, evidence, action }) {
   };
 }
 
-// OASIS item ids PennSync compares against. Values are read defensively — an
-// assessment may store them at the top level or under `oasis_items`.
-function oasisValue(oasis, itemId) {
-  if (!oasis) return null;
+// OASIS responses, read from the shape they are ACTUALLY persisted in.
+//
+// `OASISAssessment.oasis_items` is an ARRAY of { item_number, response, … } —
+// see the entity schema and SmartOASISAssessment's save path. An earlier version
+// of this module treated it as an object keyed by item id, so every lookup
+// returned null on a real saved assessment: the OASIS cross-checks silently did
+// nothing while the panel reported no inconsistencies found. That is the worst
+// possible failure for a review tool, because absence of findings reads as
+// assurance.
+//
+// `answersFromOasisItems` is the app's existing normalizer (it already handles
+// both the array and an already-flat map, and lower-cases the keys), so this
+// stays consistent with the outcome-measure engine rather than growing a second
+// interpretation of the same field.
+function oasisAnswers(oasis) {
+  if (!oasis) return {};
   const items = oasis.oasis_items || oasis.items || oasis.responses || oasis;
-  const v = items?.[itemId] ?? items?.[itemId?.toUpperCase?.()] ?? items?.[itemId?.toLowerCase?.()];
-  if (v == null) return null;
-  return typeof v === "object" ? (v.value ?? v.response ?? null) : v;
+  return answersFromOasisItems(items);
+}
+
+function oasisValue(answers, itemId) {
+  const v = answers?.[String(itemId || "").toLowerCase()];
+  return v == null ? null : v;
 }
 
 function num(value) {
@@ -81,13 +97,14 @@ export function reviewCrossDocumentConsistency({
 } = {}) {
   const note = String(noteText || "");
   const plans = CARE_PLAN_TEXT(carePlans);
+  const answers = oasisAnswers(oasis);
   const findings = [];
   const checked = [];
 
   // ── Fall risk vs fall-prevention intervention ────────────────────────────
   checked.push("High fall risk with a fall-prevention intervention");
   const fallRiskHigh = patient?.functional_status?.fall_risk === "high"
-    || num(oasisValue(oasis, "m1910")) === 1;
+    || num(oasisValue(answers, "m1910")) === 1;
   const FALL_INTERVENTION = /\bfall(?:s)?[- ](?:precaution|prevention|risk (?:intervention|reduction))|remove(?:d)? (?:clutter|throw rugs?)|grab bars?|non[- ]?skid|bed alarm|assistive device (?:for|to) (?:safe )?(?:ambulation|transfer)|safety (?:sweep|assessment) of the home/i;
   if (fallRiskHigh && !FALL_INTERVENTION.test(`${note} ${plans}`)) {
     findings.push(finding({
@@ -103,7 +120,7 @@ export function reviewCrossDocumentConsistency({
 
   // ── Severe functional limitation vs "independent" in the narrative ───────
   checked.push("Functional limitation consistent with the narrative");
-  const ambulation = num(oasisValue(oasis, "m1860"));
+  const ambulation = num(oasisValue(answers, "m1860"));
   const bedfast = ambulation != null && ambulation >= 5;
   const INDEPENDENT_NARRATIVE = /\b(?:ambulates? independently|independent (?:with )?ambulation|walks? without assistance|independent with (?:all )?adls?)\b/i;
   if (bedfast && INDEPENDENT_NARRATIVE.test(`${note} ${plans}`)) {
@@ -131,7 +148,7 @@ export function reviewCrossDocumentConsistency({
 
   // ── Medication-management deficit vs a medication intervention ────────────
   checked.push("Medication-management deficit with a medication intervention");
-  const oralMeds = num(oasisValue(oasis, "m2020"));
+  const oralMeds = num(oasisValue(answers, "m2020"));
   const medDeficit = oralMeds != null && oralMeds >= 2;
   const MED_INTERVENTION = /\bmedication (?:management|teaching|reconcil|set[- ]?up|administration|review)|pill ?box|med(?:ication)? planner|taught .{0,40}medication|reviewed .{0,30}medication/i;
   if (medDeficit && !MED_INTERVENTION.test(`${note} ${plans}`)) {
@@ -167,7 +184,18 @@ export function reviewCrossDocumentConsistency({
   const DECLINE = /\b(?:worsen(?:ed|ing)?|declin(?:e|ed|ing)|deteriorat(?:ed|ing|ion)|increased (?:pain|edema|dyspnea|confusion)|new (?:onset|symptom)|exacerbation|larger|more drainage|unable to .{0,25}(?:anymore|now))\b/i;
   const declineSentences = sentencesMatching(note, DECLINE);
   const PLAN_RESPONSE = /\b(?:plan (?:updated|revised|changed)|new order|notified|increase(?:d)? (?:the )?(?:frequency|visits)|added (?:an )?intervention|care plan (?:review|update))\b/i;
-  if (declineSentences.length && !PLAN_RESPONSE.test(`${note} ${plans}`) && !openTasks.some((t) => t && t.status !== "completed")) {
+  // Task types/wording that plausibly respond to a clinical decline.
+  const FOLLOW_UP_TASK = /\b(?:notify|notification|provider|physician|prescriber|md|order|follow[- ]?up|escalat|assess|wound|safety|care plan|clinical)\b/i;
+  // A decline is only "responded to" by an OPEN follow-up that plausibly relates
+  // to it. Suppressing on ANY task that is merely not `completed` let a
+  // cancelled task — or an unrelated supply or scheduling task — silence a
+  // documented deterioration, which is the one finding here that must not be
+  // silenced by accident.
+  const respondingTask = openTasks.some((t) => {
+    if (!t || ["completed", "cancelled", "resolved"].includes(t.status)) return false;
+    return FOLLOW_UP_TASK.test(`${t.title || ""} ${t.description || ""} ${t.type || ""}`);
+  });
+  if (declineSentences.length && !PLAN_RESPONSE.test(`${note} ${plans}`) && !respondingTask) {
     findings.push(finding({
       id: "decline_no_plan_change",
       severity: "high",

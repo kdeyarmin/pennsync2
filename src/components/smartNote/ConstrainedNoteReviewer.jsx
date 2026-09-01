@@ -54,7 +54,8 @@ import { runDenialGuardrail, elementsJudgedByGuardrail } from "../compliance/den
  *   onFinalNote    — (optional) called with the verified note text
  *   onBack         — (optional) renders a Back button next to Generate
  *   renderFinalNote — (optional) host render-prop for the final-note area. Receives
- *                     an `api` with { finalNote, setFinalNote, building, copy,
+ *                     an `api` with { finalNote, setFinalNote, generatedNote,
+ *                     nurseEdited, building, copy,
  *                     copied, verified, dirty, fixRequired, coverage, recheck,
  *                     result }. `recheck()` re-verifies and resolves to the
  *                     save-ready `result` (or null if it fails). When provided,
@@ -81,6 +82,11 @@ export default function ConstrainedNoteReviewer({ roughNote, serviceLine = "home
   // Which denial-risk findings are expanded to show remediation/evidence.
   const [openDenialClusters, setOpenDenialClusters] = useState(() => new Set());
   const [finalNote, setFinalNote] = useState("");
+  // The note EXACTLY as generated, before any hand-edit. Kept so a caller can
+  // tell "the AI rewrote the rough draft" (always true, and not interesting)
+  // apart from "the clinician changed the generated text" (the fact an
+  // AI-governance record actually needs).
+  const [generatedNote, setGeneratedNote] = useState("");
   const [verifiedNote, setVerifiedNote] = useState("");
   const [fixRequired, setFixRequired] = useState(null);
   const [building, setBuilding] = useState(false);
@@ -193,7 +199,7 @@ export default function ConstrainedNoteReviewer({ roughNote, serviceLine = "home
   const priorNoteRef = useRef("");
   priorNoteRef.current = priorNote;
   useEffect(() => {
-    setFinalNote(""); setVerifiedNote(""); setFixRequired(null); setIncludeTrend(false); setAcknowledgedRisks(false); setAckJustification(""); setAcknowledgedDenialRisk(false); setDenialAckJustification(""); setOpenDenialClusters(new Set()); setShowProvenance(false); setEscalatedKeys(new Set()); setCritic(null); setOpenExamples(new Set()); setShowThinConfirm(false); setConfirmedThinCritical(false);
+    setFinalNote(""); setGeneratedNote(""); setVerifiedNote(""); setFixRequired(null); setIncludeTrend(false); setAcknowledgedRisks(false); setAckJustification(""); setAcknowledgedDenialRisk(false); setDenialAckJustification(""); setOpenDenialClusters(new Set()); setShowProvenance(false); setEscalatedKeys(new Set()); setCritic(null); setOpenExamples(new Set()); setShowThinConfirm(false); setConfirmedThinCritical(false);
     if (!analysis) { setAnswers({}); setPrefilledIds(new Set()); setConfirmedNegatives(new Set()); return; }
     const prefill = computeCarryForward(priorNoteRef.current || "", analysis.gaps);
     setAnswers(prefill);
@@ -425,6 +431,7 @@ export default function ConstrainedNoteReviewer({ roughNote, serviceLine = "home
       const extras = [activeTrendSummary(), analysis.vitalsSentence, ...computeNotDocumented()].filter(Boolean);
       const finalText = extras.length ? `${generated}\n\n${extras.join(" ")}` : generated;
       setFinalNote(finalText);
+      setGeneratedNote(finalText);
       // Ground only the LLM-authored portion. The appended extras (trend summary,
       // structured vitals, "not documented" fallbacks) are deterministic and
       // already pass the value-guard, so re-grounding them only burns tokens.
@@ -533,6 +540,9 @@ export default function ConstrainedNoteReviewer({ roughNote, serviceLine = "home
 
   const finalApi = {
     finalNote, setFinalNote, building, copy, copied,
+    // What the scribe produced, and whether the clinician has since changed it.
+    generatedNote,
+    nurseEdited: !!generatedNote && finalNote !== generatedNote,
     verified: !dirty && !fixRequired,
     dirty, fixRequired,
     coverage: liveCoverage,
@@ -943,7 +953,7 @@ export default function ConstrainedNoteReviewer({ roughNote, serviceLine = "home
                   <Button onClick={copy} className="flex-1 h-11 gap-2 font-semibold">
                     {copied ? <><CheckCircle2 className="w-4 h-4" /> Copied!</> : <><Copy className="w-4 h-4" /> Copy</>}
                   </Button>
-                  <Button variant="outline" className="h-11 px-4" onClick={() => { setFinalNote(""); setVerifiedNote(""); setFixRequired(null); }}>Back</Button>
+                  <Button variant="outline" className="h-11 px-4" onClick={() => { setFinalNote(""); setGeneratedNote(""); setVerifiedNote(""); setFixRequired(null); }}>Back</Button>
                 </div>
               </div>
               <NoteDiffView originalNote={roughNote} enhancedNote={finalNote} />

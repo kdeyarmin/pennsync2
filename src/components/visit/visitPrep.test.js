@@ -151,13 +151,21 @@ test("care-plan goals are read from the CarePlan problem/goal pair", () => {
     patient: PATIENT,
     carePlans: [
       { problem: "Fluid overload", goal: "Weight stable within 3 lb", status: "active" },
-      { problem: "Old problem", goal: "Resolved", status: "completed" },
+      // `met` / `not_met` / `revised` are the real CarePlan.status terminal
+      // values. The earlier fixture used "completed", which the enum does not
+      // contain, so the test passed while every met goal still showed as active.
+      { problem: "Old problem", goal: "Resolved", status: "met" },
+      { problem: "Missed problem", goal: "Unmet", status: "not_met" },
+      { problem: "Changed problem", goal: "Superseded", status: "revised" },
     ],
     now: NOW,
   });
   const plan = findItem(prep, "care_plan");
   assert.match(plan.detail, /Fluid overload — Weight stable within 3 lb/);
-  assert.ok(!/Old problem/.test(plan.detail), "a completed plan is not an active goal");
+  for (const gone of ["Old problem", "Missed problem", "Changed problem"]) {
+    assert.ok(!plan.detail.includes(gone), `a "${gone}" goal is no longer active`);
+  }
+  assert.match(plan.label, /\(1\)/, "only the active goal is counted");
 });
 
 test("the OASIS row states PennSync holds only its own copy", () => {

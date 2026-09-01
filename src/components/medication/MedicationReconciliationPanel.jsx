@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, CheckCircle2, Info, Pill } from "lucide-react";
 import { reconcileMedications, summarizeMedicationChanges } from "./medicationReconciliation";
+import { extractMedications } from "../smartNote/compliance/factExtraction";
 
 const SEVERITY = {
   critical: { badge: "destructive", label: "Critical" },
@@ -27,12 +28,28 @@ export default function MedicationReconciliationPanel({
   onCreateFollowUp = null,
   className = "",
 }) {
+  // When the caller does not supply a parsed medication list, derive one from
+  // the note text. Without this the panel only ever ran the stopped/held check:
+  // a note that introduced a drug, or changed a dose or frequency, could not
+  // produce a not_on_list / dose_change / frequency_change finding at all, so
+  // most of what this panel advertises was silently skipped.
+  const noteMeds = useMemo(() => {
+    if (noteMedications?.length) return noteMedications;
+    if (!noteText) return [];
+    return extractMedications(noteText).map((name) => {
+      // Keep the strength/route/frequency context that follows the drug name in
+      // the note so the normalizer can compare doses, not just names.
+      const m = new RegExp(`${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}[^.;\n]{0,60}`, "i").exec(noteText);
+      return m ? m[0].trim() : name;
+    });
+  }, [noteMedications, noteText]);
+
   const result = useMemo(() => reconcileMedications({
     chartMedications: patient?.current_medications || [],
-    noteMedications,
+    noteMedications: noteMeds,
     noteText,
     allergies: patient?.allergies || "",
-  }), [patient, noteMedications, noteText]);
+  }), [patient, noteMeds, noteText]);
 
   const changes = useMemo(() => summarizeMedicationChanges(result.changes), [result.changes]);
 

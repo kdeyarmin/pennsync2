@@ -206,6 +206,15 @@ export default function SmartNoteAssistant({ visitId = null }) {
     setExistingVisitId(boundVisit.id);
     if (boundVisit.patient_id) setPatientId(boundVisit.patient_id);
     if (boundVisit.visit_type) setVisitType(boundVisit.visit_type);
+    // Hydrate the handoff trail from the visit. Without this a previously
+    // signed-off visit re-opened here showed "Not copied yet", and the next
+    // report wrote a fresh one-entry history back — downgrading the persisted
+    // status and destroying an append-only audit trail.
+    setHandoff({
+      status: boundVisit.emr_handoff_status || "not_started",
+      history: Array.isArray(boundVisit.emr_handoff_history) ? boundVisit.emr_handoff_history : [],
+    });
+    setReviewAck(boundVisit.documentation_review_ack || null);
   }, [boundVisit]);
 
   useEffect(() => {
@@ -515,23 +524,28 @@ export default function SmartNoteAssistant({ visitId = null }) {
    * The AI-governance review record. Not a clinical signature: it states only
    * that a human read the AI-assisted text, against a specific note version.
    */
-  const recordReviewAck = async (checked, finalText) => {
-    if (!checked) {
-      setReviewAck(null);
-      return;
-    }
-    const ack = buildReviewAcknowledgement({
-      noteText: finalText,
-      actorEmail: currentUser?.email,
-      aiAssisted: true,
-      edited: finalText !== note,
-    });
+  const recordReviewAck = async (checked, finalText, nurseEdited = false) => {
+    // Withdrawing the acknowledgement must clear the SERVER record too.
+    // Clearing only local state left the Visit asserting that a clinician had
+    // reviewed a note version they had since un-reviewed — a false governance
+    // record, which is worse than no record.
+    const ack = checked
+      ? buildReviewAcknowledgement({
+          noteText: finalText,
+          actorEmail: currentUser?.email,
+          aiAssisted: true,
+          // Whether the CLINICIAN changed the generated text — not whether the
+          // scribe rewrote the rough draft, which it always does.
+          edited: nurseEdited,
+        })
+      : null;
     setReviewAck(ack);
     if (!savedVisitId) return;
     try {
       await base44.entities.Visit.update(savedVisitId, { documentation_review_ack: ack });
     } catch (err) {
       console.error("Failed to persist the documentation review acknowledgement:", err);
+      toast.error("Couldn't sync your review record to the server. Try again.");
     }
   };
 
@@ -942,12 +956,12 @@ export default function SmartNoteAssistant({ visitId = null }) {
                     onReset={reset}
                     originalNote={note}
                     aiAssisted
-                    nurseEdited={api.finalNote !== note}
+                    nurseEdited={api.nurseEdited}
                     handoffStatus={handoff.status}
                     onReportHandoffStatus={reportHandoffStatus}
                     handoffStatusError={handoffError}
                     reviewAck={reviewAck}
-                    onReviewAck={(checked) => recordReviewAck(checked, api.finalNote)}
+                    onReviewAck={(checked) => recordReviewAck(checked, api.finalNote, api.nurseEdited)}
                     onSave={() => {
                       if (facilityBlocked) {
                         toast.error("Document the required facility item(s) or acknowledge the override before saving.");

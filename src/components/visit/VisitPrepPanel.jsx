@@ -94,7 +94,9 @@ export default function VisitPrepPanel({
           </Link>
         </Button>
         <Button asChild variant="outline" className="h-11 gap-1.5 text-xs font-semibold">
-          <Link to={`/PatientDetails?id=${encodeURIComponent(patientId)}&tab=medications`}>
+          {/* `clinical` is where the medication list lives; there is no
+              standalone medications tab. */}
+          <Link to={`/PatientDetails?id=${encodeURIComponent(patientId)}&tab=clinical`}>
             <Pill className="w-3.5 h-3.5" aria-hidden="true" /> Medications
           </Link>
         </Button>
