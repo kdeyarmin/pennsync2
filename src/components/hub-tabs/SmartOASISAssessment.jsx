@@ -21,8 +21,8 @@ import { todayEastern } from "@/components/utils/timezone";
 import { evaluateOASIS, computeCareScope } from "@/components/oasis/oasisScoringEngine";
 import { itemSourceFor } from "@/components/oasis/specs/verification.js";
 import { buildLegacyFormOutput } from "@/components/oasis/responseSchema/legacyFormOutput.js";
+import { saveLegacyScreeningDraft } from "@/components/oasis/responseSchema/oasisWriteAdapter.js";
 import OasisItemNotice from "@/components/oasis/OasisItemNotice.jsx";
-import { ACTIVE_OASIS_SPEC } from "@/components/oasis/specs/registry.js";
 import OASISSuggestionPanel from "@/components/oasis/OASISSuggestionPanel";
 import OASISComplianceWarnings, { getComplianceIssues } from "@/components/oasis/OASISComplianceWarnings";
 import OASISClinicalReasoningEngine, { getClinicalReasoningIssues } from "@/components/oasis/OASISClinicalReasoningEngine";
@@ -391,26 +391,27 @@ export default function SmartOASISAssessment() {
       // Eastern calendar day (matches OASISQuickUpdate) — this date drives
       // Medicare assessment-timing windows and the referral SOC clock below.
       const assessmentDate = todayEastern();
-      await base44.entities.OASISAssessment.create({
-        patient_id: selectedPatientId,
-        visit_type: visitType,
-        assessment_date: assessmentDate,
-        // `item_number` here is PennSync's own FORM id, not necessarily a CMS
-        // item number — several of this form's ids are retired CMS items or
-        // appear in no CMS manual (see specs/verification.js). Stamping the
-        // classification keeps a screening answer distinguishable from a real
-        // CMS item response downstream, where the field name alone implies the
-        // latter.
-        oasis_items: Object.entries(answers).map(([item_number, response]) => ({
-          item_number,
-          response: String(response),
-          item_source: itemSourceFor(item_number),
-          item_spec_version: ACTIVE_OASIS_SPEC.id,
-          ai_suggested: false,
-          manually_edited: true,
+      // Routed through the single write adapter, never straight at the entity.
+      // `item_number` here is PennSync's own FORM id, not necessarily a CMS item
+      // number — several of this form's ids are retired CMS items or appear in
+      // no CMS manual (see specs/verification.js). The adapter stamps
+      // `pennsync-oasis-response-v1-legacy` on every row, so a screening answer
+      // is not merely distinguishable from a CMS response: every CMS-labeled
+      // consumer refuses it by name.
+      await saveLegacyScreeningDraft({
+        assessment: {
+          patient_id: selectedPatientId,
+          visit_type: visitType,
+          assessment_date: assessmentDate,
+          status: "completed",
+          completed_date: new Date().toISOString(),
+        },
+        answers: Object.entries(answers).map(([item_number, response]) => ({
+          id: item_number,
+          itemNumber: item_number,
+          itemSource: itemSourceFor(item_number),
+          response,
         })),
-        status: "completed",
-        completed_date: new Date().toISOString(),
       });
       // The assessment now lives server-side — the local draft is obsolete.
       // Cancel any pending debounced write first so it can't resurrect it.

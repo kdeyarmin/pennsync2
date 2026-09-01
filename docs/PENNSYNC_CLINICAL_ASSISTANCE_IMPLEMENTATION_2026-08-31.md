@@ -722,3 +722,61 @@ care-suggestion engine would be worse than the current honest, limited state.
 6. **Self-reported handoff statuses could be misread as verification** if a
    future screen renders them without their caveat. The caveats are asserted by
    tests; anyone building a new surface must keep them.
+
+---
+
+## Addendum (2026-09-01): OASIS response-schema remediation
+
+The pass above fixed which CMS **instrument** PennSync claimed to follow. It did
+not fix what PennSync's **own answer choices meant** — and a later read of the
+final OASIS-E2 All-Item instrument found that on **18 items** at least one code
+named something different than the same code on the official assessment.
+
+Point 3 above ("`verified` means verified against PennSync's own scale table")
+was the warning sign. `itemSourceFor()` treated that identity-level verification
+as sufficient to stamp `item_source: "cms_item"`, so a conflicting row was
+labelled official and every downstream path — the printed guide, the clipboard,
+the referral packet, the analytics extractors, the outcome engine, the PDGM
+calculator — read it as one. An item-level warning that downstream paths bypass
+is not a control.
+
+What changed:
+
+- A **separate, append-only response-schema registry** records what the answer
+  choices meant: `pennsync-oasis-response-v1-legacy` (frozen, display-only) and
+  `pennsync-oasis-response-v2-cms-e2` (15 CMS-aligned definitions transcribed
+  from the final instrument, plus 3 PennSync screening prompts demoted out of the
+  M-number namespace).
+- **P0 containment shipped unconditionally**, not behind the flag: a fail-closed
+  output policy, AI that can no longer select or apply a response, and
+  schema-gated analytics, outcomes and PDGM.
+- A **protected backend write path** and scoped write RLS, because
+  `OASISAssessment` had `"write": {}` and UI-level enforcement is not
+  enforcement against a hosted entity endpoint.
+
+Full detail, the 18-item decision table, the CMS source manifest with hashes,
+the rollout and rollback procedure, and the outstanding gates are in
+[`docs/oasis/OASIS_RESPONSE_SCHEMA_MIGRATION.md`](oasis/OASIS_RESPONSE_SCHEMA_MIGRATION.md).
+The per-consumer disposition — including a named list of what is still
+outstanding — is in [`docs/oasis/CONSUMER_MATRIX.md`](oasis/CONSUMER_MATRIX.md).
+
+### Corrections to the statements above
+
+- Point 3 stands, and is now enforced rather than merely documented: an item
+  whose response set conflicts with CMS no longer resolves to `cms_item` at all.
+- Point 5 (hosted RLS validation outstanding) is **unchanged and now also gates
+  the new work**: v2 response entry stays disabled until hosted enforcement of
+  the write-scoping is proven.
+- The 2026-09-01 product-owner sign-off recorded in `specs/verification.js` is
+  **not** option-level CMS approval. Its own recorded scope excludes individual
+  response-option verification, and it must not be cited as clinical validation
+  of the v2 response sets. Every v2 definition carries
+  `clinical_review: "pending_named_sme_review"`.
+
+### Still required from a human
+
+1. **CMS source verification** — an independent re-read of the 15 response sets
+   against the final instrument.
+2. **Named clinical / OASIS SME validation** — no v2 definition has one.
+3. **Hosted schema / RLS validation** — a release blocker.
+4. **Deployment approval** — separate from all of the above.

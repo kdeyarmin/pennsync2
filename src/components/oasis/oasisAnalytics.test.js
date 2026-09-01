@@ -60,7 +60,7 @@ test("aggregateTopDiagnoses counts, sorts, limits, and filters placeholders", ()
 });
 
 test("aggregateFunctionalScores filters, orders oldest->newest, slices, maps fields", () => {
-  const rows = aggregateFunctionalScores(
+  const { points } = aggregateFunctionalScores(
     [
       u({ assessment_date: "2026-03-01", patient_name: "Bob", pdgm_data: { functional_scores: { m1860_ambulation: 3 } } }),
       u({ assessment_date: "2026-01-01", patient_name: "Amy", pdgm_data: { functional_scores: { m1850_transferring: 2 } } }),
@@ -69,11 +69,25 @@ test("aggregateFunctionalScores filters, orders oldest->newest, slices, maps fie
     ],
     20,
   );
-  assert.equal(rows.length, 2);
-  assert.equal(rows[0].patient, "Amy"); // oldest first
-  assert.equal(rows[0].transferring, 2);
-  assert.equal(rows[1].ambulation, 3);
-  assert.equal(rows[1].bathing, 0); // default
+  assert.equal(points.length, 2);
+  assert.equal(points[0].patient, "Amy"); // oldest first
+  assert.equal(points[0].transferring, 2);
+  assert.equal(points[1].ambulation, 3);
+  // A MISSING score is null, not 0. On every OASIS functional scale 0 means
+  // fully independent, so defaulting a gap to 0 plotted an incompletely
+  // extracted upload as an independent patient.
+  assert.equal(points[1].bathing, null);
+});
+
+test("aggregateFunctionalScores excludes uploads whose response set cannot be verified", () => {
+  const res = aggregateFunctionalScores([
+    u({ assessment_date: "2026-01-01", patient_name: "Amy", response_schema_id: "pennsync-oasis-response-v2-cms-e2", pdgm_data: { functional_scores: { m1860_ambulation: 3 } } }),
+    u({ assessment_date: "2026-02-01", patient_name: "Bob", response_schema_id: "pennsync-oasis-response-v1-legacy", pdgm_data: { functional_scores: { m1860_ambulation: 3 } } }),
+  ]);
+  assert.equal(res.points.length, 1);
+  assert.equal(res.points[0].patient, "Amy");
+  assert.equal(res.excluded, 1);
+  assert.match(res.excluded_reason, /cannot verify/);
 });
 
 test("aggregatePaymentTrends keeps only rows with date + payment", () => {

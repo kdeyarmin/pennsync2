@@ -44,13 +44,23 @@ export function computePphRisk({ oasis = [], visits = [] } = {}) {
       base += 25;
       factors.push({ factor: "Recent hospitalization/SNF stay", impact: 25 });
     }
-    const totalFunctional = toNum(fs.m1860_ambulation) + toNum(fs.m1850_transferring) + toNum(fs.m1830_bathing);
-    if (totalFunctional >= 12) {
-      base += 20;
-      factors.push({ factor: "Severe functional impairment", impact: 20 });
-    } else if (totalFunctional >= 8) {
-      base += 12;
-      factors.push({ factor: "Moderate functional impairment", impact: 12 });
+    // Only score functional impairment when ALL THREE items are present. The
+    // previous sum treated a missing item as 0, which on these scales means
+    // fully independent — so a partially extracted assessment silently scored
+    // as lower risk than an unknown one. A partial set now adds no points and
+    // is surfaced as a gap instead.
+    const parts = [fs.m1860_ambulation, fs.m1850_transferring, fs.m1830_bathing].map(toNum);
+    if (parts.every((n) => Number.isFinite(n))) {
+      const totalFunctional = parts.reduce((a, b) => a + b, 0);
+      if (totalFunctional >= 12) {
+        base += 20;
+        factors.push({ factor: "Severe functional impairment", impact: 20 });
+      } else if (totalFunctional >= 8) {
+        base += 12;
+        factors.push({ factor: "Moderate functional impairment", impact: 12 });
+      }
+    } else {
+      factors.push({ factor: "Functional status incomplete — risk may be understated", impact: 0 });
     }
     const dx = String(pdgm.primary_diagnosis || "").toLowerCase();
     if (dx.includes("heart failure") || dx.includes("chf")) {
