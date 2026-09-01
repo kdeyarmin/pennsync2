@@ -214,3 +214,131 @@ test("a malformed stored rate override cannot clobber a rate subtree", async () 
   const expectedWeight = DEFAULT_PDGM_RATES.clinicalGroupWeights.MMTA_Cardiac_Circulatory.community_early;
   assert.equal(json.original.clinicalWeight, Math.round(expectedWeight * 10000) / 10000);
 });
+
+// ── response-schema gating on the functional input ──────────────────────────
+
+/**
+ * The functional score drives the case-mix weight and therefore the payment.
+ * It is computed from OASIS response CODES, and a code only means something
+ * once you know which response set it came from. These tests pin the refusal:
+ * without verified, clinician-selected CMS-aligned input there is no functional
+ * level to report, and the calculation must say so rather than quietly costing
+ * the period at "functional low".
+ */
+
+const V2_SCHEMA = "pennsync-oasis-response-v2-cms-e2";
+
+const VERIFIED_FUNCTIONAL = {
+  response_schema_id: V2_SCHEMA,
+  response_origin: "clinician_selected",
+  m1800_grooming: "1",
+  m1810_dress_upper: "1",
+  m1820_dress_lower: "1",
+  m1830_bathing: "2",
+  m1840_toilet_transfer: "1",
+  m1850_transferring: "1",
+  m1860_ambulation: "2",
+};
+
+test("PDGM is incomplete when the functional input states no response schema", async () => {
+  const handler = await loadHandler();
+  const { status, json } = await call(handler, {
+    pdgmData: { ...BASE_PDGM, functional_scores: { m1830_bathing: "2", m1860_ambulation: "2" } },
+  });
+  assert.equal(status, 200);
+  const r = json.original ?? json;
+  assert.equal(r.incomplete, true);
+  assert.equal(r.reason, "functional_input_not_verifiable");
+  // The refusal must not become a cheap answer.
+  assert.equal(r.functionalLevel, null);
+  assert.equal(r.functionalPoints, null);
+  assert.equal(r.caseMixWeight, null);
+  assert.equal(r.totalPayment, null);
+  assert.ok(r.missing.some((m) => /response schema/i.test(m)), JSON.stringify(r.missing));
+});
+
+test("an ENTIRELY EMPTY functional input is incomplete, never functional-low", async () => {
+  const handler = await loadHandler();
+  const { json } = await call(handler, { pdgmData: BASE_PDGM });
+  const r = json.original ?? json;
+  assert.equal(r.incomplete, true);
+  assert.notEqual(r.functionalLevel, "low", "missing values must not become the cheapest level");
+  assert.equal(r.totalPayment, null);
+});
+
+test("a legacy response schema on the functional input is refused", async () => {
+  const handler = await loadHandler();
+  const { json } = await call(handler, {
+    pdgmData: {
+      ...BASE_PDGM,
+      functional_scores: { ...VERIFIED_FUNCTIONAL, response_schema_id: "pennsync-oasis-response-v1-legacy" },
+    },
+  });
+  const r = json.original ?? json;
+  assert.equal(r.incomplete, true);
+  assert.ok(r.missing.some((m) => /not the CMS-aligned v2 set/i.test(m)), JSON.stringify(r.missing));
+});
+
+test("an AI-originated functional input is refused", async () => {
+  const handler = await loadHandler();
+  const { json } = await call(handler, {
+    pdgmData: { ...BASE_PDGM, functional_scores: { ...VERIFIED_FUNCTIONAL, response_origin: "ai_suggested" } },
+  });
+  const r = json.original ?? json;
+  assert.equal(r.incomplete, true);
+  assert.ok(r.missing.some((m) => /clinician/i.test(m)), JSON.stringify(r.missing));
+});
+
+test("the PennSync hospitalization-risk tier can never stand in for an official item", async () => {
+  const handler = await loadHandler();
+  const { json } = await call(handler, {
+    pdgmData: {
+      ...BASE_PDGM,
+      functional_scores: { ...VERIFIED_FUNCTIONAL, ps_hospitalization_risk_tier: "high" },
+    },
+  });
+  const r = json.original ?? json;
+  assert.equal(r.incomplete, true);
+  assert.ok(
+    r.missing.some((m) => /ps_hospitalization_risk_tier/.test(m)),
+    `the screening tier must be named as a refusal — got ${JSON.stringify(r.missing)}`,
+  );
+});
+
+test("items with no CMS-verified response set are named, so the gap is visible", async () => {
+  // M1800/M1810/M1820/M1850 were outside the CMS-alignment cutover, so PennSync
+  // holds no verified response set for them. The functional score is therefore
+  // not computable today — which is reported, not papered over.
+  const handler = await loadHandler();
+  const { json } = await call(handler, {
+    pdgmData: { ...BASE_PDGM, functional_scores: VERIFIED_FUNCTIONAL },
+  });
+  const r = json.original ?? json;
+  assert.equal(r.incomplete, true);
+  for (const item of ["M1800", "M1810", "M1820", "M1850"]) {
+    assert.ok(
+      r.missing.some((m) => m.includes(item) && /no CMS-verified response set/i.test(m)),
+      `${item} should be named as lacking a verified response set — got ${JSON.stringify(r.missing)}`,
+    );
+  }
+  // The items that DO have one are not listed as missing.
+  for (const item of ["M1830", "M1840", "M1860"]) {
+    assert.ok(
+      !r.missing.some((m) => m.includes(item) && /no CMS-verified response set/i.test(m)),
+      `${item} has a verified response set and must not be listed`,
+    );
+  }
+});
+
+test("an incomplete result still reports the payment-independent facts it did establish", async () => {
+  const handler = await loadHandler();
+  const { json } = await call(handler, { pdgmData: BASE_PDGM, wageIndex: 1.2 });
+  const r = json.original ?? json;
+  assert.equal(r.incomplete, true);
+  // Wage/base math is independent of the functional level, so it is still shown
+  // — the caller can see how far the calculation got.
+  assert.equal(r.wageIndex, 1.2);
+  assert.equal(r.adjustedBasePayment, Math.round(BASE_RATE * (LABOR_SHARE * 1.2 + (1 - LABOR_SHARE)) * 100) / 100);
+  assert.equal(r.clinicalGroup, "MMTA_Cardiac_Circulatory");
+  assert.match(r.message, /does not determine PDGM/i);
+});

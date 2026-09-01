@@ -354,7 +354,36 @@ enforcement. Until hosted enforcement is proven, and until it is confirmed that
 write-scoping does not break legitimate cross-user workflows, **v2 entry stays
 disabled**. This is recorded as a release blocker, not a warning.
 
-## 12. Known gaps in this change
+## 12. Data-driven controls
+
+`src/components/oasis/OasisResponseControl.jsx` renders the shape the item
+declares rather than a shape hard-coded at the call site: single-select,
+matrix (M1100's published 3x5 grid), multi-select (M1740, with the mutually
+exclusive "none" enforced in the control as well as the validator) and grid
+(M2401's five rows). It begins blank — a pre-selected official response is a
+response nobody chose — requires an explicit clinician action, preserves codes
+exactly as strings, omits codes CMS does not offer at the time point, and shows
+applicability plus source/version information. An item at an inapplicable time
+point renders as a locked explanation rather than an answerable control.
+
+`LegacyResponseNotice` shows a stored legacy answer read-only, with its frozen
+v1 label and the persistent warning. It deliberately exposes no button, radio or
+text input: edit, clone, carry-forward, copy and convert are all absent because
+none can be made safe.
+
+Accessibility: every input has a programmatic label, groups use `fieldset` /
+`legend` and the matrix uses real table headers, unanswered state and grid
+completeness are announced via `aria-live`, and the matrix scrolls inside its own
+container rather than widening the page. `pnpm run test:a11y` runs axe over all
+four shapes plus the legacy notice.
+
+> The `test:a11y` script itself was fixed here. `vitest run src/**/*.a11y.test.jsx`
+> was expanded by the SHELL, where `**` collapses to a single `*`, so only
+> `src/<dir>/*.a11y.test.jsx` matched — two of the four a11y suites, including a
+> pre-existing one, had never run. It is now a vitest filter (`a11y.test.jsx`),
+> and the suite went from 2 tests to 19.
+
+## 13. Known gaps in this change
 
 `docs/oasis/CONSUMER_MATRIX.md` ends with an "Outstanding, by name" table. The
 short version: several output surfaces (`OASISExportManager`,
@@ -369,7 +398,7 @@ None of these can currently emit a v2 code — there are none, because the flag 
 off — and all sit downstream of gates that refuse unverifiable values. They are
 listed so the gap is reviewable rather than implied by a green table.
 
-## 13. Where the code lives
+## 14. Where the code lives
 
 | Concern | Path |
 | --- | --- |
@@ -387,6 +416,7 @@ listed so the gap is reviewable rather than implied by a green table.
 | Protected backend writer | `base44/functions/saveOasisResponses/entry.ts` |
 | Shared write validator | `base44/_shared/backendHelpers.mjs` (`oasisResponseGuard`) |
 | Migration / dry-run tool | `tools-oasis-response-migration.mjs` |
+| Schema-driven controls | `src/components/oasis/OasisResponseControl.jsx` |
 | Consumer matrix | `docs/oasis/CONSUMER_MATRIX.md` |
 | Client-side write adapter | `src/components/oasis/responseSchema/oasisWriteAdapter.js` |
 | Static no-direct-writer test | `base44/oasisWriterContract.test.js` |
