@@ -29,6 +29,8 @@ import PatientRiskStratification from "../components/patient/PatientRiskStratifi
 import DischargeSummaryGenerator from "../components/discharge/DischargeSummaryGenerator";
 import AIPatientDashboardSummary from "../components/patient/AIPatientDashboardSummary";
 import QuickActionsPanel from "../components/patient/QuickActionsPanel";
+import VisitPrepPanel from "../components/visit/VisitPrepPanel";
+import DocumentationReadinessPanel from "../components/compliance/DocumentationReadinessPanel";
 import AIComplianceAuditor from "../components/compliance/AIComplianceAuditor";
 import PredictiveRiskAnalyzer from "../components/analytics/PredictiveRiskAnalyzer";
 import RiskAlertWidget from "../components/alerts/RiskAlertWidget";
@@ -297,6 +299,19 @@ export default function PatientDetails() {
 
         {/* Overview Tab */}
         <TabsContent value="overview" className="space-y-6">
+          {/* Pre-visit briefing, first on the tab. It is assembled
+              deterministically from the context already fetched above (no extra
+              request, no LLM) and is what a nurse standing in a driveway needs
+              before they open anything else. */}
+          <VisitPrepPanel
+            patient={patient}
+            priorVisits={visits.filter((v) => v.status === 'completed')}
+            openTasks={tasks}
+            carePlans={ctx.carePlans ?? []}
+            oasisAssessments={ctx.oasisAssessments ?? []}
+            alerts={activeAlerts}
+          />
+
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2">
               <AIPatientDashboardSummary
@@ -621,6 +636,14 @@ export default function PatientDetails() {
             </TabsContent>
 
             <TabsContent value="documentation" className="space-y-6">
+              {/* Deterministic readiness view for QA/office staff. NOT a billing
+                  gate — it reports only what PennSync knows and says so. */}
+              <DocumentationReadinessPanel
+                patient={patient}
+                visits={visits}
+                openTasks={tasks}
+                incidents={incidents}
+              />
               {oasisTriggerVisit && (
                 <AIGeneratedOASISAssessment
                   patientId={patientId}
