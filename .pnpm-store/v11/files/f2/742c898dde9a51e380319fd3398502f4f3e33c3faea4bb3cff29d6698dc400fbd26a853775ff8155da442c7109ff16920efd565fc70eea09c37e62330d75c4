@@ -1,0 +1,4 @@
+declare const support: {
+    getIsSupported(): null;
+};
+export default support;

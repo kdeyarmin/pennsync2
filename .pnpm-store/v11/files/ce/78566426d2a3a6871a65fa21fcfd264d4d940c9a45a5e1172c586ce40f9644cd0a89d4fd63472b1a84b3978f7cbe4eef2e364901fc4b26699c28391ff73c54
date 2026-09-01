@@ -1,0 +1,80 @@
+import { Immutable } from 'immer';
+import { Participant, Stream } from 'src';
+import { Subscription } from './subscription';
+export declare type State = Immutable<{
+    status: 'initialized' | 'connecting' | 'connected' | 'disconnected';
+    localParticipantId: Participant['id'];
+    participants: Map<Participant['id'], Participant>;
+    streams: Map<Stream['id'], Stream>;
+    subscriptions: Map<Participant['id'], Map<Stream['key'], Subscription>>;
+    mixedAudioTrack?: MediaStreamTrack;
+}>;
+interface StateActions {
+    status_changed: {
+        type: 'status_changed';
+        payload: State['status'];
+    };
+    add_participant: {
+        type: 'add_participant';
+        payload: Participant;
+    };
+    update_participant: {
+        type: 'update_participant';
+        payload: {
+            id: Participant['id'];
+            props: Partial<Pick<Participant, 'canReceiveMessages'>>;
+        };
+    };
+    remove_participant: {
+        type: 'remove_participant';
+        payload: Participant;
+    };
+    update_mixed_audio_track: {
+        type: 'update_mixed_audio_track';
+        payload: MediaStreamTrack;
+    };
+    add_stream: {
+        type: 'add_stream';
+        payload: Stream;
+    };
+    update_stream: {
+        type: 'update_stream';
+        payload: {
+            id: Stream['id'];
+            props: Partial<Pick<Stream, 'audioTrack' | 'videoTrack' | 'isAudioEnabled' | 'isVideoEnabled' | 'isAudioCensored' | 'isVideoCensored' | 'isConfigured'>>;
+        };
+    };
+    remove_stream: {
+        type: 'remove_stream';
+        payload: Stream;
+    };
+    add_subscription: {
+        type: 'add_subscription';
+        payload: Subscription;
+    };
+    update_subscription: {
+        type: 'update_subscription';
+        payload: {
+            participantId: Participant['id'];
+            key: Stream['key'];
+            props: Partial<Pick<Subscription, 'audio' | 'video'>>;
+        };
+    };
+    remove_subscription: {
+        type: 'remove_subscription';
+        payload: Subscription;
+    };
+}
+export declare type ReadFn = () => State;
+export declare type UpdateFn = (action: StateActions[keyof StateActions]) => State;
+export declare type CleanupFn = () => void;
+export declare const initState: (config: {
+    localParticipant: Participant;
+}, callbacks: {
+    onStateChange?: ((state: State) => void) | undefined;
+}) => {
+    read: ReadFn;
+    update: UpdateFn;
+    cleanup: CleanupFn;
+};
+export {};

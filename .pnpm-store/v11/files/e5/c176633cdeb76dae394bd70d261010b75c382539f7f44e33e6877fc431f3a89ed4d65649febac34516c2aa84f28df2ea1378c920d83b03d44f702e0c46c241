@@ -1,0 +1,33 @@
+import { Unsubscribe } from 'nanoevents';
+import { Participant } from 'src/participant';
+import { Session } from 'src/session';
+import { CleanupFn, ReadFn, UpdateFn } from 'src/state';
+declare type MessageType = 'text';
+export interface Message {
+    type: MessageType;
+    payload: string;
+    meta?: string;
+}
+export interface Events {
+    registered: (participantId: Participant['id']) => void;
+    will_unregister: (participantId: Participant['id'], reason: 'kicked' | null) => void;
+    audio_activity: (participantId: Participant['id']) => void;
+    unregistered: (participantId: Participant['id']) => void;
+    message_received: (participantId: Participant['id'], message: Message, recipients: Array<Participant['id']> | null) => void;
+}
+export interface ParticipantRegister {
+    register: () => Promise<void>;
+    unregister: () => Promise<void>;
+    sendMessage: (message: Message, recipients?: Array<Participant['id']>) => Promise<void>;
+    on<E extends keyof Events>(event: E, callback: Events[E]): Unsubscribe;
+}
+export declare const initParticipantRegister: ({ session, state, enableMessages, }: {
+    session: Session;
+    state: {
+        read: ReadFn;
+        update: UpdateFn;
+        cleanup: CleanupFn;
+    };
+    enableMessages?: boolean | undefined;
+}) => Promise<ParticipantRegister>;
+export {};

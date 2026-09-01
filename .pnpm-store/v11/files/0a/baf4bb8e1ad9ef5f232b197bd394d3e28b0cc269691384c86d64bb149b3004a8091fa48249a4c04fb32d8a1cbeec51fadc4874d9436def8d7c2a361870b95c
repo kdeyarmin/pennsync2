@@ -1,0 +1,52 @@
+# @telnyx/video
+
+| This library is evolving rapidly and might introduce breaking changes to the API in the upcoming releases.
+
+## Summary
+
+The Telnyx Video JavaScript SDK
+
+## Documentation
+
+Please consult the documentation available [here](https://developers.telnyx.com/docs/api/v2/video) to learn how you can use this SDK to build your own video conferencing apps.
+
+## Development
+
+_**Requirement** Node v14.0.0 or later_
+
+This library is written in [TypeScript](https://www.typescriptlang.org/) to define a clear API with optional typechecking benefits.
+
+To contribute, clone this repo and install locally:
+
+```
+yarn
+```
+
+Afterwards, you're ready to make changes to the files in `src`.
+
+During development you can use `yarn watch:dev` to have your changes compiled instantly.
+
+To run all tests:
+
+```
+yarn test
+```
+
+## Browser Support
+
+For best support use the latest version of the browsers.
+
+| Browser             | Supported Versions |
+| ------------------- | ------------------ |
+| Chrome              | 56 and above       |
+| Firefox             | 44 and above       |
+| Safari              | 11 and above       |
+| Edge                | 79 and above       |
+| Opera               | 43 and above       |
+| Safari on iOS       | 15 and above       |
+| Chrome for Android  | 95 and above       |
+| Firefox for Android | 92 and above       |
+
+## License
+
+[MIT](./LICENSE) © [Telnyx](https://github.com/team-telnyx)

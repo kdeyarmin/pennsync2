@@ -1,0 +1,19 @@
+export interface WebRTCStats {
+    senders: {
+        audio?: {
+            [reportId: string]: {};
+        };
+        video?: {
+            [reportId: string]: {};
+        };
+    };
+    receivers: {
+        audio?: {
+            [reportId: string]: {};
+        };
+        video?: {
+            [reportId: string]: {};
+        };
+    };
+}
+export declare const getWebRTCStats: (conn: RTCPeerConnection) => Promise<WebRTCStats>;

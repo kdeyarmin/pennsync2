@@ -1,0 +1,18 @@
+import { Immutable } from 'immer';
+import { Stream } from 'src';
+export { v4 as generateParticipantId } from 'uuid';
+export declare type Participant = Immutable<{
+    id: string;
+    context?: string;
+    streams: {
+        [key: string]: Stream['id'];
+    };
+    canReceiveMessages: boolean;
+    origin: 'local' | 'remote' | 'telephony_engine';
+}>;
+export declare const createParticipant: (config: {
+    id: string;
+    context?: string;
+    origin: Participant['origin'];
+    canReceiveMessages?: boolean;
+}) => Participant;

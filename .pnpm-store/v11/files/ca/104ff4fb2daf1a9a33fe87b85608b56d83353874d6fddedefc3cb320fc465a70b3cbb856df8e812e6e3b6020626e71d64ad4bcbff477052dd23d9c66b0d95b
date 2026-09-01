@@ -1,0 +1,83 @@
+import { Unsubscribe } from 'nanoevents';
+import { Immutable } from 'immer';
+import { Participant } from './participant';
+import { Stream } from './stream';
+import { Message } from './registers/participant_register';
+import { State } from './state';
+import { WebRTCStats } from './util/webrtc';
+import { NetworkMetrics } from './metrics/utils';
+import { DisconnectionReason } from './util/network';
+export declare type Room = Immutable<{
+    id: string;
+    on<E extends keyof Events>(event: E, callback: Events[E]): Unsubscribe;
+    connect: () => Promise<void>;
+    disconnect: () => Promise<void>;
+    updateClientToken: (clientToken: string) => Promise<void>;
+    getState: () => State;
+    getLocalParticipant: () => Participant;
+    getLocalStreams: () => {
+        [key: Stream['key']]: Stream;
+    };
+    addStream: (key: Stream['key'], tracks?: {
+        audio?: MediaStreamTrack;
+        video?: MediaStreamTrack | {
+            track?: MediaStreamTrack;
+            options?: {
+                enableSimulcast?: boolean;
+            };
+        };
+    }) => Promise<void>;
+    updateStream: (key: Stream['key'], tracks?: {
+        audio?: MediaStreamTrack;
+        video?: MediaStreamTrack | {
+            track?: MediaStreamTrack;
+            options?: {
+                enableSimulcast?: boolean;
+            };
+        };
+    }) => Promise<void>;
+    removeStream: (key: string) => Promise<void>;
+    addSubscription: (participantId: Participant['id'], key: Stream['key'], config: {
+        audio: boolean;
+        video: boolean;
+    }) => Promise<void>;
+    updateSubscription: (participantId: Participant['id'], key: Stream['key'], config: {
+        audio: boolean;
+        video: boolean;
+    }) => Promise<void>;
+    removeSubscription: (participantId: Participant['id'], key: Stream['key']) => Promise<void>;
+    getParticipantStreams: (participantId: Participant['id']) => Map<Stream['key'], Stream>;
+    getParticipantStream: (participantId: Participant['id'], key: Stream['key']) => Stream | undefined;
+    getWebRTCStatsForStream: (participantId: Participant['id'], key: Stream['key']) => Promise<WebRTCStats>;
+    sendMessage: (message: Message, recipients?: Array<Participant['id']>) => Promise<void>;
+    enableNetworkMetricsReport: (participantIds: Array<Participant['id']>, options?: {
+        includeStreams?: boolean;
+    }) => Promise<void>;
+    disableNetworkMetricsReport: (participantIds?: Array<Participant['id']>) => Promise<void>;
+}>;
+export interface Events {
+    state_changed: (state: State) => void;
+    connected: (state: State) => void;
+    disconnected: (reason: DisconnectionReason, state: State) => void;
+    participant_joined: (participant: Participant['id'], state: State) => void;
+    participant_leaving: (participant: Participant['id'], reason: 'kicked' | null, state: State) => void;
+    participant_left: (participantId: Participant['id'], state: State) => void;
+    stream_published: (participantId: Participant['id'], key: Stream['key'], state: State) => void;
+    stream_unpublished: (participantId: Participant['id'], key: Stream['key'], state: State) => void;
+    track_enabled: (participantId: Participant['id'], key: Stream['key'], kind: 'audio' | 'video', state: State) => void;
+    track_disabled: (participantId: Participant['id'], key: Stream['key'], kind: 'audio' | 'video', state: State) => void;
+    track_censored: (participantId: Participant['id'], key: Stream['key'], kind: 'audio' | 'video', state: State) => void;
+    track_uncensored: (participantId: Participant['id'], key: Stream['key'], kind: 'audio' | 'video', state: State) => void;
+    audio_activity: (participantId: Participant['id'], key: Stream['key'] | null, state: State) => void;
+    subscription_started: (participantId: Participant['id'], key: Stream['key'], state: State) => void;
+    subscription_reconfigured: (participantId: Participant['id'], key: Stream['key'], state: State) => void;
+    subscription_ended: (participantId: Participant['id'], key: Stream['key'], state: State) => void;
+    message_received: (participantId: Participant['id'], message: Message, recipients: Array<Participant['id']> | null, state: State) => void;
+    network_metrics_report: (networkMetrics: NetworkMetrics) => void;
+}
+export declare const createRoom: (config: {
+    id: string;
+    clientToken: string;
+    context?: string;
+    enableMessages: boolean;
+}) => Promise<Room>;

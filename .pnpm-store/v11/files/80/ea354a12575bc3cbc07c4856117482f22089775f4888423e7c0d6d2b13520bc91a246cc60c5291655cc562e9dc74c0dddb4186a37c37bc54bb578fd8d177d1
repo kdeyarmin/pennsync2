@@ -1,0 +1,31 @@
+import type { LogLevel } from 'src/util/logger';
+export declare const CONNECTION_TIMEOUT_IN_MILLISECONDS: number;
+import { Network, InboundMessage, DisconnectionReason } from './util/network';
+export interface Options {
+    clientToken?: string;
+    logLevel?: LogLevel;
+    loggerName?: string;
+}
+export declare enum Direction {
+    SEND = "send",
+    ACK = "ack"
+}
+export interface Session {
+    readonly roomId: string;
+    readonly sessionId: number;
+    updateClientToken: (clientToken: string) => Promise<void>;
+    message: (message: {
+        [key: string]: any;
+    }) => ReturnType<Network['send']>;
+    subscribe: (sender: number, callback: (message: InboundMessage['plugindata']) => void) => void;
+    destroy: (reason: DisconnectionReason) => Promise<void>;
+}
+export declare const createSession: (config: {
+    roomId: string;
+    clientToken?: string;
+    timeout?: number;
+}, callbacks?: {
+    onCreated: () => void;
+    onDestroyed: (reason: DisconnectionReason) => void;
+    onKeepAlive: (transactionId: string, direction: Direction, timestamp: number) => void;
+} | undefined) => Promise<Session>;

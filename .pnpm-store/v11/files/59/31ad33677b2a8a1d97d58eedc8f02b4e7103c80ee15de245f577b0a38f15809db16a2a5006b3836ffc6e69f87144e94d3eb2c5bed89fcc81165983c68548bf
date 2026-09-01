@@ -1,0 +1,7 @@
+interface Config {
+    width: number;
+    height: number;
+    fps: number;
+}
+export declare function createEmptyVideoSource(config: Config): MediaStreamTrack;
+export {};

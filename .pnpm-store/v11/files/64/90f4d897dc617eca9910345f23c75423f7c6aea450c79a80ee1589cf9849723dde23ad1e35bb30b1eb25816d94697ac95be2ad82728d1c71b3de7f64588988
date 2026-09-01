@@ -1,0 +1,30 @@
+import { WebRTCStats } from 'src/util/webrtc';
+export interface BitrateLevel {
+    level: ConnectionQualityLevel;
+    reportId: string | null;
+    report: RTCOutboundRTPStreamReport | RTCInboundRTPStreamReport | null;
+}
+export interface RTCOutboundRTPStreamReport {
+    timestamp: number;
+    bytesSent: number;
+    id: string;
+}
+export interface RTCInboundRTPStreamReport {
+    timestamp: number;
+    bytesReceived: number;
+    id: string;
+}
+export declare enum ConnectionQualityLevel {
+    excellent_network = 5,
+    good_network = 4,
+    average_network = 3,
+    below_average_network = 2,
+    bad_network = 1,
+    network_broken = 0
+}
+export declare function getVideoConnectionQualityLevel(bitrate: number): ConnectionQualityLevel;
+export declare function getAudioConnectionQualityLevel(bitrate: number): ConnectionQualityLevel;
+export declare function getSenderAudioMetrics(previousStats: Map<string, RTCOutboundRTPStreamReport>, currentStats: WebRTCStats): BitrateLevel;
+export declare function getSenderVideoMetrics(previousStats: Map<string, RTCOutboundRTPStreamReport>, currentStats: WebRTCStats): BitrateLevel;
+export declare function getReceiverAudioMetrics(previousStats: Map<string, RTCInboundRTPStreamReport>, currentStats: WebRTCStats): BitrateLevel;
+export declare function getReceiverVideoMetrics(previousStats: Map<string, RTCInboundRTPStreamReport>, currentStats: WebRTCStats): BitrateLevel;

@@ -1,0 +1,21 @@
+import { Session } from 'src/session';
+import { Subscription } from 'src/subscription';
+export interface AVStreamSubscriber {
+    pluginHandleId: number;
+    feedId: number;
+    peerConnection?: RTCPeerConnection;
+    reconfigure: (config: {
+        audio: boolean;
+        video: boolean;
+    }) => Promise<void>;
+    destroy: () => Promise<void>;
+}
+export declare const initAVStreamSubscriber: ({ session, subscription, feedId, }: {
+    session: Session;
+    subscription: Subscription;
+    feedId: number;
+}, callbacks?: {
+    onConnected?: (() => void) | undefined;
+    onDisconnected?: (() => void) | undefined;
+    onTrack?: ((track: MediaStreamTrack) => void) | undefined;
+} | undefined) => Promise<AVStreamSubscriber>;

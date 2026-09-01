@@ -1,0 +1,23 @@
+import { Stream } from 'src';
+import { Session } from 'src/session';
+export interface AVStreamPublisher {
+    streamId: Stream['id'];
+    pluginHandleId: number;
+    publisherId: number;
+    peerConnection?: RTCPeerConnection;
+    audioTransceiver?: RTCRtpTransceiver;
+    videoTransceiver?: RTCRtpTransceiver;
+    replaceTracks: (stream: Stream) => Promise<void>;
+    destroy: () => Promise<void>;
+}
+export declare const initAVStreamPublisher: ({ session, stream, fallbackTracks, options, }: {
+    session: Session;
+    stream: Stream;
+    fallbackTracks: {
+        audio: MediaStreamTrack;
+        video: MediaStreamTrack;
+    };
+    options?: {
+        enableSimulcast?: boolean | undefined;
+    } | undefined;
+}) => Promise<AVStreamPublisher>;
