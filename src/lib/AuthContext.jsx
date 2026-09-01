@@ -124,9 +124,12 @@ export const AuthProvider = ({ children }) => {
             // The app ID resolves, but the backend has no published deployment
             // for it (a freshly created / duplicated app). This is a platform
             // publishing state, not a configuration problem.
+            // Prefer the backend's own explanation over the transport-level
+            // message (which can be a generic "Request failed with status 403").
+            const backendMessage = appError.data?.message || appError.data?.detail || appError.message;
             setAuthError({
               type: 'not_deployed',
-              message: `Base44 has no deployment for app ${appParams.appId}. ${appError.message || 'Publish it from the Base44 dashboard.'}`
+              message: `Base44 has no deployment for app ${appParams.appId}. ${backendMessage || 'Publish it from the Base44 dashboard.'}`
             });
           } else {
             setAuthError({

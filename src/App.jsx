@@ -66,8 +66,24 @@ const ConfigurationErrorScreen = ({ message }) => (
 // / 5xx failure loading public settings). Deliberately NOT the configuration
 // screen above: that headline sends people hunting for missing env vars that
 // are actually present. Show the backend's own message with an honest title.
+//
+// The server message is only echoed when it looks like short prose: a
+// non-JSON error body (HTML error page, stack trace, proxy banner) would leak
+// internals and wreck the layout, so anything long, multi-line or markup-like
+// falls back to generic copy. React escapes the text, so this is about
+// leakage and layout, not injection.
+const MAX_SERVER_MESSAGE_LENGTH = 300;
+const presentableServerMessage = (message) => {
+  if (typeof message !== 'string') return null;
+  const trimmed = message.trim();
+  if (!trimmed || trimmed.length > MAX_SERVER_MESSAGE_LENGTH) return null;
+  if (/[<>{}]/.test(trimmed) || /\n/.test(trimmed) || /\bat\s+\S+\s*\(/.test(trimmed)) return null;
+  return trimmed;
+};
+
 const AppUnavailableScreen = ({ type, message }) => {
   const notDeployed = type === 'not_deployed';
+  const serverMessage = presentableServerMessage(message);
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-slate-50 p-4">
       <div className="max-w-lg rounded-xl border border-amber-200 bg-white p-6 shadow-sm">
@@ -78,7 +94,7 @@ const AppUnavailableScreen = ({ type, message }) => {
           {notDeployed ? 'This Base44 app has not been deployed yet' : 'PennSync could not load'}
         </h1>
         <p className="mt-3 text-sm text-slate-700">
-          {message || 'The server could not be reached. Check your connection and try again.'}
+          {serverMessage || 'The server could not be reached. Check your connection and try again.'}
         </p>
         {notDeployed && (
           <p className="mt-3 text-xs text-slate-500">
