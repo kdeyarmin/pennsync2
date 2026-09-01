@@ -3,6 +3,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, CheckCircle2, GitCompare, ListChecks } from "lucide-react";
 import { RESOLUTIONS, resolveFinding, reviewCrossDocumentConsistency } from "./crossDocumentConsistency";
+import DocumentationGapPanel from "@/components/oasis/DocumentationGapPanel";
+import { findDocumentationGaps } from "@/components/oasis/documentationGaps.js";
 
 const ACTION_LABEL = {
   acknowledged: "Acknowledge",
@@ -33,6 +35,14 @@ export default function CrossDocumentReviewPanel({
   const review = useMemo(
     () => reviewCrossDocumentConsistency({ noteText, patient, oasis, carePlans, openTasks }),
     [noteText, patient, oasis, carePlans, openTasks],
+  );
+  // Item-level note-versus-code gaps. Evidence-triggered and symmetric: the
+  // same rules fire when the note describes MORE independence than the recorded
+  // response as when it describes less. Nothing financial reaches this — see
+  // documentationGaps.js.
+  const documentationGaps = useMemo(
+    () => findDocumentationGaps({ documentation: noteText, oasis }),
+    [noteText, oasis],
   );
   // { [findingId]: resolution } — local review state; PennSync stores the
   // reviewer's choice, never an edit to the underlying record.
@@ -69,14 +79,19 @@ export default function CrossDocumentReviewPanel({
           <GitCompare className="w-4 h-4 text-navy-600" aria-hidden="true" />
           Note · OASIS · care-plan review
         </h3>
-        {review.counts.total > 0 && (
+        {review.counts.total + documentationGaps.length > 0 && (
           <Badge variant="warning" className="text-xs">
-            {review.counts.total} to review
+            {review.counts.total + documentationGaps.length} to review
           </Badge>
         )}
       </div>
 
-      {review.findings.length === 0 ? (
+      <DocumentationGapPanel gaps={documentationGaps} />
+
+      {/* The all-clear must account for BOTH engines. Checking only
+          `review.findings` rendered the gap panel and a green "no
+          inconsistencies" message about the same record, in the same view. */}
+      {review.findings.length === 0 && documentationGaps.length === 0 ? (
         <p className="flex items-start gap-2 text-xs text-emerald-900 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
           <CheckCircle2 className="w-3.5 h-3.5 mt-0.5 shrink-0 text-emerald-600" aria-hidden="true" />
           No inconsistencies detected by PennSync&apos;s current rules across the records it holds.

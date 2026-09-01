@@ -31,7 +31,8 @@ export function getOasisSpec(id) {
 /**
  * The spec in force on an assessment date (M0090).
  *
- * Returns null rather than guessing when the date precedes every known version:
+ * Returns null rather than guessing when the date is missing or invalid, and
+ * when it precedes every known version:
  * PennSync must not apply OASIS-E definitions to an assessment completed under
  * an earlier instrument it does not hold.
  *
@@ -41,7 +42,11 @@ export function getOasisSpec(id) {
  */
 export function resolveSpecForDate(date) {
   const t = date instanceof Date ? date.getTime() : Date.parse(String(date || ""));
-  if (!Number.isFinite(t)) return ACTIVE_OASIS_SPEC;
+  // A missing or unparseable date resolves to NOTHING. Returning the active
+  // spec here stamped OASIS-E2 onto assessments whose instrument nobody knew,
+  // which is a claim PennSync has no basis for. Callers must handle null as
+  // "unresolved / ineligible", not substitute a default.
+  if (!Number.isFinite(t)) return null;
   let match = null;
   for (const spec of KNOWN_OASIS_SPECS) {
     const from = Date.parse(spec.effective_date);

@@ -129,6 +129,8 @@
 
 import { ACTIVE_OASIS_SPEC } from "./registry.js";
 
+import { V2_DEFINITIONS } from "../responseSchema/v2CmsE2.js";
+import { V1_LEGACY_DEFINITIONS } from "../responseSchema/v1Legacy.js";
 /** @type {ReadonlyArray<string>} */
 export const VERIFICATION_LEVELS = Object.freeze([
   "verified",
@@ -1141,6 +1143,38 @@ export function clinicalReviewStatus(itemIds) {
  * @param {{ specLabel?: string, generatedAt?: string }} [options]
  * @returns {string} Markdown
  */
+/**
+ * The cutover disposition for an item, from the response-schema registry.
+ *
+ * Read from the registry rather than restated here, so the worksheet a reviewer
+ * signs cannot disagree with what the app actually does.
+ *
+ * @param {string} itemId
+ */
+export function cutoverDispositionFor(itemId) {
+  const number = officialItemNumber(itemId) || String(itemId || "").toUpperCase();
+  const v2 = Object.values(V2_DEFINITIONS).find((d) => d.item_number === number);
+  if (v2) {
+    return { disposition: "align_to_cms", definitionId: v2.definition_id, note: v2.migration_rationale };
+  }
+  const demoted = V2_SCREENING_FOR_LEGACY[String(itemId || "").toLowerCase()];
+  if (demoted) {
+    const d = V2_DEFINITIONS[demoted];
+    return { disposition: "pennsync_only_screening", definitionId: demoted, note: d.migration_rationale };
+  }
+  if (V1_LEGACY_DEFINITIONS[String(itemId || "").toLowerCase()]) {
+    return { disposition: "frozen_legacy_only", definitionId: null, note: "Frozen in v1 for historical display only." };
+  }
+  return { disposition: "out_of_scope", definitionId: null, note: "Not part of the CMS-alignment cutover." };
+}
+
+/** The three legacy M-numbers demoted to PennSync screening prompts. */
+const V2_SCREENING_FOR_LEGACY = Object.freeze({
+  m1033: "ps_hospitalization_risk_tier",
+  m1610: "ps_urinary_incontinence_frequency",
+  m1630: "ps_ostomy_self_management",
+});
+
 export function buildClinicalReviewWorksheet(items, { specLabel = ACTIVE_OASIS_SPEC.label, generatedAt = "" } = {}) {
   const rows = (Array.isArray(items) ? items : [])
     .filter((i) => i && i.id)
@@ -1186,8 +1220,22 @@ export function buildClinicalReviewWorksheet(items, { specLabel = ACTIVE_OASIS_S
     "item number exist, and what is its title. It is **not** a clinical sign-off, which is",
     "what the reviewer columns are for.",
     "",
-    "| PennSync id | Item number shown | PennSync label | Classification (signed off) | Answer choices vs CMS | Source check / note | Clinical question outstanding | Reviewer: answer | Reviewer initials / date |",
-    "| --- | --- | --- | --- | --- | --- | --- | --- | --- |",
+    "Cutover disposition key (from the response-schema registry — see",
+    "`src/components/oasis/responseSchema/`):",
+    "",
+    "- `align_to_cms` — a v2 definition transcribed from the final CMS OASIS-E2 instrument",
+    "- `pennsync_only_screening` — kept as a PennSync screening prompt under a non-M identifier",
+    "- `frozen_legacy_only` — readable in the frozen v1 set; never carryable, exportable or scorable",
+    "- `out_of_scope` — not part of this cutover; stays fail-closed until separately reviewed",
+    "",
+    "**Source verification, product disposition and clinical review are SEPARATE approvals.**",
+    "Every v2 definition is `source_verification: verified_against_final_cms_source` and",
+    "`clinical_review: pending_named_sme_review`. Kevin Deyarmin's 2026-09-01 sign-off",
+    "explicitly excluded individual response-option verification and is **not** option-level",
+    "CMS approval.",
+    "",
+    "| PennSync id | Item number shown | PennSync label | Classification (signed off) | Answer choices vs CMS | Cutover disposition | v2 definition id | Source check / note | Clinical question outstanding | Reviewer: answer | Reviewer initials / date |",
+    "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |",
   ].filter((line, i, arr) => !(line === "" && arr[i - 1] === "")).join("\n");
 
   const body = rows.map((r) => [
@@ -1197,6 +1245,8 @@ export function buildClinicalReviewWorksheet(items, { specLabel = ACTIVE_OASIS_S
     (r.label || "").replace(/\|/g, "\\|"),
     `\`${r.level}\``,
     [`\`${r.responseSet}\``, r.responseSetNote].filter(Boolean).join(" · ").replace(/\|/g, "\\|"),
+    `\`${cutoverDispositionFor(r.id).disposition}\``,
+    cutoverDispositionFor(r.id).definitionId ? `\`${cutoverDispositionFor(r.id).definitionId}\`` : "—",
     [r.sourceVerified ? `Checked ${r.sourceVerifiedAt}` : "Not checked", r.officialTitle, r.note || r.evidence]
       .filter(Boolean).join(" · ").replace(/\|/g, "\\|") || "—",
     (outstandingClinicalQuestion(r.id)?.question || "—").replace(/\|/g, "\\|"),
@@ -1262,10 +1312,20 @@ export function sourceCheckStatus(itemIds) {
  * @returns {"cms_item"|"pennsync_screening"|"retired_cms_item"|"unknown"}
  */
 export function itemSourceFor(itemId) {
-  const level = classifyItem(itemId).level;
-  if (level === "verified" || level === "abbreviated") return "cms_item";
+  const c = classifyItem(itemId);
+  const level = c.level;
   if (level === "retired") return "retired_cms_item";
   if (level === "pennsync_screening" || level === "not_a_cms_item") return "pennsync_screening";
+  if (level === "verified" || level === "abbreviated") {
+    // Verified IDENTITY is not enough to call the saved answer a CMS response.
+    // M1830 is a real, verified item number under both response sets, and only
+    // the response set says whether its `6` means "bathed totally by another
+    // person" (CMS) or "unable to rate — artificial opening" (legacy PennSync).
+    // Calling a conflicting row `cms_item` is how a legacy code reached
+    // CMS-labeled output and scoring.
+    if (c.responseSet === "conflicts" || c.responseSet === "unchecked") return "unknown";
+    return "cms_item";
+  }
   return "unknown";
 }
 
@@ -1276,15 +1336,23 @@ export function itemSourceFor(itemId) {
  * excluded rather than assumed official, because assuming is how PennSync's own
  * screening answers would end up read as the assessment.
  *
- * @param {Array<{ item_number?: string, item_source?: string }>} items
+ * @param {Array<{ item_number?: string, item_source?: string, response_schema_id?: string }>} items
  */
 export function cmsItemsOnly(items) {
   return (Array.isArray(items) ? items : []).filter((row) => {
     if (!row?.item_number) return false;
-    const stated = row.item_source;
-    if (stated) return stated === "cms_item";
-    // Legacy row: fall back to the registry rather than trusting the number.
-    return itemSourceFor(row.item_number) === "cms_item";
+    // A row with no `item_source` predates the marker. It is UNKNOWN, and the
+    // registry cannot rescue it: today's registry describes today's response
+    // meanings, so consulting it for an unversioned row retrospectively
+    // declares that the old answer meant what the new option list means.
+    // That is exactly the reinterpretation this layer exists to prevent.
+    if (!row.item_source) return false;
+    if (row.item_source !== "cms_item") return false;
+    // `item_source: "cms_item"` alone is still not sufficient — it was written
+    // by the old `itemSourceFor()`, which treated a conflicting response set as
+    // official. A row must also state a RESPONSE schema, and only v2 carries
+    // CMS-aligned meanings.
+    return row.response_schema_id === "pennsync-oasis-response-v2-cms-e2";
   });
 }
 

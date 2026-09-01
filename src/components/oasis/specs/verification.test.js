@@ -187,9 +187,14 @@ test("a date before every known version resolves to null rather than guessing", 
   assert.equal(resolveSpecForDate("2019-05-01"), null);
 });
 
-test("an unparseable date falls back to the active spec rather than throwing", () => {
-  assert.equal(resolveSpecForDate("not-a-date").id, ACTIVE_OASIS_SPEC.id);
-  assert.equal(resolveSpecForDate(null).id, ACTIVE_OASIS_SPEC.id);
+test("a missing or unparseable date resolves to null, not the active spec", () => {
+  // Falling back to the active spec stamped OASIS-E2 onto assessments whose
+  // instrument nobody knew. An unresolved date must stay unresolved so callers
+  // treat the assessment as ineligible rather than scoring it under E2.
+  assert.equal(resolveSpecForDate("not-a-date"), null);
+  assert.equal(resolveSpecForDate(null), null);
+  assert.equal(resolveSpecForDate(""), null);
+  assert.equal(resolveSpecForDate(undefined), null);
 });
 
 // ── Clinical sign-off ──────────────────────────────────────────────────────
@@ -376,33 +381,45 @@ test("itemSourceFor marks each id for the shape it is persisted in", () => {
   // PennSync writes its own form ids into OASISAssessment.oasis_items[].item_number,
   // the field every consumer reads as a CMS item number. Without this marker a
   // screening answer is indistinguishable from an official response.
-  assert.equal(itemSourceFor("m1860"), "cms_item");
-  assert.equal(itemSourceFor("m2420"), "cms_item", "an abbreviated response set is still a CMS item");
+  // A VERIFIED item number whose response set conflicts is NOT `cms_item`.
+  // M1860's legacy scale inserts a level CMS does not have, so its saved codes
+  // name different things than the official item — calling the row `cms_item`
+  // is how a legacy code reached CMS-labeled output and scoring.
+  assert.equal(itemSourceFor("m1860"), "unknown", "a conflicting response set is not an official CMS response");
+  assert.equal(itemSourceFor("m2420"), "unknown", "an abbreviated/conflicting response set is not carryable as CMS");
+  assert.equal(itemSourceFor("m1800"), "cms_item", "a matching response set is a genuine CMS response");
   assert.equal(itemSourceFor("m1730"), "retired_cms_item");
   assert.equal(itemSourceFor("m1020"), "pennsync_screening", "an invented number is not a CMS item");
   assert.equal(itemSourceFor("m2102"), "pennsync_screening");
   assert.equal(itemSourceFor("m9999"), "unknown");
 });
 
-test("cmsItemsOnly keeps official responses and drops screening answers", () => {
+test("cmsItemsOnly keeps only v2 CMS rows and drops screening answers", () => {
+  // `item_source: "cms_item"` alone is not sufficient: it was written by the old
+  // `itemSourceFor()`, which treated a conflicting response set as official. A
+  // row must ALSO state the v2 response schema.
   const rows = [
-    { item_number: "m1860", response: "3", item_source: "cms_item" },
+    { item_number: "M1860", response_value: { code: "3" }, item_source: "cms_item", response_schema_id: "pennsync-oasis-response-v2-cms-e2" },
+    { item_number: "M1860", response: "3", item_source: "cms_item" },
+    { item_number: "M1860", response: "3", item_source: "cms_item", response_schema_id: "pennsync-oasis-response-v1-legacy" },
     { item_number: "m1730", response: "1", item_source: "retired_cms_item" },
     { item_number: "m1020", response: "2", item_source: "pennsync_screening" },
   ];
-  assert.deepEqual(cmsItemsOnly(rows).map((r) => r.item_number), ["m1860"]);
+  const kept = cmsItemsOnly(rows);
+  assert.equal(kept.length, 1);
+  assert.equal(kept[0].response_schema_id, "pennsync-oasis-response-v2-cms-e2");
 });
 
-test("a legacy row with no marker is classified, never assumed official", () => {
-  // Rows written before item_source existed must not be trusted on the strength
-  // of the field name alone — that is exactly how a screening answer would be
-  // read as the official assessment.
+test("an unversioned legacy row is never rescued by the current registry", () => {
+  // Consulting today's registry for a row that states no response schema
+  // retrospectively declares that the old answer meant what the new option list
+  // means. That is the reinterpretation this layer exists to prevent.
   const legacy = [
-    { item_number: "m1860", response: "3" },
-    { item_number: "m1730", response: "1" },
-    { item_number: "m1020", response: "2" },
+    { item_number: "M1860", response: "3" },
+    { item_number: "M1730", response: "1" },
+    { item_number: "M1020", response: "2" },
   ];
-  assert.deepEqual(cmsItemsOnly(legacy).map((r) => r.item_number), ["m1860"]);
+  assert.deepEqual(cmsItemsOnly(legacy), []);
 });
 
 test("cmsItemsOnly is safe on junk input", () => {

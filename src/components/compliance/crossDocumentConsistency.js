@@ -18,7 +18,7 @@
 //
 // Pure + offline so it runs under `node --test`. It may only import other plain
 // `.js` modules with explicit extensions (never `.jsx`).
-import { answersFromOasisItems } from "../oasis/outcomeMeasureEngine.js";
+import { RESPONSE_SCHEMA_V2_CMS_E2 } from "../oasis/responseSchema/registry.js";
 
 /** Resolution actions a reviewer may take. PennSync records the choice only. */
 export const RESOLUTIONS = Object.freeze(["acknowledged", "resolved", "task_created", "not_applicable"]);
@@ -50,30 +50,75 @@ function finding({ id, severity, title, sourceA, sourceB, evidence, action }) {
 // possible failure for a review tool, because absence of findings reads as
 // assurance.
 //
-// `answersFromOasisItems` is the app's existing normalizer (it already handles
-// both the array and an already-flat map, and lower-cases the keys), so this
-// stays consistent with the outcome-measure engine rather than growing a second
-// interpretation of the same field.
+// The reader below is local to this module on purpose. The outcome engine's
+// extractor is CMS-scoring-grade and refuses anything that is not a v2
+// clinician-selected response; these checks are not CMS scoring, so they read
+// both schemas — but each rule states, per schema, which codes meet it.
+/**
+ * Read saved OASIS answers for DISCREPANCY DETECTION ONLY.
+ *
+ * This module never emits an official code, never exports one, and never feeds a
+ * CMS-labeled calculation — it asks the clinician to look again at their EMR. So
+ * unlike the outcome engine it deliberately reads BOTH response schemas: gating
+ * it on v2 would silently switch the safety check off for every assessment
+ * recorded before the cutover, which is the opposite of safer.
+ *
+ * What it must NOT do is read a code without knowing which scale it came from.
+ * Each answer is returned WITH its schema, and every rule below states the codes
+ * it treats as meeting the condition, per schema.
+ *
+ * @returns {Object<string, {code: string, schema: "v1"|"v2"}>}
+ */
 function oasisAnswers(oasis) {
   if (!oasis) return {};
   const items = oasis.oasis_items || oasis.items || oasis.responses || oasis;
-  // PennSync writes its own form ids into `item_number`, so a saved assessment
-  // mixes real CMS responses with screening answers under a field name that
-  // implies the former. The rows are kept as-is (they are PennSync's own data
-  // and the checks below are calibrated to this form's scales), but the mix is
-  // deliberate rather than accidental: see specs/verification.js `cmsItemsOnly`
-  // for the filter a consumer that needs OFFICIAL responses only should apply.
-  return answersFromOasisItems(items);
+  const out = {};
+  if (!Array.isArray(items)) {
+    // A flat { m1860: 5 } map carries no schema at all, so it can only be read
+    // under the legacy meanings — that is what it was written under.
+    if (!items || typeof items !== "object") return out;
+    for (const [k, v] of Object.entries(items)) {
+      if (v === undefined || v === null || v === "") continue;
+      if (typeof v === "object") continue;
+      out[String(k).toLowerCase().replace(/[^a-z0-9]/g, "")] = { code: String(v), schema: "v1" };
+    }
+    return out;
+  }
+  for (const it of items) {
+    if (!it || it.item_number == null) continue;
+    const key = String(it.item_number).toLowerCase().replace(/[^a-z0-9]/g, "");
+    if (it.response_schema_id === RESPONSE_SCHEMA_V2_CMS_E2) {
+      const code = it.response_value?.code;
+      if (typeof code === "string") out[key] = { code, schema: "v2" };
+    } else {
+      // Legacy or unversioned: the value means what PennSync's old option list
+      // meant. Recorded as v1 so a rule cannot apply a v2 threshold to it.
+      const raw = it.response;
+      if (raw !== undefined && raw !== null && raw !== "") out[key] = { code: String(raw), schema: "v1" };
+    }
+  }
+  return out;
 }
 
-function oasisValue(answers, itemId) {
-  const v = answers?.[String(itemId || "").toLowerCase()];
-  return v == null ? null : v;
+/**
+ * Whether an item's saved answer is one of the codes that meet a condition.
+ * Codes are compared as STRINGS, per schema — never coerced to numbers.
+ *
+ * @param {object} answers
+ * @param {string} itemId
+ * @param {{v1: string[], v2: string[]}} codesBySchema
+ */
+function answerMeans(answers, itemId, codesBySchema) {
+  const hit = answers?.[String(itemId || "").toLowerCase()];
+  if (!hit) return false;
+  const allowed = codesBySchema[hit.schema];
+  return Array.isArray(allowed) && allowed.includes(hit.code);
 }
 
-function num(value) {
-  const n = typeof value === "string" ? Number(value) : value;
-  return Number.isFinite(n) ? n : null;
+/** The saved code for display in a finding, or null. */
+function oasisCode(answers, itemId) {
+  const hit = answers?.[String(itemId || "").toLowerCase()];
+  return hit ? hit.code : null;
 }
 
 const CARE_PLAN_TEXT = (carePlans) => (carePlans || [])
@@ -110,7 +155,9 @@ export function reviewCrossDocumentConsistency({
   // ── Fall risk vs fall-prevention intervention ────────────────────────────
   checked.push("High fall risk with a fall-prevention intervention");
   const fallRiskHigh = patient?.functional_status?.fall_risk === "high"
-    || num(oasisValue(answers, "m1910")) === 1;
+    // M1910 is a retired CMS item PennSync keeps as an internal screening
+    // prompt, so it only ever exists under the legacy set.
+    || answerMeans(answers, "m1910", { v1: ["1"], v2: [] });
   const FALL_INTERVENTION = /\bfall(?:s)?[- ](?:precaution|prevention|risk (?:intervention|reduction))|remove(?:d)? (?:clutter|throw rugs?)|grab bars?|non[- ]?skid|bed alarm|assistive device (?:for|to) (?:safe )?(?:ambulation|transfer)|safety (?:sweep|assessment) of the home/i;
   if (fallRiskHigh && !FALL_INTERVENTION.test(`${note} ${plans}`)) {
     findings.push(finding({
@@ -126,8 +173,11 @@ export function reviewCrossDocumentConsistency({
 
   // ── Severe functional limitation vs "independent" in the narrative ───────
   checked.push("Functional limitation consistent with the narrative");
-  const ambulation = num(oasisValue(answers, "m1860"));
-  const bedfast = ambulation != null && ambulation >= 5;
+  const ambulation = oasisCode(answers, "m1860");
+  // Chairfast or bedfast. Legacy 5/6 are "chairfast, wheels self" / "bedfast";
+  // CMS 5/6 are "chairfast, unable to wheel self" / "bedfast". Different
+  // wording, same claim for this check — stated per schema rather than assumed.
+  const bedfast = answerMeans(answers, "m1860", { v1: ["5", "6"], v2: ["5", "6"] });
   const INDEPENDENT_NARRATIVE = /\b(?:ambulates? independently|independent (?:with )?ambulation|walks? without assistance|independent with (?:all )?adls?)\b/i;
   if (bedfast && INDEPENDENT_NARRATIVE.test(`${note} ${plans}`)) {
     findings.push(finding({
@@ -154,8 +204,10 @@ export function reviewCrossDocumentConsistency({
 
   // ── Medication-management deficit vs a medication intervention ────────────
   checked.push("Medication-management deficit with a medication intervention");
-  const oralMeds = num(oasisValue(answers, "m2020"));
-  const medDeficit = oralMeds != null && oralMeds >= 2;
+  const oralMeds = oasisCode(answers, "m2020");
+  // Cannot manage oral medications independently. CMS "NA" (no oral medications
+  // prescribed) is deliberately absent — it is not a deficit.
+  const medDeficit = answerMeans(answers, "m2020", { v1: ["2", "3"], v2: ["2", "3"] });
   const MED_INTERVENTION = /\bmedication (?:management|teaching|reconcil|set[- ]?up|administration|review)|pill ?box|med(?:ication)? planner|taught .{0,40}medication|reviewed .{0,30}medication/i;
   if (medDeficit && !MED_INTERVENTION.test(`${note} ${plans}`)) {
     findings.push(finding({
