@@ -454,7 +454,7 @@ now recorded separately:
 | --- | --- |
 | **Factual** — does this item number exist in the current CMS manual, and what is its title? | **Done** (2026-09-01, three manuals) |
 | **Classification** — is the level (`verified` / `retired` / `not_a_cms_item` / …) the right one, given that evidence? | **Signed off** — `classification_signed_off_by: "PennSync CMS source check"` |
-| **Clinical** — is PennSync's *use* of this item appropriate, and are its response options safe as a screening prompt? | **Signed off 2026-09-01** by the product owner (`kdeyarmin@comcast.net`), all 36 items. |
+| **Clinical** — is PennSync's *use* of this item appropriate, and are its response options safe as a screening prompt? | **Signed off 2026-09-01** by Kevin Deyarmin (`kdeyarmin@comcast.net`), all 36 items. |
 
 **Who may write the third.** `reviewed_by` means a NAMED HUMAN confirmed this.
 An automated check must never write to it — that would make the product assert

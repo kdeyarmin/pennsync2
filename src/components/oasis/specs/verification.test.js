@@ -200,6 +200,10 @@ test("a recorded clinical reviewer is a named human, never an automated check", 
       `${id}: reviewed_by must name a person, got "${entry.reviewed_by}"`,
     );
     assert.match(entry.reviewed_at, /^\d{4}-\d{2}-\d{2}$/, `${id} needs a review date`);
+    assert.match(
+      entry.reviewed_by, /^[A-Z][a-z]+ [A-Z][a-z]/,
+      `${id}: reviewed_by should lead with a person's name, got "${entry.reviewed_by}"`,
+    );
     assert.ok(entry.review_source, `${id} needs the scope of what was reviewed`);
   }
 });
@@ -275,7 +279,7 @@ test("the question set still maps every classification, for items added later", 
 test("review provenance travels with the classification", () => {
   const c = classifyItem("m1800");
   assert.equal(c.clinicallyReviewed, true);
-  assert.equal(c.reviewedBy, "kdeyarmin@comcast.net");
+  assert.equal(c.reviewedBy, "Kevin Deyarmin (kdeyarmin@comcast.net)");
   assert.match(c.reviewSource, /Product-owner sign-off/);
 });
 
@@ -327,7 +331,7 @@ test("the worksheet states PennSync lacks the CMS instrument and never pre-fills
   assert.match(sheet, /classification column is already signed off/i);
   const row = sheet.split("\n").find((l) => l.includes("`m2102`"));
   assert.ok(row, "the item must appear as a row");
-  assert.match(row, /Answered by kdeyarmin@comcast\.net/, "a signed row shows who signed it");
+  assert.match(row, /Answered by Kevin Deyarmin/, "a signed row names who signed it");
   assert.match(sheet, /All 1 items are signed off/);
   assert.match(sheet, /response OPTIONS were not\s+individually verified/i,
     "the worksheet must repeat the gap the sign-off states");
