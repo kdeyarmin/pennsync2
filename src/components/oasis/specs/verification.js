@@ -1336,7 +1336,7 @@ export function itemSourceFor(itemId) {
  * excluded rather than assumed official, because assuming is how PennSync's own
  * screening answers would end up read as the assessment.
  *
- * @param {Array<{ item_number?: string, item_source?: string }>} items
+ * @param {Array<{ item_number?: string, item_source?: string, response_schema_id?: string }>} items
  */
 export function cmsItemsOnly(items) {
   return (Array.isArray(items) ? items : []).filter((row) => {
