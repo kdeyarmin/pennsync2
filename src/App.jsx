@@ -94,7 +94,7 @@ const AppUnavailableScreen = ({ type, message }) => {
           {notDeployed ? 'This Base44 app has not been deployed yet' : 'PennSync could not load'}
         </h1>
         <p className="mt-3 text-sm text-slate-700">
-          {serverMessage || 'The server could not be reached. Check your connection and try again.'}
+          {serverMessage || 'The Base44 backend did not return a usable response. Try again in a moment, or contact your administrator if this persists.'}
         </p>
         {notDeployed && (
           <p className="mt-3 text-xs text-slate-500">
