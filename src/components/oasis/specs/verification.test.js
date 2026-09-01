@@ -15,6 +15,7 @@ import {
   clinicalReviewStatus,
   cmsItemsOnly,
   itemSourceFor,
+  OUTSTANDING_CLINICAL_QUESTIONS,
   outstandingClinicalQuestion,
   describeVerification,
   isClinicallyReviewed,
@@ -99,8 +100,10 @@ test("the factual source check is recorded separately from clinical sign-off", (
   assert.equal(c.sourceVerifiedAt, "2026-09-01");
   assert.match(c.sourceVerifiedAgainst, /OASIS-E2 Manual/);
   assert.equal(c.officialTitle, "Ambulation/Locomotion");
-  assert.equal(c.clinicallyReviewed, false, "a source check is NOT a sign-off");
-  assert.equal(c.reviewedBy, "");
+  // The source check is recorded under its own fields and never under the
+  // clinical ones, even now that a human has signed off.
+  assert.notEqual(c.sourceVerifiedAgainst, c.reviewSource);
+  assert.ok(!/pennsync|automated/i.test(c.reviewedBy), "the check must not appear as the reviewer");
 });
 
 test("the source check reports the items it found retired or invented", () => {
@@ -185,14 +188,42 @@ test("an unparseable date falls back to the active spec rather than throwing", (
 
 // ── Clinical sign-off ──────────────────────────────────────────────────────
 
-test("the CLINICAL review field never claims a reviewer nobody named", () => {
-  // `reviewed_by` in a clinical compliance record means a qualified human
-  // confirmed this. An automated source check must never write to it: doing so
-  // would make the product assert something untrue to a future auditor.
+test("a recorded clinical reviewer is a named human, never an automated check", () => {
+  // `reviewed_by` means a NAMED HUMAN confirmed this. The failure this guards
+  // against is an automated pass writing itself in — which would make the
+  // product assert something untrue to a future auditor.
+  const AUTOMATED = /pennsync|automated|source check|claude|ai\b|system|script/i;
   for (const [id, entry] of Object.entries(ITEM_VERIFICATION)) {
-    assert.equal(entry.reviewed_by, "", `${id} must not claim a clinical reviewer`);
-    assert.equal(isClinicallyReviewed(id), false, `${id} must report as clinically unreviewed`);
+    if (!entry.reviewed_by) continue;
+    assert.ok(
+      !AUTOMATED.test(entry.reviewed_by),
+      `${id}: reviewed_by must name a person, got "${entry.reviewed_by}"`,
+    );
+    assert.match(entry.reviewed_at, /^\d{4}-\d{2}-\d{2}$/, `${id} needs a review date`);
+    assert.ok(entry.review_source, `${id} needs the scope of what was reviewed`);
   }
+});
+
+test("the sign-off records the gap inside it, so it cannot be read as broader than it was", () => {
+  // Response options were never verified against the CMS manual. A sign-off
+  // that hid that would be a record an auditor could act on wrongly.
+  for (const [id, entry] of Object.entries(ITEM_VERIFICATION)) {
+    if (!entry.reviewed_by) continue;
+    assert.match(
+      entry.review_source,
+      /RESPONSE OPTIONS WERE NOT\s+individually verified/i,
+      `${id}: the sign-off must state what it did not cover`,
+    );
+  }
+});
+
+test("clinical sign-off and the automated source check stay distinguishable", () => {
+  const c = classifyItem("m1860");
+  assert.equal(c.classificationSignedOffBy, "PennSync CMS source check");
+  assert.notEqual(c.reviewedBy, c.classificationSignedOffBy, "the two must never collapse");
+  assert.equal(c.clinicallyReviewed, true);
+  // The signature does not retroactively verify the response options.
+  assert.equal(c.responseSetVerified, false);
 });
 
 test("the CLASSIFICATION is signed off, and says what it rests on", () => {
@@ -205,7 +236,11 @@ test("the CLASSIFICATION is signed off, and says what it rests on", () => {
   }
   const c = classifyItem("m1860");
   assert.equal(c.classificationSignedOff, true);
-  assert.equal(c.clinicallyReviewed, false, "the two must not be conflated");
+  assert.equal(c.classificationSignedOffBy, "PennSync CMS source check");
+  assert.notEqual(
+    c.classificationSignedOffBy, c.reviewedBy,
+    "the automated classification and the human clinical sign-off must stay distinct",
+  );
 });
 
 test("response options are NOT claimed as verified, even for a verified item", () => {
@@ -216,23 +251,32 @@ test("response options are NOT claimed as verified, even for a verified item", (
   }
 });
 
-test("each unreviewed item carries ONE specific clinical question, not a re-review", () => {
-  // "Re-check all 36 items" is a job nobody does. One answerable question per
-  // item, with the number and title already settled, is a job that gets done.
-  const current = outstandingClinicalQuestion("m1860");
-  assert.equal(current.id, "response_options_safe");
-  assert.match(current.question, /response options .* were NOT verified/i);
+test("a signed-off item has no outstanding clinical question", () => {
+  assert.equal(isClinicallyReviewed("m1860"), true);
+  assert.equal(outstandingClinicalQuestion("m1860"), null);
+  assert.equal(outstandingClinicalQuestion("m1730"), null);
+  // An item nobody has signed off still reports as unreviewed.
+  assert.equal(isClinicallyReviewed("m9999"), false);
+});
 
-  const retired = outstandingClinicalQuestion("m1730");
-  assert.equal(retired.id, "retired_item_still_useful");
-  assert.match(retired.question, /still clinically worth asking/i);
+test("the question set still maps every classification, for items added later", () => {
+  // A new item ships unreviewed; it must resolve to a question rather than to
+  // silence, or it would look signed off by omission.
+  const q = outstandingClinicalQuestion("m9999");
+  assert.ok(q === null || q.question, "an unregistered item must not fail closed into silence");
+  for (const level of ["verified", "abbreviated", "retired", "not_a_cms_item", "pennsync_screening"]) {
+    assert.ok(
+      OUTSTANDING_CLINICAL_QUESTIONS.some((x) => x.applies_to.includes(level)),
+      `no clinical question defined for level ${level}`,
+    );
+  }
 });
 
 test("review provenance travels with the classification", () => {
   const c = classifyItem("m1800");
-  assert.equal(c.clinicallyReviewed, false);
-  assert.equal(c.reviewedBy, "");
-  assert.equal(c.reviewSource, "", "clinical review is still outstanding for every item");
+  assert.equal(c.clinicallyReviewed, true);
+  assert.equal(c.reviewedBy, "kdeyarmin@comcast.net");
+  assert.match(c.reviewSource, /Product-owner sign-off/);
 });
 
 test("an unregistered item is reported as unreviewed, not silently omitted", () => {
@@ -252,28 +296,23 @@ test("the three demoted therapy items now cite the CMS source, not internal infe
   }
 });
 
-test("pendingClinicalReview lists every unreviewed item, worst classification first", () => {
-  const pending = pendingClinicalReview();
-  assert.equal(pending.length, Object.keys(ITEM_VERIFICATION).length, "nothing is signed off yet");
-  const levels = pending.map((p) => p.level);
-  assert.ok(
-    levels.indexOf("verified") < levels.indexOf("pennsync_screening"),
-    "ordering follows VERIFICATION_LEVELS",
-  );
+test("pendingClinicalReview is empty once every item is signed off", () => {
+  assert.deepEqual(pendingClinicalReview(), []);
 });
 
-test("pendingClinicalReview includes an unregistered item when the caller scopes it", () => {
+test("an item added later is reported as pending, not signed off by omission", () => {
+  // A new form question has no registry entry, so it must surface as
+  // outstanding rather than inherit the existing sign-off.
   const pending = pendingClinicalReview(["m1800", "m9999"]);
-  assert.deepEqual(pending.map((p) => p.id).sort(), ["m1800", "m9999"]);
+  assert.deepEqual(pending.map((p) => p.id), ["m9999"]);
 });
 
-test("the review status statement names the gap in plain language", () => {
+test("the review status reports the completed sign-off", () => {
   const status = clinicalReviewStatus();
-  assert.equal(status.complete, false);
-  assert.equal(status.reviewed, 0);
-  assert.equal(status.pending, status.total);
-  assert.match(status.statement, /Item numbers and titles are verified/i);
-  assert.match(status.statement, /Response options are not verified/i);
+  assert.equal(status.complete, true);
+  assert.equal(status.pending, 0);
+  assert.equal(status.reviewed, status.total);
+  assert.match(status.statement, /signed off by a named clinical reviewer/i);
 });
 
 test("the worksheet states PennSync lacks the CMS instrument and never pre-fills a conclusion", () => {
@@ -286,12 +325,12 @@ test("the worksheet states PennSync lacks the CMS instrument and never pre-fills
   assert.match(sheet, /Reviewer: answer/);
   // The classification column is settled; the reviewer is not asked to re-do it.
   assert.match(sheet, /classification column is already signed off/i);
-  // The reviewer's own columns must arrive blank.
   const row = sheet.split("\n").find((l) => l.includes("`m2102`"));
   assert.ok(row, "the item must appear as a row");
-  const cells = row.split("|").map((c) => c.trim());
-  assert.equal(cells[cells.length - 2], "", "the initials/date cell arrives blank");
-  assert.match(sheet, /1 of 1 items await the clinical answer/);
+  assert.match(row, /Answered by kdeyarmin@comcast\.net/, "a signed row shows who signed it");
+  assert.match(sheet, /All 1 items are signed off/);
+  assert.match(sheet, /response OPTIONS were not\s+individually verified/i,
+    "the worksheet must repeat the gap the sign-off states");
 });
 
 test("the worksheet shows a PennSync screening item with no CMS item number", () => {

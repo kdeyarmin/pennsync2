@@ -454,14 +454,25 @@ now recorded separately:
 | --- | --- |
 | **Factual** — does this item number exist in the current CMS manual, and what is its title? | **Done** (2026-09-01, three manuals) |
 | **Classification** — is the level (`verified` / `retired` / `not_a_cms_item` / …) the right one, given that evidence? | **Signed off** — `classification_signed_off_by: "PennSync CMS source check"` |
-| **Clinical** — is PennSync's *use* of this item appropriate, and are its response options safe as a screening prompt? | **Open for all 36.** `reviewed_by` is empty. |
+| **Clinical** — is PennSync's *use* of this item appropriate, and are its response options safe as a screening prompt? | **Signed off 2026-09-01** by the product owner (`kdeyarmin@comcast.net`), all 36 items. |
 
-**Why the third stays empty.** `reviewed_by` in a clinical compliance record
-means a qualified human confirmed this. Writing to it on the strength of an
-automated check would make the product assert something untrue to a future
-auditor — the exact failure this layer exists to prevent, and the one thing the
-brief lists as non-negotiable ("AI ... must never ... autonomously certify
-clinical/compliance conclusions"). Its emptiness is the honest state.
+**Who may write the third.** `reviewed_by` means a NAMED HUMAN confirmed this.
+An automated check must never write to it — that would make the product assert
+something untrue to a future auditor, the one thing the brief lists as
+non-negotiable ("AI ... must never ... autonomously certify clinical/compliance
+conclusions"). A test enforces it: any value matching an automated actor
+(`pennsync`, `automated`, `source check`, `claude`, `ai`, `system`, `script`)
+fails the suite.
+
+The sign-off recorded on 2026-09-01 is a real human attestation, and
+`review_source` records its scope on every item — including, verbatim, that
+**response options were not individually verified against the CMS manual**. A
+test asserts that caveat is present on any signed item, so the record can never
+be read as broader than the review behind it. `responseSetVerified` stays
+`false`: a signature does not retroactively verify what was never checked.
+
+An item added later inherits nothing — with no registry entry it reports as
+pending, so a new question cannot become signed off by omission.
 
 **Response sets are NOT verified**, even for a `verified` item. The source check
 confirmed item numbers and titles. An attempt to extract response options was

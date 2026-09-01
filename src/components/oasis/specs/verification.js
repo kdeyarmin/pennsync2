@@ -58,13 +58,17 @@
 //                              safe as a screening prompt? A judgement about
 //                              patient care. NOT done, and not mine to make.
 //
-// WHY THE THIRD ONE STAYS EMPTY
-// `reviewed_by` in a clinical compliance record means a qualified human
-// confirmed this. Writing anything there on the strength of an automated check
-// would make the product assert something untrue to a future auditor — the exact
-// failure this whole layer exists to prevent. The classification sign-off is
-// real and is recorded; the clinical one is not, and its absence is the honest
-// state, not an omission.
+// WHO MAY WRITE THE THIRD ONE
+// `reviewed_by` means a NAMED HUMAN confirmed this. An automated check must
+// never write to it — doing so would make the product assert something untrue
+// to a future auditor, the exact failure this layer exists to prevent. It is
+// written only when a person actually signs off, and `review_source` records
+// what their sign-off did and did not cover, so the record is never read as
+// broader than the review behind it.
+//
+// Signed 2026-09-01 by the product owner. `review_source` states plainly that
+// RESPONSE OPTIONS were not individually verified against the CMS manual — the
+// known gap inside the attestation.
 //
 // RESPONSE SETS ARE NOT VERIFIED. The source check confirmed item numbers and
 // TITLES. The CMS manual states response codes as prose coding instructions
@@ -116,9 +120,10 @@ export const ITEM_VERIFICATION = Object.freeze({
     official_item: null,
     note:
       "This item number appears in no published CMS OASIS manual PennSync checked (E, E1, E2). Primary Diagnosis is M1021 in every manual checked (M1023 is Other Diagnoses).",
-    reviewed_by: "",
-    reviewed_at: "",
-    review_source: "",    classification_signed_off_by: "PennSync CMS source check",
+    reviewed_by: "kdeyarmin@comcast.net",
+    reviewed_at: "2026-09-01",
+    review_source:
+      "Product-owner sign-off. Covers PennSync's USE of each item: for a current CMS item, that this form's response options are acceptable as a screening prompt; for a retired or non-CMS item, that the question is still worth asking internally. Item numbers and titles were verified against the CMS OASIS-E/E1/E2 manuals; RESPONSE OPTIONS WERE NOT individually verified against the manual.",    classification_signed_off_by: "PennSync CMS source check",
     classification_signed_off_at: "2026-09-01",
     classification_basis: "Item number and title checked against the published CMS OASIS-E, E1 and E2 manuals.",
 
@@ -130,9 +135,10 @@ export const ITEM_VERIFICATION = Object.freeze({
     official_item: null,
     note:
       "This item number appears in no published CMS OASIS manual PennSync checked (E, E1, E2).",
-    reviewed_by: "",
-    reviewed_at: "",
-    review_source: "",    classification_signed_off_by: "PennSync CMS source check",
+    reviewed_by: "kdeyarmin@comcast.net",
+    reviewed_at: "2026-09-01",
+    review_source:
+      "Product-owner sign-off. Covers PennSync's USE of each item: for a current CMS item, that this form's response options are acceptable as a screening prompt; for a retired or non-CMS item, that the question is still worth asking internally. Item numbers and titles were verified against the CMS OASIS-E/E1/E2 manuals; RESPONSE OPTIONS WERE NOT individually verified against the manual.",    classification_signed_off_by: "PennSync CMS source check",
     classification_signed_off_at: "2026-09-01",
     classification_basis: "Item number and title checked against the published CMS OASIS-E, E1 and E2 manuals.",
 
@@ -144,9 +150,10 @@ export const ITEM_VERIFICATION = Object.freeze({
     official_item: null,
     note:
       "This item number appears in no published CMS OASIS manual PennSync checked (E, E1, E2).",
-    reviewed_by: "",
-    reviewed_at: "",
-    review_source: "",    classification_signed_off_by: "PennSync CMS source check",
+    reviewed_by: "kdeyarmin@comcast.net",
+    reviewed_at: "2026-09-01",
+    review_source:
+      "Product-owner sign-off. Covers PennSync's USE of each item: for a current CMS item, that this form's response options are acceptable as a screening prompt; for a retired or non-CMS item, that the question is still worth asking internally. Item numbers and titles were verified against the CMS OASIS-E/E1/E2 manuals; RESPONSE OPTIONS WERE NOT individually verified against the manual.",    classification_signed_off_by: "PennSync CMS source check",
     classification_signed_off_at: "2026-09-01",
     classification_basis: "Item number and title checked against the published CMS OASIS-E, E1 and E2 manuals.",
 
@@ -158,9 +165,10 @@ export const ITEM_VERIFICATION = Object.freeze({
     official_item: null,
     note:
       "This item number appears in no published CMS OASIS manual PennSync checked (E, E1, E2). Prior Functioning is GG0100.",
-    reviewed_by: "",
-    reviewed_at: "",
-    review_source: "",    classification_signed_off_by: "PennSync CMS source check",
+    reviewed_by: "kdeyarmin@comcast.net",
+    reviewed_at: "2026-09-01",
+    review_source:
+      "Product-owner sign-off. Covers PennSync's USE of each item: for a current CMS item, that this form's response options are acceptable as a screening prompt; for a retired or non-CMS item, that the question is still worth asking internally. Item numbers and titles were verified against the CMS OASIS-E/E1/E2 manuals; RESPONSE OPTIONS WERE NOT individually verified against the manual.",    classification_signed_off_by: "PennSync CMS source check",
     classification_signed_off_at: "2026-09-01",
     classification_basis: "Item number and title checked against the published CMS OASIS-E, E1 and E2 manuals.",
 
@@ -178,9 +186,10 @@ export const ITEM_VERIFICATION = Object.freeze({
       "Retired from the OASIS instrument currently in effect. Present in OASIS-E; absent from E1 and E2. "
       + "Do not enter this on the official assessment; PennSync keeps the question only as an "
       + "internal screening prompt.",
-    reviewed_by: "",
-    reviewed_at: "",
-    review_source: "",    classification_signed_off_by: "PennSync CMS source check",
+    reviewed_by: "kdeyarmin@comcast.net",
+    reviewed_at: "2026-09-01",
+    review_source:
+      "Product-owner sign-off. Covers PennSync's USE of each item: for a current CMS item, that this form's response options are acceptable as a screening prompt; for a retired or non-CMS item, that the question is still worth asking internally. Item numbers and titles were verified against the CMS OASIS-E/E1/E2 manuals; RESPONSE OPTIONS WERE NOT individually verified against the manual.",    classification_signed_off_by: "PennSync CMS source check",
     classification_signed_off_at: "2026-09-01",
     classification_basis: "Item number and title checked against the published CMS OASIS-E, E1 and E2 manuals.",
 
@@ -196,9 +205,10 @@ export const ITEM_VERIFICATION = Object.freeze({
       "Retired from the OASIS instrument currently in effect. Present in OASIS-E; absent from E1 and E2. Pain is now J0510/J0520/J0530. "
       + "Do not enter this on the official assessment; PennSync keeps the question only as an "
       + "internal screening prompt.",
-    reviewed_by: "",
-    reviewed_at: "",
-    review_source: "",    classification_signed_off_by: "PennSync CMS source check",
+    reviewed_by: "kdeyarmin@comcast.net",
+    reviewed_at: "2026-09-01",
+    review_source:
+      "Product-owner sign-off. Covers PennSync's USE of each item: for a current CMS item, that this form's response options are acceptable as a screening prompt; for a retired or non-CMS item, that the question is still worth asking internally. Item numbers and titles were verified against the CMS OASIS-E/E1/E2 manuals; RESPONSE OPTIONS WERE NOT individually verified against the manual.",    classification_signed_off_by: "PennSync CMS source check",
     classification_signed_off_at: "2026-09-01",
     classification_basis: "Item number and title checked against the published CMS OASIS-E, E1 and E2 manuals.",
 
@@ -214,9 +224,10 @@ export const ITEM_VERIFICATION = Object.freeze({
       "Retired from the OASIS instrument currently in effect. The OASIS-E manual lists this item as Removed; absent from E1 and E2. Depression is now D0150/D0160 (PHQ). "
       + "Do not enter this on the official assessment; PennSync keeps the question only as an "
       + "internal screening prompt.",
-    reviewed_by: "",
-    reviewed_at: "",
-    review_source: "",    classification_signed_off_by: "PennSync CMS source check",
+    reviewed_by: "kdeyarmin@comcast.net",
+    reviewed_at: "2026-09-01",
+    review_source:
+      "Product-owner sign-off. Covers PennSync's USE of each item: for a current CMS item, that this form's response options are acceptable as a screening prompt; for a retired or non-CMS item, that the question is still worth asking internally. Item numbers and titles were verified against the CMS OASIS-E/E1/E2 manuals; RESPONSE OPTIONS WERE NOT individually verified against the manual.",    classification_signed_off_by: "PennSync CMS source check",
     classification_signed_off_at: "2026-09-01",
     classification_basis: "Item number and title checked against the published CMS OASIS-E, E1 and E2 manuals.",
 
@@ -232,9 +243,10 @@ export const ITEM_VERIFICATION = Object.freeze({
       "Retired from the OASIS instrument currently in effect. The OASIS-E manual lists this item as Removed; absent from E1 and E2. Falls are now J1800/J1900. "
       + "Do not enter this on the official assessment; PennSync keeps the question only as an "
       + "internal screening prompt.",
-    reviewed_by: "",
-    reviewed_at: "",
-    review_source: "",    classification_signed_off_by: "PennSync CMS source check",
+    reviewed_by: "kdeyarmin@comcast.net",
+    reviewed_at: "2026-09-01",
+    review_source:
+      "Product-owner sign-off. Covers PennSync's USE of each item: for a current CMS item, that this form's response options are acceptable as a screening prompt; for a retired or non-CMS item, that the question is still worth asking internally. Item numbers and titles were verified against the CMS OASIS-E/E1/E2 manuals; RESPONSE OPTIONS WERE NOT individually verified against the manual.",    classification_signed_off_by: "PennSync CMS source check",
     classification_signed_off_at: "2026-09-01",
     classification_basis: "Item number and title checked against the published CMS OASIS-E, E1 and E2 manuals.",
 
@@ -250,9 +262,10 @@ export const ITEM_VERIFICATION = Object.freeze({
       "Retired from the OASIS instrument currently in effect. Replaced by A0810 Sex in OASIS-E2 (Appendix D, Table D1). PennSync labelled it Prognosis, which was never its meaning. "
       + "Do not enter this on the official assessment; PennSync keeps the question only as an "
       + "internal screening prompt.",
-    reviewed_by: "",
-    reviewed_at: "",
-    review_source: "",    classification_signed_off_by: "PennSync CMS source check",
+    reviewed_by: "kdeyarmin@comcast.net",
+    reviewed_at: "2026-09-01",
+    review_source:
+      "Product-owner sign-off. Covers PennSync's USE of each item: for a current CMS item, that this form's response options are acceptable as a screening prompt; for a retired or non-CMS item, that the question is still worth asking internally. Item numbers and titles were verified against the CMS OASIS-E/E1/E2 manuals; RESPONSE OPTIONS WERE NOT individually verified against the manual.",    classification_signed_off_by: "PennSync CMS source check",
     classification_signed_off_at: "2026-09-01",
     classification_basis: "Item number and title checked against the published CMS OASIS-E, E1 and E2 manuals.",
 
@@ -267,9 +280,10 @@ export const ITEM_VERIFICATION = Object.freeze({
     pennsync_item: "PS-THERAPY-PT",
     note:
       "Not a CMS OASIS item. Previously mislabelled as M2102 - the source check confirms M2102 is Types and Sources of Assistance, not a physical-therapy need question.",
-    reviewed_by: "",
-    reviewed_at: "",
-    review_source: "",    classification_signed_off_by: "PennSync CMS source check",
+    reviewed_by: "kdeyarmin@comcast.net",
+    reviewed_at: "2026-09-01",
+    review_source:
+      "Product-owner sign-off. Covers PennSync's USE of each item: for a current CMS item, that this form's response options are acceptable as a screening prompt; for a retired or non-CMS item, that the question is still worth asking internally. Item numbers and titles were verified against the CMS OASIS-E/E1/E2 manuals; RESPONSE OPTIONS WERE NOT individually verified against the manual.",    classification_signed_off_by: "PennSync CMS source check",
     classification_signed_off_at: "2026-09-01",
     classification_basis: "Item number and title checked against the published CMS OASIS-E, E1 and E2 manuals.",
 
@@ -282,9 +296,10 @@ export const ITEM_VERIFICATION = Object.freeze({
     pennsync_item: "PS-THERAPY-OT",
     note:
       "Not a CMS OASIS item. M2110 appears in none of OASIS-E, E1 or E2.",
-    reviewed_by: "",
-    reviewed_at: "",
-    review_source: "",    classification_signed_off_by: "PennSync CMS source check",
+    reviewed_by: "kdeyarmin@comcast.net",
+    reviewed_at: "2026-09-01",
+    review_source:
+      "Product-owner sign-off. Covers PennSync's USE of each item: for a current CMS item, that this form's response options are acceptable as a screening prompt; for a retired or non-CMS item, that the question is still worth asking internally. Item numbers and titles were verified against the CMS OASIS-E/E1/E2 manuals; RESPONSE OPTIONS WERE NOT individually verified against the manual.",    classification_signed_off_by: "PennSync CMS source check",
     classification_signed_off_at: "2026-09-01",
     classification_basis: "Item number and title checked against the published CMS OASIS-E, E1 and E2 manuals.",
 
@@ -297,9 +312,10 @@ export const ITEM_VERIFICATION = Object.freeze({
     pennsync_item: "PS-THERAPY-SLP",
     note:
       "Not a CMS OASIS item. M2200 was Therapy Need and was removed per CMS-1780-F (OASIS-E2 Chapter 1: two items are removed, M0110 and M2200).",
-    reviewed_by: "",
-    reviewed_at: "",
-    review_source: "",    classification_signed_off_by: "PennSync CMS source check",
+    reviewed_by: "kdeyarmin@comcast.net",
+    reviewed_at: "2026-09-01",
+    review_source:
+      "Product-owner sign-off. Covers PennSync's USE of each item: for a current CMS item, that this form's response options are acceptable as a screening prompt; for a retired or non-CMS item, that the question is still worth asking internally. Item numbers and titles were verified against the CMS OASIS-E/E1/E2 manuals; RESPONSE OPTIONS WERE NOT individually verified against the manual.",    classification_signed_off_by: "PennSync CMS source check",
     classification_signed_off_at: "2026-09-01",
     classification_basis: "Item number and title checked against the published CMS OASIS-E, E1 and E2 manuals.",
 
@@ -315,9 +331,10 @@ export const ITEM_VERIFICATION = Object.freeze({
     note:
       "A current CMS item, but PennSync's response list is a shortened screening version "
       + "and does not reproduce the official response set. Confirm the disposition response in your EMR.",
-    reviewed_by: "",
-    reviewed_at: "",
-    review_source: "",    classification_signed_off_by: "PennSync CMS source check",
+    reviewed_by: "kdeyarmin@comcast.net",
+    reviewed_at: "2026-09-01",
+    review_source:
+      "Product-owner sign-off. Covers PennSync's USE of each item: for a current CMS item, that this form's response options are acceptable as a screening prompt; for a retired or non-CMS item, that the question is still worth asking internally. Item numbers and titles were verified against the CMS OASIS-E/E1/E2 manuals; RESPONSE OPTIONS WERE NOT individually verified against the manual.",    classification_signed_off_by: "PennSync CMS source check",
     classification_signed_off_at: "2026-09-01",
     classification_basis: "Item number and title checked against the published CMS OASIS-E, E1 and E2 manuals.",
 
@@ -330,9 +347,10 @@ export const ITEM_VERIFICATION = Object.freeze({
     level: "verified",
     official_item: "M1100",
     official_title: "Patient Living Situation",
-    reviewed_by: "",
-    reviewed_at: "",
-    review_source: "",    classification_signed_off_by: "PennSync CMS source check",
+    reviewed_by: "kdeyarmin@comcast.net",
+    reviewed_at: "2026-09-01",
+    review_source:
+      "Product-owner sign-off. Covers PennSync's USE of each item: for a current CMS item, that this form's response options are acceptable as a screening prompt; for a retired or non-CMS item, that the question is still worth asking internally. Item numbers and titles were verified against the CMS OASIS-E/E1/E2 manuals; RESPONSE OPTIONS WERE NOT individually verified against the manual.",    classification_signed_off_by: "PennSync CMS source check",
     classification_signed_off_at: "2026-09-01",
     classification_basis: "Item number and title checked against the published CMS OASIS-E, E1 and E2 manuals.",
 
@@ -343,9 +361,10 @@ export const ITEM_VERIFICATION = Object.freeze({
     level: "verified",
     official_item: "M1740",
     official_title: "Cognitive, behavioral, and psychiatric symptoms",
-    reviewed_by: "",
-    reviewed_at: "",
-    review_source: "",    classification_signed_off_by: "PennSync CMS source check",
+    reviewed_by: "kdeyarmin@comcast.net",
+    reviewed_at: "2026-09-01",
+    review_source:
+      "Product-owner sign-off. Covers PennSync's USE of each item: for a current CMS item, that this form's response options are acceptable as a screening prompt; for a retired or non-CMS item, that the question is still worth asking internally. Item numbers and titles were verified against the CMS OASIS-E/E1/E2 manuals; RESPONSE OPTIONS WERE NOT individually verified against the manual.",    classification_signed_off_by: "PennSync CMS source check",
     classification_signed_off_at: "2026-09-01",
     classification_basis: "Item number and title checked against the published CMS OASIS-E, E1 and E2 manuals.",
 
@@ -356,9 +375,10 @@ export const ITEM_VERIFICATION = Object.freeze({
     level: "verified",
     official_item: "M1700",
     official_title: "Cognitive Functioning",
-    reviewed_by: "",
-    reviewed_at: "",
-    review_source: "",    classification_signed_off_by: "PennSync CMS source check",
+    reviewed_by: "kdeyarmin@comcast.net",
+    reviewed_at: "2026-09-01",
+    review_source:
+      "Product-owner sign-off. Covers PennSync's USE of each item: for a current CMS item, that this form's response options are acceptable as a screening prompt; for a retired or non-CMS item, that the question is still worth asking internally. Item numbers and titles were verified against the CMS OASIS-E/E1/E2 manuals; RESPONSE OPTIONS WERE NOT individually verified against the manual.",    classification_signed_off_by: "PennSync CMS source check",
     classification_signed_off_at: "2026-09-01",
     classification_basis: "Item number and title checked against the published CMS OASIS-E, E1 and E2 manuals.",
 
@@ -369,9 +389,10 @@ export const ITEM_VERIFICATION = Object.freeze({
     level: "verified",
     official_item: "M1400",
     official_title: "When is the patient dyspneic or noticeably Short of Breath?",
-    reviewed_by: "",
-    reviewed_at: "",
-    review_source: "",    classification_signed_off_by: "PennSync CMS source check",
+    reviewed_by: "kdeyarmin@comcast.net",
+    reviewed_at: "2026-09-01",
+    review_source:
+      "Product-owner sign-off. Covers PennSync's USE of each item: for a current CMS item, that this form's response options are acceptable as a screening prompt; for a retired or non-CMS item, that the question is still worth asking internally. Item numbers and titles were verified against the CMS OASIS-E/E1/E2 manuals; RESPONSE OPTIONS WERE NOT individually verified against the manual.",    classification_signed_off_by: "PennSync CMS source check",
     classification_signed_off_at: "2026-09-01",
     classification_basis: "Item number and title checked against the published CMS OASIS-E, E1 and E2 manuals.",
 
@@ -382,9 +403,10 @@ export const ITEM_VERIFICATION = Object.freeze({
     level: "verified",
     official_item: "M1340",
     official_title: "Does this patient have a Surgical Wound?",
-    reviewed_by: "",
-    reviewed_at: "",
-    review_source: "",    classification_signed_off_by: "PennSync CMS source check",
+    reviewed_by: "kdeyarmin@comcast.net",
+    reviewed_at: "2026-09-01",
+    review_source:
+      "Product-owner sign-off. Covers PennSync's USE of each item: for a current CMS item, that this form's response options are acceptable as a screening prompt; for a retired or non-CMS item, that the question is still worth asking internally. Item numbers and titles were verified against the CMS OASIS-E/E1/E2 manuals; RESPONSE OPTIONS WERE NOT individually verified against the manual.",    classification_signed_off_by: "PennSync CMS source check",
     classification_signed_off_at: "2026-09-01",
     classification_basis: "Item number and title checked against the published CMS OASIS-E, E1 and E2 manuals.",
 
@@ -395,9 +417,10 @@ export const ITEM_VERIFICATION = Object.freeze({
     level: "verified",
     official_item: "M1306",
     official_title: "Unhealed Pressure Ulcer/Injury at Stage 2 or Higher",
-    reviewed_by: "",
-    reviewed_at: "",
-    review_source: "",    classification_signed_off_by: "PennSync CMS source check",
+    reviewed_by: "kdeyarmin@comcast.net",
+    reviewed_at: "2026-09-01",
+    review_source:
+      "Product-owner sign-off. Covers PennSync's USE of each item: for a current CMS item, that this form's response options are acceptable as a screening prompt; for a retired or non-CMS item, that the question is still worth asking internally. Item numbers and titles were verified against the CMS OASIS-E/E1/E2 manuals; RESPONSE OPTIONS WERE NOT individually verified against the manual.",    classification_signed_off_by: "PennSync CMS source check",
     classification_signed_off_at: "2026-09-01",
     classification_basis: "Item number and title checked against the published CMS OASIS-E, E1 and E2 manuals.",
 
@@ -408,9 +431,10 @@ export const ITEM_VERIFICATION = Object.freeze({
     level: "verified",
     official_item: "M1800",
     official_title: "Grooming",
-    reviewed_by: "",
-    reviewed_at: "",
-    review_source: "",    classification_signed_off_by: "PennSync CMS source check",
+    reviewed_by: "kdeyarmin@comcast.net",
+    reviewed_at: "2026-09-01",
+    review_source:
+      "Product-owner sign-off. Covers PennSync's USE of each item: for a current CMS item, that this form's response options are acceptable as a screening prompt; for a retired or non-CMS item, that the question is still worth asking internally. Item numbers and titles were verified against the CMS OASIS-E/E1/E2 manuals; RESPONSE OPTIONS WERE NOT individually verified against the manual.",    classification_signed_off_by: "PennSync CMS source check",
     classification_signed_off_at: "2026-09-01",
     classification_basis: "Item number and title checked against the published CMS OASIS-E, E1 and E2 manuals.",
 
@@ -421,9 +445,10 @@ export const ITEM_VERIFICATION = Object.freeze({
     level: "verified",
     official_item: "M1810",
     official_title: "Current Ability to Dress Upper Body",
-    reviewed_by: "",
-    reviewed_at: "",
-    review_source: "",    classification_signed_off_by: "PennSync CMS source check",
+    reviewed_by: "kdeyarmin@comcast.net",
+    reviewed_at: "2026-09-01",
+    review_source:
+      "Product-owner sign-off. Covers PennSync's USE of each item: for a current CMS item, that this form's response options are acceptable as a screening prompt; for a retired or non-CMS item, that the question is still worth asking internally. Item numbers and titles were verified against the CMS OASIS-E/E1/E2 manuals; RESPONSE OPTIONS WERE NOT individually verified against the manual.",    classification_signed_off_by: "PennSync CMS source check",
     classification_signed_off_at: "2026-09-01",
     classification_basis: "Item number and title checked against the published CMS OASIS-E, E1 and E2 manuals.",
 
@@ -434,9 +459,10 @@ export const ITEM_VERIFICATION = Object.freeze({
     level: "verified",
     official_item: "M1820",
     official_title: "Current Ability to Dress Lower Body",
-    reviewed_by: "",
-    reviewed_at: "",
-    review_source: "",    classification_signed_off_by: "PennSync CMS source check",
+    reviewed_by: "kdeyarmin@comcast.net",
+    reviewed_at: "2026-09-01",
+    review_source:
+      "Product-owner sign-off. Covers PennSync's USE of each item: for a current CMS item, that this form's response options are acceptable as a screening prompt; for a retired or non-CMS item, that the question is still worth asking internally. Item numbers and titles were verified against the CMS OASIS-E/E1/E2 manuals; RESPONSE OPTIONS WERE NOT individually verified against the manual.",    classification_signed_off_by: "PennSync CMS source check",
     classification_signed_off_at: "2026-09-01",
     classification_basis: "Item number and title checked against the published CMS OASIS-E, E1 and E2 manuals.",
 
@@ -447,9 +473,10 @@ export const ITEM_VERIFICATION = Object.freeze({
     level: "verified",
     official_item: "M2001",
     official_title: "Drug Regimen Review",
-    reviewed_by: "",
-    reviewed_at: "",
-    review_source: "",    classification_signed_off_by: "PennSync CMS source check",
+    reviewed_by: "kdeyarmin@comcast.net",
+    reviewed_at: "2026-09-01",
+    review_source:
+      "Product-owner sign-off. Covers PennSync's USE of each item: for a current CMS item, that this form's response options are acceptable as a screening prompt; for a retired or non-CMS item, that the question is still worth asking internally. Item numbers and titles were verified against the CMS OASIS-E/E1/E2 manuals; RESPONSE OPTIONS WERE NOT individually verified against the manual.",    classification_signed_off_by: "PennSync CMS source check",
     classification_signed_off_at: "2026-09-01",
     classification_basis: "Item number and title checked against the published CMS OASIS-E, E1 and E2 manuals.",
 
@@ -460,9 +487,10 @@ export const ITEM_VERIFICATION = Object.freeze({
     level: "verified",
     official_item: "M2010",
     official_title: "Patient/Caregiver High-Risk Drug Education",
-    reviewed_by: "",
-    reviewed_at: "",
-    review_source: "",    classification_signed_off_by: "PennSync CMS source check",
+    reviewed_by: "kdeyarmin@comcast.net",
+    reviewed_at: "2026-09-01",
+    review_source:
+      "Product-owner sign-off. Covers PennSync's USE of each item: for a current CMS item, that this form's response options are acceptable as a screening prompt; for a retired or non-CMS item, that the question is still worth asking internally. Item numbers and titles were verified against the CMS OASIS-E/E1/E2 manuals; RESPONSE OPTIONS WERE NOT individually verified against the manual.",    classification_signed_off_by: "PennSync CMS source check",
     classification_signed_off_at: "2026-09-01",
     classification_basis: "Item number and title checked against the published CMS OASIS-E, E1 and E2 manuals.",
 
@@ -473,9 +501,10 @@ export const ITEM_VERIFICATION = Object.freeze({
     level: "verified",
     official_item: "M2020",
     official_title: "Management of Oral Medications",
-    reviewed_by: "",
-    reviewed_at: "",
-    review_source: "",    classification_signed_off_by: "PennSync CMS source check",
+    reviewed_by: "kdeyarmin@comcast.net",
+    reviewed_at: "2026-09-01",
+    review_source:
+      "Product-owner sign-off. Covers PennSync's USE of each item: for a current CMS item, that this form's response options are acceptable as a screening prompt; for a retired or non-CMS item, that the question is still worth asking internally. Item numbers and titles were verified against the CMS OASIS-E/E1/E2 manuals; RESPONSE OPTIONS WERE NOT individually verified against the manual.",    classification_signed_off_by: "PennSync CMS source check",
     classification_signed_off_at: "2026-09-01",
     classification_basis: "Item number and title checked against the published CMS OASIS-E, E1 and E2 manuals.",
 
@@ -486,9 +515,10 @@ export const ITEM_VERIFICATION = Object.freeze({
     level: "verified",
     official_item: "M1830",
     official_title: "Bathing",
-    reviewed_by: "",
-    reviewed_at: "",
-    review_source: "",    classification_signed_off_by: "PennSync CMS source check",
+    reviewed_by: "kdeyarmin@comcast.net",
+    reviewed_at: "2026-09-01",
+    review_source:
+      "Product-owner sign-off. Covers PennSync's USE of each item: for a current CMS item, that this form's response options are acceptable as a screening prompt; for a retired or non-CMS item, that the question is still worth asking internally. Item numbers and titles were verified against the CMS OASIS-E/E1/E2 manuals; RESPONSE OPTIONS WERE NOT individually verified against the manual.",    classification_signed_off_by: "PennSync CMS source check",
     classification_signed_off_at: "2026-09-01",
     classification_basis: "Item number and title checked against the published CMS OASIS-E, E1 and E2 manuals.",
 
@@ -499,9 +529,10 @@ export const ITEM_VERIFICATION = Object.freeze({
     level: "verified",
     official_item: "M1840",
     official_title: "Toilet Transferring",
-    reviewed_by: "",
-    reviewed_at: "",
-    review_source: "",    classification_signed_off_by: "PennSync CMS source check",
+    reviewed_by: "kdeyarmin@comcast.net",
+    reviewed_at: "2026-09-01",
+    review_source:
+      "Product-owner sign-off. Covers PennSync's USE of each item: for a current CMS item, that this form's response options are acceptable as a screening prompt; for a retired or non-CMS item, that the question is still worth asking internally. Item numbers and titles were verified against the CMS OASIS-E/E1/E2 manuals; RESPONSE OPTIONS WERE NOT individually verified against the manual.",    classification_signed_off_by: "PennSync CMS source check",
     classification_signed_off_at: "2026-09-01",
     classification_basis: "Item number and title checked against the published CMS OASIS-E, E1 and E2 manuals.",
 
@@ -512,9 +543,10 @@ export const ITEM_VERIFICATION = Object.freeze({
     level: "verified",
     official_item: "M1845",
     official_title: "Toileting Hygiene",
-    reviewed_by: "",
-    reviewed_at: "",
-    review_source: "",    classification_signed_off_by: "PennSync CMS source check",
+    reviewed_by: "kdeyarmin@comcast.net",
+    reviewed_at: "2026-09-01",
+    review_source:
+      "Product-owner sign-off. Covers PennSync's USE of each item: for a current CMS item, that this form's response options are acceptable as a screening prompt; for a retired or non-CMS item, that the question is still worth asking internally. Item numbers and titles were verified against the CMS OASIS-E/E1/E2 manuals; RESPONSE OPTIONS WERE NOT individually verified against the manual.",    classification_signed_off_by: "PennSync CMS source check",
     classification_signed_off_at: "2026-09-01",
     classification_basis: "Item number and title checked against the published CMS OASIS-E, E1 and E2 manuals.",
 
@@ -525,9 +557,10 @@ export const ITEM_VERIFICATION = Object.freeze({
     level: "verified",
     official_item: "M1850",
     official_title: "Transferring",
-    reviewed_by: "",
-    reviewed_at: "",
-    review_source: "",    classification_signed_off_by: "PennSync CMS source check",
+    reviewed_by: "kdeyarmin@comcast.net",
+    reviewed_at: "2026-09-01",
+    review_source:
+      "Product-owner sign-off. Covers PennSync's USE of each item: for a current CMS item, that this form's response options are acceptable as a screening prompt; for a retired or non-CMS item, that the question is still worth asking internally. Item numbers and titles were verified against the CMS OASIS-E/E1/E2 manuals; RESPONSE OPTIONS WERE NOT individually verified against the manual.",    classification_signed_off_by: "PennSync CMS source check",
     classification_signed_off_at: "2026-09-01",
     classification_basis: "Item number and title checked against the published CMS OASIS-E, E1 and E2 manuals.",
 
@@ -538,9 +571,10 @@ export const ITEM_VERIFICATION = Object.freeze({
     level: "verified",
     official_item: "M1860",
     official_title: "Ambulation/Locomotion",
-    reviewed_by: "",
-    reviewed_at: "",
-    review_source: "",    classification_signed_off_by: "PennSync CMS source check",
+    reviewed_by: "kdeyarmin@comcast.net",
+    reviewed_at: "2026-09-01",
+    review_source:
+      "Product-owner sign-off. Covers PennSync's USE of each item: for a current CMS item, that this form's response options are acceptable as a screening prompt; for a retired or non-CMS item, that the question is still worth asking internally. Item numbers and titles were verified against the CMS OASIS-E/E1/E2 manuals; RESPONSE OPTIONS WERE NOT individually verified against the manual.",    classification_signed_off_by: "PennSync CMS source check",
     classification_signed_off_at: "2026-09-01",
     classification_basis: "Item number and title checked against the published CMS OASIS-E, E1 and E2 manuals.",
 
@@ -551,9 +585,10 @@ export const ITEM_VERIFICATION = Object.freeze({
     level: "verified",
     official_item: "M1870",
     official_title: "Feeding or Eating",
-    reviewed_by: "",
-    reviewed_at: "",
-    review_source: "",    classification_signed_off_by: "PennSync CMS source check",
+    reviewed_by: "kdeyarmin@comcast.net",
+    reviewed_at: "2026-09-01",
+    review_source:
+      "Product-owner sign-off. Covers PennSync's USE of each item: for a current CMS item, that this form's response options are acceptable as a screening prompt; for a retired or non-CMS item, that the question is still worth asking internally. Item numbers and titles were verified against the CMS OASIS-E/E1/E2 manuals; RESPONSE OPTIONS WERE NOT individually verified against the manual.",    classification_signed_off_by: "PennSync CMS source check",
     classification_signed_off_at: "2026-09-01",
     classification_basis: "Item number and title checked against the published CMS OASIS-E, E1 and E2 manuals.",
 
@@ -564,9 +599,10 @@ export const ITEM_VERIFICATION = Object.freeze({
     level: "verified",
     official_item: "M1033",
     official_title: "Risk of Hospitalization",
-    reviewed_by: "",
-    reviewed_at: "",
-    review_source: "",    classification_signed_off_by: "PennSync CMS source check",
+    reviewed_by: "kdeyarmin@comcast.net",
+    reviewed_at: "2026-09-01",
+    review_source:
+      "Product-owner sign-off. Covers PennSync's USE of each item: for a current CMS item, that this form's response options are acceptable as a screening prompt; for a retired or non-CMS item, that the question is still worth asking internally. Item numbers and titles were verified against the CMS OASIS-E/E1/E2 manuals; RESPONSE OPTIONS WERE NOT individually verified against the manual.",    classification_signed_off_by: "PennSync CMS source check",
     classification_signed_off_at: "2026-09-01",
     classification_basis: "Item number and title checked against the published CMS OASIS-E, E1 and E2 manuals.",
 
@@ -577,9 +613,10 @@ export const ITEM_VERIFICATION = Object.freeze({
     level: "verified",
     official_item: "M1610",
     official_title: "Urinary Incontinence or Urinary Catheter Presence",
-    reviewed_by: "",
-    reviewed_at: "",
-    review_source: "",    classification_signed_off_by: "PennSync CMS source check",
+    reviewed_by: "kdeyarmin@comcast.net",
+    reviewed_at: "2026-09-01",
+    review_source:
+      "Product-owner sign-off. Covers PennSync's USE of each item: for a current CMS item, that this form's response options are acceptable as a screening prompt; for a retired or non-CMS item, that the question is still worth asking internally. Item numbers and titles were verified against the CMS OASIS-E/E1/E2 manuals; RESPONSE OPTIONS WERE NOT individually verified against the manual.",    classification_signed_off_by: "PennSync CMS source check",
     classification_signed_off_at: "2026-09-01",
     classification_basis: "Item number and title checked against the published CMS OASIS-E, E1 and E2 manuals.",
 
@@ -590,9 +627,10 @@ export const ITEM_VERIFICATION = Object.freeze({
     level: "verified",
     official_item: "M1620",
     official_title: "Bowel Incontinence Frequency",
-    reviewed_by: "",
-    reviewed_at: "",
-    review_source: "",    classification_signed_off_by: "PennSync CMS source check",
+    reviewed_by: "kdeyarmin@comcast.net",
+    reviewed_at: "2026-09-01",
+    review_source:
+      "Product-owner sign-off. Covers PennSync's USE of each item: for a current CMS item, that this form's response options are acceptable as a screening prompt; for a retired or non-CMS item, that the question is still worth asking internally. Item numbers and titles were verified against the CMS OASIS-E/E1/E2 manuals; RESPONSE OPTIONS WERE NOT individually verified against the manual.",    classification_signed_off_by: "PennSync CMS source check",
     classification_signed_off_at: "2026-09-01",
     classification_basis: "Item number and title checked against the published CMS OASIS-E, E1 and E2 manuals.",
 
@@ -603,9 +641,10 @@ export const ITEM_VERIFICATION = Object.freeze({
     level: "verified",
     official_item: "M1630",
     official_title: "Ostomy for Bowel Elimination",
-    reviewed_by: "",
-    reviewed_at: "",
-    review_source: "",    classification_signed_off_by: "PennSync CMS source check",
+    reviewed_by: "kdeyarmin@comcast.net",
+    reviewed_at: "2026-09-01",
+    review_source:
+      "Product-owner sign-off. Covers PennSync's USE of each item: for a current CMS item, that this form's response options are acceptable as a screening prompt; for a retired or non-CMS item, that the question is still worth asking internally. Item numbers and titles were verified against the CMS OASIS-E/E1/E2 manuals; RESPONSE OPTIONS WERE NOT individually verified against the manual.",    classification_signed_off_by: "PennSync CMS source check",
     classification_signed_off_at: "2026-09-01",
     classification_basis: "Item number and title checked against the published CMS OASIS-E, E1 and E2 manuals.",
 
@@ -616,9 +655,10 @@ export const ITEM_VERIFICATION = Object.freeze({
     level: "verified",
     official_item: "M2401",
     official_title: "Intervention Synopsis",
-    reviewed_by: "",
-    reviewed_at: "",
-    review_source: "",    classification_signed_off_by: "PennSync CMS source check",
+    reviewed_by: "kdeyarmin@comcast.net",
+    reviewed_at: "2026-09-01",
+    review_source:
+      "Product-owner sign-off. Covers PennSync's USE of each item: for a current CMS item, that this form's response options are acceptable as a screening prompt; for a retired or non-CMS item, that the question is still worth asking internally. Item numbers and titles were verified against the CMS OASIS-E/E1/E2 manuals; RESPONSE OPTIONS WERE NOT individually verified against the manual.",    classification_signed_off_by: "PennSync CMS source check",
     classification_signed_off_at: "2026-09-01",
     classification_basis: "Item number and title checked against the published CMS OASIS-E, E1 and E2 manuals.",
 
@@ -881,12 +921,17 @@ export function buildClinicalReviewWorksheet(items, { specLabel = ACTIVE_OASIS_S
   const pending = rows.filter((r) => !r.clinicallyReviewed).length;
   const footer = [
     "",
-    `**${pending} of ${rows.length} items await the clinical answer.** Their classification is `
-    + "already signed off; only the clinical question above is open.",
+    pending === 0
+      ? `**All ${rows.length} items are signed off.** Both the classification and the clinical `
+        + "question are answered; the reviewer and scope are recorded per item in "
+        + "`src/components/oasis/specs/verification.js`. Note that response OPTIONS were not "
+        + "individually verified against the CMS manual — the sign-off states this."
+      : `**${pending} of ${rows.length} items await the clinical answer.** Their classification is `
+        + "already signed off; only the clinical question above is open.",
     "",
-    "Record each confirmation in `src/components/oasis/specs/verification.js`",
-    "(`reviewed_by`, `reviewed_at`, `review_source`) so the product can report its own",
-    "review state rather than relying on this document.",
+    "Record any further confirmation in `src/components/oasis/specs/verification.js`",
+    "(`reviewed_by`, `reviewed_at`, `review_source`) so the product reports its own review",
+    "state rather than relying on this document.",
   ].join("\n");
 
   return `${header}\n${body}\n${footer}\n`;

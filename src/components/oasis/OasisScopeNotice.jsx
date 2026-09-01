@@ -53,12 +53,14 @@ export default function OasisScopeNotice({ className = "" }) {
             enter official responses in your EMR.
           </p>
         )}
-        {!review.complete && (
-          <p className="text-navy-700">
-            Item numbers and titles are verified against the CMS manual.{" "}
-            <strong>Response options are not</strong> — confirm them in your EMR.
-          </p>
-        )}
+        {/* Even with the clinical sign-off recorded, the response-set gap is
+            real and stays on screen: the sign-off states it, and a nurse
+            entering an official response needs to know it. */}
+        <p className="text-navy-700">
+          Item numbers and titles are verified against the CMS manual.{" "}
+          <strong>Response options are not</strong> — confirm them in your EMR.
+          {review.complete && " Clinical use of these items is signed off by the agency."}
+        </p>
       </div>
     </div>
   );
