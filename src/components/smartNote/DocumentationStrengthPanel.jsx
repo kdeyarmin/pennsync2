@@ -1,5 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, CheckCircle2, HelpCircle, Quote, Wrench } from "lucide-react";
+import { describeCalibration } from "./compliance/thresholds";
 
 const TONE = {
   weak: { frame: "border-amber-200 bg-amber-50", heading: "text-amber-900", badge: "warning", icon: AlertTriangle },
@@ -23,6 +24,9 @@ const TONE = {
 export default function DocumentationStrengthPanel({ findings = [], compact = false }) {
   const rows = compact ? findings.filter((f) => f.level === "weak" || f.level === "partial") : findings;
   if (!rows.length) return null;
+  // The grading bands are PennSync defaults until an agency tunes them on its
+  // own denials; a screen must not imply otherwise.
+  const calibration = describeCalibration();
 
   return (
     <div className="space-y-3">
@@ -30,6 +34,10 @@ export default function DocumentationStrengthPanel({ findings = [], compact = fa
         PennSync checks whether these statements carry the factual support a reviewer looks for.
         These are review prompts, not a compliance determination — answer what applies from your
         own assessment.
+        {!calibration.complete && (
+          <> The grading bands are PennSync defaults, not standards, and have not been calibrated
+          on your agency&apos;s documentation.</>
+        )}
       </p>
       {rows.map((finding) => {
         const tone = TONE[finding.level] || TONE.partial;

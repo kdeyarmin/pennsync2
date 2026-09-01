@@ -10,9 +10,13 @@ import { OASIS_E_SPEC } from "./e/index.js";
 import {
   ITEM_VERIFICATION,
   VERIFICATION_LEVELS,
+  buildClinicalReviewWorksheet,
   classifyItem,
+  clinicalReviewStatus,
   describeVerification,
+  isClinicallyReviewed,
   isOfficialCmsItem,
+  pendingClinicalReview,
   itemDisclaimer,
   officialItemNumber,
 } from "./verification.js";
@@ -120,4 +124,96 @@ test("a date before every known version resolves to null rather than guessing", 
 test("an unparseable date falls back to the active spec rather than throwing", () => {
   assert.equal(resolveSpecForDate("not-a-date").id, ACTIVE_OASIS_SPEC.id);
   assert.equal(resolveSpecForDate(null).id, ACTIVE_OASIS_SPEC.id);
+});
+
+// ── Clinical sign-off ──────────────────────────────────────────────────────
+
+test("no item ships pre-signed — a classification is not a sign-off", () => {
+  // The classifications were derived from internal evidence and the app's own
+  // scale table, not from a qualified reviewer reading the CMS instrument. The
+  // product must not imply otherwise.
+  for (const [id, entry] of Object.entries(ITEM_VERIFICATION)) {
+    assert.equal(entry.reviewed_by, "", `${id} must not claim a reviewer nobody named`);
+    assert.equal(isClinicallyReviewed(id), false, `${id} must report as unreviewed`);
+  }
+});
+
+test("review provenance travels with the classification", () => {
+  const c = classifyItem("m1800");
+  assert.equal(c.clinicallyReviewed, false);
+  assert.equal(c.reviewedBy, "");
+  assert.match(c.reviewSource, /canonical scale table/i, "the app's own source is named honestly");
+});
+
+test("an unregistered item is reported as unreviewed, not silently omitted", () => {
+  const c = classifyItem("m9999");
+  assert.equal(c.clinicallyReviewed, false);
+  assert.equal(c.reviewSource, "");
+});
+
+test("the three demoted items carry the evidence behind the demotion", () => {
+  assert.match(classifyItem("m2102").evidence, /AIProactiveOASISAssistant\.jsx:138/);
+  assert.match(classifyItem("m2200").evidence, /discontinued under PDGM/i);
+  // Where PennSync did NOT independently confirm, it says so rather than implying it did.
+  assert.match(classifyItem("m2110").evidence, /Not independently confirmed/i);
+});
+
+test("pendingClinicalReview lists every unreviewed item, worst classification first", () => {
+  const pending = pendingClinicalReview();
+  assert.equal(pending.length, Object.keys(ITEM_VERIFICATION).length, "nothing is signed off yet");
+  const levels = pending.map((p) => p.level);
+  assert.ok(
+    levels.indexOf("verified") < levels.indexOf("pennsync_screening"),
+    "ordering follows VERIFICATION_LEVELS",
+  );
+});
+
+test("pendingClinicalReview includes an unregistered item when the caller scopes it", () => {
+  const pending = pendingClinicalReview(["m1800", "m9999"]);
+  assert.deepEqual(pending.map((p) => p.id).sort(), ["m1800", "m9999"]);
+});
+
+test("the review status statement names the gap in plain language", () => {
+  const status = clinicalReviewStatus();
+  assert.equal(status.complete, false);
+  assert.equal(status.reviewed, 0);
+  assert.equal(status.pending, status.total);
+  assert.match(status.statement, /have not been\s+reviewed by a qualified OASIS reviewer/i);
+  assert.match(status.statement, /Confirm item wording and response sets in your EMR/i);
+});
+
+test("the worksheet states PennSync lacks the CMS instrument and never pre-fills a conclusion", () => {
+  const sheet = buildClinicalReviewWorksheet(
+    [{ id: "m2102", label: "Physical therapy need (PennSync screening item)" }],
+    { generatedAt: "2026-09-01" },
+  );
+  assert.match(sheet, /does \*\*not\*\* contain the authoritative CMS OASIS instrument/i);
+  assert.match(sheet, /Reviewer: correct\?/);
+  assert.match(sheet, /Reviewer: CMS source/);
+  // The reviewer's own columns must arrive blank.
+  const row = sheet.split("\n").find((l) => l.includes("`m2102`"));
+  assert.ok(row, "the item must appear as a row");
+  const cells = row.split("|").map((c) => c.trim());
+  assert.equal(cells[cells.length - 2], "", "the initials/date cell arrives blank");
+  assert.match(sheet, /1 of 1 items await sign-off/);
+});
+
+test("the worksheet shows a PennSync screening item with no CMS item number", () => {
+  const sheet = buildClinicalReviewWorksheet([{ id: "m2102", label: "PT need" }]);
+  const row = sheet.split("\n").find((l) => l.includes("`m2102`"));
+  assert.match(row, /—\s*\(none\)/, "a screening item must not display an M-number");
+});
+
+test("a pipe in a label cannot break the worksheet table", () => {
+  const sheet = buildClinicalReviewWorksheet([{ id: "m1800", label: "Grooming | upper body" }]);
+  const row = sheet.split("\n").find((l) => l.includes("`m1800`"));
+  assert.match(row, /Grooming \\\| upper body/);
+});
+
+test("the worksheet is deterministic and safe on empty input", () => {
+  const a = buildClinicalReviewWorksheet([{ id: "m1800" }], { generatedAt: "2026-09-01" });
+  const b = buildClinicalReviewWorksheet([{ id: "m1800" }], { generatedAt: "2026-09-01" });
+  assert.equal(a, b);
+  assert.doesNotThrow(() => buildClinicalReviewWorksheet([]));
+  assert.doesNotThrow(() => buildClinicalReviewWorksheet(null));
 });

@@ -1,5 +1,6 @@
 import { Info } from "lucide-react";
 import { ACTIVE_OASIS_SPEC } from "./specs/registry.js";
+import { clinicalReviewStatus } from "./specs/verification.js";
 
 /**
  * The standing scope statement for every OASIS surface.
@@ -10,11 +11,14 @@ import { ACTIVE_OASIS_SPEC } from "./specs/registry.js";
  * always visible rather than tucked behind a disclosure: it is the sentence that
  * stops the OASIS Center reading as the official assessment.
  *
- * It also states the version PennSync's guidance is patterned after, and that
- * PennSync's internal item set is abbreviated — so no one mistakes a screening
- * question for the CMS instrument.
+ * It also states the version PennSync's guidance is patterned after, that
+ * PennSync's internal item set is abbreviated, and how much of that set a
+ * qualified OASIS reviewer has actually signed off — so no one mistakes a
+ * screening question for the CMS instrument, and the sign-off gap is visible
+ * in the product rather than only in a document.
  */
 export default function OasisScopeNotice({ className = "" }) {
+  const review = clinicalReviewStatus();
   return (
     <div
       role="note"
@@ -32,6 +36,17 @@ export default function OasisScopeNotice({ className = "" }) {
           {ACTIVE_OASIS_SPEC.effective_date}). PennSync&apos;s internal item set is abbreviated and
           is not the CMS instrument — confirm item wording and response sets in your EMR.
         </p>
+        {/* The sign-off gap belongs on screen, not only in an audit document:
+            a classification nobody qualified has confirmed must not read as
+            settled just because it is rendered confidently. */}
+        {!review.complete && (
+          <p className="text-navy-700">
+            <strong>
+              {review.pending} of {review.total} items
+            </strong>{" "}
+            have not been reviewed by a qualified OASIS reviewer.
+          </p>
+        )}
       </div>
     </div>
   );

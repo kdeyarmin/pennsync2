@@ -24,6 +24,7 @@
 // Pure + offline so it runs under `node --test`. It may only import other plain
 // `.js` modules with explicit extensions (never `.jsx`).
 import { splitSentences } from "./factExtraction.js";
+import { thresholdValue } from "./thresholds.js";
 
 /** Strength bands, weakest first. Exported so UI ordering can't drift. */
 export const STRENGTH_LEVELS = Object.freeze(["absent", "weak", "partial", "strong"]);
@@ -219,10 +220,13 @@ const TEACHING_PRESENCE =
 export function analyzeHomebound(noteText) {
   const text = noteText || "";
   const present = HOMEBOUND_PRESENCE.test(text);
-  // Three of the seven factors is the bar for "strong": a medical reason plus
-  // two concrete supports (device / assistance / symptom / effort) is what a
-  // reviewer needs to see confinement AND taxing effort.
-  const graded = gradeFactors(text, HOMEBOUND_FACTORS, { present, minStrong: 3, minPartial: 1 });
+  // Thresholds live in thresholds.js with their provenance: they are PennSync
+  // defaults, not regulatory standards, and an agency can calibrate them.
+  const graded = gradeFactors(text, HOMEBOUND_FACTORS, {
+    present,
+    minStrong: thresholdValue("homebound_strong_factors"),
+    minPartial: thresholdValue("homebound_partial_factors"),
+  });
   return buildFinding({
     id: "homebound_strength",
     element: "homebound",
@@ -244,7 +248,11 @@ export function analyzeHomebound(noteText) {
 export function analyzeSkilledNeed(noteText) {
   const text = noteText || "";
   const present = SKILLED_PRESENCE.test(text);
-  const graded = gradeFactors(text, SKILLED_NEED_FACTORS, { present, minStrong: 3, minPartial: 1 });
+  const graded = gradeFactors(text, SKILLED_NEED_FACTORS, {
+    present,
+    minStrong: thresholdValue("skilled_need_strong_factors"),
+    minPartial: thresholdValue("skilled_need_partial_factors"),
+  });
   return buildFinding({
     id: "skilled_need_strength",
     element: "skilled_need",
@@ -270,7 +278,11 @@ export function analyzeTeaching(noteText) {
   // an unrelated "patient" or "reviewed the" elsewhere in the note cannot make a
   // bare "Education provided." look supported.
   const teachingText = evidenceFor(text, TEACHING_PRESENCE).join(" ");
-  const graded = gradeFactors(teachingText, TEACHING_FACTORS, { present, minStrong: 4, minPartial: 2 });
+  const graded = gradeFactors(teachingText, TEACHING_FACTORS, {
+    present,
+    minStrong: thresholdValue("teaching_strong_factors"),
+    minPartial: thresholdValue("teaching_partial_factors"),
+  });
   return buildFinding({
     id: "teaching_strength",
     element: "patient_education",

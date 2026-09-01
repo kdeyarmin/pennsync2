@@ -21,14 +21,26 @@
 // Pure + offline so it runs under `node --test`. It may only import other plain
 // `.js` modules with explicit extensions (never `.jsx`).
 import { splitSentences } from "./factExtraction.js";
+import { thresholdValue } from "./thresholds.js";
 
-/** Similarity bands. Advisory copy only — no accusation, no misconduct language. */
-export const SIMILARITY_BANDS = Object.freeze([
-  { id: "low", min: 0, label: "Visit-specific", tone: "green", advisory: "This note reads as visit-specific compared with prior documentation." },
-  { id: "moderate", min: 0.55, label: "Some repeated wording", tone: "slate", advisory: "Some wording repeats prior documentation. Expected for a stable patient — confirm today's findings are described." },
-  { id: "high", min: 0.72, label: "High similarity to prior documentation", tone: "amber", advisory: "High similarity to prior documentation — review for visit-specific detail." },
-  { id: "very_high", min: 0.88, label: "Very high similarity to prior documentation", tone: "red", advisory: "Very high similarity to prior documentation — review for visit-specific detail before entering this in the EMR." },
-]);
+/**
+ * Similarity bands. Advisory copy only — no accusation, no misconduct language.
+ *
+ * The band boundaries are read from thresholds.js at call time (not frozen in
+ * here) so an agency can calibrate them on its own notes; they are PennSync
+ * defaults, not standards. `bandFor` builds the list per call.
+ */
+function bands() {
+  return [
+    { id: "low", min: 0, label: "Visit-specific", tone: "green", advisory: "This note reads as visit-specific compared with prior documentation." },
+    { id: "moderate", min: thresholdValue("similarity_moderate"), label: "Some repeated wording", tone: "slate", advisory: "Some wording repeats prior documentation. Expected for a stable patient — confirm today's findings are described." },
+    { id: "high", min: thresholdValue("similarity_high"), label: "High similarity to prior documentation", tone: "amber", advisory: "High similarity to prior documentation — review for visit-specific detail." },
+    { id: "very_high", min: thresholdValue("similarity_very_high"), label: "Very high similarity to prior documentation", tone: "red", advisory: "Very high similarity to prior documentation — review for visit-specific detail before entering this in the EMR." },
+  ];
+}
+
+/** The bands at their current (default or calibrated) boundaries. */
+export const SIMILARITY_BANDS = Object.freeze(bands());
 
 /** Shingle width. 5 words is long enough that ordinary clinical phrasing
  *  ("patient tolerated the procedure well") does not by itself register as a
@@ -36,8 +48,9 @@ export const SIMILARITY_BANDS = Object.freeze([
 const SHINGLE_SIZE = 5;
 
 /** A repeated sentence must be substantial before it is worth surfacing — a
- *  short shared line ("Vitals stable.") is normal documentation, not cloning. */
-const MIN_REPEATED_SENTENCE_WORDS = 8;
+ *  short shared line ("Vitals stable.") is normal documentation, not cloning.
+ *  Tunable: see thresholds.js. */
+const minRepeatedSentenceWords = () => thresholdValue("similarity_min_repeated_words");
 
 // Category-level repeats: the parts of a note that MUST change visit to visit.
 //
@@ -108,8 +121,9 @@ export function shingleSimilarity(a, b) {
 
 /** @param {number} score */
 export function bandFor(score) {
-  let band = SIMILARITY_BANDS[0];
-  for (const b of SIMILARITY_BANDS) if (score >= b.min) band = b;
+  const list = bands();
+  let band = list[0];
+  for (const b of list) if (score >= b.min) band = b;
   return band;
 }
 
@@ -126,7 +140,7 @@ export function repeatedSentences(currentText, priorText) {
     const normalized = normalizeForSimilarity(sentence);
     if (!normalized || seen.has(normalized)) continue;
     const count = normalized.split(" ").length;
-    if (count < MIN_REPEATED_SENTENCE_WORDS) continue;
+    if (count < minRepeatedSentenceWords()) continue;
     if (!priorSet.has(normalized)) continue;
     seen.add(normalized);
     out.push({
@@ -182,8 +196,10 @@ export function categorySimilarity(currentText, priorText) {
 export function identicalVitals(current, priors) {
   const keys = ["bp_sys", "bp_dia", "hr", "o2", "temp", "weight"];
   const present = keys.filter((k) => current?.[k] != null);
-  // Fewer than three recorded values is not a meaningful set.
-  if (present.length < 3) return { repeated: false, matchedCount: 0, keys: [] };
+  // Fewer than a full set of recorded values is not meaningful (see thresholds.js).
+  if (present.length < thresholdValue("similarity_identical_vitals_min_readings")) {
+    return { repeated: false, matchedCount: 0, keys: [] };
+  }
   let matchedCount = 0;
   for (const prior of priors || []) {
     if (!prior) continue;

@@ -319,7 +319,7 @@ response set. Confirm the wording and response in your EMR."
 
 ## 8. Tests added
 
-**209 new tests across 11 suites** (191 under `node --test`, 18 under Vitest), all deterministic and offline.
+**245 new tests across 13 suites** (227 under `node --test`, 18 under Vitest), all deterministic and offline.
 
 | Suite | Tests | Focus |
 | --- | --- | --- |
@@ -327,7 +327,9 @@ response set. Confirm the wording and response in your EMR."
 | `smartNote/EmrHandoffPanel.spec.jsx` | 12 | copy success, **clipboard failure**, per-section copy, self-reported labelling, stale-ack warning |
 | `compliance/documentationStrength.test.js` | 24 | weak/partial/strong grading per element, question wording, hospice exclusion |
 | `compliance/noteSimilarity.test.js` | 23 | similarity maths, **the legitimately-similar negative case**, tone guardrails, identical vitals |
-| `oasis/specs/verification.test.js` | 14 | classification, fail-closed default, disclaimers, effective-date resolution |
+| `oasis/specs/verification.test.js` | 25 | classification, fail-closed default, disclaimers, effective-date resolution, **clinical sign-off tracking and the reviewer worksheet** |
+| `compliance/thresholds.test.js` | 12 | uncalibrated-by-default provenance, override validation, hand-set ≠ calibrated |
+| `compliance/calibrationHarness.test.js` | 13 | corpus scoring, candidate trade-offs, declining on a small or one-sided sample |
 | `oasis/specs/oasisItemBank.spec.js` | 6 | contract: every item classified; an M-number only where permitted |
 | `visit/visitPrep.test.js` | 20 | priority banding, recent-change windows, overflow truncation, determinism |
 | `compliance/documentationReadiness.test.js` | 20 | each status transition, "nothing known ≠ nothing wrong", billing-language guard |
@@ -429,7 +431,12 @@ No regressions. No test was skipped, disabled or quarantined.
    the existing `chartCrossCheck` medication findings is deduplicated — today it
    is surfaced on the patient documentation tab to avoid double-reporting.
 4. Populate `specs/e/` with verified item content once the CMS specification is
-   available; the registry and contract test are ready.
+   available; the registry, worksheet generator and contract test are ready.
+   Work `docs/oasis/ITEM_REVIEW_WORKSHEET.md` and record each sign-off in
+   `specs/verification.js`.
+7. Wire `setThresholdOverrides()` to `AgencySettings` so an admin can persist a
+   calibrated threshold set, and add an admin surface over
+   `calibrationHarness.js` for running the agency's own corpus.
 5. Connect `documentationStrength` findings to the existing training
    recommendation engine (`training/DeficitAnalyzer.jsx`) so recurring weak
    elements drive targeted microlearning.
@@ -438,18 +445,51 @@ No regressions. No test was skipped, disabled or quarantined.
 
 ## 14. Risks still requiring human / clinical / regulatory review
 
-1. **The OASIS item classifications need clinical sign-off.** The three
-   `pennsync_screening` demotions are supported by the repository's own internal
-   contradiction and by PDGM's discontinuation of M2200, but a qualified OASIS
-   reviewer should confirm the classification of every item — especially the
-   `unverified` ones, which are unregistered and fail closed rather than having
-   been examined.
-2. **Documentation-strength thresholds are a clinical judgement.** "Three of
-   seven factors = strong" for homebound is a defensible starting point, not a
-   regulatory standard. Agency QA should review the bands against real denials.
-3. **Similarity band boundaries need calibration on real data.** 0.72 / 0.88 were
-   chosen so a legitimately-updated note on a stable patient does not trip them
-   (test-verified), but they should be tuned against the agency's own notes.
+1. **The OASIS item classifications need clinical sign-off — now tracked, not
+   assumed.** The three `pennsync_screening` demotions are supported by the
+   repository's own internal contradiction and by PDGM's discontinuation of
+   M2200, but no qualified OASIS reviewer has confirmed them, and the
+   `unverified` items fail closed rather than having been examined.
+
+   This is no longer only a note in this document. Every registry entry carries
+   `reviewed_by` / `reviewed_at` / `review_source`, all of which ship empty and
+   are asserted empty by test — a classification is not a sign-off, and the
+   product must not imply one. `pendingClinicalReview()` lists what is
+   outstanding, `clinicalReviewStatus()` produces the sentence the OASIS scope
+   notice now shows on screen ("36 of 36 items have not been reviewed by a
+   qualified OASIS reviewer"), and `node tools-oasis-review-worksheet.mjs`
+   generates `docs/oasis/ITEM_REVIEW_WORKSHEET.md` — one row per item with what
+   PennSync claims, the evidence behind it, and the reviewer's columns blank.
+   `pnpm run check:oasis-worksheet` fails if it drifts from the item bank.
+
+   **Still required from a human:** a qualified OASIS reviewer working the
+   worksheet and recording each confirmation in `specs/verification.js`.
+
+2. **Documentation-strength and similarity thresholds are judgements — now
+   configurable and calibratable.** "Three of seven factors = strong" and the
+   0.72 / 0.88 similarity bands are PennSync defaults chosen so a legitimately-
+   updated note on a stable patient does not trip them (test-verified), not
+   regulatory standards.
+
+   They are no longer literals buried in the engines. `compliance/thresholds.js`
+   holds all nine with `calibrated: false`, the basis they came from, and the
+   rationale for moving them each way; `setThresholdOverrides()` accepts agency
+   values, **rejects** unknown keys and out-of-range values rather than ignoring
+   them, and refuses to mark a hand-set number as calibrated. The Smart Note
+   panels now say on screen that the bands are uncalibrated defaults.
+   `compliance/calibrationHarness.js` turns an agency corpus into the evidence
+   to set them: the factor distribution, the caught/missed/false-alarm trade at
+   each candidate, and a recommendation that **declines** when the sample is
+   under 30 labelled notes or the outcomes are too one-sided — and that is
+   framed as evidence for a human, never as a setting PennSync applies itself.
+
+   **Still required from a human:** running a real labelled corpus through the
+   harness and choosing the flag rate, which is an operational judgement about
+   what a false flag costs a nurse's attention.
+
+3. **The `verified` level means verified against PennSync's own scale table**,
+   not against CMS. `review_source` states this explicitly for those ten items;
+   a reviewer should not read `verified` as CMS-confirmed.
 4. **The medication list is not a licensed drug database.** Every finding needs
    confirmation against the EMR profile and a medication reference. The UI says
    so; the risk is that it is trusted anyway.

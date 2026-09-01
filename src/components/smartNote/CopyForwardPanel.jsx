@@ -1,5 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Copy, Info } from "lucide-react";
+import { getThreshold } from "./compliance/thresholds";
 
 const TONE = {
   green: { frame: "border-emerald-200 bg-emerald-50", badge: "success" },
@@ -21,6 +22,8 @@ export default function CopyForwardPanel({ review }) {
   if (!review || !review.comparedCount) return null;
   const tone = TONE[review.band.tone] || TONE.slate;
   const pct = Math.round(review.score * 100);
+  // A band boundary nobody has tuned must not be presented as an authority.
+  const bandThreshold = getThreshold("similarity_high");
 
   return (
     <div className={`rounded-xl border p-3 space-y-2 ${tone.frame}`}>
@@ -60,6 +63,9 @@ export default function CopyForwardPanel({ review }) {
         <span>
           Compared against {review.comparedCount} prior note{review.comparedCount === 1 ? "" : "s"}.
           Advisory only — repeated wording is expected for a stable patient and never blocks saving.
+          {bandThreshold && !bandThreshold.calibrated && (
+            <> These bands are PennSync defaults that have not been calibrated on your agency&apos;s notes.</>
+          )}
         </span>
       </p>
     </div>
