@@ -302,7 +302,23 @@ is exactly how a legacy code would keep scoring after the UI stopped showing it.
 
 ## 9. Feature-flag rollout
 
-Agency feature key **`oasis_response_schema_v2`**, default **OFF**.
+`AgencySettings.`**`oasis_response_schema_v2_enabled`**, a flat boolean,
+default **OFF**. Scoped per agency: both the frontend gate
+(`responseSchema/featureFlag.js`) and the protected writer read this field name
+off this entity, and the writer resolves the row belonging to *the caller's*
+agency through the shared `resolveAgencySettings` helper.
+
+The last part is not incidental. `AgencySettings` read RLS is open, so a
+newest-row-wins `list()` returns whichever tenant saved most recently — one
+agency's rollout flag would govern another's writes, and, worse, an agency
+flipping its own kill switch could be overruled by a stranger's newer `false`
+during the incident the switch exists for. A keyed miss resolves to `null` and
+both gates read that as *not enabled*.
+
+It lives on `AgencySettings` rather than `Agency` because `Agency` defines no
+feature-flag object at all (only an `enabled_features` page list) and its read
+RLS is admin-only, so the clinicians who are the primary callers of the write
+path could never resolve their own agency's flag.
 
 **P0 containment is unconditional** — AI, output and analytics containment ship
 regardless of the flag. Only v2 new-entry controls are flagged.
@@ -321,9 +337,13 @@ Rollout order:
 
 ## 10. Rollback procedure
 
-1. Set `oasis_response_schema_v2` to `false` for the affected agency.
+1. Set `oasis_response_schema_v2_enabled` to `false` on the affected agency's
+   own `AgencySettings` row.
 2. If an incident requires stopping writes immediately without a deploy, set
-   `oasis_response_writes_disabled` — the protected writer returns 423.
+   `oasis_response_writes_disabled` on that same row — the protected writer
+   returns 423. It is independent of the rollout flag, and it is the agency's
+   own row that is consulted, so containing one tenant neither depends on nor
+   affects another.
 
 Rollback disables **new v2 writes only**. Both v1 and v2 readers keep working.
 Never down-convert a v2 row, never resume legacy writes, and never restore the

@@ -40,14 +40,20 @@ import { canWriteV2Responses, writesAreKilled } from "./featureFlag.js";
  * @param {object} args.assessment  { patient_id, visit_id, visit_type, assessment_date, status }
  * @param {Array<{definitionId: string, responseValue: object}>} args.selections
  * @param {string} args.clinicianEmail
- * @param {object} [args.agency]    for the flag / kill-switch check
+ * @param {object} [args.agencySettings]  the caller's AgencySettings row, from
+ *   `fetchCallerAgencySettings()` in `@/lib/agencySettings` — NOT an `Agency`
+ *   record, which carries neither flag. Omitting it fails closed.
  * @returns {Promise<{ok: true, assessment: object} | {ok: false, reason: string, detail: string, errors?: Array}>}
  */
-export async function saveOfficialResponses({ assessment, selections, clinicianEmail, agency }) {
-  if (writesAreKilled(agency)) {
+export async function saveOfficialResponses({ assessment, selections, clinicianEmail, agencySettings }) {
+  // Both checks are courtesy copies of the server's. `saveOasisResponses`
+  // re-reads the same two fields for the caller's own agency and refuses on its
+  // own authority, so a stale or absent settings row here costs a round trip,
+  // never a write that should have been blocked.
+  if (writesAreKilled(agencySettings)) {
     return { ok: false, reason: "write_kill_switch", detail: "OASIS response writes are temporarily disabled for this agency." };
   }
-  if (!canWriteV2Responses(agency)) {
+  if (!canWriteV2Responses(agencySettings)) {
     return {
       ok: false,
       reason: "feature_disabled",

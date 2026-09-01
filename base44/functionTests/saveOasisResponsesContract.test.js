@@ -47,9 +47,38 @@ function payload(overrides = {}) {
   };
 }
 
-const DEFAULT_USER = { id: "u1", email: "rn@example.com", agency_id: "ag1", is_active: true };
+const AGENCY = "Maple Home Health";
+const OTHER_AGENCY = "Birch Home Health";
+const DEFAULT_USER = { id: "u1", email: "rn@example.com", agency_id: "ag1", agency_name: AGENCY, is_active: true };
 
-async function loadHandler({ settings = { [FLAG]: true }, user = DEFAULT_USER } = {}) {
+/** An AgencySettings row as the entity actually defines it: flat boolean fields. */
+function settingsRow(agencyName, fields = {}) {
+  return { id: `set_${agencyName}`, agency_code: agencyName, office_name: agencyName, created_date: "2026-01-01", ...fields };
+}
+
+/**
+ * A multi-tenant AgencySettings store with the two read shapes the shared
+ * `resolveAgencySettings` helper uses. Newest first, so a newest-row-wins bug
+ * has a wrong row available to pick.
+ */
+function agencySettingsStore(rows) {
+  const newestFirst = [...rows].sort((a, b) => String(b.created_date || "").localeCompare(String(a.created_date || "")));
+  return {
+    list: async (_sort, limit) => newestFirst.slice(0, limit ?? newestFirst.length),
+    filter: async (where, _sort, limit) => {
+      const [[field, value]] = Object.entries(where);
+      return newestFirst.filter((r) => r[field] === value).slice(0, limit ?? newestFirst.length);
+    },
+  };
+}
+
+async function loadHandler({ settings = { [FLAG]: true }, settingsRows = null, user = DEFAULT_USER } = {}) {
+  // The store is a LIST of tenant rows, and the handler must find the caller's
+  // own. A single-row store cannot tell a correctly-scoped read from a
+  // newest-row-wins one, which is how the cross-tenant defect survived the
+  // first round of these tests. `settings` is the shorthand for "one row,
+  // belonging to the caller's agency".
+  const rows = settingsRows || (settings ? [settingsRow(user?.agency_name || AGENCY, settings)] : []);
   let src = await readFile(new URL("../functions/saveOasisResponses/entry.ts", import.meta.url), "utf8");
   src = src.replace(/import\s+\{[^}]*\}\s+from\s+'npm:[^']*';?/, "const createClientFromRequest = globalThis.__soMakeClient;");
   const js = transpileTs(src).outputText;
@@ -63,10 +92,13 @@ async function loadHandler({ settings = { [FLAG]: true }, user = DEFAULT_USER } 
     // `user` may legitimately be null (anonymous), so no ?? fallback here —
     // that would make the anonymous case untestable.
     auth: { me: async () => user },
+    // The rollout flag lives on AgencySettings: Agency has no feature object
+    // and its read RLS is admin-only, so a clinician could never resolve it.
+    // Resolution goes through the shared agency-scoped helper, which reads via
+    // asServiceRole — so the harness must provide one, backed by the same store.
+    asServiceRole: { entities: { AgencySettings: agencySettingsStore(rows) } },
     entities: {
-      // The rollout flag lives on AgencySettings: Agency has no feature object
-      // and its read RLS is admin-only, so a clinician could never resolve it.
-      AgencySettings: { list: async () => (settings ? [settings] : []) },
+      AgencySettings: agencySettingsStore(rows),
       OASISAssessment: {
         create: async (rec) => { written.push({ op: "create", rec }); return { id: "new1", ...rec }; },
         update: async (id, rec) => { written.push({ op: "update", id, rec }); return { id, ...rec }; },
@@ -130,6 +162,78 @@ test("the kill switch stops writes without a deploy", async () => {
   assert.equal(status, 423);
   assert.equal(json.reason, "write_kill_switch");
   assert.equal(written.length, 0);
+});
+
+// ── the flags belong to ONE agency ──────────────────────────────────────────
+//
+// AgencySettings read RLS is open, so a `list('-created_date', 1)` returns
+// whichever tenant saved last, not the caller's. That is a rollout flag and an
+// incident kill switch answerable by a stranger. Both directions are tested
+// because only one of them fails safe.
+
+test("another agency's enabled flag does not enable this agency", async () => {
+  const { handler, written } = await loadHandler({
+    settingsRows: [
+      // Newest row wins a global read, and it belongs to somebody else.
+      settingsRow(OTHER_AGENCY, { [FLAG]: true, created_date: "2026-08-01" }),
+      settingsRow(AGENCY, { [FLAG]: false, created_date: "2026-01-01" }),
+    ],
+  });
+  const { status, json } = await post(handler, payload());
+  assert.equal(status, 403, JSON.stringify(json));
+  assert.equal(json.reason, "feature_disabled");
+  assert.equal(written.length, 0, "a tenant not approved for v2 must not be enabled by another tenant's row");
+});
+
+test("this agency's kill switch stops this agency, even under a newer foreign row", async () => {
+  // The direction that fails OPEN: an agency containing an incident flips its
+  // own switch, and a global newest-row read answers with somebody else's
+  // `false`. The write would proceed during the incident the switch exists for.
+  const { handler, written } = await loadHandler({
+    settingsRows: [
+      settingsRow(OTHER_AGENCY, { [FLAG]: true, oasis_response_writes_disabled: false, created_date: "2026-08-01" }),
+      settingsRow(AGENCY, { [FLAG]: true, oasis_response_writes_disabled: true, created_date: "2026-01-01" }),
+    ],
+  });
+  const { status, json } = await post(handler, payload());
+  assert.equal(status, 423, JSON.stringify(json));
+  assert.equal(json.reason, "write_kill_switch");
+  assert.equal(written.length, 0);
+});
+
+test("an agency with no settings row of its own is not enabled by anyone else's", async () => {
+  const { handler, written } = await loadHandler({
+    settingsRows: [settingsRow(OTHER_AGENCY, { [FLAG]: true, created_date: "2026-08-01" })],
+  });
+  const { status, json } = await post(handler, payload());
+  assert.equal(status, 403, JSON.stringify(json));
+  assert.equal(json.reason, "feature_disabled");
+  assert.equal(written.length, 0);
+});
+
+test("a caller with no agency_name is not enabled by a multi-tenant store", async () => {
+  // No agency hint and more than one tenant row: the helper cannot tell which
+  // is the caller's, so it resolves nothing and the write is refused.
+  const { handler, written } = await loadHandler({
+    user: { ...DEFAULT_USER, agency_name: "" },
+    settingsRows: [
+      settingsRow(AGENCY, { [FLAG]: true, created_date: "2026-08-01" }),
+      settingsRow(OTHER_AGENCY, { [FLAG]: true, created_date: "2026-01-01" }),
+    ],
+  });
+  const { status, json } = await post(handler, payload());
+  assert.equal(status, 403, JSON.stringify(json));
+  assert.equal(json.reason, "feature_disabled");
+  assert.equal(written.length, 0);
+});
+
+test("the caller's own row is found by office_name when agency_code does not match", async () => {
+  const row = settingsRow(AGENCY, { [FLAG]: true });
+  delete row.agency_code;
+  const { handler, written } = await loadHandler({ settingsRows: [row] });
+  const { status, json } = await post(handler, payload());
+  assert.equal(status, 200, JSON.stringify(json));
+  assert.equal(written.length, 1);
 });
 
 // ── stale clients ───────────────────────────────────────────────────────────

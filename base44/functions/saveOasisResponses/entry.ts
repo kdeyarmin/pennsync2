@@ -33,6 +33,35 @@ const DEACTIVATED_USER_RESPONSE = () => Response.json(
 );
 // <<<END SHARED HELPER: requireActiveUser>>>
 
+// <<<BEGIN SHARED HELPER: resolveAgencySettings — generated, edit base44/_shared/backendHelpers.mjs>>>
+async function resolveAgencySettings(base44, agencyName) {
+  let settings = [];
+  const key = String(agencyName || '').trim();
+  if (key) {
+    settings = await base44.asServiceRole.entities.AgencySettings
+      .filter({ agency_code: key }, '-created_date', 1)
+      .catch(() => []);
+    if (!settings?.length) {
+      settings = await base44.asServiceRole.entities.AgencySettings
+        .filter({ office_name: key }, '-created_date', 1)
+        .catch(() => []);
+    }
+  }
+  if (!settings?.length) {
+    // Fail closed when the agency hint missed (or no hint but multiple tenant
+    // rows exist). Newest-row-wins would silently apply another agency's fax
+    // line / dial allowlist / wage index / quiet-hour timezone.
+    if (key) return null;
+    const newest = await base44.asServiceRole.entities.AgencySettings
+      .list('-created_date', 5)
+      .catch(() => []);
+    if ((newest || []).length > 1) return null;
+    settings = (newest || []).slice(0, 1);
+  }
+  return settings?.[0] || null;
+}
+// <<<END SHARED HELPER: resolveAgencySettings>>>
+
 // <<<BEGIN SHARED HELPER: oasisResponseGuard — generated, edit base44/_shared/backendHelpers.mjs>>>
 const OASIS_RESPONSE_SCHEMA_V1_LEGACY = 'pennsync-oasis-response-v1-legacy';
 const OASIS_RESPONSE_SCHEMA_V2_CMS_E2 = 'pennsync-oasis-response-v2-cms-e2';
@@ -232,6 +261,11 @@ function validateOasisResponseWrite(payload) {
 // list), and its read RLS is admin-only — so a clinician, who is the primary
 // caller of this endpoint, could never resolve their own agency's flag. Reading
 // it there would have made this path return `feature_disabled` for everyone.
+//
+// These are FLAT fields on the row, not members of a nested bag. The frontend
+// gate in `src/components/oasis/responseSchema/featureFlag.js` reads the same
+// two field names off the same entity, so the two layers cannot drift into
+// disagreeing about whether the feature is on.
 const OASIS_V2_FLAG_FIELD = 'oasis_response_schema_v2_enabled';
 const OASIS_WRITE_KILL_SWITCH_FIELD = 'oasis_response_writes_disabled';
 
@@ -255,8 +289,17 @@ Deno.serve(async (req) => {
   const assessmentId = payload?.assessment_id ? String(payload.assessment_id) : '';
 
   // Feature gate + kill switch. Reading is never gated; only NEW v2 writes are.
-  const settingsRows = await base44.entities.AgencySettings.list('-created_date', 1).catch(() => []);
-  const settings: any = (Array.isArray(settingsRows) && settingsRows[0]) || null;
+  //
+  // Resolved through the shared agency-scoped helper, NOT a newest-row-wins
+  // `list()`. AgencySettings read RLS is open, so a global newest-row read
+  // returns whichever tenant wrote last: agency A's rollout flag would govern
+  // agency B's writes, and — the serious direction — B flipping its own kill
+  // switch would not stop B's writes while A's newer row still says false. A
+  // control that exists to contain an incident without a deploy must not be
+  // silently answerable by another tenant.
+  //
+  // A keyed miss returns null, which both gates below treat as "not enabled".
+  const settings: any = await resolveAgencySettings(base44, user?.agency_name);
 
   if (settings && settings[OASIS_WRITE_KILL_SWITCH_FIELD] === true) {
     return Response.json(
@@ -264,7 +307,8 @@ Deno.serve(async (req) => {
       { status: 423 },
     );
   }
-  // Fail closed: no settings row, or the flag absent/false, means not enabled.
+  // Fail closed: no resolvable settings row for THIS agency, or the flag
+  // absent/false, means not enabled.
   if (!settings || settings[OASIS_V2_FLAG_FIELD] !== true) {
     return Response.json(
       {

@@ -14,7 +14,10 @@ import { buildOfficialResponseRow } from "./responseBuilder.js";
 import { buildOasisOutput, COMPANION_DISCLAIMER, containsBannedOutputPhrase } from "./outputPolicy.js";
 import { sanitizeAiItemPayload, sanitizeAiItems, stripCodeAssertions, looksLikeOasisCode } from "./aiResponseSanitizer.js";
 import { evaluateDraft, draftKey, draftPayload, saveDraft, listDrafts, discardDraft } from "./draftStorage.js";
-import { canWriteV2Responses, writesAreKilled, canReadSchema } from "./featureFlag.js";
+import {
+  canWriteV2Responses, writesAreKilled, canReadSchema,
+  OASIS_RESPONSE_SCHEMA_V2_FLAG as FLAG_FIELD, OASIS_WRITE_KILL_SWITCH as KILL_FIELD,
+} from "./featureFlag.js";
 import { v2Row, legacyRow, unversionedRow, v2Assessment, legacyAssessment } from "./testFixtures.js";
 import {
   CMS_GOLDEN_CODES, CMS_GOLDEN_TIMEPOINTS, CMS_GOLDEN_SHAPES, CMS_GOLDEN_M2401_ROWS,
@@ -440,16 +443,54 @@ test("23. the five abbreviated items were not silently promoted", () => {
 });
 
 test("24. the flag gates new v2 writes only; reading is never gated", () => {
+  // The argument is an AgencySettings row. Flat fields, not a nested bag.
   assert.equal(canWriteV2Responses(null), false, "default OFF");
-  assert.equal(canWriteV2Responses({}), false);
-  assert.equal(canWriteV2Responses({ feature_access: {} }), false);
-  assert.equal(canWriteV2Responses({ feature_access: { oasis_response_schema_v2: false } }), false);
-  assert.equal(canWriteV2Responses({ feature_access: { oasis_response_schema_v2: true } }), true);
-  assert.equal(writesAreKilled({ feature_access: { oasis_response_writes_disabled: true } }), true);
+  assert.equal(canWriteV2Responses(undefined), false);
+  assert.equal(canWriteV2Responses({}), false, "absent field is not enabled");
+  assert.equal(canWriteV2Responses({ [FLAG_FIELD]: false }), false);
+  assert.equal(canWriteV2Responses({ [FLAG_FIELD]: true }), true);
+  // Truthy non-booleans are not "on". `"false"` is truthy.
+  assert.equal(canWriteV2Responses({ [FLAG_FIELD]: "true" }), false);
+  assert.equal(canWriteV2Responses({ [FLAG_FIELD]: "false" }), false);
+  assert.equal(canWriteV2Responses({ [FLAG_FIELD]: 1 }), false);
+
+  assert.equal(writesAreKilled(null), false);
+  assert.equal(writesAreKilled({}), false, "absent kill switch is not engaged");
+  assert.equal(writesAreKilled({ [KILL_FIELD]: true }), true);
+  assert.equal(writesAreKilled({ [KILL_FIELD]: "true" }), false);
+
   assert.equal(canReadSchema(), true);
   // Reading both schemas works regardless of any flag.
   assert.ok(getResponseSchema(RESPONSE_SCHEMA_V1_LEGACY));
   assert.ok(getResponseSchema(RESPONSE_SCHEMA_V2_CMS_E2));
+});
+
+test("24b. both flag names are fields the AgencySettings entity actually declares", async () => {
+  // The test that was missing. A gate reading a field no entity defines is not
+  // a gate: it answers the same way forever. That already happened here — the
+  // flags were read from `agency.feature_access`, which no entity declares, so
+  // `canWriteV2Responses` could never be true (the feature was unreachable) and
+  // `writesAreKilled` could never be true either (the incident kill switch
+  // could not fire). Asserting the names against the schema, rather than
+  // against a hand-written fixture, is what makes the two sides unable to drift.
+  const { readFile } = await import("node:fs/promises");
+  const raw = await readFile(new URL("../../../../base44/entities/AgencySettings.jsonc", import.meta.url), "utf8");
+  const declared = JSON.parse(raw.replace(/^\s*\/\/.*$/gm, "")).properties;
+
+  for (const field of [FLAG_FIELD, KILL_FIELD]) {
+    assert.ok(declared[field], `AgencySettings must declare ${field}`);
+    assert.equal(declared[field].type, "boolean", `${field} must be a boolean`);
+    assert.equal(declared[field].default, false, `${field} must default to false`);
+  }
+
+  // Neither flag may migrate into a nested bag: no entity in the app has one.
+  assert.equal(declared.feature_access, undefined);
+  assert.equal(declared.features, undefined);
+
+  // The backend gate must read the same two field names off the same entity.
+  const entry = await readFile(new URL("../../../../base44/functions/saveOasisResponses/entry.ts", import.meta.url), "utf8");
+  assert.match(entry, new RegExp(`OASIS_V2_FLAG_FIELD = '${FLAG_FIELD}'`));
+  assert.match(entry, new RegExp(`OASIS_WRITE_KILL_SWITCH_FIELD = '${KILL_FIELD}'`));
 });
 
 test("25. rollback preserves v2 data and never re-enables legacy entry", () => {
