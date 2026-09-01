@@ -672,10 +672,11 @@ export default function SmartOASISAssessment() {
               </div>
             </div>
           )}
+          {/* Evidence only — deliberately NOT wired to handleAnswer. AI may show
+              what the note says; the clinician chooses every response. */}
           <NoteToOasisPrefill
             patientId={selectedPatientId}
             sections={OASIS_SECTIONS}
-            onApply={handleAnswer}
           />
           {OASIS_SECTIONS.map(section => (
             <SectionCard 

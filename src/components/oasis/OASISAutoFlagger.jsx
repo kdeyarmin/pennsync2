@@ -91,22 +91,12 @@ async function autoFlagOASIS(oasisUpload, analysisResults) {
     });
   });
 
-  // Compile rescore opportunities
-  const rescoreOpps = (analysisResults.specific_rescore_opportunities || []).map(opp => ({
-    m_item: opp.m_item,
-    current_score: opp.current_score,
-    recommended_score: opp.recommended_score,
-    revenue_impact: opp.revenue_impact
-  }));
-
-  // Estimate total revenue impact
-  let estimatedRevenue = 0;
-  rescoreOpps.forEach(opp => {
-    const match = (opp.revenue_impact || '').match(/\$?([\d,]+)/);
-    if (match) {
-      estimatedRevenue += parseInt(match[1].replace(/,/g, '')) || 0;
-    }
-  });
+  // Rescore opportunities are no longer compiled. They carried
+  // `current_score → recommended_score` per M-item with a dollar figure — an
+  // AI-chosen OASIS response presented as money left on the table. The audit
+  // record keeps documentation gaps instead, which need no code to be useful.
+  const rescoreOpps = [];
+  const estimatedRevenue = 0;
 
   const auditRecord = {
     oasis_upload_id: oasisUpload.id,
