@@ -25,10 +25,13 @@ gaps concentrate in five places:
    defensible?" — so `Patient is homebound.` scored as documented.
 3. **No copy-forward / cloning defence exists.** `visitComparison.js` compares
    *vitals*, not *text*.
-4. **The OASIS item bank contains factually wrong CMS item attributions.**
+4. **The OASIS item bank contains factually wrong CMS item attributions** — and,
+   as a later item-by-item read of the CMS instrument established, answer
+   choices that offer a code meaning something else on the official
+   assessment for 18 of the 24 comparable items (§6.4).
 5. **No consolidated Documentation Readiness view** for QA/office staff.
 
-Two outright factual/regulatory defects were found and corrected (§6).
+Three outright factual/regulatory defects were found and corrected (§6).
 
 ## 2. Current-state audit
 
@@ -85,7 +88,7 @@ misstatement) → R3 (workflow friction).
 | 11 | Phase 2 — Visit Prep | **Missing (field visits)** | `referral/socVisitPrep.js` exists for *intake/SOC only* | No pre-visit briefing for an ordinary field visit | new | R2 | Pure `visitPrep.js` briefing builder + progressive-disclosure panel with direct actions | Unit tests over the builder |
 | 12 | Phase 3 — Today workflow | **Implemented** | `todayPriorities.js` + `coreWorkQueues.js` + `TodayPriorities.jsx`, each row action-linked | Documentation-readiness and unresolved-gap rows | `dashboard/*` | R3 | Feed readiness output into the existing queue rather than rebuild | Existing tests + new readiness tests |
 | 13 | Phase 4 — OASIS assistance framing | **Partial** | Guidance, deterministic checks, suggestion panels, no iQIES submission anywhere | Center is titled/positioned as *completing* OASIS; item bank has no version metadata | `pages/OASISCenter.jsx`, `oasis/oasisQuestions.jsx` | R2 | Re-frame as **OASIS Review & Assistance Center** + versioned spec layer | Contract test over the spec registry |
-| 14 | Phase 4 — item-bank correctness | **Implemented incorrectly** | 37 items | `M2102`→"Physical Therapy", `M2110`→"Occupational Therapy", `M2200`→"Speech-Language Pathology" are **wrong CMS attributions** (M2102/M2110 are assistance items; M2200 Therapy Need was retired under PDGM). The same repo contradicts itself at `AIProactiveOASISAssistant.jsx:138`. Several response sets are abbreviated (M1020, M1030, M1100, M2420) | `oasis/oasisQuestions.jsx` | **R1** — a nurse could carry a wrong item number/response into the official record | Versioned `specs/` registry with per-item verification status; demote the three mis-numbered items to clearly-labelled PennSync internal screening items; flag abbreviated response sets in the UI. **No CMS content fabricated** | Contract test: every item is classified; no unverified item may be presented as an official CMS item |
+| 14 | Phase 4 — item-bank correctness | **Implemented incorrectly** | 37 items | `M2102`→"Physical Therapy", `M2110`→"Occupational Therapy", `M2200`→"Speech-Language Pathology" are **wrong CMS attributions** (M2102/M2110 are assistance items; M2200 Therapy Need was retired under PDGM). The same repo contradicts itself at `AIProactiveOASISAssistant.jsx:138`. Response sets logged as "abbreviated" (M1020, M1030, M1100, M2420) — an item-by-item read against the CMS instrument later found 18 items whose codes carry a different meaning, not four that are merely short (see §6.4) | `oasis/oasisQuestions.jsx` | **R1** — a nurse could carry a wrong item number/response into the official record | Versioned `specs/` registry with per-item verification status; demote the three mis-numbered items to clearly-labelled PennSync internal screening items; flag abbreviated response sets in the UI. **No CMS content fabricated** | Contract test: every item is classified; no unverified item may be presented as an official CMS item |
 | 15 | Phase 5 — note/OASIS/care-plan consistency | **Partial** | `oasisDeterministicChecks.js`, `dischargeComplianceEnforcer.js`, `comorbidityReconciler.js` | No cross-document (note ↔ OASIS ↔ care plan) finding model with source A/source B evidence | new | R2 | Deterministic `crossDocumentConsistency.js` | Unit tests per finding type |
 | 16 | Phase 6 — medication reconciliation | **Partial** | `medication/drugInteractions.js` (deterministic, limited list), `MedicationReconciliation` entity, allergy cross-check | No normalization layer, no explicit "limited list" labelling, no external-knowledge adapter seam | `medication/**` | R2 | `medicationNormalize.js` + discrepancy engine + honest source labelling + adapter seam | Unit tests |
 | 17 | Phase 7 — closed-loop provider follow-up | **Partial** | Full token lifecycle exists **for referrals** (`ProviderFollowUpToken`, `validateFollowUpToken`, `submitFollowUpResponse`); clinical escalation creates a `Task` and says "Follow-up task created" (correct wording) | No clinical-side lifecycle states beyond Task status | `tasks/**`, `referral/**` | R2 | Deterministic lifecycle model + unresolved queue derivation | Unit tests on the state machine |
@@ -277,12 +280,94 @@ resolving, and the verification registry classifies them `pennsync_screening`
 with `official_item: null`. A contract test enforces that an item may display an
 M-number only where the registry permits one.
 
-### 6.3 Four items presented abbreviated response sets as if official (severity: R2)
+### 6.3 Answer choices diverge from the CMS response sets (severity: R1)
 
-`M1020`, `M1030`, `M1100` and `M2420` carry shortened response lists. They remain
-usable as screening prompts but are now classified `abbreviated`, and their
-deterministic disclaimer states that the list "may not match the official CMS
-response set. Confirm the wording and response in your EMR."
+Originally logged as four items with "shortened response lists" and classified
+`abbreviated`. A later item-by-item read of the CMS instrument (§6.4) found that
+framing far too gentle: the problem is not length, and it is not four items.
+
+### 6.4 18 items offer a code that means something else in the EMR (severity: R1)
+
+The clinical sign-off states in its own text that response OPTIONS were not
+individually verified. That caveat has now been closed, and it was carrying most
+of the weight.
+
+The guidance manual states response codes as prose coding instructions, which is
+why the first check stopped at titles. CMS publishes the response sets
+separately, in the **OASIS-E2 All Items instrument (12/11/2025)**. Every PennSync
+item present there was read against it option by option — code set, code order,
+and the *meaning* of each option's text.
+
+Of the 24 items with an official response set to compare against:
+
+| Verdict | Count | Items |
+| --- | --- | --- |
+| `matches` — reproduces the CMS set in order and meaning | 1 | M1800 |
+| `abbreviated` — same codes, same order, looser wording | 5 | M1700, M1810, M1820, M1845, M1850 |
+| `conflicts` — at least one code means something different, or the answer shape differs | **18** | M1033, M1100, M1306, M1340, M1400, M1610, M1620, M1630, M1740, M1830, M1840, M1860, M1870, M2001, M2010, M2020, M2401, M2420 |
+
+**A matching code set is not a matching response set**, and that is the trap this
+read exists to close. A comparison of code sets alone would have cleared several
+of the worst cases:
+
+| Item | Codes | What actually differs |
+| --- | --- | --- |
+| **M1340** | `{0,1,2}` — identical to CMS | PennSync's `2` is "Yes — infected"; the CMS `2` is "surgical wound known but **not observable**". Infection is not part of M1340. |
+| **M2020** | `{0,1,2,3}` — identical to CMS | Codes **1 and 2 are transposed**. CMS `1` is "if dosages are prepared in advance", CMS `2` is "if given reminders". PennSync has them the other way round. |
+| **M2010** | `{0,1,2}` | PennSync's `0` is "not applicable — no high-risk drugs", which is CMS **NA**. The CMS `0` is "**No** — education not provided". Entering PennSync's `0` records the opposite of what the nurse meant. |
+| **M1860** | `{0..6}` — identical to CMS | The scale is **offset by one** from code 1 onward. PennSync inserts "minor difficulty on uneven surfaces", pushing one-handed device to `2` (CMS `1`), two-handed to `3` (CMS `2`), supervision to `4` (CMS `3`). |
+| **M1840** | `{0..4}` — identical to CMS | Codes 2–3 use **M1850's** bear-weight/pivot language. CMS M1840 codes by *where* the patient can toilet (bedside commode, bedpan/urinal). |
+| **M1610** | `{0..4}` | A frequency-graded scale that is not the current M1610. CMS has three responses, where `2` means **a catheter**; PennSync's `2` is "daily pads required". |
+| **M1306** | `{0,1}` — identical to CMS | PennSync asks about a pressure ulcer "at any stage". CMS asks about **Stage 2 or higher or unstageable**, explicitly excluding Stage 1. |
+| **M1100** | 4 options | CMS M1100 is a 3x5 grid with codes **01–15**. PennSync's printed `01` is CMS `05`; its `03` is CMS `10`. No congregate-living option exists. |
+| **M1033**, **M1740** | single-select | Both CMS items are **check-all-that-apply**. No PennSync answer maps to a valid response. |
+| **M2001** | `{0,1,2}` | Splits "issues found" by physician contact, which is the separate item **M2003**. CMS `9` (NA) is absent. |
+| **M2401** | `{0,1,9}` | PennSync asks one medication question. CMS M2401 is a grid of falls / depression / pain / pressure-ulcer rows. Medication intervention is M2003/M2005. |
+| **M2420** | `{1..5,9}` | The **pre-OASIS-D** disposition list. In the current instrument `2` is "remained in the community with HHA services", `3` is "non-institutional hospice", `4` is "moved out of the service area" — not hospital / rehab / nursing home. |
+
+**The hazard is code carry-over.** A nurse reading a code off a PennSync screen
+and typing it into the same-numbered item in the EMR would enter a wrong response
+in each of those cases. Before this change the product actively encouraged that:
+`officialItemNumber()` printed the CMS number and `describeVerification()`
+returned a green "Verified item" badge for 23 of these items.
+
+**What was deliberately NOT done.** The option lists were **not rewritten** to
+the CMS wording. Stored assessments key off these values, and re-labelling
+M2020's code 2 would silently change the meaning of every M2020 answer already
+recorded — changing clinician-entered facts after the fact (brief rule 13). No
+mapping was invented either. Instead the divergence is recorded as data and the
+consequence is made deterministic:
+
+- Each registry entry gains `response_set` (`matches` / `abbreviated` /
+  `conflicts` / `not_applicable` / `unchecked`) and a `response_set_note` saying
+  what the read found for that item.
+- `mayCarryResponseToEmr(itemId)` — the question the read was for. It answers
+  "may the nurse type the code they picked here into that item over there",
+  which `officialItemNumber()` does not. True only for `matches`. Fails closed
+  for anything unregistered.
+- `describeVerification()` — a conflicting response set now **overrides** the
+  identity badge. M1340 is a genuine current CMS item with the right title, so
+  its `level` stays `verified`; a green badge beside answer choices whose code 2
+  means something else is the exact reassurance a nurse must not be given.
+- `responseSetCaveat()` / `itemDisclaimer()` carry the deterministic sentence
+  "Do not carry this code into your EMR…".
+- **`OasisItemNotice`** renders it *at the item*, beside the answer choices,
+  because that is where the carry-over happens — not in a banner at the top of
+  the page. Before this, `itemDisclaimer()` and `describeVerification()` had no
+  UI consumer at all: the whole registry was invisible to the nurse.
+- `responseSetStatus()` feeds the OASIS scope notice a computed count, so the
+  on-screen number cannot drift from the registry.
+
+`oasisScales.js` and `oasisScoringEngine.js` mirror these same scales
+deliberately, so the app stays internally consistent with itself. What it is not
+is a reproduction of the CMS instrument, and it no longer claims to be.
+
+**This does not overturn the clinical sign-off, it bounds it.** Signing that an
+option list is usable as a *screening prompt* is a different claim from saying it
+is the CMS response set, and only the first was ever made. The signed
+`review_source` text is left exactly as signed — a test still asserts its
+"RESPONSE OPTIONS WERE NOT individually verified" caveat is present — and the
+read is recorded separately in `RESPONSE_SET_CHECK`.
 
 ## 7. Files changed by area
 
@@ -295,7 +380,8 @@ response set. Confirm the wording and response in your EMR."
 
 **OASIS (7)** — `specs/index.js`*, `specs/registry.js`*, `specs/e/index.js`*,
 `specs/verification.js`*, `specs/verification.test.js`*, `specs/oasisItemBank.spec.js`*,
-`OasisScopeNotice.jsx`*, plus `oasisQuestions.jsx`
+`OasisScopeNotice.jsx`*, `OasisItemNotice.jsx`*, `OasisItemNotice.test.jsx`*,
+plus `oasisQuestions.jsx` and `hub-tabs/SmartOASISAssessment.jsx`
 
 **Compliance (6)** — `documentationReadiness.js`*, `documentationReadiness.test.js`*,
 `DocumentationReadinessPanel.jsx`*, `crossDocumentConsistency.js`*,
@@ -319,7 +405,7 @@ response set. Confirm the wording and response in your EMR."
 
 ## 8. Tests added
 
-**~260 new tests across 13 suites**, all deterministic and offline.
+**~273 new tests across 14 suites**, all deterministic and offline.
 
 | Suite | Tests | Focus |
 | --- | --- | --- |
@@ -327,7 +413,7 @@ response set. Confirm the wording and response in your EMR."
 | `smartNote/EmrHandoffPanel.spec.jsx` | 12 | copy success, **clipboard failure**, per-section copy, self-reported labelling, stale-ack warning |
 | `compliance/documentationStrength.test.js` | 24 | weak/partial/strong grading per element, question wording, hospice exclusion |
 | `compliance/noteSimilarity.test.js` | 23 | similarity maths, **the legitimately-similar negative case**, tone guardrails, identical vitals |
-| `oasis/specs/verification.test.js` | 25 | classification, fail-closed default, disclaimers, effective-date resolution, **clinical sign-off tracking and the reviewer worksheet** |
+| `oasis/specs/verification.test.js` | 32 | classification, fail-closed default, disclaimers, effective-date resolution, clinical sign-off tracking and the reviewer worksheet, **the response-set read: a matching code set is not a matching response set, and a conflict overrides a reassuring badge** |
 | `compliance/thresholds.test.js` | 12 | uncalibrated-by-default provenance, override validation, hand-set ≠ calibrated |
 | `compliance/calibrationHarness.test.js` | 13 | corpus scoring, candidate trade-offs, declining on a small or one-sided sample |
 | `oasis/specs/oasisItemBank.spec.js` | 6 | contract: every item classified; an M-number only where permitted |
@@ -336,6 +422,7 @@ response set. Confirm the wording and response in your EMR."
 | `compliance/crossDocumentConsistency.test.js` | 22 | each finding type, resolution rules, ordering |
 | `medication/medicationReconciliation.test.js` | 25 | normalisation, each discrepancy type, false-alert guards, adapter honesty |
 | `tasks/providerFollowUpLifecycle.test.js` | 24 | contact semantics, transition legality, queue ordering, Task enum mapping |
+| `oasis/OasisItemNotice.test.jsx` | 6 | the at-the-item caveat: alert for a conflicting code, silence for a faithful one, softer note for looser wording, no CMS number on a screening item |
 
 All new `.test.js` files are registered in `package.json` `test:utils`
 (`testRegistryContract` enforces this).
@@ -363,12 +450,12 @@ runs and passes.
 | --- | --- |
 | `pnpm install --frozen-lockfile` | ✅ clean |
 | `pnpm run lint` | ✅ 0 errors, 0 warnings |
-| `pnpm run typecheck:signal` (CI gate) | ✅ 0 high-signal diagnostics (16 233 total, all low-signal or in fixtures) |
-| `pnpm test` → `test:utils` | ✅ 1839 / 1839 |
+| `pnpm run typecheck:signal` (CI gate) | ✅ 0 high-signal diagnostics (16 290 total, all low-signal or in fixtures) |
+| `pnpm test` → `test:utils` | ✅ 1912 / 1912 |
 | `pnpm test` → `test:contracts` | ✅ 22 / 22 |
 | `pnpm test` → `test:security` | ✅ 87 / 87 |
 | `pnpm test` → `test:dedupe` | ✅ pass |
-| `pnpm test` → `test:components` | ✅ 912 / 912 across 115 files |
+| `pnpm test` → `test:components` | ✅ 920 / 920 across 116 files |
 | `pnpm run build` | ✅ succeeds |
 | `pnpm run test:a11y` | ✅ 2 / 2 |
 | `pnpm run check:backend-transpile` | ✅ 238 functions transpile cleanly |
@@ -381,10 +468,15 @@ No regressions. No test was skipped, disabled or quarantined.
 1. **PennSync still cannot see inside the EMR.** Every handoff status is
    self-reported. This is a product boundary, not a defect, and the UI states it
    at every step.
-2. **The OASIS item set remains abbreviated.** The framework now records that
-   honestly, but PennSync still does not contain the authoritative CMS
-   instrument. Populating a verified item bank requires the licensed CMS
-   specification and clinical sign-off — see §14.
+2. **The OASIS item set is a screening instrument, not the CMS one.** Item
+   numbers, titles and now answer choices have all been read against the CMS
+   manuals and the OASIS-E2 All Items instrument, and the divergence is recorded
+   per item (§6.4) — but recording it is not fixing it. 18 of 24 comparable items
+   still *offer* a code that means something else on the official assessment; the
+   product's answer is to warn at the item and refuse to vouch for the code, not
+   to correct the scale. Correcting one means re-labelling options that stored
+   assessments key off, which is a data-migration decision with a clinical
+   reviewer in the loop, not an edit — see §13.
 3. **The medication knowledge base is a small deterministic list.** The adapter
    seam exists; no licensed service is wired.
 4. **Similarity is lexical, not semantic.** A note rewritten in different words
@@ -430,17 +522,34 @@ No regressions. No test was skipped, disabled or quarantined.
 3. Wire `medicationReconciliation` into the Smart Note flow once its overlap with
    the existing `chartCrossCheck` medication findings is deduplicated — today it
    is surfaced on the patient documentation tab to avoid double-reporting.
-4. Populate `specs/e/` with verified item content once the CMS specification is
-   available; the registry, worksheet generator and contract test are ready.
-   Work `docs/oasis/ITEM_REVIEW_WORKSHEET.md` and record each sign-off in
-   `specs/verification.js`.
-7. Wire `setThresholdOverrides()` to `AgencySettings` so an admin can persist a
+4. **Decide what to do about the 18 divergent response sets (§6.4).** Recording
+   the divergence stops the product vouching for a wrong code; it does not stop
+   the form offering one. Each item is a separate call with a real cost on both
+   sides, and none of them is a code edit:
+   - *Align the scale to CMS* — most defensible for a nurse, but re-labelling an
+     option changes the meaning of every answer already stored under that code.
+     Needs a migration that versions the answers (`item_spec_version` is already
+     stamped on save and gives the discriminator), plus clinical sign-off on the
+     new labels.
+   - *Keep the screening scale and drop the CMS number* — reclassify the item as
+     `pennsync_screening`, as M2102/M2110/M2200 already are. Cheap and safe, but
+     loses the cross-reference that makes the item useful for OASIS review.
+   - *Keep both, as now* — the item warns and refuses to vouch for the code.
+   The worst four to take first are the ones whose codes are silently wrong
+   rather than merely different: **M2020** (codes transposed), **M2010** (`0`
+   inverts to the CMS "No"), **M1860** (offset by one), **M1340** (`2` reads as
+   "infected"). Work `docs/oasis/ITEM_REVIEW_WORKSHEET.md` and record each
+   decision in `specs/verification.js`.
+5. Populate `specs/e/` with verified item content. The registry, worksheet
+   generator and contract test are ready, and the OASIS-E2 All Items instrument
+   used for §6.4 is the source for the response sets.
+6. Wire `setThresholdOverrides()` to `AgencySettings` so an admin can persist a
    calibrated threshold set, and add an admin surface over
    `calibrationHarness.js` for running the agency's own corpus.
-5. Connect `documentationStrength` findings to the existing training
+7. Connect `documentationStrength` findings to the existing training
    recommendation engine (`training/DeficitAnalyzer.jsx`) so recurring weak
    elements drive targeted microlearning.
-6. Add an admin rule-governance UI over the existing `MedicareComplianceRule`
+8. Add an admin rule-governance UI over the existing `MedicareComplianceRule`
    entity (governance data and rule-version snapshotting already exist).
 
 ## 14. Risks still requiring human / clinical / regulatory review
@@ -469,23 +578,27 @@ The sign-off recorded on 2026-09-01 is a real human attestation, and
 **response options were not individually verified against the CMS manual**. A
 test asserts that caveat is present on any signed item, so the record can never
 be read as broader than the review behind it. `responseSetVerified` stays
-`false`: a signature does not retroactively verify what was never checked.
+`false` at the time of signing: a signature does not retroactively verify what
+was never checked. It was later established by reading the instrument (§6.4),
+which is recorded as its own provenance rather than written into the signature.
 
 An item added later inherits nothing — with no registry entry it reports as
 pending, so a new question cannot become signed off by omission.
 
-**Response sets are NOT verified**, even for a `verified` item. The source check
-confirmed item numbers and titles. An attempt to extract response options was
-abandoned: the CMS manual states response codes as prose coding instructions
-rather than a parseable enumeration, and parsing them would have produced
-plausible-but-unconfirmed data. A wrong `verified` is worse than an honest gap.
-`classifyItem().responseSetVerified` is `false` for every item, asserted by test.
+**Response sets have since been read** — see §6.4. The first attempt was
+abandoned because the *guidance manual* states response codes as prose rather
+than a parseable list; CMS publishes them separately in the OASIS-E2 All Items
+instrument, and that read closed the gap on 2026-09-01. `responseSetVerified` is
+no longer a blanket `false`: it is `true` for exactly the one item whose options
+reproduce the CMS set, and a test asserts it tracks the per-item verdict rather
+than the item's level.
 
 **What the reviewer is now asked** is deliberately narrow — one question per item
 rather than "re-check everything", because the latter is a job nobody does:
 
-- current CMS items → "response options were not verified; are the options this
-  form offers safe and sufficient as a screening prompt?"
+- current CMS items → "the options this form offers have now been read against
+  the CMS response set (§6.4); are they safe and sufficient as a *screening
+  prompt*, given how they diverge?"
 - retired / non-CMS items → "is this still clinically worth asking as an internal
   prompt, or should it be removed from the form?"
 
@@ -550,8 +663,10 @@ Fixed by making the classification explicit rather than by inventing a mapping:
   cannot quietly reintroduce a CMS claim for one of them.
 
 **Deliberately not done:** no mapping was invented from PennSync's picklists to
-D0150/D0160, J1800/J1900, J0510–J0530, M1021 or GG0100. Those items' response
-sets were not verified (only titles were), and a wrong mapping in a
+D0150/D0160, J1800/J1900, J0510–J0530, M1021 or GG0100. The later response-set
+read (§6.4) strengthens this rather than unblocking it: PennSync's option lists
+diverge from the CMS sets for 18 of 24 comparable items, so a mapping would have
+to reconcile the scales as well as the numbers. A wrong mapping in a
 care-suggestion engine would be worse than the current honest, limited state.
 
 1. **The OASIS item classifications need clinical sign-off — now tracked, not

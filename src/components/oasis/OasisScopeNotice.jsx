@@ -1,6 +1,6 @@
 import { Info } from "lucide-react";
 import { ACTIVE_OASIS_SPEC } from "./specs/registry.js";
-import { clinicalReviewStatus, sourceCheckStatus } from "./specs/verification.js";
+import { clinicalReviewStatus, responseSetStatus, sourceCheckStatus } from "./specs/verification.js";
 
 /**
  * The standing scope statement for every OASIS surface.
@@ -20,6 +20,7 @@ import { clinicalReviewStatus, sourceCheckStatus } from "./specs/verification.js
 export default function OasisScopeNotice({ className = "" }) {
   const review = clinicalReviewStatus();
   const source = sourceCheckStatus();
+  const responses = responseSetStatus();
   return (
     <div
       role="note"
@@ -53,12 +54,20 @@ export default function OasisScopeNotice({ className = "" }) {
             enter official responses in your EMR.
           </p>
         )}
-        {/* Even with the clinical sign-off recorded, the response-set gap is
-            real and stays on screen: the sign-off states it, and a nurse
-            entering an official response needs to know it. */}
+        {/* The response sets HAVE now been read against the CMS instrument
+            (2026-09-01), so this no longer says they are unverified — it says
+            what the read found, which is worse and more useful. The count is
+            computed, never hardcoded, so it cannot drift from the registry. */}
         <p className="text-navy-700">
-          Item numbers and titles are verified against the CMS manual.{" "}
-          <strong>Response options are not</strong> — confirm them in your EMR.
+          Item numbers and titles are verified against the CMS manual, and answer choices have
+          been read against it option by option.{" "}
+          {responses.conflicts > 0 && (
+            <strong className="text-amber-900">
+              {responses.conflicts} of {responses.comparable} items have at least one answer
+              choice that means something different on the official assessment — answer those from
+              the wording in your EMR rather than copying the code.
+            </strong>
+          )}
           {review.complete && " Clinical use of these items is signed off by the agency."}
         </p>
       </div>

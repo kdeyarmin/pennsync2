@@ -70,10 +70,46 @@
 // RESPONSE OPTIONS were not individually verified against the CMS manual — the
 // known gap inside the attestation.
 //
-// RESPONSE SETS ARE NOT VERIFIED. The source check confirmed item numbers and
-// TITLES. The CMS manual states response codes as prose coding instructions
-// rather than a parseable enumeration, so PennSync's response OPTIONS for an
-// item remain unconfirmed even where the item itself is `verified`.
+// RESPONSE-SET READ (2026-09-01) — WHAT IT FOUND
+// The sign-off above states plainly that RESPONSE OPTIONS were not individually
+// verified. That caveat has since been closed, and it turned out to be carrying
+// most of the weight.
+//
+// The guidance manual states response codes as prose coding instructions rather
+// than a parseable list, which is why the first check stopped at titles. CMS
+// publishes the response sets separately, in the OASIS-E2 All Items instrument
+// (12/11/2025). Every PennSync item present there was read against it option by
+// option — code set, code order, and the MEANING of each option's text.
+//
+// Of the 24 items with an official response set to compare against:
+//   -  1 reproduces it faithfully (M1800).
+//   -  5 use the same codes in the same order with looser wording (M1700,
+//      M1810, M1820, M1845, M1850).
+//   - 18 have at least one code that means something DIFFERENT on the official
+//      assessment, or a different answer shape entirely.
+//
+// A matching code SET is not a matching response set, and that is the trap this
+// read exists to close. M1340's codes are {0,1,2} exactly as CMS has them — and
+// PennSync's 2 is "Yes, infected" where the CMS 2 is "known but not observable".
+// M2020's codes 1 and 2 are transposed against CMS. M2010's 0 means "not
+// applicable" where the CMS 0 means "No, education was not provided". M1860's
+// scale is offset by one from code 1 onward. A nurse reading a code off a
+// PennSync screen and typing it into the same-numbered item in the EMR would
+// enter the wrong response in each of those cases.
+//
+// WHAT WAS DELIBERATELY NOT DONE
+// The option lists were NOT rewritten to the CMS wording. Stored assessments key
+// off these values, and re-labelling code 2 of M2020 would silently change the
+// meaning of every M2020 answer already recorded — changing clinician-entered
+// facts after the fact. The divergence is instead recorded as data
+// (`response_set`), and `mayCarryResponseToEmr()` makes the consequence
+// deterministic. `oasisScales.js` and `oasisScoringEngine.js` mirror these same
+// scales, so the app remains internally consistent with itself; what it is not
+// is a reproduction of the CMS instrument.
+//
+// This does not overturn the clinical sign-off, it bounds it. Signing that an
+// option list is usable as a SCREENING PROMPT is a different claim from saying
+// it is the CMS response set, and only the first was ever made.
 //
 // CLINICAL SIGN-OFF IS TRACKED, NOT ASSUMED
 // A classification is only as good as the person who made it. Every entry
@@ -117,6 +153,9 @@ export const ITEM_VERIFICATION = Object.freeze({
   // -- Item numbers that appear in NO published CMS manual -----------------
   m1020: {
     level: "not_a_cms_item",
+    response_set: "not_applicable",
+    response_set_note:
+      "Not in the CMS instrument now in effect, so there is no official response set to compare against.",
     official_item: null,
     note:
       "This item number appears in no published CMS OASIS manual PennSync checked (E, E1, E2). Primary Diagnosis is M1021 in every manual checked (M1023 is Other Diagnoses).",
@@ -132,6 +171,9 @@ export const ITEM_VERIFICATION = Object.freeze({
   },
   m1300: {
     level: "not_a_cms_item",
+    response_set: "not_applicable",
+    response_set_note:
+      "Not in the CMS instrument now in effect, so there is no official response set to compare against.",
     official_item: null,
     note:
       "This item number appears in no published CMS OASIS manual PennSync checked (E, E1, E2).",
@@ -147,6 +189,9 @@ export const ITEM_VERIFICATION = Object.freeze({
   },
   m1350: {
     level: "not_a_cms_item",
+    response_set: "not_applicable",
+    response_set_note:
+      "Not in the CMS instrument now in effect, so there is no official response set to compare against.",
     official_item: null,
     note:
       "This item number appears in no published CMS OASIS manual PennSync checked (E, E1, E2).",
@@ -162,6 +207,9 @@ export const ITEM_VERIFICATION = Object.freeze({
   },
   m1900: {
     level: "not_a_cms_item",
+    response_set: "not_applicable",
+    response_set_note:
+      "Not in the CMS instrument now in effect, so there is no official response set to compare against.",
     official_item: null,
     note:
       "This item number appears in no published CMS OASIS manual PennSync checked (E, E1, E2). Prior Functioning is GG0100.",
@@ -179,6 +227,9 @@ export const ITEM_VERIFICATION = Object.freeze({
   // -- Real CMS items, retired from the instrument now in effect -----------
   m1030: {
     level: "retired",
+    response_set: "not_applicable",
+    response_set_note:
+      "Not in the CMS instrument now in effect, so there is no official response set to compare against.",
     official_item: null,
     former_item: "M1030",
     official_title: "Therapies the patient receives at home",
@@ -198,6 +249,9 @@ export const ITEM_VERIFICATION = Object.freeze({
   },
   m1242: {
     level: "retired",
+    response_set: "not_applicable",
+    response_set_note:
+      "Not in the CMS instrument now in effect, so there is no official response set to compare against.",
     official_item: null,
     former_item: "M1242",
     official_title: "Frequency of Pain Interfering with activity or movement",
@@ -217,6 +271,9 @@ export const ITEM_VERIFICATION = Object.freeze({
   },
   m1730: {
     level: "retired",
+    response_set: "not_applicable",
+    response_set_note:
+      "Not in the CMS instrument now in effect, so there is no official response set to compare against.",
     official_item: null,
     former_item: "M1730",
     official_title: "Depression Screening",
@@ -236,6 +293,9 @@ export const ITEM_VERIFICATION = Object.freeze({
   },
   m1910: {
     level: "retired",
+    response_set: "not_applicable",
+    response_set_note:
+      "Not in the CMS instrument now in effect, so there is no official response set to compare against.",
     official_item: null,
     former_item: "M1910",
     official_title: "Falls Risk Assessment",
@@ -255,6 +315,9 @@ export const ITEM_VERIFICATION = Object.freeze({
   },
   m0069: {
     level: "retired",
+    response_set: "not_applicable",
+    response_set_note:
+      "Not in the CMS instrument now in effect, so there is no official response set to compare against.",
     official_item: null,
     former_item: "M0069",
     official_title: "Gender",
@@ -276,6 +339,9 @@ export const ITEM_VERIFICATION = Object.freeze({
   // -- PennSync screening questions (never CMS items) ----------------------
   m2102: {
     level: "pennsync_screening",
+    response_set: "not_applicable",
+    response_set_note:
+      "PennSync's question (physical therapy need) is not the CMS item, so there is no response set to compare. The CMS M2102 is 'Types and Sources of Assistance', coded 0-4 per sub-item — confirming this item's pennsync_screening classification.",
     official_item: null,
     pennsync_item: "PS-THERAPY-PT",
     note:
@@ -292,6 +358,9 @@ export const ITEM_VERIFICATION = Object.freeze({
   },
   m2110: {
     level: "pennsync_screening",
+    response_set: "not_applicable",
+    response_set_note:
+      "Not in the CMS instrument now in effect, so there is no official response set to compare against.",
     official_item: null,
     pennsync_item: "PS-THERAPY-OT",
     note:
@@ -308,6 +377,9 @@ export const ITEM_VERIFICATION = Object.freeze({
   },
   m2200: {
     level: "pennsync_screening",
+    response_set: "not_applicable",
+    response_set_note:
+      "Not in the CMS instrument now in effect, so there is no official response set to compare against.",
     official_item: null,
     pennsync_item: "PS-THERAPY-SLP",
     note:
@@ -326,6 +398,9 @@ export const ITEM_VERIFICATION = Object.freeze({
   // -- Current CMS item whose response list PennSync abbreviates -----------
   m2420: {
     level: "abbreviated",
+    response_set: "conflicts",
+    response_set_note:
+      "PennSync uses the pre-OASIS-D discharge-disposition list. In the current instrument, 2 is 'remained in the community with skilled services from a Medicare Certified HHA', 3 is 'transferred to a non-institutional hospice' and 4 is 'moved to a geographic location not served by this agency'. PennSync's 2, 3 and 4 (hospital, rehab facility, nursing home) name different destinations under the same codes, and its 5 is not a valid response.",
     official_item: "M2420",
     official_title: "Discharge Disposition",
     note:
@@ -345,6 +420,9 @@ export const ITEM_VERIFICATION = Object.freeze({
   // -- Item number and title confirmed against the current CMS manual ------
   m1100: {
     level: "verified",
+    response_set: "conflicts",
+    response_set_note:
+      "CMS M1100 is a 3x5 grid (living arrangement x availability of assistance) with codes 01-15. PennSync offers four options whose printed codes 01-04 name different cells than CMS: PennSync's '01 — lives alone, no assistance' is CMS 05, and its '03 — lives with others, no assistance' is CMS 10. There is no congregate-living option at all.",
     official_item: "M1100",
     official_title: "Patient Living Situation",
     reviewed_by: "Kevin Deyarmin (kdeyarmin@comcast.net)",
@@ -359,6 +437,9 @@ export const ITEM_VERIFICATION = Object.freeze({
   },
   m1740: {
     level: "verified",
+    response_set: "conflicts",
+    response_set_note:
+      "CMS M1740 is check-all-that-apply with codes 1-7 where 7 is 'None of the above'. PennSync is single-select 0-4 where 0 is 'None'. The answer shape differs, code 0 is not a valid M1740 response, and CMS 5 and 6 are absent.",
     official_item: "M1740",
     official_title: "Cognitive, behavioral, and psychiatric symptoms",
     reviewed_by: "Kevin Deyarmin (kdeyarmin@comcast.net)",
@@ -373,6 +454,9 @@ export const ITEM_VERIFICATION = Object.freeze({
   },
   m1700: {
     level: "verified",
+    response_set: "abbreviated",
+    response_set_note:
+      "Codes 0-4 are in CMS order with the same anchors, but each label drops the qualifier that defines the code — CMS 1 applies only 'under stressful or unfamiliar conditions', which PennSync's 'Requires prompting (cues) to focus' does not say.",
     official_item: "M1700",
     official_title: "Cognitive Functioning",
     reviewed_by: "Kevin Deyarmin (kdeyarmin@comcast.net)",
@@ -387,6 +471,9 @@ export const ITEM_VERIFICATION = Object.freeze({
   },
   m1400: {
     level: "verified",
+    response_set: "conflicts",
+    response_set_note:
+      "Codes 0-4 align with CMS except code 3, which PennSync labels 'with minimal exertion at rest'. CMS 3 is minimal exertion or agitation and explicitly excludes rest; rest is code 4. PennSync's 3 and 4 are also not distinguishable from each other.",
     official_item: "M1400",
     official_title: "When is the patient dyspneic or noticeably Short of Breath?",
     reviewed_by: "Kevin Deyarmin (kdeyarmin@comcast.net)",
@@ -401,6 +488,9 @@ export const ITEM_VERIFICATION = Object.freeze({
   },
   m1340: {
     level: "verified",
+    response_set: "conflicts",
+    response_set_note:
+      "The code set {0,1,2} is identical to CMS but code 2 is not: CMS 2 is 'surgical wound known but not observable due to non-removable dressing/device', while PennSync's 2 is 'Yes — infected/complications'. Infection status is not part of M1340.",
     official_item: "M1340",
     official_title: "Does this patient have a Surgical Wound?",
     reviewed_by: "Kevin Deyarmin (kdeyarmin@comcast.net)",
@@ -415,6 +505,9 @@ export const ITEM_VERIFICATION = Object.freeze({
   },
   m1306: {
     level: "verified",
+    response_set: "conflicts",
+    response_set_note:
+      "Codes 0-1 match, but the question does not. CMS asks about an unhealed pressure ulcer/injury at Stage 2 or higher or unstageable, explicitly EXCLUDING Stage 1; PennSync asks about one 'at any stage', so a Stage 1 injury is coded 1 here and 0 on the official assessment.",
     official_item: "M1306",
     official_title: "Unhealed Pressure Ulcer/Injury at Stage 2 or Higher",
     reviewed_by: "Kevin Deyarmin (kdeyarmin@comcast.net)",
@@ -429,6 +522,9 @@ export const ITEM_VERIFICATION = Object.freeze({
   },
   m1800: {
     level: "verified",
+    response_set: "matches",
+    response_set_note:
+      "Codes 0-3 correspond to the CMS response set in both order and meaning.",
     official_item: "M1800",
     official_title: "Grooming",
     reviewed_by: "Kevin Deyarmin (kdeyarmin@comcast.net)",
@@ -443,6 +539,9 @@ export const ITEM_VERIFICATION = Object.freeze({
   },
   m1810: {
     level: "verified",
+    response_set: "abbreviated",
+    response_set_note:
+      "Codes 0-3 are in CMS order. Code 1 is worded as 'minor difficulty or helper makes adaptations' where CMS says 'if clothing is laid out or handed to the patient' — a different coding trigger for the same code.",
     official_item: "M1810",
     official_title: "Current Ability to Dress Upper Body",
     reviewed_by: "Kevin Deyarmin (kdeyarmin@comcast.net)",
@@ -457,6 +556,9 @@ export const ITEM_VERIFICATION = Object.freeze({
   },
   m1820: {
     level: "verified",
+    response_set: "abbreviated",
+    response_set_note:
+      "Codes 0-3 are in CMS order. Code 1 is worded as 'minor difficulty or helper makes adaptations' where CMS says 'if clothing and shoes are laid out or handed to the patient'.",
     official_item: "M1820",
     official_title: "Current Ability to Dress Lower Body",
     reviewed_by: "Kevin Deyarmin (kdeyarmin@comcast.net)",
@@ -471,6 +573,9 @@ export const ITEM_VERIFICATION = Object.freeze({
   },
   m2001: {
     level: "verified",
+    response_set: "conflicts",
+    response_set_note:
+      "PennSync merges two CMS items: its code 1 and code 2 split 'issues found' by whether the physician was contacted, which is CMS M2003 (Medication Follow-up), a separate item. Code 2 is not a valid M2001 response, and CMS code 9 (NA — patient is not taking any medications) is absent.",
     official_item: "M2001",
     official_title: "Drug Regimen Review",
     reviewed_by: "Kevin Deyarmin (kdeyarmin@comcast.net)",
@@ -485,6 +590,9 @@ export const ITEM_VERIFICATION = Object.freeze({
   },
   m2010: {
     level: "verified",
+    response_set: "conflicts",
+    response_set_note:
+      "The codes are remapped against CMS, and one of them inverts. PennSync 0 is 'not applicable — no high-risk drugs', which is CMS NA; PennSync 2 is 'education not completed', which is CMS 0 ('No'). Entering PennSync's 0 as an M2010 response would record that education was NOT provided.",
     official_item: "M2010",
     official_title: "Patient/Caregiver High-Risk Drug Education",
     reviewed_by: "Kevin Deyarmin (kdeyarmin@comcast.net)",
@@ -499,6 +607,9 @@ export const ITEM_VERIFICATION = Object.freeze({
   },
   m2020: {
     level: "verified",
+    response_set: "conflicts",
+    response_set_note:
+      "Codes 1 and 2 are transposed relative to CMS. CMS 1 is 'if individual dosages are prepared in advance'; CMS 2 is 'if given reminders'. PennSync's 1 is 'if given daily reminders' and its 2 is 'only if medication is prepared'. CMS NA (no oral medications prescribed) is also absent.",
     official_item: "M2020",
     official_title: "Management of Oral Medications",
     reviewed_by: "Kevin Deyarmin (kdeyarmin@comcast.net)",
@@ -513,6 +624,9 @@ export const ITEM_VERIFICATION = Object.freeze({
   },
   m1830: {
     level: "verified",
+    response_set: "conflicts",
+    response_set_note:
+      "PennSync uses a graduated person-assistance scale, not the CMS shower/tub scale. CMS 1 is 'with the use of devices, able to bathe independently'; PennSync's 1 is 'minimal person assistance'. PennSync's 5 ('refused') and 6 ('unable to rate — artificial opening') are not M1830 responses at all; CMS 6 is 'bathed totally by another person'.",
     official_item: "M1830",
     official_title: "Bathing",
     reviewed_by: "Kevin Deyarmin (kdeyarmin@comcast.net)",
@@ -527,6 +641,9 @@ export const ITEM_VERIFICATION = Object.freeze({
   },
   m1840: {
     level: "verified",
+    response_set: "conflicts",
+    response_set_note:
+      "PennSync's codes 2 and 3 use the bear-weight/pivot language of CMS M1850 (Transferring), not M1840. CMS M1840 codes by where the patient can toilet: 2 is 'unable to get to the toilet but able to use a bedside commode', 3 is 'able to use a bedpan/urinal independently', 4 is 'totally dependent in toileting'.",
     official_item: "M1840",
     official_title: "Toilet Transferring",
     reviewed_by: "Kevin Deyarmin (kdeyarmin@comcast.net)",
@@ -541,6 +658,9 @@ export const ITEM_VERIFICATION = Object.freeze({
   },
   m1845: {
     level: "verified",
+    response_set: "abbreviated",
+    response_set_note:
+      "Codes 0-3 are in CMS order. Code 1 is worded as 'devices/difficulty' where CMS says 'if supplies/implements are laid out for the patient'.",
     official_item: "M1845",
     official_title: "Toileting Hygiene",
     reviewed_by: "Kevin Deyarmin (kdeyarmin@comcast.net)",
@@ -555,6 +675,9 @@ export const ITEM_VERIFICATION = Object.freeze({
   },
   m1850: {
     level: "verified",
+    response_set: "abbreviated",
+    response_set_note:
+      "Codes 0-5 are in CMS order with the same anchors. Code 1 drops 'or with use of an assistive device', so a device-using patient may be coded 0 here and 1 on the official assessment.",
     official_item: "M1850",
     official_title: "Transferring",
     reviewed_by: "Kevin Deyarmin (kdeyarmin@comcast.net)",
@@ -569,6 +692,9 @@ export const ITEM_VERIFICATION = Object.freeze({
   },
   m1860: {
     level: "verified",
+    response_set: "conflicts",
+    response_set_note:
+      "PennSync's scale is offset by one from code 1 onward. It inserts '1 — with minor difficulty on uneven surfaces', which is not a CMS response, pushing one-handed device to 2 (CMS 1), two-handed device to 3 (CMS 2) and supervision to 4 (CMS 3). CMS 5 (chairfast, unable to wheel self) has no PennSync equivalent.",
     official_item: "M1860",
     official_title: "Ambulation/Locomotion",
     reviewed_by: "Kevin Deyarmin (kdeyarmin@comcast.net)",
@@ -583,6 +709,9 @@ export const ITEM_VERIFICATION = Object.freeze({
   },
   m1870: {
     level: "verified",
+    response_set: "conflicts",
+    response_set_note:
+      "Codes 0-2 align. PennSync's 3 is 'totally dependent on another person'; CMS 3 is 'takes nutrients orally AND receives supplemental nutrients by nasogastric tube or gastrostomy'. CMS 4 and 5 (tube-fed, and unable to take nutrients by either route) are absent, so a tube-fed patient cannot be coded.",
     official_item: "M1870",
     official_title: "Feeding or Eating",
     reviewed_by: "Kevin Deyarmin (kdeyarmin@comcast.net)",
@@ -597,6 +726,9 @@ export const ITEM_VERIFICATION = Object.freeze({
   },
   m1033: {
     level: "verified",
+    response_set: "conflicts",
+    response_set_note:
+      "CMS M1033 is check-all-that-apply across ten named risk factors (1-10, where 10 is 'None of the above'). PennSync is a single-select three-tier rating (low/medium/high). No PennSync answer maps to a valid M1033 response.",
     official_item: "M1033",
     official_title: "Risk of Hospitalization",
     reviewed_by: "Kevin Deyarmin (kdeyarmin@comcast.net)",
@@ -611,6 +743,9 @@ export const ITEM_VERIFICATION = Object.freeze({
   },
   m1610: {
     level: "verified",
+    response_set: "conflicts",
+    response_set_note:
+      "PennSync uses a frequency-graded incontinence scale that is not the current M1610. CMS M1610 has three responses: 0 no incontinence or catheter, 1 incontinent, 2 requires a urinary catheter. PennSync's 2 is 'during day/night; daily pads required' — incontinence, where CMS 2 means a catheter — and its 3 and 4 are not M1610 responses.",
     official_item: "M1610",
     official_title: "Urinary Incontinence or Urinary Catheter Presence",
     reviewed_by: "Kevin Deyarmin (kdeyarmin@comcast.net)",
@@ -625,6 +760,9 @@ export const ITEM_VERIFICATION = Object.freeze({
   },
   m1620: {
     level: "verified",
+    response_set: "conflicts",
+    response_set_note:
+      "Codes 1-3 align. PennSync's 4 ('daily or more often') merges CMS 4 (on a daily basis) and CMS 5 (more often than once daily), and its 5 is 'patient has ostomy', which is CMS NA rather than code 5. CMS UK is absent.",
     official_item: "M1620",
     official_title: "Bowel Incontinence Frequency",
     reviewed_by: "Kevin Deyarmin (kdeyarmin@comcast.net)",
@@ -639,6 +777,9 @@ export const ITEM_VERIFICATION = Object.freeze({
   },
   m1630: {
     level: "verified",
+    response_set: "conflicts",
+    response_set_note:
+      "PennSync codes the patient's independence with the ostomy; CMS M1630 codes whether the ostomy was related to an inpatient stay or necessitated a change in regimen within the last 14 days. CMS 1 and 2 turn on that relationship, not on how much help the patient needs.",
     official_item: "M1630",
     official_title: "Ostomy for Bowel Elimination",
     reviewed_by: "Kevin Deyarmin (kdeyarmin@comcast.net)",
@@ -653,6 +794,9 @@ export const ITEM_VERIFICATION = Object.freeze({
   },
   m2401: {
     level: "verified",
+    response_set: "conflicts",
+    response_set_note:
+      "PennSync asks a single question about medication interventions. CMS M2401 is a grid of separate rows — falls prevention, depression, pain, pressure ulcer prevention and treatment — each coded 0/1/NA. Medication intervention is CMS M2003/M2005, not M2401.",
     official_item: "M2401",
     official_title: "Intervention Synopsis",
     reviewed_by: "Kevin Deyarmin (kdeyarmin@comcast.net)",
@@ -698,8 +842,13 @@ export function classifyItem(itemId) {
       classificationSignedOffAt: entry.classification_signed_off_at || "",
       classificationBasis: entry.classification_basis || "",
       classificationSignedOff: !!entry.classification_signed_off_by,
-      // Response OPTIONS are unconfirmed even for a `verified` item.
-      responseSetVerified: false,
+      // Response OPTIONS: the verdict from the item-by-item read of the CMS
+      // instrument. `responseSetVerified` is true ONLY for a faithful
+      // reproduction, so it stays false for `abbreviated` and `conflicts`.
+      responseSet: entry.response_set || "unchecked",
+      responseSetNote: entry.response_set_note || "",
+      responseSetVerified: entry.response_set === "matches",
+      responseSetConflicts: entry.response_set === "conflicts",
       // Review provenance travels with the classification so no caller can
       // present a classification as signed off when nobody has signed it off.
       reviewedBy: entry.reviewed_by || "",
@@ -722,7 +871,12 @@ export function classifyItem(itemId) {
     classificationSignedOffAt: "",
     classificationBasis: "",
     classificationSignedOff: false,
+    // Fail closed: an unregistered item has not been read against the manual,
+    // so it is neither verified nor cleared of conflicting with CMS.
+    responseSet: "unchecked",
+    responseSetNote: "",
     responseSetVerified: false,
+    responseSetConflicts: false,
     reviewedBy: "",
     reviewedAt: "",
     reviewSource: "",
@@ -756,6 +910,111 @@ export function officialItemNumber(itemId) {
   return NO_NUMBER.includes(c.level) ? null : c.officialItem;
 }
 
+/** @type {ReadonlyArray<string>} */
+export const RESPONSE_SET_VERDICTS = Object.freeze([
+  // PennSync's option list reproduces the CMS response set in order and meaning.
+  "matches",
+  // Same codes in the same order, but the wording is looser than the manual's,
+  // so a borderline patient could be coded differently on the two forms.
+  "abbreviated",
+  // At least one PennSync code carries a DIFFERENT meaning than the same CMS
+  // code, or the answer shape differs (single-select against check-all). The
+  // code cannot be carried across.
+  "conflicts",
+  // No official response set to compare: the number is not in the current
+  // instrument, or PennSync's question is a different question.
+  "not_applicable",
+  // Not yet read against the manual. Fail-closed default.
+  "unchecked",
+]);
+
+/** What the response-set read was carried out against. */
+export const RESPONSE_SET_CHECK = Object.freeze({
+  checked_at: "2026-09-01",
+  checked_against:
+    "CMS OASIS-E2 All Items instrument (Effective 04/01/2026), published 12/11/2025",
+  method:
+    "Every PennSync item present in the instrument was read against it option by option — "
+    + "code set, code order and the meaning of each option's text. The earlier source check "
+    + "compared item numbers and titles only.",
+});
+
+/**
+ * Whether a response recorded in PennSync may be carried into the EMR as this
+ * item's official code.
+ *
+ * This is the question the read was for. `officialItemNumber()` answers "may we
+ * print M1340 next to this question"; this answers "may the nurse type the code
+ * they picked here into M1340 over there". They are not the same: M1340's code
+ * set is identical to CMS's, and its code 2 still means something else.
+ *
+ * Deterministic — a lookup, not a judgement.
+ */
+export function mayCarryResponseToEmr(itemId) {
+  const c = classifyItem(itemId);
+  if (!isOfficialCmsItem(itemId)) return false;
+  return c.responseSet === "matches";
+}
+
+const RESPONSE_SET_CAVEATS = {
+  matches: "",
+  abbreviated:
+    "PennSync's answer choices for this item are worded more loosely than the CMS response "
+    + "set. Re-read the official wording in your EMR before choosing a code there.",
+  conflicts:
+    "Do not carry this code into your EMR. PennSync's answer choices for this item do not "
+    + "match the CMS response set — at least one code means something different on the "
+    + "official assessment. Answer the item again from the wording in your EMR.",
+  not_applicable: "",
+  unchecked:
+    "PennSync has not read this item's answer choices against the CMS instrument. Do not "
+    + "assume the code matches; answer the item from the wording in your EMR.",
+};
+
+/**
+ * The deterministic caveat about an item's ANSWER CHOICES, or "" when there is
+ * nothing to warn about. Separate from `itemDisclaimer()`, which is about the
+ * item's identity, so a screen can place them independently.
+ */
+export function responseSetCaveat(itemId) {
+  const c = classifyItem(itemId);
+  return RESPONSE_SET_CAVEATS[c.responseSet] ?? RESPONSE_SET_CAVEATS.unchecked;
+}
+
+/** Every registry item whose answer choices conflict with the CMS response set. */
+export function conflictingResponseSets() {
+  return Object.keys(ITEM_VERIFICATION)
+    .map(classifyItem)
+    .filter((c) => c.responseSetConflicts)
+    .sort((a, b) => a.id.localeCompare(b.id));
+}
+
+/** Counts for a status surface. */
+export function responseSetStatus(itemIds) {
+  const ids = Array.isArray(itemIds) && itemIds.length
+    ? [...new Set(itemIds.map((i) => String(i || "").toLowerCase()).filter(Boolean))]
+    : Object.keys(ITEM_VERIFICATION);
+  const tally = { matches: 0, abbreviated: 0, conflicts: 0, not_applicable: 0, unchecked: 0 };
+  for (const id of ids) {
+    const v = classifyItem(id).responseSet;
+    tally[v] = (tally[v] ?? 0) + 1;
+  }
+  const comparable = tally.matches + tally.abbreviated + tally.conflicts;
+  return {
+    ...tally,
+    total: ids.length,
+    comparable,
+    statement: comparable === 0
+      ? "No PennSync item in this set has an official CMS response set to compare against."
+      : `Of ${comparable} items with an official CMS response set, ${tally.matches} `
+        + `${tally.matches === 1 ? "reproduces" : "reproduce"} it, ${tally.abbreviated} `
+        + `${tally.abbreviated === 1 ? "uses" : "use"} looser wording for the same codes, and `
+        + `${tally.conflicts} ${tally.conflicts === 1 ? "has" : "have"} at least one code that means `
+        + "something different on the official assessment. Answer those items from the wording in "
+        + "your EMR rather than copying the code.",
+  };
+}
+
 const DISCLAIMERS = {
   verified:
     "Review this against your patient assessment and enter the response on the official "
@@ -778,14 +1037,32 @@ const DISCLAIMERS = {
     + "prompt only and enter official responses in your EMR.",
 };
 
-/** The deterministic caveat a screen must show for an item. */
+/**
+ * The deterministic caveat a screen must show for an item — its identity, plus
+ * the answer-choice warning when there is one. A screen that shows only this
+ * still cannot mislead a nurse about either dimension.
+ */
 export function itemDisclaimer(itemId) {
-  return DISCLAIMERS[classifyItem(itemId).level] || DISCLAIMERS.unverified;
+  const base = DISCLAIMERS[classifyItem(itemId).level] || DISCLAIMERS.unverified;
+  const caveat = responseSetCaveat(itemId);
+  return caveat ? `${base} ${caveat}` : base;
 }
 
-/** Short human label for the classification, for a badge. */
+/**
+ * Short human label for the classification, for a badge.
+ *
+ * A conflicting response set OVERRIDES the identity badge. M1340 is a genuine,
+ * current CMS item with the right title, so its level is `verified` — but a
+ * green "Verified item" badge next to answer choices whose code 2 means
+ * something else on the official assessment is the exact reassurance a nurse
+ * must not be given.
+ */
 export function describeVerification(itemId) {
-  const level = classifyItem(itemId).level;
+  const c = classifyItem(itemId);
+  if (c.responseSetConflicts) {
+    return { label: "Answer choices differ from CMS", tone: "destructive" };
+  }
+  const level = c.level;
   return {
     verified: { label: "Verified item", tone: "success" },
     abbreviated: { label: "Abbreviated response set", tone: "warning" },
@@ -844,10 +1121,10 @@ export function clinicalReviewStatus(itemIds) {
     // The one sentence a screen must be able to show.
     statement: pending.length === 0
       ? "Every OASIS item in PennSync's internal set has been signed off by a named clinical reviewer."
-      : `Item numbers and titles are verified against the CMS manual. What remains for `
-        + `${pending.length} of ${ids.length} items is the CLINICAL question: whether PennSync's use `
-        + "of the item is appropriate, and whether its response options are safe as a screening "
-        + "prompt. Response options are not verified. Confirm both in your EMR.",
+      : `Item numbers, titles and response sets are checked against the CMS manual. What `
+        + `remains for ${pending.length} of ${ids.length} items is the CLINICAL question: whether `
+        + "PennSync's use of the item is appropriate, and whether its response options are safe as "
+        + "a screening prompt. Confirm both in your EMR.",
     complete: pending.length === 0,
   };
 }
@@ -879,9 +1156,18 @@ export function buildClinicalReviewWorksheet(items, { specLabel = ACTIVE_OASIS_S
     "canonical scale table, **not** from a qualified reviewer reading the CMS manual.",
     "",
     "**The classification column is already signed off** against the CMS manuals (item number",
-    "and title). You are not being asked to re-do that. What is open is ONE clinical question",
-    "per row, in the \"Clinical question\" column — response options were NOT verified, because",
-    "the manual states response codes as prose rather than a parseable list.",
+    "and title), and the \"Answer choices vs CMS\" column records a later read of each item's",
+    "response set against the CMS OASIS-E2 All Items instrument. You are not being asked to",
+    "re-do either. What is open is ONE clinical question per row, in the \"Clinical question\"",
+    "column.",
+    "",
+    "Answer-choice key:",
+    "",
+    "- `matches` — PennSync's options reproduce the CMS response set in order and meaning",
+    "- `abbreviated` — same codes in the same order, looser wording than the manual",
+    "- `conflicts` — at least one code means something DIFFERENT on the official assessment,",
+    "  or the answer shape differs. Do not carry the code across.",
+    "- `not_applicable` — no official response set to compare against",
     "",
     "Leave a row blank if you did not review it — an unreviewed row is a more useful record",
     "than a guessed one.",
@@ -900,8 +1186,8 @@ export function buildClinicalReviewWorksheet(items, { specLabel = ACTIVE_OASIS_S
     "item number exist, and what is its title. It is **not** a clinical sign-off, which is",
     "what the reviewer columns are for.",
     "",
-    "| PennSync id | Item number shown | PennSync label | Classification (signed off) | Source check / note | Clinical question outstanding | Reviewer: answer | Reviewer initials / date |",
-    "| --- | --- | --- | --- | --- | --- | --- | --- |",
+    "| PennSync id | Item number shown | PennSync label | Classification (signed off) | Answer choices vs CMS | Source check / note | Clinical question outstanding | Reviewer: answer | Reviewer initials / date |",
+    "| --- | --- | --- | --- | --- | --- | --- | --- | --- |",
   ].filter((line, i, arr) => !(line === "" && arr[i - 1] === "")).join("\n");
 
   const body = rows.map((r) => [
@@ -910,6 +1196,7 @@ export function buildClinicalReviewWorksheet(items, { specLabel = ACTIVE_OASIS_S
     r.officialItem || "— (none)",
     (r.label || "").replace(/\|/g, "\\|"),
     `\`${r.level}\``,
+    [`\`${r.responseSet}\``, r.responseSetNote].filter(Boolean).join(" · ").replace(/\|/g, "\\|"),
     [r.sourceVerified ? `Checked ${r.sourceVerifiedAt}` : "Not checked", r.officialTitle, r.note || r.evidence]
       .filter(Boolean).join(" · ").replace(/\|/g, "\\|") || "—",
     (outstandingClinicalQuestion(r.id)?.question || "—").replace(/\|/g, "\\|"),
@@ -924,8 +1211,9 @@ export function buildClinicalReviewWorksheet(items, { specLabel = ACTIVE_OASIS_S
     pending === 0
       ? `**All ${rows.length} items are signed off.** Both the classification and the clinical `
         + "question are answered; the reviewer and scope are recorded per item in "
-        + "`src/components/oasis/specs/verification.js`. Note that response OPTIONS were not "
-        + "individually verified against the CMS manual — the sign-off states this."
+        + "`src/components/oasis/specs/verification.js`. The sign-off itself states that response "
+        + "OPTIONS were not individually verified; a later read (2026-09-01) closed that gap and "
+        + "its findings are in the \"Answer choices vs CMS\" column."
       : `**${pending} of ${rows.length} items await the clinical answer.** Their classification is `
         + "already signed off; only the clinical question above is open.",
     "",

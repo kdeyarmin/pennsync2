@@ -9,7 +9,13 @@ import {
 import { OASIS_E_SPEC } from "./e/index.js";
 import {
   ITEM_VERIFICATION,
+  RESPONSE_SET_CHECK,
+  RESPONSE_SET_VERDICTS,
   VERIFICATION_LEVELS,
+  conflictingResponseSets,
+  mayCarryResponseToEmr,
+  responseSetCaveat,
+  responseSetStatus,
   buildClinicalReviewWorksheet,
   classifyItem,
   clinicalReviewStatus,
@@ -247,11 +253,17 @@ test("the CLASSIFICATION is signed off, and says what it rests on", () => {
   );
 });
 
-test("response options are NOT claimed as verified, even for a verified item", () => {
-  // The CMS manual states response codes as prose coding instructions, not a
-  // parseable list, so PennSync's options for an item stay unconfirmed.
-  for (const id of Object.keys(ITEM_VERIFICATION)) {
-    assert.equal(classifyItem(id).responseSetVerified, false, `${id}`);
+test("responseSetVerified is true ONLY where the option list reproduces CMS", () => {
+  // Superseded the blanket `false`: every item has now been read against the
+  // CMS OASIS-E2 All Items instrument option by option. The invariant that
+  // matters is that the flag tracks the verdict rather than the item's level —
+  // an `abbreviated` or `conflicts` verdict must never read as verified.
+  for (const [id, entry] of Object.entries(ITEM_VERIFICATION)) {
+    const c = classifyItem(id);
+    assert.ok(RESPONSE_SET_VERDICTS.includes(c.responseSet), `${id}: ${c.responseSet}`);
+    assert.equal(c.responseSetVerified, entry.response_set === "matches", id);
+    assert.equal(c.responseSetConflicts, entry.response_set === "conflicts", id);
+    assert.ok(c.responseSetNote.length > 20, `${id} must say what the read found`);
   }
 });
 
@@ -396,4 +408,98 @@ test("a legacy row with no marker is classified, never assumed official", () => 
 test("cmsItemsOnly is safe on junk input", () => {
   assert.deepEqual(cmsItemsOnly(null), []);
   assert.deepEqual(cmsItemsOnly([null, {}, { response: "1" }]), []);
+});
+
+// ── The response-set read (2026-09-01) ─────────────────────────────────────
+// The clinical sign-off recorded that response OPTIONS were not individually
+// verified. These cover the read that closed that gap.
+
+test("a matching code SET is not treated as a matching response set", () => {
+  // The trap the read exists to close. M1340's codes are {0,1,2} exactly as CMS
+  // has them, and its code 2 still means something else: CMS 2 is "known but
+  // not observable", PennSync's is "Yes — infected". A code-set comparison
+  // alone would have cleared this item.
+  const c = classifyItem("m1340");
+  assert.equal(c.level, "verified", "the item number and title are genuinely current");
+  assert.equal(c.responseSet, "conflicts");
+  assert.equal(mayCarryResponseToEmr("m1340"), false);
+  assert.match(c.responseSetNote, /not observable/i);
+});
+
+test("mayCarryResponseToEmr is granted only by a faithful response set", () => {
+  for (const id of Object.keys(ITEM_VERIFICATION)) {
+    const c = classifyItem(id);
+    assert.equal(
+      mayCarryResponseToEmr(id),
+      c.responseSet === "matches" && isOfficialCmsItem(id),
+      `${id} (${c.level}/${c.responseSet})`,
+    );
+  }
+  // Nothing outside the registry may be carried across either — fail closed.
+  assert.equal(mayCarryResponseToEmr("m9999"), false);
+  assert.equal(mayCarryResponseToEmr(""), false);
+  assert.equal(mayCarryResponseToEmr(null), false);
+});
+
+test("a conflicting response set overrides a reassuring badge", () => {
+  // A green "Verified item" chip beside answer choices whose codes mean
+  // something else on the official assessment is the precise reassurance a
+  // nurse must not be given, however accurate the item's identity is.
+  for (const c of conflictingResponseSets()) {
+    const badge = describeVerification(c.id);
+    assert.notEqual(badge.tone, "success", `${c.id} must not read as reassuring`);
+    assert.match(badge.label, /differ/i, c.id);
+  }
+  assert.equal(describeVerification("m1800").tone, "success", "a faithful item keeps its badge");
+});
+
+test("every conflicting item tells the nurse not to carry the code across", () => {
+  for (const c of conflictingResponseSets()) {
+    assert.match(responseSetCaveat(c.id), /do not carry this code into your emr/i, c.id);
+    assert.match(itemDisclaimer(c.id), /do not carry this code into your emr/i, c.id);
+  }
+  // A faithful item is not given a warning it does not need.
+  assert.equal(responseSetCaveat("m1800"), "");
+});
+
+test("an unread item fails closed rather than reading as clean", () => {
+  const c = classifyItem("m9999");
+  assert.equal(c.responseSet, "unchecked");
+  assert.equal(c.responseSetVerified, false);
+  assert.equal(c.responseSetConflicts, false, "unread is not the same as read-and-conflicting");
+  assert.match(responseSetCaveat("m9999"), /has not read this item's answer choices/i);
+});
+
+test("items absent from the current instrument have no response set to compare", () => {
+  // Comparing PennSync's options against a response set that does not exist
+  // would be inventing a comparison, so these are `not_applicable`, not `matches`.
+  for (const id of ["m1020", "m1730", "m2200", "m2102"]) {
+    assert.equal(classifyItem(id).responseSet, "not_applicable", id);
+    assert.equal(mayCarryResponseToEmr(id), false, id);
+  }
+});
+
+test("the response-set check records what it was read against", () => {
+  assert.equal(RESPONSE_SET_CHECK.checked_at, "2026-09-01");
+  assert.match(RESPONSE_SET_CHECK.checked_against, /All Items instrument/i);
+  assert.match(RESPONSE_SET_CHECK.method, /option by option/i);
+  // It is a separate record from the human clinical sign-off, and must not be
+  // written into it: the sign-off's own text says response options were not
+  // verified, and that remains a true account of what was signed.
+  for (const entry of Object.values(ITEM_VERIFICATION)) {
+    assert.match(entry.review_source, /RESPONSE OPTIONS WERE NOT individually verified/);
+  }
+});
+
+test("responseSetStatus counts the read rather than asserting a conclusion", () => {
+  const s = responseSetStatus();
+  assert.equal(s.total, Object.keys(ITEM_VERIFICATION).length);
+  assert.equal(s.comparable, s.matches + s.abbreviated + s.conflicts);
+  assert.ok(s.conflicts > 0, "the read found conflicts; the status must not hide them");
+  assert.match(s.statement, /means something different on the official assessment/i);
+  // Scoped to a caller's own bank.
+  const scoped = responseSetStatus(["m1800", "m1340"]);
+  assert.equal(scoped.total, 2);
+  assert.equal(scoped.matches, 1);
+  assert.equal(scoped.conflicts, 1);
 });

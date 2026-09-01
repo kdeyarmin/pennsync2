@@ -20,6 +20,7 @@ import { exportToPDF } from "@/components/utils/pdfExporter";
 import { todayEastern } from "@/components/utils/timezone";
 import { evaluateOASIS, computeCareScope } from "@/components/oasis/oasisScoringEngine";
 import { itemSourceFor } from "@/components/oasis/specs/verification.js";
+import OasisItemNotice from "@/components/oasis/OasisItemNotice.jsx";
 import { ACTIVE_OASIS_SPEC } from "@/components/oasis/specs/registry.js";
 import OASISSuggestionPanel from "@/components/oasis/OASISSuggestionPanel";
 import OASISComplianceWarnings, { getComplianceIssues } from "@/components/oasis/OASISComplianceWarnings";
@@ -165,6 +166,10 @@ function SectionCard({ section, answers, onChange, onShowGuidance }) {
                 )}
               </div>
               <QuestionField question={q} value={answers[q.id]} onChange={onChange} onShowGuidance={onShowGuidance} />
+              {/* The answer-choice caveat sits with the choices, because that is
+                  where a nurse would otherwise read a code and carry it into the
+                  same-numbered item in the EMR. */}
+              <OasisItemNotice itemId={q.id} />
             </div>
           ))}
         </div>
