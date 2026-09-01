@@ -1,0 +1,22 @@
+{
+  "previewPort": 3000,
+  "healthPath": "/",
+  "startCommand": "docker compose -f docker-compose.base44.yml up -d",
+  "secrets": [
+    {
+      "name": "VITE_BASE44_APP_ID",
+      "description": "Your Base44 app ID (found in the Base44 builder under Settings for your PennSync app)",
+      "requiredAtBoot": true
+    },
+    {
+      "name": "VITE_BASE44_BACKEND_URL",
+      "description": "Base44 backend origin, e.g. https://api.base44.app",
+      "requiredAtBoot": true
+    },
+    {
+      "name": "VITE_SUPER_ADMIN_EMAIL",
+      "description": "Optional: owner email for super-admin UI gating",
+      "requiredAtBoot": false
+    }
+  ]
+}
