@@ -21,6 +21,7 @@ import {
 import { BarChart3 } from "lucide-react";
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
+import DocumentationGapAdminPanel from "@/components/oasis/DocumentationGapAdminPanel";
 // Analytics Dashboard Component — payment trends & revenue stats.
 // Extracted from OASISAnalyzer.jsx; pure aggregation logic lives in oasisAnalytics.js (unit-tested).
 export default function OASISAnalyticsDashboard({ savedOASISUploads }) {
@@ -202,6 +203,10 @@ export default function OASISAnalyticsDashboard({ savedOASISUploads }) {
           </CardContent>
         </Card>
       )}
+
+      {/* Documentation gaps and their revenue context — administrators only.
+          The panel gates itself; it is not relying on this placement. */}
+      <DocumentationGapAdminPanel episodes={savedOASISUploads} />
 
       {/* PDGM Payment Trends */}
       {paymentTrendsData.length > 0 && (

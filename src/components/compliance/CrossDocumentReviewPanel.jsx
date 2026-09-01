@@ -3,6 +3,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, CheckCircle2, GitCompare, ListChecks } from "lucide-react";
 import { RESOLUTIONS, resolveFinding, reviewCrossDocumentConsistency } from "./crossDocumentConsistency";
+import DocumentationGapPanel from "@/components/oasis/DocumentationGapPanel";
+import { findDocumentationGaps } from "@/components/oasis/documentationGaps.js";
 
 const ACTION_LABEL = {
   acknowledged: "Acknowledge",
@@ -33,6 +35,14 @@ export default function CrossDocumentReviewPanel({
   const review = useMemo(
     () => reviewCrossDocumentConsistency({ noteText, patient, oasis, carePlans, openTasks }),
     [noteText, patient, oasis, carePlans, openTasks],
+  );
+  // Item-level note-versus-code gaps. Evidence-triggered and symmetric: the
+  // same rules fire when the note describes MORE independence than the recorded
+  // response as when it describes less. Nothing financial reaches this — see
+  // documentationGaps.js.
+  const documentationGaps = useMemo(
+    () => findDocumentationGaps({ documentation: noteText, oasis }),
+    [noteText, oasis],
   );
   // { [findingId]: resolution } — local review state; PennSync stores the
   // reviewer's choice, never an edit to the underlying record.
@@ -75,6 +85,8 @@ export default function CrossDocumentReviewPanel({
           </Badge>
         )}
       </div>
+
+      <DocumentationGapPanel gaps={documentationGaps} />
 
       {review.findings.length === 0 ? (
         <p className="flex items-start gap-2 text-xs text-emerald-900 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
