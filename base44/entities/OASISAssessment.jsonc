@@ -34,6 +34,20 @@
           "item_number": {
             "type": "string"
           },
+          "item_source": {
+            "type": "string",
+            "enum": [
+              "cms_item",
+              "pennsync_screening",
+              "retired_cms_item",
+              "unknown"
+            ],
+            "description": "Whether item_number is a CMS item number in the instrument currently in effect, a PennSync-internal screening question, or a retired CMS item. PennSync writes its own form ids into item_number, so without this a screening answer is indistinguishable from a CMS response downstream. Absent on rows written before this field existed — treat those as 'unknown', NOT as CMS items."
+          },
+          "item_spec_version": {
+            "type": "string",
+            "description": "The OASIS spec version item_source was classified against (e.g. 'oasis-e2'), so a later reclassification does not silently re-interpret an older row."
+          },
           "item_name": {
             "type": "string"
           },

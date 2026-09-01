@@ -15,6 +15,11 @@ import { describePlaceholders } from "./compliance/placeholderGuard";
 import { computeCoverageScore } from "./compliance/coverageScore";
 import { compareVisits, buildTrendSummary, detectSustainedTrends } from "./compliance/visitComparison";
 import { crossCheckChart } from "./compliance/chartCrossCheck";
+import { analyzeDocumentationStrength } from "./compliance/documentationStrength";
+import { reviewCopyForward } from "./compliance/noteSimilarity";
+import { extractVitals } from "./compliance/factExtraction";
+import DocumentationStrengthPanel from "./DocumentationStrengthPanel";
+import CopyForwardPanel from "./CopyForwardPanel";
 import VisitComparisonPanel from "./VisitComparisonPanel";
 import ChartCrossCheckPanel from "./ChartCrossCheckPanel";
 import DenialRiskPanel from "./DenialRiskPanel";
@@ -49,7 +54,8 @@ import { runDenialGuardrail, elementsJudgedByGuardrail } from "../compliance/den
  *   onFinalNote    — (optional) called with the verified note text
  *   onBack         — (optional) renders a Back button next to Generate
  *   renderFinalNote — (optional) host render-prop for the final-note area. Receives
- *                     an `api` with { finalNote, setFinalNote, building, copy,
+ *                     an `api` with { finalNote, setFinalNote, generatedNote,
+ *                     nurseEdited, building, copy,
  *                     copied, verified, dirty, fixRequired, coverage, recheck,
  *                     result }. `recheck()` re-verifies and resolves to the
  *                     save-ready `result` (or null if it fails). When provided,
@@ -76,6 +82,11 @@ export default function ConstrainedNoteReviewer({ roughNote, serviceLine = "home
   // Which denial-risk findings are expanded to show remediation/evidence.
   const [openDenialClusters, setOpenDenialClusters] = useState(() => new Set());
   const [finalNote, setFinalNote] = useState("");
+  // The note EXACTLY as generated, before any hand-edit. Kept so a caller can
+  // tell "the AI rewrote the rough draft" (always true, and not interesting)
+  // apart from "the clinician changed the generated text" (the fact an
+  // AI-governance record actually needs).
+  const [generatedNote, setGeneratedNote] = useState("");
   const [verifiedNote, setVerifiedNote] = useState("");
   const [fixRequired, setFixRequired] = useState(null);
   const [building, setBuilding] = useState(false);
@@ -144,6 +155,29 @@ export default function ConstrainedNoteReviewer({ roughNote, serviceLine = "home
     return detectSustainedTrends([...priorTexts, roughNote]);
   }, [patient, roughNote]);
 
+  // Deterministic documentation-STRENGTH grading. presenceDetection above answers
+  // "is homebound mentioned?"; this answers "does the homebound statement carry
+  // the factual support a reviewer looks for?" — the difference between
+  // "Patient is homebound." passing and being flagged as a potential gap.
+  // Graded against the text the nurse will actually use (final note once built).
+  const strength = useMemo(
+    () => analyzeDocumentationStrength(finalNote || roughNote, { serviceLine }),
+    [finalNote, roughNote, serviceLine],
+  );
+
+  // Deterministic copy-forward / visit-specificity review against the patient's
+  // recent notes. ADVISORY ONLY — it never blocks a save and never alleges
+  // cloning; repeated wording is expected for a stable patient.
+  const copyForward = useMemo(() => {
+    const history = Array.isArray(patient?.enhanced_notes_history) ? patient.enhanced_notes_history : [];
+    const priors = history.slice(-5).reverse();
+    const priorTexts = priors.length ? priors : (priorNote ? [{ note: priorNote }] : []);
+    return reviewCopyForward(finalNote || roughNote, priorTexts, {
+      currentVitals: extractVitals(finalNote || roughNote),
+      priorVitals: priorTexts.map((p) => extractVitals(p?.note || p?.text || "")),
+    });
+  }, [finalNote, roughNote, patient, priorNote]);
+
   // Deterministic chart cross-check: how the note lines up against the standing
   // chart (allergies, med list, fall risk). Advisory only — never edits the note.
   // Once a final note exists it cross-checks the text the nurse will actually
@@ -165,7 +199,7 @@ export default function ConstrainedNoteReviewer({ roughNote, serviceLine = "home
   const priorNoteRef = useRef("");
   priorNoteRef.current = priorNote;
   useEffect(() => {
-    setFinalNote(""); setVerifiedNote(""); setFixRequired(null); setIncludeTrend(false); setAcknowledgedRisks(false); setAckJustification(""); setAcknowledgedDenialRisk(false); setDenialAckJustification(""); setOpenDenialClusters(new Set()); setShowProvenance(false); setEscalatedKeys(new Set()); setCritic(null); setOpenExamples(new Set()); setShowThinConfirm(false); setConfirmedThinCritical(false);
+    setFinalNote(""); setGeneratedNote(""); setVerifiedNote(""); setFixRequired(null); setIncludeTrend(false); setAcknowledgedRisks(false); setAckJustification(""); setAcknowledgedDenialRisk(false); setDenialAckJustification(""); setOpenDenialClusters(new Set()); setShowProvenance(false); setEscalatedKeys(new Set()); setCritic(null); setOpenExamples(new Set()); setShowThinConfirm(false); setConfirmedThinCritical(false);
     if (!analysis) { setAnswers({}); setPrefilledIds(new Set()); setConfirmedNegatives(new Set()); return; }
     const prefill = computeCarryForward(priorNoteRef.current || "", analysis.gaps);
     setAnswers(prefill);
@@ -397,6 +431,7 @@ export default function ConstrainedNoteReviewer({ roughNote, serviceLine = "home
       const extras = [activeTrendSummary(), analysis.vitalsSentence, ...computeNotDocumented()].filter(Boolean);
       const finalText = extras.length ? `${generated}\n\n${extras.join(" ")}` : generated;
       setFinalNote(finalText);
+      setGeneratedNote(finalText);
       // Ground only the LLM-authored portion. The appended extras (trend summary,
       // structured vitals, "not documented" fallbacks) are deterministic and
       // already pass the value-guard, so re-grounding them only burns tokens.
@@ -505,6 +540,9 @@ export default function ConstrainedNoteReviewer({ roughNote, serviceLine = "home
 
   const finalApi = {
     finalNote, setFinalNote, building, copy, copied,
+    // What the scribe produced, and whether the clinician has since changed it.
+    generatedNote,
+    nurseEdited: !!generatedNote && finalNote !== generatedNote,
     verified: !dirty && !fixRequired,
     dirty, fixRequired,
     coverage: liveCoverage,
@@ -632,6 +670,32 @@ export default function ConstrainedNoteReviewer({ roughNote, serviceLine = "home
 
           {/* Already self-collapsing and closed by default — left as it is. */}
           <ClinicalIndicatorsPanel narrativeText={roughNote} />
+
+          {strength.needsReview.length > 0 && (
+            <CollapsibleSection
+              title="Documentation strength"
+              icon={ShieldAlert}
+              badge={`${strength.needsReview.length} to strengthen`}
+              badgeVariant={strength.weakest === "weak" ? "warning" : "secondary"}
+              summary="Whether these statements carry the support a reviewer looks for"
+              defaultOpen={strength.weakest === "weak"}
+            >
+              <DocumentationStrengthPanel findings={strength.needsReview} />
+            </CollapsibleSection>
+          )}
+
+          {copyForward.comparedCount > 0 && copyForward.band.id !== "low" && (
+            <CollapsibleSection
+              title="Visit-specific detail"
+              icon={Copy}
+              badge={copyForward.band.label}
+              badgeVariant={copyForward.band.tone === "red" ? "destructive" : copyForward.band.tone === "amber" ? "warning" : "secondary"}
+              summary="How this note compares with recent documentation"
+              defaultOpen={copyForward.band.id === "very_high"}
+            >
+              <CopyForwardPanel review={copyForward} />
+            </CollapsibleSection>
+          )}
 
           {gaps.length > 0 && (
             <div className="bg-white border border-amber-200 rounded-xl p-4 shadow-sm">
@@ -889,7 +953,7 @@ export default function ConstrainedNoteReviewer({ roughNote, serviceLine = "home
                   <Button onClick={copy} className="flex-1 h-11 gap-2 font-semibold">
                     {copied ? <><CheckCircle2 className="w-4 h-4" /> Copied!</> : <><Copy className="w-4 h-4" /> Copy</>}
                   </Button>
-                  <Button variant="outline" className="h-11 px-4" onClick={() => { setFinalNote(""); setVerifiedNote(""); setFixRequired(null); }}>Back</Button>
+                  <Button variant="outline" className="h-11 px-4" onClick={() => { setFinalNote(""); setGeneratedNote(""); setVerifiedNote(""); setFixRequired(null); }}>Back</Button>
                 </div>
               </div>
               <NoteDiffView originalNote={roughNote} enhancedNote={finalNote} />

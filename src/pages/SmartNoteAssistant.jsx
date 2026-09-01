@@ -27,6 +27,7 @@ import FacilityRequirementsChecklist from "../components/smartNote/FacilityRequi
 import ConstrainedNoteReviewer from "../components/smartNote/ConstrainedNoteReviewer";
 import NoteReadinessBar from "../components/smartNote/NoteReadinessBar";
 import { persistVisitNote, OfflineSaveError } from "../components/smartNote/persistVisitNote";
+import { advanceHandoffStatus, buildReviewAcknowledgement } from "../components/smartNote/emrHandoff";
 import { getPriorNote } from "../components/smartNote/noteHelpers";
 import { evaluateFacilityRules, summarizeFacilityRules } from "../components/smartNote/compliance/facilityDocRules";
 import { describePlaceholders, countPlaceholders, findPlaceholders } from "../components/smartNote/compliance/placeholderGuard";
@@ -119,6 +120,12 @@ export default function SmartNoteAssistant({ visitId = null }) {
   const [generatingTasks, setGeneratingTasks] = useState(false);
   // Why the last save attempt failed, kept on screen instead of only in a toast.
   const [saveError, setSaveError] = useState(null);
+  // EMR handoff — SELF-REPORTED progress moving the prepared note into the
+  // agency's EMR, plus the AI-governance review record. PennSync has no EMR
+  // integration, so neither ever asserts what happened inside the EMR.
+  const [handoff, setHandoff] = useState({ status: "not_started", history: [] });
+  const [handoffError, setHandoffError] = useState(null);
+  const [reviewAck, setReviewAck] = useState(null);
   const recRef = useRef(null);
   const recStopRef = useRef(null);
   const textareaRef = useRef(null);
@@ -199,6 +206,15 @@ export default function SmartNoteAssistant({ visitId = null }) {
     setExistingVisitId(boundVisit.id);
     if (boundVisit.patient_id) setPatientId(boundVisit.patient_id);
     if (boundVisit.visit_type) setVisitType(boundVisit.visit_type);
+    // Hydrate the handoff trail from the visit. Without this a previously
+    // signed-off visit re-opened here showed "Not copied yet", and the next
+    // report wrote a fresh one-entry history back — downgrading the persisted
+    // status and destroying an append-only audit trail.
+    setHandoff({
+      status: boundVisit.emr_handoff_status || "not_started",
+      history: Array.isArray(boundVisit.emr_handoff_history) ? boundVisit.emr_handoff_history : [],
+    });
+    setReviewAck(boundVisit.documentation_review_ack || null);
   }, [boundVisit]);
 
   useEffect(() => {
@@ -252,6 +268,12 @@ export default function SmartNoteAssistant({ visitId = null }) {
     // Same reasoning: a failure recorded against the previous patient's note must
     // not be reported against this one, which no save has been attempted on.
     setSaveError(null);
+    // The handoff trail and review record belong to ONE patient's note. Carrying
+    // them across a patient switch would attribute "signed in EMR" (and a review
+    // acknowledgement) to a chart it was never made against.
+    setHandoff({ status: "not_started", history: [] });
+    setHandoffError(null);
+    setReviewAck(null);
     if (patientId !== boundPatientRef.current) setExistingVisitId(null);
     let incoming = null;
     const saved = sessionStorage.getItem(draftKeyFor(patientId));
@@ -406,6 +428,22 @@ export default function SmartNoteAssistant({ visitId = null }) {
       facilityAcknowledgment: facilityOverrideRef.current,
     });
     if (!out) return null;
+    // A handoff step or review acknowledgement reported BEFORE the working copy
+    // existed was held in component state; attach it to the record now so the
+    // office sees the same trail the nurse saw. Best-effort: a failure here must
+    // never surface as "the note didn't save", because it did.
+    if (out.visitId && (handoff.status !== "not_started" || reviewAck)) {
+      const trail = {};
+      if (handoff.status !== "not_started") {
+        trail.emr_handoff_status = handoff.status;
+        trail.emr_handoff_history = handoff.history;
+      }
+      if (reviewAck) trail.documentation_review_ack = reviewAck;
+      base44.entities.Visit.update(out.visitId, trail).catch((err) => {
+        console.error("Failed to attach the EMR handoff trail to the saved visit:", err);
+        setHandoffError("Your note saved, but the EMR handoff steps didn't sync. Re-report them to try again.");
+      });
+    }
     if (out.mode === 'create') {
       setSavedVisitId(out.visitId);
       setExistingVisitId(null);
@@ -449,10 +487,75 @@ export default function SmartNoteAssistant({ visitId = null }) {
     }
   };
 
+  /**
+   * Record a SELF-REPORTED EMR handoff step.
+   *
+   * The status is persisted onto the Visit only once PennSync's working copy
+   * exists (a saved visit). Before that there is no record to attach it to, so
+   * it is held in component state and written on the next save — and a report
+   * made with no connection is refused outright rather than shown as recorded,
+   * because a workflow status the office never receives is worse than none.
+   */
+  const reportHandoffStatus = async (nextStatus) => {
+    const next = advanceHandoffStatus(handoff, nextStatus, { actorEmail: currentUser?.email });
+    if (!next.ok) {
+      setHandoffError(next.reason);
+      return;
+    }
+    setHandoffError(null);
+    setHandoff({ status: next.status, history: next.history });
+    if (!savedVisitId) return;
+    if (typeof navigator !== "undefined" && navigator.onLine === false) {
+      setHandoffError("You're offline. This step is recorded on this device — reconnect to sync it.");
+      return;
+    }
+    try {
+      await base44.entities.Visit.update(savedVisitId, {
+        emr_handoff_status: next.status,
+        emr_handoff_history: next.history,
+      });
+    } catch (err) {
+      console.error("Failed to sync EMR handoff status:", err);
+      setHandoffError("Couldn't sync this step to the server. It is recorded on this device — try again.");
+    }
+  };
+
+  /**
+   * The AI-governance review record. Not a clinical signature: it states only
+   * that a human read the AI-assisted text, against a specific note version.
+   */
+  const recordReviewAck = async (checked, finalText, nurseEdited = false) => {
+    // Withdrawing the acknowledgement must clear the SERVER record too.
+    // Clearing only local state left the Visit asserting that a clinician had
+    // reviewed a note version they had since un-reviewed — a false governance
+    // record, which is worse than no record.
+    const ack = checked
+      ? buildReviewAcknowledgement({
+          noteText: finalText,
+          actorEmail: currentUser?.email,
+          aiAssisted: true,
+          // Whether the CLINICIAN changed the generated text — not whether the
+          // scribe rewrote the rough draft, which it always does.
+          edited: nurseEdited,
+        })
+      : null;
+    setReviewAck(ack);
+    if (!savedVisitId) return;
+    try {
+      await base44.entities.Visit.update(savedVisitId, { documentation_review_ack: ack });
+    } catch (err) {
+      console.error("Failed to persist the documentation review acknowledgement:", err);
+      toast.error("Couldn't sync your review record to the server. Try again.");
+    }
+  };
+
   const reset = () => {
     setNote(""); setSaved(false); setSavedVisitId(null); setSavedAuditId(null);
     setStep(1); setDraftRestored(false); setFollowUpTasks([]); setSaveError(null);
     setVitals({}); setExistingVisitId(null); setFacilityAck(false);
+    setHandoff({ status: "not_started", history: [] });
+    setHandoffError(null);
+    setReviewAck(null);
     facilityOverrideRef.current = null;
     clearDraft(patientIdRef.current);
   };
@@ -852,6 +955,13 @@ export default function SmartNoteAssistant({ visitId = null }) {
                     currentUser={currentUser}
                     onReset={reset}
                     originalNote={note}
+                    aiAssisted
+                    nurseEdited={api.nurseEdited}
+                    handoffStatus={handoff.status}
+                    onReportHandoffStatus={reportHandoffStatus}
+                    handoffStatusError={handoffError}
+                    reviewAck={reviewAck}
+                    onReviewAck={(checked) => recordReviewAck(checked, api.finalNote, api.nurseEdited)}
                     onSave={() => {
                       if (facilityBlocked) {
                         toast.error("Document the required facility item(s) or acknowledge the override before saving.");
