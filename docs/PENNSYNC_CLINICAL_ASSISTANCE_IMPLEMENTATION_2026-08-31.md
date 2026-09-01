@@ -319,7 +319,7 @@ response set. Confirm the wording and response in your EMR."
 
 ## 8. Tests added
 
-**156 new tests across 9 suites**, all deterministic and offline.
+**209 new tests across 11 suites** (191 under `node --test`, 18 under Vitest), all deterministic and offline.
 
 | Suite | Tests | Focus |
 | --- | --- | --- |
