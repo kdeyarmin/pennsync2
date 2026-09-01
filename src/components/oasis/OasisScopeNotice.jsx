@@ -55,10 +55,8 @@ export default function OasisScopeNotice({ className = "" }) {
         )}
         {!review.complete && (
           <p className="text-navy-700">
-            <strong>
-              {review.pending} of {review.total} items
-            </strong>{" "}
-            have not been reviewed by a qualified OASIS reviewer.
+            Item numbers and titles are verified against the CMS manual.{" "}
+            <strong>Response options are not</strong> — confirm them in your EMR.
           </p>
         )}
       </div>

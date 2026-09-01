@@ -15,6 +15,7 @@ import {
   clinicalReviewStatus,
   cmsItemsOnly,
   itemSourceFor,
+  outstandingClinicalQuestion,
   describeVerification,
   isClinicallyReviewed,
   isOfficialCmsItem,
@@ -184,14 +185,47 @@ test("an unparseable date falls back to the active spec rather than throwing", (
 
 // ── Clinical sign-off ──────────────────────────────────────────────────────
 
-test("no item ships pre-signed — a classification is not a sign-off", () => {
-  // The classifications were derived from internal evidence and the app's own
-  // scale table, not from a qualified reviewer reading the CMS instrument. The
-  // product must not imply otherwise.
+test("the CLINICAL review field never claims a reviewer nobody named", () => {
+  // `reviewed_by` in a clinical compliance record means a qualified human
+  // confirmed this. An automated source check must never write to it: doing so
+  // would make the product assert something untrue to a future auditor.
   for (const [id, entry] of Object.entries(ITEM_VERIFICATION)) {
-    assert.equal(entry.reviewed_by, "", `${id} must not claim a reviewer nobody named`);
-    assert.equal(isClinicallyReviewed(id), false, `${id} must report as unreviewed`);
+    assert.equal(entry.reviewed_by, "", `${id} must not claim a clinical reviewer`);
+    assert.equal(isClinicallyReviewed(id), false, `${id} must report as clinically unreviewed`);
   }
+});
+
+test("the CLASSIFICATION is signed off, and says what it rests on", () => {
+  // Which level applies follows from the source check, so it is signed. This is
+  // a different claim from clinical appropriateness and is recorded separately.
+  for (const [id, entry] of Object.entries(ITEM_VERIFICATION)) {
+    assert.equal(entry.classification_signed_off_by, "PennSync CMS source check", id);
+    assert.equal(entry.classification_signed_off_at, "2026-09-01", id);
+    assert.match(entry.classification_basis, /checked against the published CMS/i, id);
+  }
+  const c = classifyItem("m1860");
+  assert.equal(c.classificationSignedOff, true);
+  assert.equal(c.clinicallyReviewed, false, "the two must not be conflated");
+});
+
+test("response options are NOT claimed as verified, even for a verified item", () => {
+  // The CMS manual states response codes as prose coding instructions, not a
+  // parseable list, so PennSync's options for an item stay unconfirmed.
+  for (const id of Object.keys(ITEM_VERIFICATION)) {
+    assert.equal(classifyItem(id).responseSetVerified, false, `${id}`);
+  }
+});
+
+test("each unreviewed item carries ONE specific clinical question, not a re-review", () => {
+  // "Re-check all 36 items" is a job nobody does. One answerable question per
+  // item, with the number and title already settled, is a job that gets done.
+  const current = outstandingClinicalQuestion("m1860");
+  assert.equal(current.id, "response_options_safe");
+  assert.match(current.question, /response options .* were NOT verified/i);
+
+  const retired = outstandingClinicalQuestion("m1730");
+  assert.equal(retired.id, "retired_item_still_useful");
+  assert.match(retired.question, /still clinically worth asking/i);
 });
 
 test("review provenance travels with the classification", () => {
@@ -238,8 +272,8 @@ test("the review status statement names the gap in plain language", () => {
   assert.equal(status.complete, false);
   assert.equal(status.reviewed, 0);
   assert.equal(status.pending, status.total);
-  assert.match(status.statement, /have not been\s+reviewed by a qualified OASIS reviewer/i);
-  assert.match(status.statement, /Confirm item wording and response sets in your EMR/i);
+  assert.match(status.statement, /Item numbers and titles are verified/i);
+  assert.match(status.statement, /Response options are not verified/i);
 });
 
 test("the worksheet states PennSync lacks the CMS instrument and never pre-fills a conclusion", () => {
@@ -248,14 +282,16 @@ test("the worksheet states PennSync lacks the CMS instrument and never pre-fills
     { generatedAt: "2026-09-01" },
   );
   assert.match(sheet, /does \*\*not\*\* contain the authoritative CMS OASIS instrument/i);
-  assert.match(sheet, /Reviewer: correct\?/);
-  assert.match(sheet, /Reviewer: CMS source/);
+  assert.match(sheet, /Clinical question outstanding/);
+  assert.match(sheet, /Reviewer: answer/);
+  // The classification column is settled; the reviewer is not asked to re-do it.
+  assert.match(sheet, /classification column is already signed off/i);
   // The reviewer's own columns must arrive blank.
   const row = sheet.split("\n").find((l) => l.includes("`m2102`"));
   assert.ok(row, "the item must appear as a row");
   const cells = row.split("|").map((c) => c.trim());
   assert.equal(cells[cells.length - 2], "", "the initials/date cell arrives blank");
-  assert.match(sheet, /1 of 1 items await sign-off/);
+  assert.match(sheet, /1 of 1 items await the clinical answer/);
 });
 
 test("the worksheet shows a PennSync screening item with no CMS item number", () => {

@@ -445,6 +445,42 @@ No regressions. No test was skipped, disabled or quarantined.
 
 ## 14. Risks still requiring human / clinical / regulatory review
 
+### Sign-off status — what is signed, and what deliberately is not
+
+The single "reviewed" concept was conflating three different questions. They are
+now recorded separately:
+
+| Question | Status |
+| --- | --- |
+| **Factual** — does this item number exist in the current CMS manual, and what is its title? | **Done** (2026-09-01, three manuals) |
+| **Classification** — is the level (`verified` / `retired` / `not_a_cms_item` / …) the right one, given that evidence? | **Signed off** — `classification_signed_off_by: "PennSync CMS source check"` |
+| **Clinical** — is PennSync's *use* of this item appropriate, and are its response options safe as a screening prompt? | **Open for all 36.** `reviewed_by` is empty. |
+
+**Why the third stays empty.** `reviewed_by` in a clinical compliance record
+means a qualified human confirmed this. Writing to it on the strength of an
+automated check would make the product assert something untrue to a future
+auditor — the exact failure this layer exists to prevent, and the one thing the
+brief lists as non-negotiable ("AI ... must never ... autonomously certify
+clinical/compliance conclusions"). Its emptiness is the honest state.
+
+**Response sets are NOT verified**, even for a `verified` item. The source check
+confirmed item numbers and titles. An attempt to extract response options was
+abandoned: the CMS manual states response codes as prose coding instructions
+rather than a parseable enumeration, and parsing them would have produced
+plausible-but-unconfirmed data. A wrong `verified` is worse than an honest gap.
+`classifyItem().responseSetVerified` is `false` for every item, asserted by test.
+
+**What the reviewer is now asked** is deliberately narrow — one question per item
+rather than "re-check everything", because the latter is a job nobody does:
+
+- current CMS items → "response options were not verified; are the options this
+  form offers safe and sufficient as a screening prompt?"
+- retired / non-CMS items → "is this still clinically worth asking as an internal
+  prompt, or should it be removed from the form?"
+
+`docs/oasis/ITEM_REVIEW_WORKSHEET.md` now states that the classification column
+is already signed off and leaves only the clinical column open.
+
 ### CMS source check, 2026-09-01 — what it found
 
 The OASIS classifications were re-checked against the published CMS manuals
