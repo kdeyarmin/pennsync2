@@ -61,6 +61,36 @@ const ConfigurationErrorScreen = ({ message }) => (
   </div>
 );
 
+// Shown when the app IS configured but the Base44 backend refused to serve it
+// (e.g. `not_deployed` for an app that has never been published, or a network
+// / 5xx failure loading public settings). Deliberately NOT the configuration
+// screen above: that headline sends people hunting for missing env vars that
+// are actually present. Show the backend's own message with an honest title.
+const AppUnavailableScreen = ({ type, message }) => {
+  const notDeployed = type === 'not_deployed';
+  return (
+    <div className="fixed inset-0 flex items-center justify-center bg-slate-50 p-4">
+      <div className="max-w-lg rounded-xl border border-amber-200 bg-white p-6 shadow-sm">
+        <p className="text-sm font-semibold uppercase tracking-wide text-amber-700">
+          {notDeployed ? 'App not published' : 'App unavailable'}
+        </p>
+        <h1 className="mt-2 text-2xl font-bold text-slate-900">
+          {notDeployed ? 'This Base44 app has not been deployed yet' : 'PennSync could not load'}
+        </h1>
+        <p className="mt-3 text-sm text-slate-700">
+          {message || 'The server could not be reached. Check your connection and try again.'}
+        </p>
+        {notDeployed && (
+          <p className="mt-3 text-xs text-slate-500">
+            The app settings are present, but the Base44 backend has no deployment for this app ID.
+            Publish the app from its Base44 dashboard, or open the app that is already published.
+          </p>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const AdminOnlyFallback = ({ superAdmin = false }) => (
   <div className="flex min-h-[60vh] flex-col items-center justify-center p-8 text-center">
     <h1 className="text-2xl font-bold text-slate-900">
@@ -228,8 +258,8 @@ const AuthenticatedApp = () => {
     // or a server-supplied reason we don't special-case) is an app-load
     // failure, NOT a missing session. Falling through to <SignInScreen /> would
     // mislead the user into trying to sign in to fix a backend outage — surface
-    // the actual error instead.
-    return <ConfigurationErrorScreen message={authError.message} />;
+    // the actual error instead, under a title that doesn't blame configuration.
+    return <AppUnavailableScreen type={authError.type} message={authError.message} />;
   }
 
   // Gate the whole app on authentication. The no-token path does NOT set an
