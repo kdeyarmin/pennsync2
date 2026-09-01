@@ -20,6 +20,7 @@ import { exportToPDF } from "@/components/utils/pdfExporter";
 import { todayEastern } from "@/components/utils/timezone";
 import { evaluateOASIS, computeCareScope } from "@/components/oasis/oasisScoringEngine";
 import { itemSourceFor } from "@/components/oasis/specs/verification.js";
+import { buildLegacyFormOutput } from "@/components/oasis/responseSchema/legacyFormOutput.js";
 import OasisItemNotice from "@/components/oasis/OasisItemNotice.jsx";
 import { ACTIVE_OASIS_SPEC } from "@/components/oasis/specs/registry.js";
 import OASISSuggestionPanel from "@/components/oasis/OASISSuggestionPanel";
@@ -466,14 +467,6 @@ export default function SmartOASISAssessment() {
         ? `${selectedPatient.first_name} ${selectedPatient.last_name}`.trim()
         : "";
 
-      // isAnswered (module scope) skips placeholder select prompts, so they are
-      // neither counted as answered nor printed as a response.
-      const responseLabel = (q) => {
-        if (!isAnswered(q, answers)) return "— Not answered —";
-        const opt = q.options.find(o => o.value === toNum(answers[q.id]));
-        return opt ? opt.label : String(answers[q.id]);
-      };
-
       const exportAnswered = OASIS_SECTIONS.reduce(
         (n, s) => n + s.questions.filter(q => isAnswered(q, answers)).length, 0,
       );
@@ -483,27 +476,70 @@ export default function SmartOASISAssessment() {
       }
       const exportPct = Math.round((exportAnswered / totalQuestions) * 100);
 
+      // Fail-closed output policy. This guide used to print EVERY answered item
+      // under its M-number and tell the nurse to transcribe it — including the
+      // items whose PennSync response set means something different than the
+      // same code on the official assessment. A code may appear in the
+      // CMS-reference section only when PennSync's answer choices reproduce the
+      // CMS response set; everything else is named and refused, never dropped
+      // silently, because a missing row reads as "not applicable".
+      const policy = buildLegacyFormOutput(OASIS_SECTIONS, answers, isAnswered);
+
       const content = [
         { type: "text", text: `Patient: ${patientName || "—"}` },
         { type: "text", text: `Suggested Care Scope: ${careScopeBadge[careScope].label}` },
         { type: "text", text: `Items Answered: ${exportAnswered} of ${totalQuestions} (${exportPct}%)` },
         { type: "spacer", height: 2 },
-        {
-          type: "text",
-          text: "Transcribe each OASIS item below into your EMR. Verify every response against your clinical findings before submission — care-scope and AI suggestions are estimates, not an official OASIS determination.",
-        },
+        { type: "text", text: policy.disclaimer },
         { type: "line" },
       ];
 
-      OASIS_SECTIONS.forEach(section => {
-        content.push({ type: "heading", text: section.title, size: 12 });
+      if (policy.cms.length > 0) {
+        content.push({
+          type: "heading",
+          text: "CMS-aligned responses for PennSync's supported OASIS-E2 item subset",
+          size: 13,
+        });
         content.push({
           type: "table",
-          headers: ["OASIS Item", "Selected Response"],
-          rows: section.questions.map(q => [q.label, responseLabel(q)]),
+          headers: ["OASIS Item", "Response you selected in PennSync"],
+          rows: policy.cms.map(r => [r.itemLabel, r.display]),
         });
         content.push({ type: "spacer", height: 3 });
-      });
+      }
+
+      if (policy.screening.length > 0) {
+        content.push({ type: "heading", text: "PennSync screening — not an OASIS item", size: 13 });
+        content.push({
+          type: "text",
+          text: "These are PennSync's own screening prompts. They have no OASIS item number and must not be entered on the official assessment.",
+        });
+        content.push({
+          type: "table",
+          headers: ["Screening prompt", "Answer"],
+          rows: policy.screening.map(r => [r.itemLabel, r.display]),
+        });
+        content.push({ type: "spacer", height: 3 });
+      }
+
+      if (policy.quarantined.length > 0) {
+        content.push({ type: "pageBreak" });
+        content.push({
+          type: "heading",
+          text: "Not included — answer these from the wording in your EMR",
+          size: 13,
+        });
+        content.push({
+          type: "text",
+          text: "PennSync recorded an answer for each item below, but its answer choices do not reproduce the CMS response set, so the code is not shown and must not be carried across.",
+        });
+        content.push({
+          type: "table",
+          headers: ["OASIS Item", "Why it is not shown"],
+          rows: policy.quarantined.map(r => [r.itemLabel, r.reason]),
+        });
+        content.push({ type: "spacer", height: 3 });
+      }
 
       if (complianceIssues.length > 0) {
         content.push({ type: "pageBreak" });
@@ -524,7 +560,7 @@ export default function SmartOASISAssessment() {
       const dateStr = toLocalISODate();
       await exportToPDF({
         filename: `OASIS_Guide_${safeName}_${dateStr}.pdf`,
-        title: "OASIS Data Entry Guide",
+        title: "OASIS companion reference (PennSync)",
         subtitle: patientName || "Smart OASIS Assessment",
         content,
       });

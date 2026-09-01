@@ -135,7 +135,7 @@ export function listDrafts(context, storage) {
   for (let i = 0; i < s.length; i++) {
     const key = s.key(i);
     if (!key || !key.startsWith(DRAFT_KEY_PREFIX)) continue;
-    let draft = null;
+    let draft;
     try { draft = JSON.parse(s.getItem(key)); } catch { draft = null; }
     out.push({ key, draft, verdict: evaluateDraft(draft, context) });
   }

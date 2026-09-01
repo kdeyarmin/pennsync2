@@ -1262,10 +1262,20 @@ export function sourceCheckStatus(itemIds) {
  * @returns {"cms_item"|"pennsync_screening"|"retired_cms_item"|"unknown"}
  */
 export function itemSourceFor(itemId) {
-  const level = classifyItem(itemId).level;
-  if (level === "verified" || level === "abbreviated") return "cms_item";
+  const c = classifyItem(itemId);
+  const level = c.level;
   if (level === "retired") return "retired_cms_item";
   if (level === "pennsync_screening" || level === "not_a_cms_item") return "pennsync_screening";
+  if (level === "verified" || level === "abbreviated") {
+    // Verified IDENTITY is not enough to call the saved answer a CMS response.
+    // M1830 is a real, verified item number under both response sets, and only
+    // the response set says whether its `6` means "bathed totally by another
+    // person" (CMS) or "unable to rate — artificial opening" (legacy PennSync).
+    // Calling a conflicting row `cms_item` is how a legacy code reached
+    // CMS-labeled output and scoring.
+    if (c.responseSet === "conflicts" || c.responseSet === "unchecked") return "unknown";
+    return "cms_item";
+  }
   return "unknown";
 }
 
@@ -1281,10 +1291,18 @@ export function itemSourceFor(itemId) {
 export function cmsItemsOnly(items) {
   return (Array.isArray(items) ? items : []).filter((row) => {
     if (!row?.item_number) return false;
-    const stated = row.item_source;
-    if (stated) return stated === "cms_item";
-    // Legacy row: fall back to the registry rather than trusting the number.
-    return itemSourceFor(row.item_number) === "cms_item";
+    // A row with no `item_source` predates the marker. It is UNKNOWN, and the
+    // registry cannot rescue it: today's registry describes today's response
+    // meanings, so consulting it for an unversioned row retrospectively
+    // declares that the old answer meant what the new option list means.
+    // That is exactly the reinterpretation this layer exists to prevent.
+    if (!row.item_source) return false;
+    if (row.item_source !== "cms_item") return false;
+    // `item_source: "cms_item"` alone is still not sufficient — it was written
+    // by the old `itemSourceFor()`, which treated a conflicting response set as
+    // official. A row must also state a RESPONSE schema, and only v2 carries
+    // CMS-aligned meanings.
+    return row.response_schema_id === "pennsync-oasis-response-v2-cms-e2";
   });
 }
 
