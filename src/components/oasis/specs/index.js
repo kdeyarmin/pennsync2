@@ -38,6 +38,8 @@ export {
 export {
   ITEM_VERIFICATION,
   VERIFICATION_LEVELS,
+  cmsItemsOnly,
+  itemSourceFor,
   sourceCheckStatus,
   classifyItem,
   describeVerification,

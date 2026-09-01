@@ -57,6 +57,12 @@ function finding({ id, severity, title, sourceA, sourceB, evidence, action }) {
 function oasisAnswers(oasis) {
   if (!oasis) return {};
   const items = oasis.oasis_items || oasis.items || oasis.responses || oasis;
+  // PennSync writes its own form ids into `item_number`, so a saved assessment
+  // mixes real CMS responses with screening answers under a field name that
+  // implies the former. The rows are kept as-is (they are PennSync's own data
+  // and the checks below are calibrated to this form's scales), but the mix is
+  // deliberate rather than accidental: see specs/verification.js `cmsItemsOnly`
+  // for the filter a consumer that needs OFFICIAL responses only should apply.
   return answersFromOasisItems(items);
 }
 

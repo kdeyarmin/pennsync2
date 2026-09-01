@@ -771,3 +771,42 @@ export function sourceCheckStatus(itemIds) {
         + "CMS item numbers. They are kept as internal prompts only — enter official responses in your EMR.",
   };
 }
+
+/**
+ * The `item_source` value to persist alongside a saved OASIS answer.
+ *
+ * PennSync writes its own form ids into `OASISAssessment.oasis_items[].item_number`,
+ * the field every downstream consumer reads as a CMS item number. Without this
+ * marker a PennSync screening answer is indistinguishable from a real CMS item
+ * response — so `m1730` (retired) or `m1020` (not a CMS number at all) would be
+ * read as official assessment data.
+ *
+ * @param {string} itemId
+ * @returns {"cms_item"|"pennsync_screening"|"retired_cms_item"|"unknown"}
+ */
+export function itemSourceFor(itemId) {
+  const level = classifyItem(itemId).level;
+  if (level === "verified" || level === "abbreviated") return "cms_item";
+  if (level === "retired") return "retired_cms_item";
+  if (level === "pennsync_screening" || level === "not_a_cms_item") return "pennsync_screening";
+  return "unknown";
+}
+
+/**
+ * Keep only the saved answers that are genuinely CMS item responses.
+ *
+ * A row with NO `item_source` predates the marker and is treated as `unknown` —
+ * excluded rather than assumed official, because assuming is how PennSync's own
+ * screening answers would end up read as the assessment.
+ *
+ * @param {Array<{ item_number?: string, item_source?: string }>} items
+ */
+export function cmsItemsOnly(items) {
+  return (Array.isArray(items) ? items : []).filter((row) => {
+    if (!row?.item_number) return false;
+    const stated = row.item_source;
+    if (stated) return stated === "cms_item";
+    // Legacy row: fall back to the registry rather than trusting the number.
+    return itemSourceFor(row.item_number) === "cms_item";
+  });
+}

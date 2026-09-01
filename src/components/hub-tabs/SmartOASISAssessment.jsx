@@ -19,6 +19,8 @@ import { toast } from "sonner";
 import { exportToPDF } from "@/components/utils/pdfExporter";
 import { todayEastern } from "@/components/utils/timezone";
 import { evaluateOASIS, computeCareScope } from "@/components/oasis/oasisScoringEngine";
+import { itemSourceFor } from "@/components/oasis/specs/verification.js";
+import { ACTIVE_OASIS_SPEC } from "@/components/oasis/specs/registry.js";
 import OASISSuggestionPanel from "@/components/oasis/OASISSuggestionPanel";
 import OASISComplianceWarnings, { getComplianceIssues } from "@/components/oasis/OASISComplianceWarnings";
 import OASISClinicalReasoningEngine, { getClinicalReasoningIssues } from "@/components/oasis/OASISClinicalReasoningEngine";
@@ -387,8 +389,19 @@ export default function SmartOASISAssessment() {
         patient_id: selectedPatientId,
         visit_type: visitType,
         assessment_date: assessmentDate,
+        // `item_number` here is PennSync's own FORM id, not necessarily a CMS
+        // item number — several of this form's ids are retired CMS items or
+        // appear in no CMS manual (see specs/verification.js). Stamping the
+        // classification keeps a screening answer distinguishable from a real
+        // CMS item response downstream, where the field name alone implies the
+        // latter.
         oasis_items: Object.entries(answers).map(([item_number, response]) => ({
-          item_number, response: String(response), ai_suggested: false, manually_edited: true,
+          item_number,
+          response: String(response),
+          item_source: itemSourceFor(item_number),
+          item_spec_version: ACTIVE_OASIS_SPEC.id,
+          ai_suggested: false,
+          manually_edited: true,
         })),
         status: "completed",
         completed_date: new Date().toISOString(),

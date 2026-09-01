@@ -13,6 +13,8 @@ import {
   buildClinicalReviewWorksheet,
   classifyItem,
   clinicalReviewStatus,
+  cmsItemsOnly,
+  itemSourceFor,
   describeVerification,
   isClinicallyReviewed,
   isOfficialCmsItem,
@@ -274,4 +276,45 @@ test("the worksheet is deterministic and safe on empty input", () => {
   assert.equal(a, b);
   assert.doesNotThrow(() => buildClinicalReviewWorksheet([]));
   assert.doesNotThrow(() => buildClinicalReviewWorksheet(null));
+});
+
+
+// ── Persisted item classification ──────────────────────────────────────────
+
+test("itemSourceFor marks each id for the shape it is persisted in", () => {
+  // PennSync writes its own form ids into OASISAssessment.oasis_items[].item_number,
+  // the field every consumer reads as a CMS item number. Without this marker a
+  // screening answer is indistinguishable from an official response.
+  assert.equal(itemSourceFor("m1860"), "cms_item");
+  assert.equal(itemSourceFor("m2420"), "cms_item", "an abbreviated response set is still a CMS item");
+  assert.equal(itemSourceFor("m1730"), "retired_cms_item");
+  assert.equal(itemSourceFor("m1020"), "pennsync_screening", "an invented number is not a CMS item");
+  assert.equal(itemSourceFor("m2102"), "pennsync_screening");
+  assert.equal(itemSourceFor("m9999"), "unknown");
+});
+
+test("cmsItemsOnly keeps official responses and drops screening answers", () => {
+  const rows = [
+    { item_number: "m1860", response: "3", item_source: "cms_item" },
+    { item_number: "m1730", response: "1", item_source: "retired_cms_item" },
+    { item_number: "m1020", response: "2", item_source: "pennsync_screening" },
+  ];
+  assert.deepEqual(cmsItemsOnly(rows).map((r) => r.item_number), ["m1860"]);
+});
+
+test("a legacy row with no marker is classified, never assumed official", () => {
+  // Rows written before item_source existed must not be trusted on the strength
+  // of the field name alone — that is exactly how a screening answer would be
+  // read as the official assessment.
+  const legacy = [
+    { item_number: "m1860", response: "3" },
+    { item_number: "m1730", response: "1" },
+    { item_number: "m1020", response: "2" },
+  ];
+  assert.deepEqual(cmsItemsOnly(legacy).map((r) => r.item_number), ["m1860"]);
+});
+
+test("cmsItemsOnly is safe on junk input", () => {
+  assert.deepEqual(cmsItemsOnly(null), []);
+  assert.deepEqual(cmsItemsOnly([null, {}, { response: "1" }]), []);
 });

@@ -259,6 +259,9 @@ const FIELD_USAGE = {
     'soc_date', 'first_visit_date', 'soc_completed_by',
   ],
   PatientAlert: ['contributing_factors', 'recommended_actions', 'risk_score'],
+  // oasis_items rows now carry their classification and the spec version it was
+  // made against.
+  OASISAssessment: ['oasis_items[].item_source', 'oasis_items[].item_spec_version'],
   // PatientOutcomeMetric — written by computeOutcomeMeasures (the keystone
   // outcome-measure cron). These fields were added alongside the CMS change-score
   // engine; without them the platform would silently drop the per-measure

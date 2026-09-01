@@ -471,10 +471,41 @@ this number exist, what is its title). `reviewed_by` / `reviewed_at` remain empt
 for all 36: whether PennSync's *use* of an item is clinically appropriate is a
 judgement, and an automated check must not masquerade as a reviewer.
 
-**Still outstanding for a human:** the scoring engine (`oasisScoringEngine.js`
-and six other modules) keys off several retired/invented ids. Whether to remap
-those to current items is a product decision with PDGM implications — not made
-here.
+### Scoring-engine follow-up — resolved, and an earlier claim corrected
+
+**Correction:** an earlier draft of this document said remapping the scoring
+engine "has PDGM implications". That was wrong. `pdgm/pdgmGrouper.js` derives its
+scored item set from the **supplied CMS table's keys** and reports unmapped
+responses instead of scoring them as zero; nothing in `oasisScoringEngine.js`
+reaches a rate. The engine feeds care suggestions in `SmartOASISAssessment` only.
+
+The real defect was elsewhere, in the save path. `SmartOASISAssessment` wrote
+PennSync's **own form ids** straight into
+`OASISAssessment.oasis_items[].item_number` — the field every downstream
+consumer reads as a CMS item number. A saved assessment therefore contained
+`item_number: "m1730"` (retired) and `"m1020"` (not a CMS number at all),
+indistinguishable from real CMS responses.
+
+Fixed by making the classification explicit rather than by inventing a mapping:
+
+- `OASISAssessment.oasis_items[]` gains `item_source`
+  (`cms_item` / `pennsync_screening` / `retired_cms_item` / `unknown`) and
+  `item_spec_version`, both stamped on save from the verification registry.
+- `cmsItemsOnly()` filters a saved assessment down to genuine CMS responses. A
+  legacy row with no marker is classified against the registry, **never assumed
+  official** — assuming is exactly how a screening answer would be read as the
+  assessment.
+- `oasisScoringEngine.js` now documents that its ids and response values are
+  PennSync's form, not CMS; `evaluateOASIS(answers, { strict: true })` throws on
+  CMS-shaped input rather than returning `[]`, because an empty result reads as
+  "no concerns found" when the truth is "these answers could not be read".
+- A test pins the exact set of non-CMS ids the engine reads, so a future edit
+  cannot quietly reintroduce a CMS claim for one of them.
+
+**Deliberately not done:** no mapping was invented from PennSync's picklists to
+D0150/D0160, J1800/J1900, J0510–J0530, M1021 or GG0100. Those items' response
+sets were not verified (only titles were), and a wrong mapping in a
+care-suggestion engine would be worse than the current honest, limited state.
 
 1. **The OASIS item classifications need clinical sign-off — now tracked, not
    assumed.** The three `pennsync_screening` demotions are supported by the
