@@ -185,16 +185,27 @@ test("valid ICD-10-CM codes with 7th-character extensions are not flagged invali
   assert.ok(invalid.json.dataValidation.discrepancies.find((d) => d.type === "invalid_diagnosis_code_format"));
 });
 
-test("a $0.00 corrected-revenue delta reports 0, not null", async () => {
+test("an INCOMPLETE comparison reports null, never a confident $0 change", async () => {
+  // This test used to assert the opposite shape: that a $0.00 delta reports 0
+  // rather than null, so a genuine no-change result was distinguishable from an
+  // absent one. That concern still stands — it has simply inverted.
+  //
+  // Both sides are now incomplete (the functional input carries no verified
+  // response schema), so both payments are null. `null - null` coerces to 0,
+  // which would render as a confident "$0 change" — the one reading that looks
+  // like a verified answer when nothing was computed at all.
+  //
+  // A genuine-zero case cannot be constructed today: PDGM cannot complete while
+  // M1800/M1810/M1820/M1850 have no CMS-verified response set. When they do,
+  // restore a complete-input case asserting 0 is reported as 0.
   const handler = await loadHandler();
   const { json } = await call(handler, {
     pdgmData: BASE_PDGM,
     correctedPdgmData: { ...BASE_PDGM },
   });
-  assert.equal(json.revenueDifference, 0);
-  assert.equal(json.percentageIncrease, 0);
-  assert.ok(json.financialImpact, "financialImpact must be present when a correction was computed");
-  assert.equal(json.financialImpact.perEpisode, 0);
+  assert.equal(json.revenueDifference, null, "an unavailable delta must not read as 0");
+  assert.equal(json.percentageIncrease, null);
+  assert.ok(!json.financialImpact, "no financial impact may be presented from incomplete inputs");
 });
 
 test("a malformed stored rate override cannot clobber a rate subtree", async () => {

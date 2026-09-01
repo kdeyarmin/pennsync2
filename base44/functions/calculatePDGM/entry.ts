@@ -882,11 +882,22 @@ Deno.serve(async (req) => {
       correctedRevenue._appliedCorrections = correctedPdgmData._appliedCorrections || [];
       correctedRevenue._correctionCount = correctedPdgmData._correctionCount || 0;
 
-      revenueDifference = correctedRevenue.totalPayment - originalRevenue.totalPayment;
-      // Guard against divide-by-zero (Infinity/NaN) if base payment is 0.
-      percentageIncrease = originalRevenue.totalPayment > 0
-        ? ((revenueDifference / originalRevenue.totalPayment) * 100).toFixed(2)
-        : '0.00';
+      // Either side may be INCOMPLETE, in which case its totalPayment is null.
+      // `null - null` coerces to 0, which would present an unavailable
+      // comparison as a confident "$0 change" — the one reading that looks like
+      // a verified answer. Leave the delta null so consumers show unavailable.
+      const bothFinite = Number.isFinite(correctedRevenue.totalPayment)
+        && Number.isFinite(originalRevenue.totalPayment);
+      if (bothFinite) {
+        revenueDifference = correctedRevenue.totalPayment - originalRevenue.totalPayment;
+        // Guard against divide-by-zero (Infinity/NaN) if base payment is 0.
+        percentageIncrease = originalRevenue.totalPayment > 0
+          ? ((revenueDifference / originalRevenue.totalPayment) * 100).toFixed(2)
+          : '0.00';
+      } else {
+        revenueDifference = null;
+        percentageIncrease = null;
+      }
     }
 
     // Calculate alternative scenarios for comparison

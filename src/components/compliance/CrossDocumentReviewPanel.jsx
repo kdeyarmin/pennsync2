@@ -79,16 +79,19 @@ export default function CrossDocumentReviewPanel({
           <GitCompare className="w-4 h-4 text-navy-600" aria-hidden="true" />
           Note · OASIS · care-plan review
         </h3>
-        {review.counts.total > 0 && (
+        {review.counts.total + documentationGaps.length > 0 && (
           <Badge variant="warning" className="text-xs">
-            {review.counts.total} to review
+            {review.counts.total + documentationGaps.length} to review
           </Badge>
         )}
       </div>
 
       <DocumentationGapPanel gaps={documentationGaps} />
 
-      {review.findings.length === 0 ? (
+      {/* The all-clear must account for BOTH engines. Checking only
+          `review.findings` rendered the gap panel and a green "no
+          inconsistencies" message about the same record, in the same view. */}
+      {review.findings.length === 0 && documentationGaps.length === 0 ? (
         <p className="flex items-start gap-2 text-xs text-emerald-900 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
           <CheckCircle2 className="w-3.5 h-3.5 mt-0.5 shrink-0 text-emerald-600" aria-hidden="true" />
           No inconsistencies detected by PennSync&apos;s current rules across the records it holds.

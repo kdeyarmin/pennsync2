@@ -225,12 +225,15 @@ function validateOasisResponseWrite(payload) {
 }
 // <<<END SHARED HELPER: oasisResponseGuard>>>
 
-const OASIS_RESPONSE_SCHEMA_V2_FLAG = 'oasis_response_schema_v2';
-const OASIS_WRITE_KILL_SWITCH = 'oasis_response_writes_disabled';
-
-function featureBag(agency: any) {
-  return (agency && (agency.feature_access || agency.features)) || null;
-}
+// Rollout flags live on AgencySettings, not Agency.
+//
+// Two reasons, both fatal to the alternative: `Agency` defines no
+// `feature_access`/`features` object at all (only an `enabled_features` page
+// list), and its read RLS is admin-only — so a clinician, who is the primary
+// caller of this endpoint, could never resolve their own agency's flag. Reading
+// it there would have made this path return `feature_disabled` for everyone.
+const OASIS_V2_FLAG_FIELD = 'oasis_response_schema_v2_enabled';
+const OASIS_WRITE_KILL_SWITCH_FIELD = 'oasis_response_writes_disabled';
 
 Deno.serve(async (req) => {
   if (req.method !== 'POST') {
@@ -250,21 +253,19 @@ Deno.serve(async (req) => {
   }
 
   const assessmentId = payload?.assessment_id ? String(payload.assessment_id) : '';
-  const agencyId = user?.agency_id ? String(user.agency_id) : '';
 
   // Feature gate + kill switch. Reading is never gated; only NEW v2 writes are.
-  let agency: any = null;
-  if (agencyId) {
-    agency = await base44.entities.Agency.get(agencyId).catch(() => null);
-  }
-  const bag = featureBag(agency);
-  if (bag && bag[OASIS_WRITE_KILL_SWITCH] === true) {
+  const settingsRows = await base44.entities.AgencySettings.list('-created_date', 1).catch(() => []);
+  const settings: any = (Array.isArray(settingsRows) && settingsRows[0]) || null;
+
+  if (settings && settings[OASIS_WRITE_KILL_SWITCH_FIELD] === true) {
     return Response.json(
       { error: 'OASIS response writes are temporarily disabled for this agency.', reason: 'write_kill_switch' },
       { status: 423 },
     );
   }
-  if (!bag || bag[OASIS_RESPONSE_SCHEMA_V2_FLAG] !== true) {
+  // Fail closed: no settings row, or the flag absent/false, means not enabled.
+  if (!settings || settings[OASIS_V2_FLAG_FIELD] !== true) {
     return Response.json(
       {
         error: 'CMS-aligned OASIS response entry is not enabled for this agency.',
@@ -272,6 +273,40 @@ Deno.serve(async (req) => {
       },
       { status: 403 },
     );
+  }
+
+  // ── Selector provenance, established BEFORE validation ────────────────────
+  // The selector is the authenticated user, never a client-supplied string: a
+  // request could otherwise record a response as chosen by another clinician,
+  // which is exactly the attestation provenance this path exists to establish.
+  //
+  // A row claiming somebody else is REJECTED rather than quietly rewritten, so
+  // a client bug surfaces instead of producing a record whose provenance
+  // silently differs from what was sent. A row that simply omits the field is
+  // fine — the server fills it in below, then the validator still checks it is
+  // present, so the guarantee holds even if this injection is ever removed.
+  const selectorEmail = String(user?.email || '').trim();
+  if (!selectorEmail) {
+    return Response.json(
+      { error: 'Cannot record a clinician selection without an authenticated email.', reason: 'no_selector_identity' },
+      { status: 403 },
+    );
+  }
+  const impostor = (payload.oasis_items || []).findIndex(
+    (r: any) => r?.selected_by && String(r.selected_by).trim().toLowerCase() !== selectorEmail.toLowerCase(),
+  );
+  if (impostor >= 0) {
+    return Response.json(
+      {
+        error: 'A response may only be recorded as selected by the signed-in clinician.',
+        reason: 'selector_mismatch',
+        errors: [{ index: impostor, reason: 'selector_is_not_the_authenticated_user' }],
+      },
+      { status: 403 },
+    );
+  }
+  if (Array.isArray(payload.oasis_items)) {
+    payload.oasis_items = payload.oasis_items.map((r: any) => ({ ...r, selected_by: selectorEmail }));
   }
 
   const validation = validateOasisResponseWrite(payload);
@@ -301,7 +336,11 @@ Deno.serve(async (req) => {
     response_shape: row.response_shape ?? null,
     response_value: row.response_value,
     response_origin: 'clinician_selected',
-    selected_by: String(row.selected_by),
+    // Derived from the authenticated identity, NOT copied from the request.
+    // A client-supplied selector would let any authenticated caller record a
+    // response as having been chosen by another clinician, which is exactly the
+    // attestation provenance this path exists to establish.
+    selected_by: selectorEmail,
     selected_at: row.selected_at,
     ai_suggested: false,
   }));

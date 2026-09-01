@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { generateDiagnosisCodes, codeLabel } from "@/components/referral/diagnosisCodeGenerator";
-import { sanitizeAiItems, NO_AI_PREFILL_NOTICE } from "@/components/oasis/responseSchema/aiResponseSanitizer.js";
+import { sanitizeAiItems, sanitizeAiText, NO_AI_PREFILL_NOTICE } from "@/components/oasis/responseSchema/aiResponseSanitizer.js";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -88,13 +88,19 @@ export default function AIGeneratedOASISAssessment({ patientId, visitType = "Sta
       // inside prose. Stripping it here is what makes it inert: nothing below
       // can display, copy, save or score a model-chosen response.
       if (Array.isArray(data?.oasis_items)) {
-        data.oasis_items = sanitizeAiItems(data.oasis_items).clean.map((clean, i) => ({
+        // Every restored field goes through `sanitizeAiText`. Reattaching the
+        // ORIGINAL values here would have undone the sanitiser for exactly the
+        // fields a model is most likely to put an answer in: a
+        // "questions_to_ask" entry reading "Is M1830 = 6 correct?" would have
+        // reached the panel and the clipboard.
+        const original = data.oasis_items;
+        data.oasis_items = sanitizeAiItems(original).clean.map((clean, i) => ({
           ...clean,
-          item_name: data.oasis_items[i]?.item_name,
-          confidence_level: data.oasis_items[i]?.confidence_level,
-          category: data.oasis_items[i]?.category,
-          questions_to_ask: data.oasis_items[i]?.questions_to_ask,
-          documentation_tips: data.oasis_items[i]?.documentation_tips,
+          item_name: sanitizeAiText(original[i]?.item_name),
+          confidence_level: sanitizeAiText(original[i]?.confidence_level),
+          category: sanitizeAiText(original[i]?.category),
+          questions_to_ask: sanitizeAiText(original[i]?.questions_to_ask),
+          documentation_tips: sanitizeAiText(original[i]?.documentation_tips),
         }));
       }
       setAssessment(data);

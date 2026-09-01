@@ -159,6 +159,40 @@ export function compareCohortRevenue(episodes = []) {
   };
 }
 
+/**
+ * Convert finished OASISUpload records into episode-shaped rows.
+ *
+ * An upload is NOT an episode, and the two vocabularies do not overlap: uploads
+ * are `uploaded | analyzed | reviewed | archived` and carry only
+ * `assessment_date`, while `isClosedEpisode()` looks for `completed`/`discharged`
+ * and an end date. Passing uploads straight in therefore classified every one of
+ * them as open, and the admin panel reported zero analysed episodes forever.
+ *
+ * The conversion is explicit rather than implicit — widening `isClosedEpisode()`
+ * to accept upload statuses would have quietly loosened what "closed" means for
+ * every caller. Only `reviewed` and `archived` qualify: those are documents a
+ * human has finished with. `uploaded` and `analyzed` are still in flight.
+ *
+ * @param {Array} uploads OASISUpload rows
+ */
+export function uploadsToClosedEpisodes(uploads = []) {
+  const FINISHED = ["reviewed", "archived"];
+  return (Array.isArray(uploads) ? uploads : [])
+    .filter((u) => u && FINISHED.includes(String(u.status || "").trim().toLowerCase()))
+    .filter((u) => u.assessment_date)
+    .map((u) => ({
+      status: "completed",
+      // The assessment date is the closest thing an upload has to an episode
+      // end. `isClosedEpisode` still rejects it if it is unparseable or future.
+      episode_end: u.assessment_date,
+      documentation: u.analysis_results?.summary || u.notes || "",
+      oasis: u.extracted_data || u.pdgm_data || null,
+      clinician_cohort: u.discipline || "unattributed",
+      estimated_payment: u.estimated_payment,
+      case_mix_weight: u.pdgm_data?.case_mix_weight,
+    }));
+}
+
 /** Header shown above every admin revenue surface built from this module. */
 export const ADMIN_REVENUE_NOTICE =
   "Administrator view. These figures are aggregate and retrospective, computed from closed "

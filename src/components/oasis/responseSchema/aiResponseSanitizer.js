@@ -74,6 +74,25 @@ export function sanitizeAiItemPayload(payload) {
   return { clean, stripped };
 }
 
+/**
+ * Recursively neutralise code assertions in any model-controlled value.
+ *
+ * `sanitizeAiItemPayload` drops code-bearing FIELDS. This handles the other
+ * half: free text nested inside allowed fields — `questions_to_ask`,
+ * `documentation_tips` and the like — where a model can still write
+ * "M1830 = 6" in prose that is otherwise legitimate guidance.
+ */
+export function sanitizeAiText(value) {
+  if (typeof value === "string") return stripCodeAssertions(value);
+  if (Array.isArray(value)) return value.map(sanitizeAiText);
+  if (value && typeof value === "object") {
+    const out = {};
+    for (const [k, v] of Object.entries(value)) out[k] = sanitizeAiText(v);
+    return out;
+  }
+  return value;
+}
+
 /** Sanitise a whole array of AI item payloads. */
 export function sanitizeAiItems(items) {
   const stripped = [];

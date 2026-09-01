@@ -385,6 +385,7 @@ Deno.serve(async (req) => {
     let metricsWritten = 0;
     let skippedNoDate = 0;
     let skippedNotScorable = 0;
+    let metricsRetired = 0;
     const skipReasons = [];
 
     for (const dc of discharges) {
@@ -423,13 +424,31 @@ Deno.serve(async (req) => {
       // episode as a metric row is how a legacy pair became a quality number.
       if (!outcome.eligible) {
         skippedNotScorable += 1;
-        skipReasons.push({
+        const reasons = outcome.episode_excluded_reasons.length
+          ? outcome.episode_excluded_reasons
+          : [outcome.episode_excluded_reason].filter(Boolean);
+        skipReasons.push({ patient_id: dc.patient_id, episode_end: dc.assessment_date, reasons });
+
+        // Skipping is not enough. An episode that was scored under the old
+        // rules already HAS a PatientOutcomeMetric, and consumers query all
+        // `oasis_change_score` rows without filtering on the new provenance
+        // fields — so a silent skip leaves the stale, unverified quality result
+        // visible and counted. Mark it retired instead, which keeps it
+        // auditable while taking it out of current CMS-labeled views.
+        const stale = await base44.asServiceRole.entities.PatientOutcomeMetric.filter({
           patient_id: dc.patient_id,
+          episode_start: start.assessment_date,
           episode_end: dc.assessment_date,
-          reasons: outcome.episode_excluded_reasons.length
-            ? outcome.episode_excluded_reasons
-            : [outcome.episode_excluded_reason].filter(Boolean),
-        });
+        }, '-created_date', 1).catch(() => []);
+        if (stale && stale[0] && stale[0].outcome_measure_source !== 'retired_unverified_schema') {
+          await base44.asServiceRole.entities.PatientOutcomeMetric.update(stale[0].id, {
+            outcome_measure_source: 'retired_unverified_schema',
+            retired_reason: reasons.join(', ') || 'not_cms_scorable',
+            retired_at: new Date().toISOString(),
+            calculation_version: OUTCOME_CALCULATION_VERSION,
+          }).catch(() => {});
+          metricsRetired += 1;
+        }
         continue;
       }
 
@@ -497,6 +516,7 @@ Deno.serve(async (req) => {
       // Excluded episodes are REPORTED, never silently dropped: a rate that
       // covers fewer episodes than the reader assumes is a false quality claim.
       skipped_not_cms_scorable: skippedNotScorable,
+      metrics_retired_unverified: metricsRetired,
       skip_reasons: skipReasons,
       calculation_version: OUTCOME_CALCULATION_VERSION,
       agency_kpis_written: kpisWritten,

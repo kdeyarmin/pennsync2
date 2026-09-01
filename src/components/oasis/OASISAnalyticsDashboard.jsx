@@ -206,7 +206,7 @@ export default function OASISAnalyticsDashboard({ savedOASISUploads }) {
 
       {/* Documentation gaps and their revenue context — administrators only.
           The panel gates itself; it is not relying on this placement. */}
-      <DocumentationGapAdminPanel episodes={savedOASISUploads} />
+      <DocumentationGapAdminPanel uploads={savedOASISUploads} />
 
       {/* PDGM Payment Trends */}
       {paymentTrendsData.length > 0 && (

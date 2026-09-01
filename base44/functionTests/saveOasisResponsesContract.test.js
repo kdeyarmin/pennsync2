@@ -17,7 +17,7 @@ import { transpileTs } from "../../tools-transpile-ts.mjs";
 
 const V2 = "pennsync-oasis-response-v2-cms-e2";
 const V1 = "pennsync-oasis-response-v1-legacy";
-const FLAG = "oasis_response_schema_v2";
+const FLAG = "oasis_response_schema_v2_enabled";
 
 function row(overrides = {}) {
   return {
@@ -49,7 +49,7 @@ function payload(overrides = {}) {
 
 const DEFAULT_USER = { id: "u1", email: "rn@example.com", agency_id: "ag1", is_active: true };
 
-async function loadHandler({ agency = { feature_access: { [FLAG]: true } }, user = DEFAULT_USER } = {}) {
+async function loadHandler({ settings = { [FLAG]: true }, user = DEFAULT_USER } = {}) {
   let src = await readFile(new URL("../functions/saveOasisResponses/entry.ts", import.meta.url), "utf8");
   src = src.replace(/import\s+\{[^}]*\}\s+from\s+'npm:[^']*';?/, "const createClientFromRequest = globalThis.__soMakeClient;");
   const js = transpileTs(src).outputText;
@@ -64,7 +64,9 @@ async function loadHandler({ agency = { feature_access: { [FLAG]: true } }, user
     // that would make the anonymous case untestable.
     auth: { me: async () => user },
     entities: {
-      Agency: { get: async () => agency },
+      // The rollout flag lives on AgencySettings: Agency has no feature object
+      // and its read RLS is admin-only, so a clinician could never resolve it.
+      AgencySettings: { list: async () => (settings ? [settings] : []) },
       OASISAssessment: {
         create: async (rec) => { written.push({ op: "create", rec }); return { id: "new1", ...rec }; },
         update: async (id, rec) => { written.push({ op: "update", id, rec }); return { id, ...rec }; },
@@ -111,8 +113,8 @@ test("a valid v2 write is accepted and the server stamps provenance", async () =
 // ── the flag and the kill switch ────────────────────────────────────────────
 
 test("the feature flag gates the write and defaults closed", async () => {
-  for (const agency of [null, {}, { feature_access: {} }, { feature_access: { [FLAG]: false } }]) {
-    const { handler, written } = await loadHandler({ agency });
+  for (const settings of [null, {}, { [FLAG]: false }, { [FLAG]: "true" }]) {
+    const { handler, written } = await loadHandler({ settings });
     const { status, json } = await post(handler, payload());
     assert.equal(status, 403, JSON.stringify(json));
     assert.equal(json.reason, "feature_disabled");
@@ -122,7 +124,7 @@ test("the feature flag gates the write and defaults closed", async () => {
 
 test("the kill switch stops writes without a deploy", async () => {
   const { handler, written } = await loadHandler({
-    agency: { feature_access: { [FLAG]: true, oasis_response_writes_disabled: true } },
+    settings: { [FLAG]: true, oasis_response_writes_disabled: true },
   });
   const { status, json } = await post(handler, payload());
   assert.equal(status, 423);
@@ -173,7 +175,6 @@ test("the validator rejects each disallowed write, and writes nothing", async ()
     }), "screening_item_wearing_m_number"],
     ["official response with no clinician selection", payload({ oasis_items: [row({ response_origin: "system" })] }), "response_not_clinician_selected"],
     ["AI-originated official response", payload({ oasis_items: [row({ ai_suggested: true })] }), "ai_originated_response"],
-    ["missing selecting clinician", payload({ oasis_items: [row({ selected_by: undefined })] }), "missing_selecting_clinician"],
     ["missing selection timestamp", payload({ oasis_items: [row({ selected_at: "nonsense" })] }), "missing_selection_timestamp"],
     ["mixed schema metadata", payload({ oasis_items: [row({ item_spec_version: "oasis-e1" })] }), "inconsistent_instrument_version"],
     ["inconsistent item source", payload({ oasis_items: [row({ item_source: "pennsync_screening" })] }), "inconsistent_item_source"],
@@ -191,6 +192,17 @@ test("the validator rejects each disallowed write, and writes nothing", async ()
     assert.ok(reasonOf(json).includes(expected), `${name}: expected "${expected}", got ${JSON.stringify(reasonOf(json))}`);
     assert.equal(written.length, 0, `${name}: nothing may be written on a rejection`);
   }
+});
+
+test("the validator still requires a selector, even though the handler injects one", async () => {
+  // The injection is convenience; this is the guarantee. If the handler's
+  // injection were ever removed, the validator must still refuse a row with no
+  // selecting clinician rather than storing an unattributed official response.
+  const src = await readFile(new URL("../functions/saveOasisResponses/entry.ts", import.meta.url), "utf8");
+  assert.ok(
+    /missing_selecting_clinician/.test(src),
+    "the shared validator must keep its selector presence check",
+  );
 });
 
 test("a mutually exclusive M1740 combination is refused server-side", async () => {
@@ -256,4 +268,47 @@ test("only POST is accepted", async () => {
   const { handler } = await loadHandler();
   const res = await handler(new Request("http://local/saveOasisResponses", { method: "GET" }));
   assert.equal(res.status, 405);
+});
+
+// ── the selector is the authenticated user, never a client-supplied string ──
+
+test("a response is stamped with the AUTHENTICATED user, not the submitted selected_by", async () => {
+  const { handler, written } = await loadHandler();
+  // The client omits selected_by entirely; the server supplies it.
+  const { status } = await post(handler, payload({ oasis_items: [row({ selected_by: undefined })] }));
+  assert.equal(status, 200);
+  assert.equal(written[0].rec.oasis_items[0].selected_by, "rn@example.com");
+});
+
+test("claiming another clinician selected the response is REFUSED, not rewritten", async () => {
+  // Without this, any authenticated caller could record a response as having
+  // been chosen by a colleague — the exact attestation provenance this path
+  // exists to establish.
+  const { handler, written } = await loadHandler();
+  const { status, json } = await post(handler, payload({
+    oasis_items: [row({ selected_by: "someone.else@example.com" })],
+  }));
+  assert.equal(status, 403);
+  assert.equal(json.reason, "selector_mismatch");
+  assert.equal(json.errors[0].index, 0);
+  assert.equal(written.length, 0, "nothing may be written on an impersonated selection");
+});
+
+test("the selector comparison ignores case and surrounding whitespace", async () => {
+  const { handler, written } = await loadHandler();
+  const { status } = await post(handler, payload({
+    oasis_items: [row({ selected_by: "  RN@Example.COM  " })],
+  }));
+  assert.equal(status, 200, "the same person in different casing is not an impostor");
+  assert.equal(written[0].rec.oasis_items[0].selected_by, "rn@example.com", "stored canonically");
+});
+
+test("an authenticated user with no email cannot record a selection", async () => {
+  const { handler, written } = await loadHandler({
+    user: { id: "u1", agency_id: "ag1", is_active: true },
+  });
+  const { status, json } = await post(handler, payload());
+  assert.equal(status, 403);
+  assert.equal(json.reason, "no_selector_identity");
+  assert.equal(written.length, 0);
 });

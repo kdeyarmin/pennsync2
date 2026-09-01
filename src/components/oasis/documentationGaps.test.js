@@ -258,3 +258,63 @@ test("the admin panel is gated and the clinician panel is not", () => {
   assert.ok(admin.includes("FinancialGate"), "the admin panel must be gated");
   assert.ok(admin.includes("documentationGapAnalytics"), "the admin panel is where revenue lives");
 });
+
+// ─────────────── OASISUpload is not an episode ─────────────────────────────
+
+test("uploadsToClosedEpisodes converts only FINISHED uploads", async () => {
+  const { uploadsToClosedEpisodes } = await import("./documentationGapAnalytics.js");
+  const up = (over) => ({ assessment_date: "2026-07-01", ...over });
+  // Upload statuses are uploaded | analyzed | reviewed | archived — a
+  // vocabulary that does not overlap with episode statuses at all. Passing
+  // uploads straight into isClosedEpisode() classified every one as open, so
+  // the admin panel reported zero analysed episodes forever.
+  const rows = uploadsToClosedEpisodes([
+    up({ status: "reviewed" }),
+    up({ status: "archived" }),
+    up({ status: "analyzed" }),   // still in flight
+    up({ status: "uploaded" }),   // raw
+    { status: "reviewed" },       // no assessment_date
+  ]);
+  assert.equal(rows.length, 2);
+  for (const r of rows) {
+    assert.equal(isClosedEpisode(r), true, "a converted row must read as closed");
+    assert.equal(r.episode_end, "2026-07-01");
+  }
+});
+
+test("converted uploads actually produce analytics instead of a permanent zero", async () => {
+  const { uploadsToClosedEpisodes } = await import("./documentationGapAnalytics.js");
+  const uploads = [{
+    status: "reviewed",
+    assessment_date: "2026-07-01",
+    analysis_results: { summary: "Patient is chairfast and requires two-person assist." },
+    extracted_data: oasis(v2Item("M1860", "1")),
+  }];
+  const direct = aggregateDocumentationGaps(uploads);
+  assert.equal(direct.episodes_analysed, 0, "raw uploads are not episodes");
+
+  const converted = aggregateDocumentationGaps(uploadsToClosedEpisodes(uploads));
+  assert.equal(converted.episodes_analysed, 1);
+  assert.equal(converted.totals.suggests_more_dependence, 1);
+});
+
+// ─────────────── nested AI text is sanitized too ───────────────────────────
+
+test("sanitizeAiText neutralises a code assertion nested in allowed fields", async () => {
+  const { sanitizeAiText } = await import("./responseSchema/aiResponseSanitizer.js");
+  // The field-level sanitiser drops code-BEARING fields. This covers the other
+  // half: a model writing an answer into prose inside a field that is otherwise
+  // legitimate guidance.
+  const payload = {
+    item_name: "M1830 — Bathing",
+    questions_to_ask: ["Is the patient bathed by an aide?", "Based on that, enter code 6."],
+    documentation_tips: { primary: "Record who performs the bath. M1830 = 6 applies here." },
+  };
+  const clean = sanitizeAiText(payload);
+  assert.ok(!/enter code 6/i.test(JSON.stringify(clean)), JSON.stringify(clean));
+  assert.ok(!/M1830 = 6/i.test(JSON.stringify(clean)), JSON.stringify(clean));
+  assert.match(JSON.stringify(clean), /code removed/);
+  // Legitimate guidance survives.
+  assert.ok(clean.questions_to_ask[0].includes("bathed by an aide"));
+  assert.ok(clean.documentation_tips.primary.includes("Record who performs the bath"));
+});

@@ -3,6 +3,7 @@ import FinancialGate from "@/components/ui/FinancialGate";
 import {
   aggregateDocumentationGaps,
   compareCohortRevenue,
+  uploadsToClosedEpisodes,
   ADMIN_REVENUE_NOTICE,
   MIN_COHORT_FOR_RATE,
 } from "./documentationGapAnalytics.js";
@@ -24,7 +25,14 @@ import {
 
 const money = (n) => (typeof n === "number" ? `$${n.toLocaleString(undefined, { maximumFractionDigits: 0 })}` : "—");
 
-export default function DocumentationGapAdminPanel({ episodes = [] }) {
+/**
+ * @param {object} props
+ * @param {Array} [props.episodes] Episode-shaped rows.
+ * @param {Array} [props.uploads]  OASISUpload rows, converted via
+ *   `uploadsToClosedEpisodes`. An upload is not an episode — see that function.
+ */
+export default function DocumentationGapAdminPanel({ episodes = [], uploads = [] }) {
+  const rows = episodes.length ? episodes : uploadsToClosedEpisodes(uploads);
   return (
     <FinancialGate
       fallback={
@@ -34,7 +42,7 @@ export default function DocumentationGapAdminPanel({ episodes = [] }) {
         </div>
       }
     >
-      <AdminBody episodes={episodes} />
+      <AdminBody episodes={rows} />
     </FinancialGate>
   );
 }
