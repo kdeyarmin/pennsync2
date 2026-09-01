@@ -92,6 +92,25 @@
         }
       }
     },
+    "input_response_schema_ids": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "The response schema id of each episode endpoint (SOC/ROC, Discharge). A record without both endpoints on 'pennsync-oasis-response-v2-cms-e2' was computed from response meanings PennSync cannot vouch for and must be excluded from current CMS-labeled aggregates."
+    },
+    "source_assessment_ids": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "The OASISAssessment ids this metric was computed from, so a reviewer can re-derive it."
+    },
+    "instrument_versions": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "CMS instrument version at each endpoint."
+    },
+    "calculation_version": {
+      "type": "string",
+      "description": "Version of the deterministic outcome core that produced this record. Bumped when the rules change meaning, so stale records can be retired rather than silently re-read under new rules."
+    },
     "outcome_measure_source": {
       "type": "string",
       "description": "Provenance of the outcome metric (e.g. oasis_change_score)"
