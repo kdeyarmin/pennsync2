@@ -1,6 +1,6 @@
 # PennSync Clinical Assistance Implementation — 2026-08-31
 
-Status: **in progress** (living document — updated throughout the implementation pass)
+Status: **complete** for this pass. Branch `claude/pennsync-clinical-implementation-omj3ze`, PR #129.
 
 ## 1. Executive summary
 
@@ -108,40 +108,353 @@ reading the implementation, not by trusting an older audit document.
 
 ## 5. Features changed
 
-_(filled in as work lands — see §7)_
+### 5.1 Smart Note — EMR handoff is now a first-class step (gap-matrix rows 2, 3)
+
+`src/components/smartNote/emrHandoff.js` (new, pure) + `EmrHandoffPanel.jsx` (new).
+
+- **Copy to EMR** is the primary action on the finished-note screen.
+- **Per-section copy**: `splitNoteSections()` splits on an explicit heading when
+  the note carries one (the copied text then matches what the nurse sees) and
+  otherwise groups paragraphs with a deterministic topic label. The section BODY
+  is always the untouched source text — a split never rewrites or drops content.
+- **Clipboard failure is shown inline**, with the manual fallback and an explicit
+  "nothing was lost". A toast that has already faded is not a recovery path.
+- **Self-reported handoff statuses** (`Copied to EMR` → `Reviewed in EMR` →
+  `Signed in EMR`). Forward-only, and every status carries "PennSync did not
+  verify this" — there is no EMR integration and nothing may imply one.
+- **Review acknowledgement**: user, time, note hash, `ai_assisted`,
+  `nurse_edited`, and `is_clinical_signature: false`. It stores a hash, not a
+  second copy of the note (PHI minimisation), and goes stale — visibly — if the
+  nurse edits after acknowledging.
+- The AI-assisted provenance badge stays visible right up to the copy, so an AI
+  suggestion never becomes indistinguishable from clinician-confirmed text.
+
+### 5.2 Documentation strength (rows 4–8)
+
+`compliance/documentationStrength.js` (new, pure) + `DocumentationStrengthPanel.jsx`.
+
+`presenceDetection` answers *"is homebound mentioned?"*. This answers *"does the
+homebound statement carry the factual support a reviewer looks for?"* — so
+`Patient is homebound.` grades **weak** rather than documented. Four analyzers
+(homebound, skilled need, patient response, teaching) grade over their supporting
+factors and produce the targeted questions for whatever is missing.
+
+Two design commitments: a missing factor becomes a **question**, never a
+suggested clinical fact; and every finding ships its rule, citation, the evidence
+sentences from the note, what appears missing, and remediation — no black-box
+score. Patient response is a *pairing* check: it names the specific intervention
+that has no documented response, rather than saying "response missing" about the
+whole note. Absent elements are left to the existing required-element gate so the
+nurse is not nagged twice.
+
+### 5.3 Copy-forward / cloning defence (rows 9)
+
+`compliance/noteSimilarity.js` (new, pure) + `CopyForwardPanel.jsx`.
+
+Shingled Jaccard similarity (5-word n-grams), exact repeated-sentence detection
+with an 8-word floor, per-category repeats, and identical-vitals detection.
+**Advisory throughout**: it never blocks a save and never alleges cloning or
+misconduct. Notes on a stable patient are legitimately similar, so the panel
+shows *what* repeats and lets the nurse judge. Vitals are only reported when a
+whole set of three or more readings is byte-identical, and even then the prompt
+asks to "confirm these readings were taken today".
+
+### 5.4 Visit Prep (row 11)
+
+`visit/visitPrep.js` (new, pure) + `VisitPrepPanel.jsx`, on the patient overview.
+
+Assembled from the context `getPatientContext` already returns — no extra
+round-trip, no LLM. Progressive disclosure lives in the data (items carry a
+priority band; the panel opens the top two). Absent data reads as "not recorded
+in PennSync", never as a clinical negative. Direct actions (Start Smart Note,
+Visit Scribe, chart, medications, OASIS guidance) so common work does not require
+walking back through several hubs.
+
+### 5.5 Documentation Readiness (row 18)
+
+`compliance/documentationReadiness.js` (new, pure) + `DocumentationReadinessPanel.jsx`.
+
+The three mandated statuses only — **No PennSync issues detected / Review
+recommended / Action needed**. Explicitly not a billing gate; the disclaimer
+naming the EMR, billing system, agency QA and pre-bill review is always on
+screen. Two distinctions the tests pin down: "PennSync has nothing recorded" is
+its own finding rather than a silent pass, and the list of checks that *ran* is
+shown even when nothing was found, so "we found nothing" and "we did not look"
+never read the same.
+
+### 5.6 Provider follow-up lifecycle (row 17)
+
+`tasks/providerFollowUpLifecycle.js` (new, pure).
+
+Ten states from `identified` to `resolved`, with `contact` **false through
+`sent`** — dispatching a fax is not a person receiving it. Only a
+channel-confirmed delivery establishes contact, and escalating because nobody
+could be reached does not flip it. Each step records whether PennSync *observed*
+it or a human *reported* it. Transitions are explicit rather than "any forward
+move": escalation from any open state, a response phoned in before a delivery
+receipt that may never arrive, and no silent reopening of a resolved item.
+States map onto the existing `Task.status` enum without inventing enum values.
+
+### 5.7 Medication reconciliation assistance (row 16)
+
+`medication/medicationReconciliation.js` (new, pure) + `MedicationReconciliationPanel.jsx`.
+
+Normalisation (name / strength / route / frequency / doses-per-day) plus
+discrepancy detection: in the note but not the list, reported stopped, dose
+change, frequency change, duplicate therapy, allergy conflict. Plus a
+"Medication changes this visit" summary that can feed a provider follow-up.
+
+`setMedicationKnowledgeAdapter()` is the seam for an authoritative external
+service; nothing is wired by default and `describeKnowledgeSource()` reports the
+built-in list as **unlicensed with a caveat**, so no screen can imply
+authoritative backing that does not exist. Two false-alert guards: a stop phrase
+only counts in the same sentence as its drug, and 1 g vs 1000 mg is not a dose
+change — false alerts train nurses to dismiss the real ones.
+
+### 5.8 Cross-document consistency (row 15)
+
+`compliance/crossDocumentConsistency.js` (new, pure) + `CrossDocumentReviewPanel.jsx`.
+
+Six deterministic checks across note ↔ OASIS ↔ care plan. Every finding shows
+source A, source B, evidence sentences, severity and a suggested action. PennSync
+never rewrites a record and never decides which side is right. Marking a finding
+"not applicable" **requires a reason**, so a real finding cannot be dismissed
+silently.
+
+### 5.9 OASIS versioned reference layer (rows 13, 14)
+
+`oasis/specs/` (new) + `OasisScopeNotice.jsx`, and the centre re-framed as the
+**OASIS Review & Assistance Center**.
+
+- `specs/e/index.js` — version metadata with effective date, source, source URL,
+  and a `completeness: "partial"` field whose note states plainly that PennSync
+  does not contain the authoritative CMS instrument.
+- `specs/registry.js` — effective-date resolution; a date before every known
+  version resolves to `null` rather than applying OASIS-E definitions to an
+  assessment completed under an instrument PennSync does not hold.
+- `specs/verification.js` — per-item classification (`verified` / `abbreviated` /
+  `unverified` / `pennsync_screening`) that **fails closed**: an unregistered item
+  is `unverified`, so a newly added item can never present itself as confirmed
+  CMS content by omission.
+- A standing scope notice states that the official OASIS is completed and
+  submitted in the agency's EMR and that nothing reaches CMS or iQIES.
+
+**No direct iQIES submission was built, and none exists anywhere in the repo.**
 
 ## 6. Regulatory / factual defects corrected
 
-_(filled in as work lands)_
+### 6.1 PennSync certified Medicare compliance (severity: R1)
+
+`src/components/smartNote/FinalNoteDisplay.jsx:14` headed the finished-note
+screen **"Medicare-Compliant Note Ready"**. PennSync is a documentation-assistance
+tool — not the EMR, not agency QA, not a Medicare adjudicator — and must never
+certify a Medicare conclusion.
+
+Corrected to **"Documentation review complete"**, with the coverage number
+re-labelled as *PennSync rule coverage … This is not a Medicare compliance
+determination*. `"Save to chart"` became `"Save to PennSync"` so the working copy
+cannot read as the legal record.
+
+### 6.2 Three OASIS questions carried the wrong CMS item numbers (severity: R1)
+
+`src/components/oasis/oasisQuestions.jsx` presented:
+
+| Displayed | PennSync's content | Why it is wrong |
+| --- | --- | --- |
+| `M2102 — Physical Therapy` | PT need (yes/no) | M2102 is an assistance item in the CMS instrument — **this repository says so itself** at `AIProactiveOASISAssistant.jsx:138` ("M2102 (Types and Sources of Assistance)"), directly contradicting the item bank |
+| `M2110 — Occupational Therapy` | OT need (yes/no) | M2110 is likewise an assistance item, not an OT-need question |
+| `M2200 — Speech-Language Pathology` | SLP need (yes/no) | M2200 (Therapy Need) was discontinued under PDGM |
+
+A nurse reading these could have carried a wrong item number into the official
+assessment.
+
+**Fix, and what it deliberately is not.** PennSync does not hold the
+authoritative CMS instrument, so writing in the "correct" item content would
+replace one fabrication with another. Instead the useful screening questions were
+kept with the **false CMS attribution removed**: they are labelled PennSync
+screening items, their internal ids are unchanged so stored responses keep
+resolving, and the verification registry classifies them `pennsync_screening`
+with `official_item: null`. A contract test enforces that an item may display an
+M-number only where the registry permits one.
+
+### 6.3 Four items presented abbreviated response sets as if official (severity: R2)
+
+`M1020`, `M1030`, `M1100` and `M2420` carry shortened response lists. They remain
+usable as screening prompts but are now classified `abbreviated`, and their
+deterministic disclaimer states that the list "may not match the official CMS
+response set. Confirm the wording and response in your EMR."
 
 ## 7. Files changed by area
 
-_(filled in as work lands)_
+**Smart Note (8)** — `emrHandoff.js`*, `emrHandoff.test.js`*, `EmrHandoffPanel.jsx`*,
+`EmrHandoffPanel.spec.jsx`*, `FinalNoteDisplay.jsx`, `ConstrainedNoteReviewer.jsx`,
+`DocumentationStrengthPanel.jsx`*, `CopyForwardPanel.jsx`*
+
+**Smart Note compliance (4)** — `documentationStrength.js`*, `documentationStrength.test.js`*,
+`noteSimilarity.js`*, `noteSimilarity.test.js`*
+
+**OASIS (7)** — `specs/index.js`*, `specs/registry.js`*, `specs/e/index.js`*,
+`specs/verification.js`*, `specs/verification.test.js`*, `specs/oasisItemBank.spec.js`*,
+`OasisScopeNotice.jsx`*, plus `oasisQuestions.jsx`
+
+**Compliance (6)** — `documentationReadiness.js`*, `documentationReadiness.test.js`*,
+`DocumentationReadinessPanel.jsx`*, `crossDocumentConsistency.js`*,
+`crossDocumentConsistency.test.js`*, `CrossDocumentReviewPanel.jsx`*
+
+**Visit (3)** — `visitPrep.js`*, `visitPrep.test.js`*, `VisitPrepPanel.jsx`*
+
+**Medication (3)** — `medicationReconciliation.js`*, `medicationReconciliation.test.js`*,
+`MedicationReconciliationPanel.jsx`*
+
+**Tasks (2)** — `providerFollowUpLifecycle.js`*, `providerFollowUpLifecycle.test.js`*
+
+**Pages (3)** — `SmartNoteAssistant.jsx`, `PatientDetails.jsx`, `OASISCenter.jsx`
+
+**Backend / contracts (3)** — `base44/entities/Visit.jsonc`,
+`base44/functions/getPatientContext/entry.ts`, `base44/schemaContract.test.js`
+
+**Config / docs (2)** — `package.json` (test registration), this document
+
+`*` = new file. 40 files, +6048 / −24.
 
 ## 8. Tests added
 
-_(filled in as work lands)_
+**156 new tests across 9 suites**, all deterministic and offline.
+
+| Suite | Tests | Focus |
+| --- | --- | --- |
+| `smartNote/emrHandoff.test.js` | 19 | disclaimer wording, forward-only status machine, section splitting, note hashing, acknowledgement staleness |
+| `smartNote/EmrHandoffPanel.spec.jsx` | 12 | copy success, **clipboard failure**, per-section copy, self-reported labelling, stale-ack warning |
+| `compliance/documentationStrength.test.js` | 24 | weak/partial/strong grading per element, question wording, hospice exclusion |
+| `compliance/noteSimilarity.test.js` | 23 | similarity maths, **the legitimately-similar negative case**, tone guardrails, identical vitals |
+| `oasis/specs/verification.test.js` | 14 | classification, fail-closed default, disclaimers, effective-date resolution |
+| `oasis/specs/oasisItemBank.spec.js` | 6 | contract: every item classified; an M-number only where permitted |
+| `visit/visitPrep.test.js` | 20 | priority banding, recent-change windows, overflow truncation, determinism |
+| `compliance/documentationReadiness.test.js` | 20 | each status transition, "nothing known ≠ nothing wrong", billing-language guard |
+| `compliance/crossDocumentConsistency.test.js` | 22 | each finding type, resolution rules, ordering |
+| `medication/medicationReconciliation.test.js` | 25 | normalisation, each discrepancy type, false-alert guards, adapter honesty |
+| `tasks/providerFollowUpLifecycle.test.js` | 24 | contact semantics, transition legality, queue ordering, Task enum mapping |
+
+All new `.test.js` files are registered in `package.json` `test:utils`
+(`testRegistryContract` enforces this).
+
+### Defects the tests caught while being written
+
+1. **Section splitting dropped clinical text.** A permissive heading rule parsed
+   `"Assessed the sacral wound: 2x3 cm, granulating"` as a heading and dropped the
+   lead-in from the copied section. Fixed with a bounded heading vocabulary plus
+   an ALL-CAPS rule; regression test added.
+2. **Category double-counting.** `"Patient tolerated the dressing change without
+   complaint"` counted as both response *and* intervention wording, polluting the
+   intervention comparison and making the identical-wording signal unreachable.
+   Fixed with single-assignment priority ordering.
+3. **Over-broad provider-task matcher.** A bare `/order/` match swept
+   `"Order new dressing supplies"` into the most urgent visit-prep band.
 
 ## 9. Validation results
 
-_(filled in at the end)_
+Run on this branch at the final commit. Node 22.22.2 was the available runtime
+(the repo targets ≥24.18.0); pnpm emits an engine warning and every command still
+runs and passes.
+
+| Command | Result |
+| --- | --- |
+| `pnpm install --frozen-lockfile` | ✅ clean |
+| `pnpm run lint` | ✅ 0 errors, 0 warnings |
+| `pnpm run typecheck:signal` (CI gate) | ✅ 0 high-signal diagnostics (16 233 total, all low-signal or in fixtures) |
+| `pnpm test` → `test:utils` | ✅ 1839 / 1839 |
+| `pnpm test` → `test:contracts` | ✅ 22 / 22 |
+| `pnpm test` → `test:security` | ✅ 87 / 87 |
+| `pnpm test` → `test:dedupe` | ✅ pass |
+| `pnpm test` → `test:components` | ✅ 912 / 912 across 115 files |
+| `pnpm run build` | ✅ succeeds |
+| `pnpm run test:a11y` | ✅ 2 / 2 |
+| `pnpm run check:backend-transpile` | ✅ 238 functions transpile cleanly |
+| `pnpm run lint:actions` | ✅ 4 workflow files pass |
+
+No regressions. No test was skipped, disabled or quarantined.
 
 ## 10. Remaining limitations
 
-_(filled in at the end)_
+1. **PennSync still cannot see inside the EMR.** Every handoff status is
+   self-reported. This is a product boundary, not a defect, and the UI states it
+   at every step.
+2. **The OASIS item set remains abbreviated.** The framework now records that
+   honestly, but PennSync still does not contain the authoritative CMS
+   instrument. Populating a verified item bank requires the licensed CMS
+   specification and clinical sign-off — see §14.
+3. **The medication knowledge base is a small deterministic list.** The adapter
+   seam exists; no licensed service is wired.
+4. **Similarity is lexical, not semantic.** A note rewritten in different words
+   with the same absent detail will not be flagged. This is the correct trade for
+   a deterministic, explainable engine, but it is a ceiling.
+5. **Documentation strength is regex-based.** Unusual phrasing may under-detect a
+   factor. It fails toward *asking a question*, never toward a false pass.
+6. **`getPatientContext` grew two reads.** Bounded to 20 care plans and 10 OASIS
+   rows; worth watching on very large charts.
+7. **No hosted verification was possible.** This environment has no Base44
+   credentials, so all evidence is from the automated suites.
 
 ## 11. Hosted / external dependencies
 
-_(filled in at the end)_
+- **Deploy with the frontend**: `base44/entities/Visit.jsonc` (three new optional
+  fields) and `base44/functions/getPatientContext/entry.ts` (two extra reads).
+  Both are additive; existing visits read as `not_started` with no migration.
+- **Hosted RLS proof remains outstanding** and is deliberately *not* marked
+  complete — see `docs/HOSTED-RLS-PROOF.md`. No RLS or tenant-isolation rule was
+  changed by this pass.
+- **Optional future integrations**: a licensed medication-knowledge service
+  (adapter seam ready) and the CMS OASIS specification (framework ready).
 
 ## 12. Recommendations intentionally not implemented
 
-_(filled in at the end)_
+| Recommendation | Why not |
+| --- | --- |
+| Reconstruct the full CMS OASIS-E2 item bank | The repository does not contain the authoritative specification. Writing one from memory would fabricate regulatory content — the exact failure this pass was asked to prevent. The framework and the honest classification are delivered instead. |
+| Direct iQIES submission | Explicitly forbidden by the brief. None exists in the repo. |
+| Claims submission / "ready to bill" status | Explicitly forbidden. Documentation Readiness is deliberately not a billing gate. |
+| A `ProviderCommunication` entity | The lifecycle model is delivered and tested, but a new hosted entity is a schema commitment that should follow a product decision on whether it supersedes `Task` or sits beside it. Recorded in §13. |
+| Rebuild Today/dashboard queues, ADR centre, denial feedback, PDGM provenance, AI provenance, draft resilience, rule governance | **Already implemented and tested** (gap-matrix rows 10, 12, 19–26). Rebuilding would violate the brief's non-duplication rule. |
+| Remove stored note history for PHI minimisation | It is load-bearing for prior-note comparison, carry-forward pre-fill and the new similarity engine. Removing it would break working features. |
+| Auto-block a save on high similarity | The brief requires advisory-only unless a justified blocking policy already exists. None does for similarity, and a false block on a legitimately stable patient would be worse than the finding. |
 
 ## 13. Remaining backlog
 
-_(filled in at the end)_
+1. Surface `providerFollowUpLifecycle` in a UI queue and decide the persistence
+   model (extend `Task`, or add a `ProviderCommunication` entity).
+2. Feed Documentation Readiness findings into the existing dashboard work queues
+   (`dashboard/coreWorkQueues.js`) so office staff see them without opening each
+   chart.
+3. Wire `medicationReconciliation` into the Smart Note flow once its overlap with
+   the existing `chartCrossCheck` medication findings is deduplicated — today it
+   is surfaced on the patient documentation tab to avoid double-reporting.
+4. Populate `specs/e/` with verified item content once the CMS specification is
+   available; the registry and contract test are ready.
+5. Connect `documentationStrength` findings to the existing training
+   recommendation engine (`training/DeficitAnalyzer.jsx`) so recurring weak
+   elements drive targeted microlearning.
+6. Add an admin rule-governance UI over the existing `MedicareComplianceRule`
+   entity (governance data and rule-version snapshotting already exist).
 
 ## 14. Risks still requiring human / clinical / regulatory review
 
-_(filled in at the end)_
+1. **The OASIS item classifications need clinical sign-off.** The three
+   `pennsync_screening` demotions are supported by the repository's own internal
+   contradiction and by PDGM's discontinuation of M2200, but a qualified OASIS
+   reviewer should confirm the classification of every item — especially the
+   `unverified` ones, which are unregistered and fail closed rather than having
+   been examined.
+2. **Documentation-strength thresholds are a clinical judgement.** "Three of
+   seven factors = strong" for homebound is a defensible starting point, not a
+   regulatory standard. Agency QA should review the bands against real denials.
+3. **Similarity band boundaries need calibration on real data.** 0.72 / 0.88 were
+   chosen so a legitimately-updated note on a stable patient does not trip them
+   (test-verified), but they should be tuned against the agency's own notes.
+4. **The medication list is not a licensed drug database.** Every finding needs
+   confirmation against the EMR profile and a medication reference. The UI says
+   so; the risk is that it is trusted anyway.
+5. **Hosted RLS validation remains outstanding.** Unchanged by this pass, and
+   still required before go-live.
+6. **Self-reported handoff statuses could be misread as verification** if a
+   future screen renders them without their caveat. The caveats are asserted by
+   tests; anyone building a new surface must keep them.

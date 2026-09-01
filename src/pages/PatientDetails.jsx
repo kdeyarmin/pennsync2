@@ -31,6 +31,8 @@ import AIPatientDashboardSummary from "../components/patient/AIPatientDashboardS
 import QuickActionsPanel from "../components/patient/QuickActionsPanel";
 import VisitPrepPanel from "../components/visit/VisitPrepPanel";
 import DocumentationReadinessPanel from "../components/compliance/DocumentationReadinessPanel";
+import CrossDocumentReviewPanel from "../components/compliance/CrossDocumentReviewPanel";
+import MedicationReconciliationPanel from "../components/medication/MedicationReconciliationPanel";
 import AIComplianceAuditor from "../components/compliance/AIComplianceAuditor";
 import PredictiveRiskAnalyzer from "../components/analytics/PredictiveRiskAnalyzer";
 import RiskAlertWidget from "../components/alerts/RiskAlertWidget";
@@ -143,6 +145,11 @@ export default function PatientDetails() {
 
   // Critical alerts drive the banner styling below the header.
   const hasCriticalAlerts = activeAlerts.some(a => a.severity === 'critical');
+
+  // The most recently documented note, used by the deterministic cross-record
+  // and medication reviews below. Visits arrive newest-first from
+  // getPatientContext, so the first one carrying a note is the current one.
+  const latestNoteText = visits.find(v => v?.nurse_notes)?.nurse_notes || '';
 
   const createVisitMutation = useMutation({
     mutationFn: (visitData) => base44.entities.Visit.create({ ...visitData, patient_id: patientId }),
@@ -643,6 +650,21 @@ export default function PatientDetails() {
                 visits={visits}
                 openTasks={tasks}
                 incidents={incidents}
+              />
+              {/* Deterministic cross-record review: where the most recent note,
+                  PennSync's OASIS copy and the care plan disagree. Nothing here
+                  edits a record — the reviewer decides. */}
+              <CrossDocumentReviewPanel
+                noteText={latestNoteText}
+                patient={patient}
+                oasis={(ctx.oasisAssessments ?? [])[0] ?? null}
+                carePlans={ctx.carePlans ?? []}
+                openTasks={tasks}
+                currentUserEmail={currentUser?.email}
+              />
+              <MedicationReconciliationPanel
+                patient={patient}
+                noteText={latestNoteText}
               />
               {oasisTriggerVisit && (
                 <AIGeneratedOASISAssessment
