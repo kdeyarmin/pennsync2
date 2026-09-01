@@ -82,8 +82,12 @@ export function aggregateFunctionalScores(uploads = [], limit = 20) {
   for (const u of uploads) {
     if (!u.assessment_date || !u.pdgm_data?.functional_scores) continue;
     // A derived value with no response schema means whatever PennSync's old
-    // option list meant; it cannot share an axis with a v2 value.
-    if (u.response_schema_id && u.response_schema_id !== RESPONSE_SCHEMA_V2_CMS_E2) { excluded += 1; continue; }
+    // option list meant; it cannot share an axis with a v2 value. ABSENT counts
+    // as unknown — per `OASISUpload.response_schema_id`, "absent means
+    // legacy/unknown" — so the check is an equality against v2, not a
+    // "present and different" test. Before cutover that empties this chart,
+    // which is the honest state: the excluded count and reason say why.
+    if (u.response_schema_id !== RESPONSE_SCHEMA_V2_CMS_E2) { excluded += 1; continue; }
     usable.push(u);
   }
   const num = (v) => {
