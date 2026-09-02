@@ -1,0 +1,8 @@
+import { ILogger } from 'js-logger';
+export declare const DEFAULT_LOG_LEVEL = "WARN";
+export declare const DEFAULT_LOGGER_NAME = "telnyx-video";
+export declare type LogLevel = 'TRACE' | 'DEBUG' | 'INFO' | 'TIME' | 'WARN' | 'ERROR' | 'OFF';
+export declare const setLogLevel: (level: LogLevel) => void;
+export declare function createLogger(name: string): ILogger;
+declare const logger: ILogger;
+export default logger;

@@ -1,0 +1,18 @@
+import { Participant } from 'src';
+import { Session } from 'src/session';
+export interface AudioBridge {
+    streamId: string;
+    status: 'connected' | 'disconnected';
+    pluginHandleId: number;
+    publisherId: number;
+    peerConnection?: RTCPeerConnection;
+    transceiver?: RTCRtpTransceiver;
+    replaceTrack: (track?: MediaStreamTrack) => Promise<void>;
+}
+export declare const initAudioBridge: ({ session, localParticipantId, onConnected, onDisconnected, onTrack, }: {
+    session: Session;
+    localParticipantId: Participant['id'];
+    onConnected: () => void;
+    onDisconnected: () => void;
+    onTrack: (event: RTCTrackEvent) => void;
+}) => Promise<AudioBridge>;

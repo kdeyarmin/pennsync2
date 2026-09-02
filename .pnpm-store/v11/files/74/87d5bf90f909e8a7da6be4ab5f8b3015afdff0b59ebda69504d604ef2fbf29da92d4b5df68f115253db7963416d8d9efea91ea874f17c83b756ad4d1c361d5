@@ -1,0 +1,34 @@
+import { Unsubscribe } from 'nanoevents';
+import { Session } from 'src/session';
+import { Stream } from 'src/stream';
+import { ReadFn, UpdateFn } from 'src/state';
+import { Participant } from 'src';
+import { AVStreamSubscriber } from './avstream_subscriber';
+import { StreamRegister } from './stream_register';
+export interface Events {
+    registered: (participantId: Participant['id'], key: Stream['key']) => void;
+    reconfigured: (participantId: Participant['id'], key: Stream['key']) => void;
+    unregistered: (participantId: Participant['id'], key: Stream['key']) => void;
+}
+export interface SubscriptionRegister {
+    register: (participantId: Participant['id'], key: Stream['key'], config: {
+        audio: boolean;
+        video: boolean;
+    }) => Promise<void>;
+    reconfigure: (participantId: Participant['id'], key: Stream['key'], config: {
+        audio: boolean;
+        video: boolean;
+    }) => Promise<void>;
+    unregister: (participantId: Participant['id'], key: Stream['key']) => Promise<void>;
+    forceUnregister: (participantId: Participant['id'], key: Stream['key']) => Promise<void>;
+    get: (participantId: Participant['id'], key: Stream['key']) => AVStreamSubscriber | undefined;
+    on<E extends keyof Events>(event: E, callback: Events[E]): Unsubscribe;
+}
+export declare const initSubscriptionRegister: ({ session, streamRegister, state, }: {
+    session: Session;
+    streamRegister: StreamRegister;
+    state: {
+        read: ReadFn;
+        update: UpdateFn;
+    };
+}) => Promise<SubscriptionRegister>;

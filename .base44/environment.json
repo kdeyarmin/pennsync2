@@ -1,0 +1,9 @@
+{
+  "previewPort": 3000,
+  "healthPath": "/",
+  "startCommand": "docker compose -f docker-compose.base44.yml up -d",
+  "secrets": [
+    { "name": "VITE_BASE44_APP_ID", "description": "Base44 app ID (Base44 dashboard → app settings)", "requiredAtBoot": true },
+    { "name": "VITE_BASE44_BACKEND_URL", "description": "Base44 backend URL (e.g. https://base44.app)", "requiredAtBoot": true }
+  ]
+}

@@ -1,0 +1,42 @@
+import { Participant } from 'src/participant';
+import { StreamRegister } from 'src/registers/stream_register';
+import { SubscriptionRegister } from 'src/registers/subscription_register';
+import { ReadFn, UpdateFn, CleanupFn } from 'src/state';
+import { ConnectionQualityLevel, RTCInboundRTPStreamReport, RTCOutboundRTPStreamReport } from './connection_quality_metrics';
+export declare enum Direction {
+    sending = "sending",
+    receiving = "receiving",
+    inactive = "inactive"
+}
+declare type Streams = Map<string, {
+    audio: {
+        direction: Direction;
+        quality: ConnectionQualityLevel;
+    };
+    video: {
+        direction: Direction;
+        quality: ConnectionQualityLevel;
+    };
+}>;
+export interface NetworkMetrics {
+    [participantId: string]: {
+        connectionQuality: ConnectionQualityLevel;
+        streams?: Streams;
+    };
+}
+export declare function getNetworkMetricsForParticipant({ streamRegister, subscriptionRegister, state, participant, includeStreams, previousInAudioSenders, previousInVideoSenders, previousOutAudioSenders, previousOutVideoSenders, }: {
+    streamRegister: StreamRegister;
+    subscriptionRegister: SubscriptionRegister;
+    state: {
+        read: ReadFn;
+        update: UpdateFn;
+        cleanup: CleanupFn;
+    };
+    participant: Participant;
+    includeStreams?: boolean;
+    previousInAudioSenders: Map<string, RTCInboundRTPStreamReport>;
+    previousInVideoSenders: Map<string, RTCInboundRTPStreamReport>;
+    previousOutAudioSenders: Map<string, RTCOutboundRTPStreamReport>;
+    previousOutVideoSenders: Map<string, RTCOutboundRTPStreamReport>;
+}): Promise<NetworkMetrics>;
+export {};

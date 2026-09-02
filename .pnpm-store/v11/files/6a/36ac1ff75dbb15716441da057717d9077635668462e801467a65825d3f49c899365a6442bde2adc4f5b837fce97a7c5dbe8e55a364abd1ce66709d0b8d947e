@@ -1,0 +1,35 @@
+import { Immutable } from 'immer';
+import { v4 as generateLocalStreamId } from 'uuid';
+export { generateLocalStreamId };
+export declare type Stream = Immutable<{
+    id: string;
+    key: string;
+    participantId: string;
+    origin: 'local' | 'remote';
+    isAudioEnabled: boolean;
+    isVideoEnabled: boolean;
+    isAudioCensored: boolean;
+    isVideoCensored: boolean;
+    audioTrack?: MediaStreamTrack;
+    videoTrack?: MediaStreamTrack;
+    isConfigured: boolean;
+}>;
+export declare const createLocalStream: (config: {
+    key: string;
+    participantId: string;
+    tracks?: {
+        audio?: MediaStreamTrack;
+        video?: MediaStreamTrack;
+    };
+    isAudioEnabled?: boolean;
+    isVideoEnabled?: boolean;
+}) => Stream;
+export declare const createRemoteStream: (config: {
+    id: string;
+    key: string;
+    participantId: string;
+    isAudioEnabled: boolean;
+    isVideoEnabled: boolean;
+    isAudioCensored: boolean;
+    isVideoCensored: boolean;
+}) => Stream;

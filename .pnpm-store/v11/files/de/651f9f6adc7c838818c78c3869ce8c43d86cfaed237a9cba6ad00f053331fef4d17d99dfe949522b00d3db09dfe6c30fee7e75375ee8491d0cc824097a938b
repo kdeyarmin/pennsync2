@@ -1,0 +1,26 @@
+import { Participant } from 'src/participant';
+import { ConnectionQualityLevel } from './connection_quality_metrics';
+export declare function getConnectionQualityLevel(avgJitter: number, requestsLost: number, avgDelay: number): ConnectionQualityLevel.excellent_network | ConnectionQualityLevel.good_network | ConnectionQualityLevel.average_network | ConnectionQualityLevel.below_average_network | ConnectionQualityLevel.bad_network;
+export declare type KeepAliveMessage = Map<string, {
+    transactionId: string;
+    direction: string;
+    timestamp: Number;
+}>;
+export declare type ACKKeepAliveMessage = Map<string, {
+    transactionId: string;
+    direction: string;
+    timestamp: Number;
+}>;
+export declare type HeartBeat = Map<string, number>;
+export declare function calculateNetworkQuality({ sendKeepAliveMessages, ackKeepAliveMessages, heartBeats, transactionId, direction, timestamp, localParticipantId, }: {
+    sendKeepAliveMessages: KeepAliveMessage;
+    ackKeepAliveMessages: ACKKeepAliveMessage;
+    heartBeats: HeartBeat;
+    transactionId: string;
+    direction: string;
+    timestamp: number;
+    localParticipantId: string;
+}): {
+    connectionQuality: ConnectionQualityLevel;
+    participantId: Participant['id'];
+} | undefined;

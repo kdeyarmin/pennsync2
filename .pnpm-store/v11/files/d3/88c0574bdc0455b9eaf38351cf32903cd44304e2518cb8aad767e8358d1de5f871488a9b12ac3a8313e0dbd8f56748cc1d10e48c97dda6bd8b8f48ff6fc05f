@@ -1,0 +1,24 @@
+import { Unsubscribe } from 'nanoevents';
+import { Participant } from 'src/participant';
+import { StreamRegister } from 'src/registers/stream_register';
+import { SubscriptionRegister } from 'src/registers/subscription_register';
+import { CleanupFn, ReadFn, UpdateFn } from 'src/state';
+import { NetworkMetrics } from 'src/metrics/utils';
+export interface Events {
+    network_metrics_report: (networkMetrics: NetworkMetrics) => void;
+}
+export interface SetupNetworkMetrics {
+    on<E extends keyof Events>(event: E, callback: Events[E]): Unsubscribe;
+}
+export declare const setupNetworkMetricsReporter: () => Promise<SetupNetworkMetrics>;
+export declare const enableNetworkMetricsReport: ({ participantIds, state, subscriptionRegister, streamRegister, }: {
+    participantIds: Array<Participant['id']>;
+    state: {
+        read: ReadFn;
+        update: UpdateFn;
+        cleanup: CleanupFn;
+    };
+    subscriptionRegister: SubscriptionRegister;
+    streamRegister: StreamRegister;
+}) => void;
+export declare const disableNetworkMetricsReport: (participantIds?: string[] | undefined) => void;

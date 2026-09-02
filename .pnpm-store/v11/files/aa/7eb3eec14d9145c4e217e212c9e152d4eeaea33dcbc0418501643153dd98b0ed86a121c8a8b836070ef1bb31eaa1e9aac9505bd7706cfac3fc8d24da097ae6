@@ -1,0 +1,2 @@
+export declare const createEmptyAudioSource: () => MediaStreamTrack;
+export declare const createMixedAudioTrack: (tracks: MediaStreamTrack[]) => MediaStreamTrack;

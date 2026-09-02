@@ -1,0 +1,14 @@
+export interface DisplayObj {
+    participantId: string;
+    telephonyEngineParticipant?: boolean;
+    stream?: {
+        id: string;
+        key: string;
+        isAudioEnabled: boolean;
+        isVideoEnabled: boolean;
+    };
+    external?: string;
+    canReceiveMessages?: boolean;
+}
+export declare const transformDisplayToObj: (value: string) => DisplayObj;
+export declare const transformDisplayToSend: (value: DisplayObj) => string;

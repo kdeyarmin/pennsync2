@@ -1,0 +1,50 @@
+export { v1 as generateTransactionId } from 'uuid';
+export interface Network {
+    ws: WebSocket;
+    send: (message: OutboundMessage) => AsyncGenerator<InboundMessage>;
+    disconnect: (code?: number) => number;
+}
+export interface OutboundMessage {
+    transaction: string;
+    [key: string]: unknown;
+}
+export declare enum DisconnectionReason {
+    USER_INITIATED = "user_initiated",
+    NETWORK_ERROR = "network_error",
+    TIMED_OUT = "timed_out",
+    UNAUTHORIZED = "unauthorized",
+    FORBIDDEN = "forbidden",
+    UNKNOWN = "unknown",
+    ROOM_EXPIRED = "room_expired",
+    KICKED = "kicked",
+    SESSION_TERMINATED = "session_terminated"
+}
+export interface InboundMessage {
+    transaction: string;
+    status_code?: number;
+    error_message?: string;
+    janus?: 'event' | 'success' | 'ack' | 'media' | 'hangup' | 'detached' | 'webrtcup';
+    data?: {
+        id: number;
+    };
+    plugindata?: {
+        data: {
+            [key: string]: string | number | [];
+        };
+        plugin: string;
+    };
+    jsep: RTCSessionDescriptionInit;
+    session_id?: number;
+    sender?: number;
+}
+export declare function getWebSocketCloseReasonByCode(code: number): DisconnectionReason.USER_INITIATED | DisconnectionReason.NETWORK_ERROR | DisconnectionReason.TIMED_OUT | DisconnectionReason.UNKNOWN | DisconnectionReason.SESSION_TERMINATED;
+export declare function getWebSocketCloseCodeByReason(reason: DisconnectionReason): 1000 | 1006 | 3999 | 4000 | undefined;
+export declare const connect: (config: {
+    url: string;
+    protocols?: string | string[];
+    clientToken?: string;
+}, callbacks?: {
+    onMessage?: (message: InboundMessage) => void;
+    onError?: (code: number, message?: string) => void;
+    onClosed?: (reason: DisconnectionReason) => void;
+}) => Promise<Network>;

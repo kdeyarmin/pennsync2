@@ -1,0 +1,30 @@
+import { Unsubscribe } from 'nanoevents';
+import { Participant } from 'src/participant';
+import { Session } from 'src/session';
+import { CleanupFn, ReadFn, State, UpdateFn } from 'src/state';
+import { Message } from './participant_register';
+export interface Events {
+    message_received: (participanId: Participant['id'], message: Message, recipients: Array<Participant['id']> | null, state: State) => void;
+}
+export interface TextRoom {
+    textRoom: JanusTextRoom;
+    send: (paylod: string) => void;
+    on<E extends keyof Events>(event: E, callback: Events[E]): Unsubscribe;
+}
+interface JanusTextRoom {
+    pluginHandleId: number;
+    janusRoomId: number;
+    connected: boolean;
+}
+export declare const setupTextRoom: ({ session, state, onConnected, onDisconnected, onMessage, }: {
+    session: Session;
+    state: {
+        read: ReadFn;
+        update: UpdateFn;
+        cleanup: CleanupFn;
+    };
+    onConnected: () => void;
+    onDisconnected: () => void;
+    onMessage: (data: string) => void;
+}) => Promise<TextRoom>;
+export {};

@@ -1,0 +1,15 @@
+import { Immutable } from 'immer';
+import { Participant, Stream } from 'src';
+export declare type Subscription = Immutable<{
+    id: string;
+    participantId: Participant['id'];
+    key: Stream['key'];
+    audio: boolean;
+    video: boolean;
+}>;
+export declare const createSubscription: (config: {
+    participantId: Participant['id'];
+    key: Stream['key'];
+    audio: boolean;
+    video: boolean;
+}) => Subscription;

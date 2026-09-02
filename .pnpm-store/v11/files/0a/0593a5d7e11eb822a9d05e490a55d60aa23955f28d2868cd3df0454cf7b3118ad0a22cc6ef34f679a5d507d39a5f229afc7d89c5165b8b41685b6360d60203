@@ -1,0 +1,44 @@
+import { Unsubscribe } from 'nanoevents';
+import { Session } from 'src/session';
+import { Stream } from 'src/stream';
+import { ReadFn, UpdateFn } from 'src/state';
+import { AVStreamPublisher } from './avstream_publisher';
+import { Participant } from 'src';
+export interface Events {
+    registered: (participantId: Participant['id'], streamKey: Stream['key']) => void;
+    will_unregister: (participantId: Participant['id'], streamKey: Stream['key']) => void;
+    unregistered: (participantId: Participant['id'], streamKey: Stream['key']) => void;
+    audio_activity: (participantId: Participant['id'], streamKey: Stream['key']) => void;
+    track_enabled: (participantId: Participant['id'], streamKey: Stream['key'], kind: 'audio' | 'video') => void;
+    track_disabled: (participantId: Participant['id'], streamKey: Stream['key'], kind: 'audio' | 'video') => void;
+    track_censored: (participantId: Participant['id'], streamKey: Stream['key'], kind: 'audio' | 'video') => void;
+    track_uncensored: (participantId: Participant['id'], streamKey: Stream['key'], kind: 'audio' | 'video') => void;
+}
+export interface StreamRegister {
+    register: (key: Stream['key'], tracks?: {
+        audio?: MediaStreamTrack;
+        video?: MediaStreamTrack;
+    }, options?: {
+        enableSimulcast?: boolean;
+    }) => Promise<void>;
+    update: (key: Stream['key'], tracks?: {
+        audio?: MediaStreamTrack;
+        video?: MediaStreamTrack;
+    }, options?: {
+        enableSimulcast?: boolean;
+    }) => Promise<void>;
+    unregister: (key: Stream['key']) => Promise<void>;
+    forceUnregister: (participantId: Participant['id'], key: Stream['key']) => Promise<void>;
+    getPublisherId: (streamId: Stream['id']) => number;
+    getAVStreamPublisher: (key: Stream['key']) => AVStreamPublisher | undefined;
+    on<E extends keyof Events>(event: E, callback: Events[E]): Unsubscribe;
+}
+export declare const initStreamRegister: ({ session, state, }: {
+    session: Session;
+    state: {
+        read: ReadFn;
+        update: UpdateFn;
+    };
+}, callbacks: {
+    onMixedAudioTrack: (track: MediaStreamTrack) => void;
+}) => Promise<StreamRegister>;
