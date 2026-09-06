@@ -1,0 +1,37 @@
+{
+  "name": "Auto-assign Nurse to Patient on Visit",
+  "description": "Automatically assigns nurse to patient's assigned_nurses list when they document a visit",
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "entity",
+      "events": [
+        "create"
+      ],
+      "entity_name": "Visit"
+    }
+  },
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "auto_assign_nurse_to_patient_on_visit",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "run_function": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "autoAssignNurseToPatient",
+            "args": {}
+          },
+          "then": "end"
+        }
+      }
+    ]
+  },
+  "x-base44-migrated-from-automation": {
+    "legacy_payload_function": "autoAssignNurseToPatient"
+  }
+}

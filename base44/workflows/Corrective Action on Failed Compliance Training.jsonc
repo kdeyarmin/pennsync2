@@ -1,0 +1,37 @@
+{
+  "name": "Corrective Action on Failed Compliance Training",
+  "description": "When a learner fails a training attempt, create a corrective action plan and assign supplemental micro-learning based on missed questions.",
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "entity",
+      "events": [
+        "create"
+      ],
+      "entity_name": "TrainingAttempt"
+    }
+  },
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "corrective_action_on_failed_compliance_training",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "run_function": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "triggerCorrectiveActionPlan",
+            "args": {}
+          },
+          "then": "end"
+        }
+      }
+    ]
+  },
+  "x-base44-migrated-from-automation": {
+    "legacy_payload_function": "triggerCorrectiveActionPlan"
+  }
+}

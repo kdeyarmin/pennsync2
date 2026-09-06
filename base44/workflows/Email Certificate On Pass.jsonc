@@ -1,0 +1,37 @@
+{
+  "name": "Email Certificate On Pass",
+  "description": "When a training certificate is created, email the PDF certificate link to the employee and matching agency admin managers.",
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "entity",
+      "events": [
+        "create"
+      ],
+      "entity_name": "TrainingCertificate"
+    }
+  },
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "email_certificate_on_pass",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "run_function": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "sendTrainingCertificateEmail",
+            "args": {}
+          },
+          "then": "end"
+        }
+      }
+    ]
+  },
+  "x-base44-migrated-from-automation": {
+    "legacy_payload_function": "sendTrainingCertificateEmail"
+  }
+}
